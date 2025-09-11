@@ -1,0 +1,95 @@
+#pragma once
+#include "UEContainer.h"
+#include "ObjectFactory.h"
+#include "MemoryManager.h"
+// 전방 선언/외부 심볼 (네 프로젝트 환경 유지)
+class UObject;
+extern TArray<UObject*> GUObjectArray;
+
+// ── UClass: 간단한 타입 디스크립터 ─────────────────────────────
+struct UClass
+{
+    const char* Name = nullptr;
+    const UClass* Super = nullptr;   // 루트(UObject)는 nullptr
+    std::size_t   Size = 0;
+
+    constexpr UClass() = default;
+    constexpr UClass(const char* n, const UClass* s, std::size_t z)
+        : Name(n), Super(s), Size(z) {
+    }
+
+    bool IsChildOf(const UClass* Base) const noexcept
+    {
+        if (!Base) return false;
+        for (auto c = this; c; c = c->Super)
+            if (c == Base) return true;
+        return false;
+    }
+};
+
+class UObject
+{
+public:
+    UObject() : UUID(GenerateUUID()), InternalIndex(UINT32_MAX) {}
+
+protected:
+    virtual ~UObject() = default;
+    // Centralized deletion entry accessible to ObjectFactory only
+    void DestroyInternal() { delete this; }
+    friend void ObjectFactory::DeleteObject(UObject* Obj);
+
+public:
+    // UObject-scoped allocation only
+    static void* operator new(std::size_t size) { return CMemoryManager::Allocate(size); }
+    static void  operator delete(void* ptr) noexcept { CMemoryManager::Deallocate(ptr); }
+    static void  operator delete(void* ptr, std::size_t) noexcept { CMemoryManager::Deallocate(ptr); }
+
+public:
+    uint32_t UUID;
+    uint32_t InternalIndex;
+
+    // 정적: 타입 메타 반환 (이름을 StaticClass로!)
+    static UClass* StaticClass()
+    {
+        static UClass Cls{ "UObject", nullptr, sizeof(UObject) };
+        return &Cls;
+    }
+
+    // 가상: 인스턴스의 실제 타입 메타
+    virtual UClass* GetClass() const { return StaticClass(); }
+
+    // IsA 헬퍼
+    bool IsA(const UClass* C) const noexcept { return GetClass()->IsChildOf(C); }
+    template<class T> bool IsA() const noexcept { return IsA(T::StaticClass()); }
+
+    // 네가 쓰던 UUID 발급기 유지
+    static uint32_t GenerateUUID()
+    {
+        static uint32 Counter = 1;
+        return Counter++;
+    }
+};
+
+// ── Cast 헬퍼 (UE Cast<> 와 동일 UX) ────────────────────────────
+template<class T>
+T* Cast(UObject* Obj) noexcept
+{
+    return (Obj && Obj->IsA<T>()) ? static_cast<T*>(Obj) : nullptr;
+}
+template<class T>
+const T* Cast(const UObject* Obj) noexcept
+{
+    return (Obj && Obj->IsA<T>()) ? static_cast<const T*>(Obj) : nullptr;
+}
+
+// ── 파생 타입에 붙일 매크로 ─────────────────────────────────────
+#define DECLARE_CLASS(ThisClass, SuperClass)                                  \
+public:                                                                       \
+    using Super_t = SuperClass;                                               \
+    static UClass* StaticClass()                                              \
+    {                                                                         \
+        static UClass Cls{ #ThisClass, SuperClass::StaticClass(),             \
+                            sizeof(ThisClass) };                              \
+        return &Cls;                                                          \
+    }                                                                         \
+    virtual UClass* GetClass() const override { return ThisClass::StaticClass(); }
