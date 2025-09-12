@@ -127,7 +127,7 @@ void UWorld::Initialize()
     // 카메라
     MainCameraActor = NewObject<ACameraActor>();
     MainCameraActor->SetWorld(this);
-    MainCameraActor->SetActorLocation({0, 0, -10});
+    MainCameraActor->SetActorLocation({-10, 0, 0});
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);

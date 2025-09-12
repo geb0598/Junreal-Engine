@@ -42,15 +42,15 @@ FMatrix UCameraComponent::GetProjectionMatrix() const
 }
 FVector UCameraComponent::GetForward() const
 {
-    return GetWorldTransform().Rotation.RotateVector(FVector(0, 0, 1)).GetNormalized();
+    return GetWorldTransform().Rotation.RotateVector(FVector(1, 0, 0)).GetNormalized();
 }
 
 FVector UCameraComponent::GetRight() const
 {
-    return GetWorldTransform().Rotation.RotateVector(FVector(1, 0, 0)).GetNormalized();
+    return GetWorldTransform().Rotation.RotateVector(FVector(0, 1, 0)).GetNormalized();
 }
 
 FVector UCameraComponent::GetUp() const
 {
-    return GetWorldTransform().Rotation.RotateVector(FVector(0, 1, 0)).GetNormalized();
+    return GetWorldTransform().Rotation.RotateVector(FVector(0, 0, 1)).GetNormalized();
 }
