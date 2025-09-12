@@ -544,9 +544,9 @@ void UWorld::ProcessCameraRotation(float DeltaSeconds)
     float CurrentRoll = UIManager.GetStoredRoll();
 
     // 축별 개별 쿼터니언 생성
-    FQuat PitchQuat = FQuat::FromAxisAngle(FVector(1, 0, 0), DegreeToRadian(CameraPitchDeg));
-    FQuat YawQuat = FQuat::FromAxisAngle(FVector(0, 1, 0), DegreeToRadian(CameraYawDeg));
-    FQuat RollQuat = FQuat::FromAxisAngle(FVector(0, 0, 1), DegreeToRadian(CurrentRoll));
+    FQuat PitchQuat = FQuat::FromAxisAngle(FVector(0, 1, 0), DegreeToRadian(CameraPitchDeg));
+    FQuat YawQuat = FQuat::FromAxisAngle(FVector(0, 0, 1), DegreeToRadian(CameraYawDeg));
+    FQuat RollQuat = FQuat::FromAxisAngle(FVector(1, 0, 0), DegreeToRadian(CurrentRoll));
 
     // RzRxRy 순서로 회전 합성 (Roll(Z) → Pitch(X) → Yaw(Y))
     FQuat FinalRotation = YawQuat * PitchQuat * RollQuat;
@@ -573,9 +573,9 @@ void UWorld::ProcessCameraMovement(float DeltaSeconds)
     // 1) 카메라 회전(쿼터니언)에서 로컬 기저 추출 (스케일 영향 제거)
     const FQuat Quat = MainCameraActor->GetActorRotation(); // (x,y,z,w)
     // DirectX LH 기준: Right=+X, Up=+Y, Forward=+Z
-    const FVector Right = Quat.RotateVector(FVector(1, 0, 0)).GetNormalized();
-    const FVector Up = Quat.RotateVector(FVector(0, 1, 0)).GetNormalized();
-    const FVector Forward = Quat.RotateVector(FVector(0, 0, 1)).GetNormalized();
+    const FVector Right = Quat.RotateVector(FVector(0, 1, 0)).GetNormalized();
+    const FVector Up = Quat.RotateVector(FVector(0, 0, 1)).GetNormalized();
+    const FVector Forward = Quat.RotateVector(FVector(1, 0, 0)).GetNormalized();
 
     // 2) 입력 누적 (WASD + QE)
     if (InputManager.IsKeyDown('W')) Move += Forward;
