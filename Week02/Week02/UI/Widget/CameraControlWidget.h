@@ -8,6 +8,8 @@ class UCameraControlWidget
 	: public UWidget
 {
 public:
+	DECLARE_CLASS(UCameraControlWidget, UWidget)
+
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;

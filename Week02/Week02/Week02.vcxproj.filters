@@ -70,6 +70,9 @@
     <Filter Include="소스 파일\UI\Widget">
       <UniqueIdentifier>{f22ad073-ae7d-4af1-bbdb-b33785621ecc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Resources">
+      <UniqueIdentifier>{6e3dcf0f-cb4b-4399-b35d-d2a158ce16be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

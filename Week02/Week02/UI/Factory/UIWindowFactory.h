@@ -1,4 +1,5 @@
 #pragma once
+#include "../../Object.h"
 #include "../../UEContainer.h"
 
 class UConsoleWindow;
@@ -23,9 +24,11 @@ enum class EUIDockDirection : uint8
 /**
 * @brief UI 윈도우들을 쉽게 생성하기 위한 팩토리 클래스
  */
-class UUIWindowFactory
+class UUIWindowFactory : public UObject
 {
 public:
+	DECLARE_CLASS(UUIWindowFactory, UObject)
+	
 	static void CreateDefaultUILayout();
 	static UConsoleWindow* CreateConsoleWindow(EUIDockDirection InDockDirection = EUIDockDirection::Bottom);
 	static UControlPanelWindow* CreateControlPanelWindow(EUIDockDirection InDockDirection = EUIDockDirection::Left);

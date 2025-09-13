@@ -8,6 +8,8 @@ class UActorTerminationWidget
 	: public UWidget
 {
 public:
+	DECLARE_CLASS(UActorTerminationWidget, UWidget)
+
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;

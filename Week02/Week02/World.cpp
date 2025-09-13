@@ -335,11 +335,11 @@ void UWorld::Tick(float DeltaSeconds)
             // PickingSystem을 사용한 피킹 처리
             if (AActor* PickedActor = CPickingSystem::PerformPicking(Actors, MainCameraActor))
             {
-                UIManager.SetPickedActor(PickedActor);
-                // 색 강조를 위한 플래그
-
                 // SelectionManager를 통해 액터 선택
                 SelectionManager.SelectActor(PickedActor);
+
+                // 색 강조를 위한 플래그
+                UIManager.SetPickedActor(PickedActor);
 
                 GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
             }
@@ -416,6 +416,10 @@ bool UWorld::DestroyActor(AActor* Actor)
     auto it = std::find(Actors.begin(), Actors.end(), Actor);
     if (it != Actors.end())
     {
+        if (*it == USelectionManager::GetInstance().GetSelectedActor())
+        {
+            USelectionManager::GetInstance().DeselectActor(*it);
+        }
         Actors.erase(it);
 
         // 메모리 해제

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdarg>
 #include <iostream>
+#include "../Object.h"
 
 class UConsoleWidget;
 
@@ -8,9 +9,11 @@ class UConsoleWidget;
  * @brief Global Console Manager - replaces ImGuiConsole completely
  * Routes all console logging to our new ConsoleWidget
  */
-class UGlobalConsole
+class UGlobalConsole : public UObject
 {
 public:
+    DECLARE_CLASS(UGlobalConsole, UObject)
+
     static void Initialize();
     static void Shutdown();
     

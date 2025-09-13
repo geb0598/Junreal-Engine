@@ -8,6 +8,8 @@
 class UExperimentalFeatureWindow : public UUIWindow
 {
 public:
+	DECLARE_CLASS(UExperimentalFeatureWindow, UUIWindow)
+
 	UExperimentalFeatureWindow();
 	void Initialize() override;
 };

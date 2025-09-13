@@ -36,9 +36,13 @@ UUIWindow::~UUIWindow()
 {
 	for (UWidget* Widget : Widgets)
 	{
-		delete Widget;
+		DeleteObject(Widget);
 		Widget = nullptr;
 	}
+}
+
+void UUIWindow::Initialize()
+{
 }
 
 /**

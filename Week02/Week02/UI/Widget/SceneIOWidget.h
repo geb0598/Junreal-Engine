@@ -13,6 +13,8 @@ using std::filesystem::path;
 class USceneIOWidget : public UWidget
 {
 public:
+	DECLARE_CLASS(USceneIOWidget, UWidget)
+
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;

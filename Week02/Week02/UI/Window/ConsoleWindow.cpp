@@ -13,18 +13,9 @@ UConsoleWindow::UConsoleWindow()
     GetMutableConfig().WindowTitle = "Console Window";
     GetMutableConfig().DefaultSize = ImVec2(800, 500);
     GetMutableConfig().MinSize = ImVec2(400, 200);
-}
 
-UConsoleWindow::~UConsoleWindow()
-{
-    // ConsoleWidget은 UUIWindow의 소멸자에서 자동으로 삭제됨
-    // 추가적인 정리가 필요한 경우 여기에 작성
-}
-
-void UConsoleWindow::Initialize()
-{
     // Create and initialize console widget
-    ConsoleWidget = new UConsoleWidget;
+    ConsoleWidget = NewObject<UConsoleWidget>();
     if (ConsoleWidget)
     {
         UE_LOG("ConsoleWidget created successfully\n");
@@ -36,6 +27,16 @@ void UConsoleWindow::Initialize()
     {
         UE_LOG("ERROR: Failed to create ConsoleWidget\n");
     }
+}
+
+UConsoleWindow::~UConsoleWindow()
+{
+    // ConsoleWidget은 UUIWindow의 소멸자에서 자동으로 삭제됨
+    // 추가적인 정리가 필요한 경우 여기에 작성
+}
+
+void UConsoleWindow::Initialize()
+{
 }
 
 void UConsoleWindow::AddLog(const char* fmt, ...)
