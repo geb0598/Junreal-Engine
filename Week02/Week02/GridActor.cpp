@@ -2,8 +2,8 @@
 
 AGridActor::AGridActor()
 {
-    GroundGrid = new UStaticMeshComponent();
-    AxisGrid = new UStaticMeshComponent();
+    GroundGrid = NewObject<UStaticMeshComponent>();
+    AxisGrid = NewObject<UStaticMeshComponent>();
     GroundGrid->SetupAttachment(RootComponent);
     AxisGrid->SetupAttachment(RootComponent);
     AddComponent(GroundGrid);

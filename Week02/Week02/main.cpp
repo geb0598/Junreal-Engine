@@ -225,10 +225,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     } // end app scope: ensure destructors run before leak dump
 
 
-
-#if defined(_MSC_VER) && defined(_DEBUG)
-    // Explicit leak dump (also happens automatically due to _CRTDBG_LEAK_CHECK_DF)
-    _CrtDumpMemoryLeaks();
-#endif
     return 0;
 }

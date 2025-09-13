@@ -86,7 +86,9 @@ namespace ObjectFactory
                 DeleteObject(Obj);
             }
         }
-        GUObjectArray.clear();
+        GUObjectArray.Empty();
+        GUObjectArray.Shrink();
+        //GUObjectArray.clear();
     }
     // (선택) null 슬롯 압축
     void CompactNullSlots()
