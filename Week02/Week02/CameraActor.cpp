@@ -39,15 +39,15 @@ FMatrix ACameraActor::GetViewProjectionMatrix() const
 
 FVector ACameraActor::GetForward() const
 {
-    return CameraComponent ? CameraComponent->GetForward() : FVector(0, 0, 1);
+    return CameraComponent ? CameraComponent->GetForward() : FVector(1, 0, 0);
 }
 
 FVector ACameraActor::GetRight() const
 {
-    return CameraComponent ? CameraComponent->GetRight() : FVector(1, 0, 0);
+    return CameraComponent ? CameraComponent->GetRight() : FVector(0, 1, 0);
 }
 
 FVector ACameraActor::GetUp() const
 {
-    return CameraComponent ? CameraComponent->GetUp() : FVector(0, 1, 0);
+    return CameraComponent ? CameraComponent->GetUp() : FVector(0, 0, 1);
 }

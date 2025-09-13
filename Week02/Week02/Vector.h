@@ -723,6 +723,13 @@ inline FMatrix MakeRotationRowMajorFromQuat(const FQuat& Q)
 // row-major + 행벡터(p' = p * M) 규약
 inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
 {
+    FMatrix YUpToZUp =
+    {
+         0,  1,  0, 0 ,
+         0,  0,  1, 0 ,
+         1, 0,  0, 0 ,
+         0,  0,  0, 1 
+    };
     // Rotation(FQuat)은 이미 로컬 XYZ 순서로 만들어져 있다고 가정
     FMatrix R = MakeRotationRowMajorFromQuat(Rotation);
 
@@ -738,7 +745,7 @@ inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
     R.M[3][2] = Translation.Z;
     R.M[3][3] = 1.0f;
 
-    return R; // 결과 = S * R(q) * T
+    return YUpToZUp*R; // 결과 = S * R(q) * T
 }
 
 
