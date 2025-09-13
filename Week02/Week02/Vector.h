@@ -276,6 +276,21 @@ struct FQuat
 
         return FVector(RadianToDegree(Pitch), RadianToDegree(Yaw), RadianToDegree(Roll));
     }
+    FVector GetForwardVector() const
+{
+    // 보통 게임엔진(Z-Up, Forward = +X) 기준
+    return RotateVector(FVector(1, 0, 0));
+}
+
+FVector GetRightVector() const
+{
+    return RotateVector(FVector(0, 1, 0));
+}
+
+FVector GetUpVector() const
+{
+    return RotateVector(FVector(0, 0, 1));
+}
 
     // Slerp
     static FQuat Slerp(const FQuat& A, const FQuat& B, float T)
