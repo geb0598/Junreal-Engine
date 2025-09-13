@@ -16,9 +16,16 @@ UInputInformationWidget::UInputInformationWidget()
 	, LastMousePosition(0.0f, 0.0f)
 	, MouseDelta(0.0f, 0.0f)
 {
+	// 메모리 누수 방지를 위해 미리 예약
+	MousePositionHistory.Reserve(MaxHistorySize + 5);
 }
 
-UInputInformationWidget::~UInputInformationWidget() = default;
+UInputInformationWidget::~UInputInformationWidget()
+{
+	// 명시적으로 히스토리 정리 (메모리 누수 방지)
+	MousePositionHistory.Empty();
+	MousePositionHistory.Shrink();
+}
 
 void UInputInformationWidget::Initialize()
 {
@@ -79,7 +86,7 @@ void UInputInformationWidget::RenderKeyList(const TArray<EKeyInput>& InPressedKe
 	}
 }
 
-void UInputInformationWidget::RenderMouseInfo() const
+void UInputInformationWidget::RenderMouseInfo()
 {
 	ImGui::Text("Mouse Information:");
 	ImGui::Separator();
@@ -151,10 +158,6 @@ void UInputInformationWidget::RenderMouseInfo() const
 	
 	// 추가 정보
 	ImGui::Text("Normalized Position: (%.3f, %.3f)", NormalizedX, NormalizedY);
-	
-	// 마우스 이동 히스토리 (간단한 그래프)
-	static TArray<FVector2D> MousePositionHistory;
-	static const int MaxHistorySize = 50;
 
 	// 현재 마우스 위치를 히스토리에 추가
 	MousePositionHistory.Add(FVector2D(NormalizedX, NormalizedY));

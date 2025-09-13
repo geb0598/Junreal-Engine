@@ -13,12 +13,12 @@ AActor::AActor()
 
 AActor::~AActor()
 {
-    // 1) Delete root: cascades to attached children
-    if (RootComponent)
-    {
-        ObjectFactory::DeleteObject(RootComponent);
-        RootComponent = nullptr;
-    }
+    //// 1) Delete root: cascades to attached children
+    //if (RootComponent)
+    //{
+    //    ObjectFactory::DeleteObject(RootComponent);
+    //    RootComponent = nullptr;
+    //}
     // 2) Delete any remaining components not under the root tree (safe: DeleteObject checks GUObjectArray)
     for (USceneComponent*& Comp : Components)
     {
