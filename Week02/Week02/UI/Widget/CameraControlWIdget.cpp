@@ -1,0 +1,187 @@
+#include "CameraControlWidget.h"
+#include "../UIManager.h" 
+#include "../../ImGui/imgui.h"
+#include "../../CameraActor.h"
+#include "../../CameraComponent.h"
+#include "../../Vector.h"
+#include <algorithm>
+
+// UE_LOG 대체 매크로
+#define UE_LOG(fmt, ...)
+
+// FMath 네임스페이스 대체
+namespace FMath {
+    template<typename T>
+    static T Max(T A, T B) { return std::max(A, B); }
+    
+    template<typename T>
+    static T Clamp(T Value, T Min, T Max) { 
+        return Value < Min ? Min : (Value > Max ? Max : Value); 
+    }
+}
+
+// Camera Mode
+static const char* CameraMode[] = {
+	"Perspective",
+	"Orthographic"
+};
+
+UCameraControlWidget::UCameraControlWidget()
+	: UWidget("Camera Control Widget")
+	, UIManager(&UUIManager::GetInstance())
+{
+}
+
+UCameraControlWidget::~UCameraControlWidget() = default;
+
+void UCameraControlWidget::Initialize()
+{
+	// UIManager 참조 확보
+	UIManager = &UUIManager::GetInstance();
+}
+
+void UCameraControlWidget::Update()
+{
+	// 필요시 카메라 상태 업데이트 로직 추가
+}
+
+ACameraActor* UCameraControlWidget::GetCurrentCamera() const
+{
+	if (!UIManager)
+		return nullptr;
+		
+	return UIManager->GetCamera();
+}
+
+void UCameraControlWidget::RenderWidget()
+{
+	ACameraActor* Camera = GetCurrentCamera();
+	
+	if (!Camera)
+	{
+		ImGui::TextUnformatted("Camera not available.");
+		ImGui::Separator();
+		ImGui::TextUnformatted("No camera is currently set in UIManager.");
+		return;
+	}
+
+	// 최초 1회 동기화
+	if (!bSyncedOnce)
+	{
+		SyncFromCamera();
+		bSyncedOnce = true;
+	}
+
+	ImGui::TextUnformatted("Camera Transform");
+	ImGui::Spacing();
+
+	// 카메라 이동속도 표시 및 조절
+	ImGui::Text("Move Speed: %.1f", CameraMoveSpeed);
+	if (ImGui::SliderFloat("##MoveSpeed", &CameraMoveSpeed, 1.0f, 20.0f, "%.1f"))
+	{
+		// 카메라 이동속도 업데이트 (필요시)
+	}
+	ImGui::Spacing();
+
+	// 카메라 모드 선택
+	if (ImGui::Combo("Mode", &CameraModeIndex, CameraMode, IM_ARRAYSIZE(CameraMode)))
+	{
+		PushToCamera();
+	}
+
+	// 카메라 위치 제어
+	FVector Location = Camera->GetActorLocation();
+	if (ImGui::DragFloat3("Camera Location", &Location.X, 0.05f))
+	{
+		Camera->SetActorLocation(Location);
+	}
+
+	// 카메라 회전 제어 (Euler angles)
+	FVector Rotation = Camera->GetActorRotation().ToEuler();
+	bool RotationChanged = false;
+	RotationChanged |= ImGui::DragFloat3("Camera Rotation", &Rotation.X, 0.1f);
+
+	// Pitch 제한 (-89 ~ 89도)
+	Rotation.X = FMath::Clamp(Rotation.X, -89.0f, 89.0f);
+
+	if (RotationChanged)
+	{
+		FQuat NewRotation = FQuat::MakeFromEuler(Rotation);
+		Camera->SetActorRotation(NewRotation);
+	}
+
+	ImGui::TextUnformatted("Camera Optics");
+	ImGui::Spacing();
+
+	// FOV 조절
+	bool bChanged = false;
+	bChanged |= ImGui::SliderFloat("FOV", &UiFovY, 1.0f, 170.0f, "%.1f");
+
+	// Near/Far 조절
+	bChanged |= ImGui::DragFloat("Z Near", &UiNearZ, 0.01f, 0.0001f, 1e6f, "%.4f");
+	bChanged |= ImGui::DragFloat("Z Far", &UiFarZ, 0.1f, 0.001f, 1e7f, "%.3f");
+
+	if (bChanged)
+	{
+		PushToCamera();
+	}
+
+	// 리셋 버튼
+	if (ImGui::Button("Reset Optics"))
+	{
+		UiFovY = 80.0f;
+		UiNearZ = 0.1f;
+		UiFarZ = 1000.0f;
+		PushToCamera();
+	}
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	
+	// 카메라 정보 표시
+	ImGui::Text("Camera Info:");
+	ImGui::Text("  Position: (%.2f, %.2f, %.2f)", Location.X, Location.Y, Location.Z);
+	ImGui::Text("  Rotation: (%.1f, %.1f, %.1f)", Rotation.X, Rotation.Y, Rotation.Z);
+}
+
+void UCameraControlWidget::SyncFromCamera()
+{
+	ACameraActor* Camera = GetCurrentCamera();
+	if (!Camera) 
+		return;
+
+	// 카메라 컴포넌트에서 설정 가져오기
+	if (UCameraComponent* CameraComp = Camera->GetCameraComponent())
+	{
+		// FOV, Near, Far 값들을 카메라 컴포넌트에서 가져오기 (만약 API가 있다면)
+		// 현재는 기본값 사용
+		UiFovY = 80.0f;
+		UiNearZ = 0.1f; 
+		UiFarZ = 1000.0f;
+		CameraModeIndex = 0; // 기본적으로 Perspective
+	}
+}
+
+void UCameraControlWidget::PushToCamera()
+{
+	ACameraActor* Camera = GetCurrentCamera();
+	if (!Camera) 
+		return;
+
+	// Near/Far 값 검증
+	UiNearZ = FMath::Max(0.0001f, UiNearZ);
+	UiFarZ = FMath::Max(UiNearZ + 0.0001f, UiFarZ);
+	UiFovY = FMath::Clamp(UiFovY, 1.0f, 170.0f);
+
+	// 카메라 컴포넌트에 설정 적용 (API가 있다면)
+	if (UCameraComponent* CameraComp = Camera->GetCameraComponent())
+	{
+		// 카메라 설정 업데이트
+		// CameraComp->SetFOV(UiFovY);
+		// CameraComp->SetNearClipPlane(UiNearZ);
+		// CameraComp->SetFarClipPlane(UiFarZ);
+		
+		// 현재는 로그만 출력
+		UE_LOG("CameraControl: FOV=%.1f, Near=%.4f, Far=%.1f", UiFovY, UiNearZ, UiFarZ);
+	}
+}

@@ -1,5 +1,6 @@
 #include "D3D11RHI.h"
 #include "Vector.h"
+#include "UI/GlobalConsole.h"
 
 struct FConstants
 {
@@ -401,7 +402,7 @@ void D3D11RHI::OnResize(UINT NewWidth, UINT NewHeight)
     );
     if (FAILED(hr))
     {
-        OutputDebugStringA("SwapChain->ResizeBuffers failed!\n");
+        UE_LOG("SwapChain->ResizeBuffers failed!\n");
         return;
     }
 
@@ -428,7 +429,7 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
     ID3D11Texture2D* backBuffer = nullptr;
     HRESULT hr = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
     if (FAILED(hr) || !backBuffer) {
-        OutputDebugStringA("GetBuffer(0) failed.\n");
+        UE_LOG("GetBuffer(0) failed.\n");
         return;
     }
 
@@ -436,7 +437,7 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
     hr = Device->CreateRenderTargetView(backBuffer, nullptr, &RenderTargetView);
     backBuffer->Release();
     if (FAILED(hr) || !RenderTargetView) {
-        OutputDebugStringA("CreateRenderTargetView failed.\n");
+        UE_LOG("CreateRenderTargetView failed.\n");
         return;
     }
 
@@ -455,7 +456,7 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
 
     hr = Device->CreateTexture2D(&depthDesc, nullptr, &depthTex);
     if (FAILED(hr) || !depthTex) {
-        OutputDebugStringA("CreateTexture2D(depth) failed.\n");
+        UE_LOG("CreateTexture2D(depth) failed.\n");
         return;
     }
 
@@ -467,7 +468,7 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
     hr = Device->CreateDepthStencilView(depthTex, &dsvDesc, &DepthStencilView);
     depthTex->Release();
     if (FAILED(hr) || !DepthStencilView) {
-        OutputDebugStringA("CreateDepthStencilView failed.\n");
+        UE_LOG("CreateDepthStencilView failed.\n");
         return;
     }
 
@@ -511,7 +512,7 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
 
     // 스왑체인 버퍼 리사이즈
     HRESULT hr = SwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-    if (FAILED(hr)) { OutputDebugStringA("ResizeBuffers failed!\n"); return; }
+    if (FAILED(hr)) { UE_LOG("ResizeBuffers failed!\n"); return; }
 
     // 다시 RTV/DSV 만들기
     CreateBackBufferAndDepthStencil(width, height);

@@ -15,7 +15,7 @@
 #include "StaticMesh.h"
 #include "StaticMeshActor.h"
 #include "StaticMeshComponent.h"
-#include "UIManager.h"
+#include "UI/UIManager.h"
 #include "Vector.h"
 #include"GizmoRotateComponent.h"
 #include"GizmoScaleComponent.h"

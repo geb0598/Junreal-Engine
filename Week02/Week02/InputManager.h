@@ -18,45 +18,6 @@ enum EMouseButton
     MaxMouseButtons = 5
 };
 
-// TODO: 나중에 Vector.h로 옮겨야 함
-// 2D 벡터 (마우스 위치용)
-struct FVector2D
-{
-    float X, Y;
-
-    FVector2D(float InX = 0.0f, float InY = 0.0f) : X(InX), Y(InY)
-    {
-    }
-
-    FVector2D operator-(const FVector2D& Other) const
-    {
-        return FVector2D(X - Other.X, Y - Other.Y);
-    }
-    
-    FVector2D operator+(const FVector2D& Other) const
-    {
-        return FVector2D(X + Other.X, Y + Other.Y);
-    }
-    
-    FVector2D operator*(float Scalar) const
-    {
-        return FVector2D(X * Scalar, Y * Scalar);
-    }
-
-    float Length() const
-    {
-        return std::sqrt(X * X + Y * Y);
-    }
-
-    FVector2D GetNormalized() const
-    {
-        float Len = Length();
-        if (Len > 0.0001f)
-            return FVector2D(X / Len, Y / Len);
-        return FVector2D(0.0f, 0.0f);
-    }
-};
-
 class UInputManager : public UObject
 {
 public:

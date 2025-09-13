@@ -60,6 +60,9 @@ public:
     //----------Getter------------
     const TArray<USceneComponent*>& GetComponents() const;
 
+    void SetName(const FString& InName) { Name = InName; }
+    const FString& GetName() { return Name; }
+
 public:
     FString Name;
     USceneComponent* RootComponent = nullptr;
