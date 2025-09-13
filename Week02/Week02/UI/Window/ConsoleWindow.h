@@ -11,6 +11,8 @@ class UConsoleWidget;
 class UConsoleWindow : public UUIWindow
 {
 public:
+    DECLARE_CLASS(UConsoleWindow, UUIWindow)
+
     UConsoleWindow();
     ~UConsoleWindow() override;
 

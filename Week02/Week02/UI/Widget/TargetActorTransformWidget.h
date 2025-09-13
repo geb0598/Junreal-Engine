@@ -10,6 +10,8 @@ class UTargetActorTransformWidget
 	: public UWidget
 {
 public:
+	DECLARE_CLASS(UTargetActorTransformWidget, UWidget)
+
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;
