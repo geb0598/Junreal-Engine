@@ -276,6 +276,21 @@ struct FQuat
 
         return FVector(RadianToDegree(Pitch), RadianToDegree(Yaw), RadianToDegree(Roll));
     }
+    FVector GetForwardVector() const
+{
+    // 보통 게임엔진(Z-Up, Forward = +X) 기준
+    return RotateVector(FVector(1, 0, 0));
+}
+
+FVector GetRightVector() const
+{
+    return RotateVector(FVector(0, 1, 0));
+}
+
+FVector GetUpVector() const
+{
+    return RotateVector(FVector(0, 0, 1));
+}
 
     // Slerp
     static FQuat Slerp(const FQuat& A, const FQuat& B, float T)
@@ -723,15 +738,13 @@ inline FMatrix MakeRotationRowMajorFromQuat(const FQuat& Q)
 // row-major + 행벡터(p' = p * M) 규약
 inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
 {
-    // 좌표계 변환 행렬 (XYZ → YZX 예시)
-    FMatrix P(
-        0, 0, 1, 0,  // row0
-        1, 0, 0, 0,  // row1
-        0, 1, 0, 0,  // row2
-        0, 0, 0, 1   // row3
-    );
-	FMatrix Pinv = P.Transpose(); // 직교행렬이므로 전치가 역행렬
-
+    FMatrix YUpToZUp =
+    {
+         0,  1,  0, 0 ,
+         0,  0,  1, 0 ,
+         1, 0,  0, 0 ,
+         0,  0,  0, 1 
+    };
     // Rotation(FQuat)은 이미 로컬 XYZ 순서로 만들어져 있다고 가정
     FMatrix R = MakeRotationRowMajorFromQuat(Rotation);
 
@@ -747,8 +760,7 @@ inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
     R.M[3][2] = Translation.Z;
     R.M[3][3] = 1.0f;
 
-    FMatrix M_new = P.Transpose()* R * P;
-    return M_new; // 결과 = S * R(q) * T
+    return YUpToZUp*R; // 결과 = S * R(q) * T
 }
 
 
