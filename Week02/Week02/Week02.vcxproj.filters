@@ -40,6 +40,36 @@
     <Filter Include="헤더 파일\Gizmo">
       <UniqueIdentifier>{268038a8-b619-4f95-bee7-c383690b3be4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\UI">
+      <UniqueIdentifier>{697e0870-1798-42a4-80b5-ee94b51f6edf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\UI">
+      <UniqueIdentifier>{89c8263c-8597-4310-a20c-847a033c26d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\UI\Window">
+      <UniqueIdentifier>{955ed923-1198-4ddc-8ed9-8c6e37023664}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\UI\Widget">
+      <UniqueIdentifier>{966c5bae-b63e-4ab3-9e2a-1d4af0f9c249}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\UI\Factory">
+      <UniqueIdentifier>{2baaa24f-1601-45a4-9ef7-5af35382c5a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\UI\ImGui">
+      <UniqueIdentifier>{b151e95f-3a9b-49f4-aced-dbf6ffba6737}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\UI\Factory">
+      <UniqueIdentifier>{fd5f7ea7-0345-4866-84d2-475c7f4d2937}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\UI\ImGui">
+      <UniqueIdentifier>{a76d0b63-5c59-4ed9-9877-b9fe409cfccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\UI\Window">
+      <UniqueIdentifier>{8b341fd7-a47d-429e-a561-39644b6d5c03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\UI\Widget">
+      <UniqueIdentifier>{f22ad073-ae7d-4af1-bbdb-b33785621ecc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -105,9 +135,6 @@
     <ClCompile Include="MeshComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="ImGuiConsole.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="MeshLoader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -115,9 +142,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="StaticMeshComponent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="UIManager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="World.cpp">
@@ -144,9 +168,6 @@
     <ClCompile Include="AllClassesRegistration.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="FObjectFactory.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="GizmoActor.cpp">
       <Filter>소스 파일\Gizmo</Filter>
     </ClCompile>
@@ -158,6 +179,66 @@
     </ClCompile>
     <ClCompile Include="GizmoScaleComponent.cpp">
       <Filter>소스 파일\Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="GridActor.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\UIManager.cpp">
+      <Filter>소스 파일\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\ImGui\ImGuiHelper.cpp">
+      <Filter>소스 파일\UI\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\UIWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Factory\UIWindowFactory.cpp">
+      <Filter>소스 파일\UI\Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\ControlPanelWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\ExperimentalFeatureWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\OutlinerWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\ActorTerminationWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\CameraControlWIdget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\FPSWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\PrimitiveSpawnWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\Widget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\InputInformationWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\ConsoleWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\ConsoleWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\GlobalConsole.cpp">
+      <Filter>소스 파일\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\SceneIOWidget.cpp">
+      <Filter>소스 파일\UI\Widget</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -244,9 +325,6 @@
     <ClInclude Include="Enums.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="ImGuiConsole.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="MeshComponent.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -257,9 +335,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="StaticMeshComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="UIManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="World.h">
@@ -283,9 +358,6 @@
     <ClInclude Include="SelectionManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="FObjectFactory.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="GizmoActor.h">
       <Filter>헤더 파일\Gizmo</Filter>
     </ClInclude>
@@ -297,6 +369,66 @@
     </ClInclude>
     <ClInclude Include="GizmoScaleComponent.h">
       <Filter>헤더 파일\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="GridActor.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\UIManager.h">
+      <Filter>헤더 파일\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Factory\UIWindowFactory.h">
+      <Filter>헤더 파일\UI\Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\ImGui\ImGuiHelper.h">
+      <Filter>헤더 파일\UI\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\Widget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\UIWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\ActorTerminationWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\CameraControlWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\FPSWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\PrimitiveSpawnWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\TargetActorTransformWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\ControlPanelWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\ExperimentalFeatureWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\OutlinerWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\InputInformationWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\ConsoleWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\ConsoleWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\GlobalConsole.h">
+      <Filter>헤더 파일\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\SceneIOWidget.h">
+      <Filter>헤더 파일\UI\Widget</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

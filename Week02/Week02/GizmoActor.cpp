@@ -15,9 +15,9 @@ AGizmoActor::AGizmoActor()
     ArrowY = NewObject<UGizmoArrowComponent>();
     ArrowZ = NewObject<UGizmoArrowComponent>();
 
-    ArrowX->SetDirection(FVector(1.0f, 0.0f, 0.0f));
-    ArrowY->SetDirection(FVector(0.0f, 1.0f, 0.0f));
-    ArrowZ->SetDirection(FVector(0.0f, 0.0f, 1.0f));
+    ArrowX->SetDirection(FVector(1.0f, 0.0f, 0.0f));//빨 
+    ArrowY->SetDirection(FVector(0.0f, 1.0f, 0.0f));//초
+    ArrowZ->SetDirection(FVector(0.0f, 0.0f, 1.0f));//파
 
     ArrowX->SetColor(FVector(1.0f, 0.0f, 0.0f));
     ArrowY->SetColor(FVector(0.0f, 1.0f, 0.0f));
@@ -27,9 +27,9 @@ AGizmoActor::AGizmoActor()
     ArrowY->SetupAttachment(RootComponent);
     ArrowZ->SetupAttachment(RootComponent);
 
-    ArrowX->SetRelativeScale({1, 3, 1});
-    ArrowY->SetRelativeScale({1, 3, 1});
-    ArrowZ->SetRelativeScale({1, 3, 1});
+    ArrowX->SetRelativeScale({1, 1, 3});
+    ArrowY->SetRelativeScale({1, 1, 3});
+    ArrowZ->SetRelativeScale({1, 1, 3});
 
     AddComponent(ArrowX);
     AddComponent(ArrowY);
@@ -37,8 +37,8 @@ AGizmoActor::AGizmoActor()
     GizmoArrowComponents.Add(ArrowX);
     GizmoArrowComponents.Add(ArrowY);   
     GizmoArrowComponents.Add(ArrowZ);
-    ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(-90, 0, 0))); // X축
-    ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // Z축
+ //   ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(-90, 0, 0))); // X축
+//    ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // Z축
 
     //======= Rotate Component 생성 =======
     RotateX = NewObject<UGizmoRotateComponent>();
@@ -129,18 +129,18 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace,AActor* PickedActor)
        
         // 월드 고정 → 기즈모 축은 항상 X/Y/Z
            // 월드 고정 → 기즈모 축은 항상 X/Y/Z
-        if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
-        if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));//초
-        if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0))); // Z축//파
+        if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -180))); // X축//빨
+        if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90)));//초
+        if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축//파
 
 
-        if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // X축//빨
+        if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
         if (ScaleY) ScaleY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 00))); // Z축//초
-        if (ScaleZ) ScaleZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(-90, 0, 0)));//파
+        if (ScaleZ) ScaleZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));//파
 
 
-        if (RotateX)         RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // X축
-        if (RotateY)         RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // Z축
+        if (RotateX)         RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // X축
+        if (RotateY)         RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축
 
         if (RotateZ)          RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
     
@@ -157,20 +157,22 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace,AActor* PickedActor)
     // ───────── Translate Gizmo ─────────
    // ArrowX->AddRelativeRotation(AC);
        // 월드 고정 → 기즈모 축은 항상 X/Y/Z
-    if (ArrowX)  ArrowX->SetRelativeRotation(TargetRot *FQuat::MakeFromEuler(FVector(0, 0, -90))  ); // X축//빨
-    if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0)) );//초
-    if (ArrowZ)  ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0)) ); // Z축//파
+    if (ArrowX)  ArrowX->SetRelativeRotation(TargetRot*FQuat::MakeFromEuler(FVector(0, 0, -180))); // X축//빨
+    if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, -90)));//초
+    if (ArrowZ)  ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축//파
 
 
-    if (ScaleX) ScaleX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0)) ); // X축//빨
-    if (ScaleY) ScaleY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 00)) ); // Z축//초
-    if (ScaleZ) ScaleZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(-90, 0, 0)) );//파
+    if (ScaleX) ScaleX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
+    if (ScaleY) ScaleY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 00))); // Z축//초
+    if (ScaleZ) ScaleZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0)));//파
 
 
-    if (RotateX)         RotateX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0)) ); // X축
-    if (RotateY)         RotateY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 90)) ); // Z축
+    if (RotateX)         RotateX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 90))); // X축
+    if (RotateY)         RotateY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축
 
     if (RotateZ)          RotateZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0)));
+
+   
     }
     
 }
@@ -271,8 +273,8 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
         switch (GizmoAxis)
         {
         case 1: Axis = FVector(1, 0, 0); break;
-        case 3: Axis = FVector(0, 1, 0); break;
-        case 2: Axis = FVector(0, 0, 1); break;
+        case 2: Axis = FVector(0, 1, 0); break;
+        case 3: Axis = FVector(0, 0, 1); break;
         }
     }
     else if (CurrentSpace == EGizmoSpace::Local)
@@ -280,8 +282,8 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
         switch (GizmoAxis)
         {
         case 1: Axis = Target->GetActorRight();   break; // Local X
-        case 3: Axis = Target->GetActorForward(); break; // Local Y
-        case 2: Axis = Target->GetActorUp();      break; // Local Z
+        case 2: Axis = Target->GetActorForward(); break; // Local Y
+        case 3: Axis = Target->GetActorUp();      break; // Local Z
         }
     }
 
@@ -352,14 +354,14 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
                 DeltaQuat = RotByX * RotByY;
                 break;
             }
-            case 3: // Y축 회전
+            case 2: // Y축 회전
             {
                 FQuat RotByX = MakeQuatFromAxisAngle(FVector(0, -1, 0), DeltaAngleX);
                 FQuat RotByY = MakeQuatFromAxisAngle(FVector(0, -1, 0), DeltaAngleY);
                 DeltaQuat = RotByX * RotByY;
                 break;
             }
-            case 2: // Z축 회전
+            case 3: // Z축 회전
             {
                 FQuat RotByX = MakeQuatFromAxisAngle(FVector(0, 0, -1), DeltaAngleX);
                 FQuat RotByY = MakeQuatFromAxisAngle(FVector(0, 0, -1), DeltaAngleY);
@@ -379,7 +381,7 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
             float Angle = DeltaAngleX + DeltaAngleY;
 
             // 로컬 모드일 경우 축을 Target 로컬 축으로
-            FVector RotationAxis = Axis.GetSafeNormal();
+            FVector RotationAxis = -Axis.GetSafeNormal();
 
             //FQuat DeltaQuat = MakeQuatFromAxisAngle(RotationAxis, Angle);
 
@@ -396,14 +398,14 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
                 DeltaQuat = RotByX * RotByY;
                 break;
             }
-            case 3: // Y축 회전
+            case 2: // Y축 회전
             {
                 FQuat RotByX = MakeQuatFromAxisAngle(RotationAxis, DeltaAngleX);
                 FQuat RotByY = MakeQuatFromAxisAngle(RotationAxis, DeltaAngleY);
                 DeltaQuat = RotByX * RotByY;
                 break;
             }
-            case 2: // Z축 회전
+            case 3: // Z축 회전
             {
                 FQuat RotByX = MakeQuatFromAxisAngle(RotationAxis, DeltaAngleX);
                 FQuat RotByY = MakeQuatFromAxisAngle(RotationAxis, DeltaAngleY);
