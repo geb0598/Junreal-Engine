@@ -63,10 +63,10 @@ protected:
 };
 
 template<typename T>
-T* UResourceManager::Get(const FString& InName)
+T* UResourceManager::Get(const FString& InFilePath)
 {
     uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
-    if (auto& iter = Resources[typeIndex].find(InName))
+    if (auto& iter = Resources[typeIndex].find(InFilePath))
     {
         return *iter;
     }
@@ -75,10 +75,10 @@ T* UResourceManager::Get(const FString& InName)
 }
 
 template<typename T, typename ...Args>
-inline T* UResourceManager::Load(const FString& InName, Args&&... InArgs)
+inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)
 {
     uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
-    auto iter = Resources[typeIndex].find(InName);
+    auto iter = Resources[typeIndex].find(InFilePath);
     if (iter != Resources[typeIndex].end())
     {
         return static_cast<T*>((*iter).second);
@@ -86,8 +86,8 @@ inline T* UResourceManager::Load(const FString& InName, Args&&... InArgs)
     else
     {
         T* Resource = SpawnObject<T>();
-        Resource->Load(FilePath, Device, std::forward<Args>(InArgs)...);
-        Resources[typeIndex].Add({ InName, InObject });
+        Resource->Load(InFilePath, Device, std::forward<Args>(InArgs)...);
+        Resources[typeIndex].Add({ InFilePath, Resource });
         return Resource;
     }
 }
