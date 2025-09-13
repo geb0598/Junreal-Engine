@@ -2,6 +2,7 @@
 #include <cstring> // for memcpy
 #include <cstdio>  // for sprintf_s
 #include <windowsx.h> // GET_X_LPARAM / GET_Y_LPARAM
+#include "UI/GlobalConsole.h"
 
 #ifndef GET_X_LPARAM
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
@@ -98,7 +99,7 @@ void UInputManager::Update()
         char debugMsg[128];
         sprintf_s(debugMsg, "Update: Mouse state changing from %d to %d\n", 
                   PreviousMouseButtons[LeftButton], MouseButtons[LeftButton]);
-        OutputDebugStringA(debugMsg);
+        UE_LOG(debugMsg);
     }
     
     memcpy(PreviousMouseButtons, MouseButtons, sizeof(MouseButtons));
@@ -124,7 +125,7 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
             char debugMsg[128];
             sprintf_s(debugMsg, "ImGui State - WantMouse: %d, WantKeyboard: %d\n", 
                       imguiWantsMouse, imguiWantsKeyboard);
-            OutputDebugStringA(debugMsg);
+            UE_LOG(debugMsg);
         }
     }
     else
@@ -132,7 +133,7 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
         // ImGui 컨텍스트가 없으면 게임 입력을 허용
         if (bEnableDebugLogging && message == WM_LBUTTONDOWN)
         {
-            OutputDebugStringA("ImGui context not initialized - allowing game input\n");
+            UE_LOG("ImGui context not initialized - allowing game input\n");
         }
     }
     
@@ -163,7 +164,7 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (!imguiWantsMouse)  // ImGui가 마우스를 사용하지 않을 때만
         {
             UpdateMouseButton(LeftButton, true);
-            if (bEnableDebugLogging) OutputDebugStringA("InputManager: Left Mouse Down\n");
+            if (bEnableDebugLogging) UE_LOG("InputManager: Left Mouse Down\n");
         }
         break;
         
@@ -171,7 +172,7 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (!imguiWantsMouse)  // ImGui가 마우스를 사용하지 않을 때만
         {
             UpdateMouseButton(LeftButton, false);
-            if (bEnableDebugLogging) OutputDebugStringA("InputManager: Left Mouse UP\n");
+            if (bEnableDebugLogging) UE_LOG("InputManager: Left Mouse UP\n");
         }
         break;
         
@@ -240,7 +241,7 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
             {
                 char debugMsg[64];
                 sprintf_s(debugMsg, "InputManager: Key Down - %d\n", KeyCode);
-                OutputDebugStringA(debugMsg);
+                UE_LOG(debugMsg);
             }
         }
         break;
@@ -258,7 +259,7 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
             {
                 char debugMsg[64];
                 sprintf_s(debugMsg, "InputManager: Key UP - %d\n", KeyCode);
-                OutputDebugStringA(debugMsg);
+                UE_LOG(debugMsg);
             }
         }
         break;
@@ -286,7 +287,7 @@ bool UInputManager::IsMouseButtonPressed(EMouseButton Button) const
         char debugMsg[128];
         sprintf_s(debugMsg, "IsPressed: Current=%d, Previous=%d, Result=%d\n", 
                   currentState, previousState, isPressed);
-        OutputDebugStringA(debugMsg);
+        UE_LOG(debugMsg);
     }
     
     return isPressed;

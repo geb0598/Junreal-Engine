@@ -11,13 +11,13 @@
 #include "ImGui/imgui_internal.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "imGui/imgui_impl_win32.h"
-#include "ImGuiConsole.h"
+#include "UI/GlobalConsole.h"
 
 // Renderer 
 #include "Renderer.h"
 #include "D3D11RHI.h"
 #include "SceneLoader.h"
-#include "UIManager.h"
+#include "UI/UIManager.h"
 
 // Input Manager
 #include "InputManager.h"
@@ -36,6 +36,7 @@ float CLIENTHEIGHT = 1024.0f;
 #   include <cstdlib>
 #   include <crtdbg.h>
 #endif
+#include "UI/Factory/UIWindowFactory.h"
 
 void GetViewportSize(HWND hWnd)
 {
@@ -103,7 +104,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
-    // _CrtSetBreakAlloc(0); // Uncomment and set alloc ID to break on specific leak
+    _CrtSetBreakAlloc(584); // Uncomment and set alloc ID to break on specific leak
 #endif
 
     // _CrtSetBreakAlloc(346);
@@ -136,7 +137,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     UResourceManager::GetInstance().Initialize(d3d11RHI.GetDevice()); //리소스매니저 이니셜라이즈
     // UI Manager Initialize
     UUIManager::GetInstance().Initialize(hWnd, d3d11RHI.GetDevice(), d3d11RHI.GetDeviceContext()); //유아이매니저 이니셜라이즈
-    // InputManager 초기화 (UUIManager 이후)
+    UUIWindowFactory::CreateDefaultUILayout();
+    
+    // InputManager 초기화 (TUUIManager 이후)
     UInputManager::GetInstance().Initialize(hWnd); //인풋 매니저 이니셜라이즈
 
     //======================================================================================================================      
@@ -193,7 +196,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         if (InputMgr.IsKeyPressed(VK_ESCAPE))
         {
-            OutputDebugStringA("ESC Key Pressed - Exiting!\n");
+            UE_LOG("ESC Key Pressed - Exiting!\n");
             bIsExit = true;
         }
 
@@ -205,9 +208,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             FVector2D mousePos = InputMgr.GetMousePosition();
             FVector2D mouseDelta = InputMgr.GetMouseDelta();
             char debugMsg[128];
-            sprintf_s(debugMsg, "Mouse Pos: (%.1f, %.1f), Delta: (%.1f, %.1f)\n",
-                      mousePos.X, mousePos.Y, mouseDelta.X, mouseDelta.Y);
-            OutputDebugStringA(debugMsg);
+            //sprintf_s(debugMsg, "Mouse Pos: (%.1f, %.1f), Delta: (%.1f, %.1f)\n",
+            //          mousePos.X, mousePos.Y, mouseDelta.X, mouseDelta.Y);
+            //UE_LOG(debugMsg);
         }
     }
 
@@ -216,8 +219,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ObjectFactory::DeleteAll(true);
 
-    // ImGui 콘솔 버퍼 비우기 (CRT 누수 리포트에서 제외)
-    ImGuiConsole::Shutdown();
+    //// ImGui 콘솔 버퍼 비우기 (CRT 누수 리포트에서 제외)
+    //ImGuiConsole::Shutdown();
 
     } // end app scope: ensure destructors run before leak dump
 

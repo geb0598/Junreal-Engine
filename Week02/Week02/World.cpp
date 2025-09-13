@@ -1,7 +1,7 @@
 #include "World.h"
 #include "Actor.h"
 #include "ResourceManager.h"
-#include "UIManager.h"
+#include "UI/UIManager.h"
 #include "InputManager.h"
 #include "SelectionManager.h"
 #include "Picking.h"
@@ -11,7 +11,7 @@
 #include "StaticMeshActor.h"
 #include "CameraComponent.h"
 #include "Vector.h"
-#include "ImGuiConsole.h"
+#include "UI/GlobalConsole.h"
 #include "ObjectFactory.h"
 #include "GridComponent.h"
 
@@ -49,41 +49,41 @@ static void DebugRTTI_UObject(const UObject* Obj, const char* Title)
 {
     if (!Obj)
     {
-        OutputDebugStringA("[RTTI] Obj == null\r\n");
+        UE_LOG("[RTTI] Obj == null\r\n");
         return;
     }
 
     char buf[256];
-    OutputDebugStringA("========== RTTI CHECK ==========\r\n");
+    UE_LOG("========== RTTI CHECK ==========\r\n");
     if (Title)
     {
         std::snprintf(buf, sizeof(buf), "[RTTI] %s\r\n", Title);
-        OutputDebugStringA(buf);
+        UE_LOG(buf);
     }
 
     // 1) 현재 동적 타입 이름
     std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetClass()->Name);
-    OutputDebugStringA(buf);
+    UE_LOG(buf);
 
     // 2) IsA 체크 (파생 포함)
     std::snprintf(buf, sizeof(buf), "[RTTI] IsA<AActor>      = %d\r\n", (int)Obj->IsA<AActor>());
-    OutputDebugStringA(buf);
+    UE_LOG(buf);
     std::snprintf(buf, sizeof(buf), "[RTTI] IsA<ACameraActor> = %d\r\n", (int)Obj->IsA<ACameraActor>());
-    OutputDebugStringA(buf);
+    UE_LOG(buf);
 
     // 3) 정확한 타입 비교 (파생 제외)
     std::snprintf(buf, sizeof(buf), "[RTTI] EXACT ACameraActor = %d\r\n",
                   (int)(Obj->GetClass() == ACameraActor::StaticClass()));
-    OutputDebugStringA(buf);
+    UE_LOG(buf);
 
     // 4) 상속 체인 출력
-    OutputDebugStringA("[RTTI] Inheritance chain: ");
+    UE_LOG("[RTTI] Inheritance chain: ");
     for (const UClass* c = Obj->GetClass(); c; c = c->Super)
     {
         std::snprintf(buf, sizeof(buf), "%s%s", c->Name, c->Super ? " <- " : "\r\n");
-        OutputDebugStringA(buf);
+        UE_LOG(buf);
     }
-    OutputDebugStringA("================================\r\n");
+    UE_LOG("================================\r\n");
 }
 
 
@@ -249,9 +249,7 @@ void UWorld::Render()
 
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
 
-    UIManager.BeginImGuiFrame();
-    UIManager.RenderImGui();
-    UIManager.EndImGuiFrame();
+    UIManager.Render();
 
 
     // === End Frame ===
@@ -347,7 +345,7 @@ void UWorld::Tick(float DeltaSeconds)
             }
             else
             {
-                //UUIManager.GetPickedActor()->ClearPickedFlag();
+                //TUUIManager.GetPickedActor()->ClearPickedFlag();
 
                 UIManager.ResetPickedActor();
                 // 선택 해제
@@ -367,7 +365,8 @@ void UWorld::Tick(float DeltaSeconds)
         }
         //UE_LOG("Real CAMERA ROTATION    Pitch : %f  Yaw : %f", CameraPitchDeg, CameraYawDeg);
     }
-    InputManager.Update();
+	InputManager.Update();
+	UIManager.Update(DeltaSeconds);
 
 
     // for (int i = 0; i < 1000; i++)

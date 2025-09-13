@@ -49,6 +49,8 @@ public:
     void LoadScene(const FString& SceneName);
     void SaveScene(const FString& SceneName);
 
+    const TArray<AActor*>& GetActors() { return Actors; }
+
     /** === 타임 / 틱 === */
     virtual void Tick(float DeltaSeconds);
     float GetTimeSeconds() const;

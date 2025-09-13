@@ -13,7 +13,7 @@
 #include "GizmoScaleComponent.h"
 #include "GizmoRotateComponent.h"
 #include "GizmoArrowComponent.h"
-#include "ImGuiConsole.h"
+#include "UI/GlobalConsole.h"
 
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
@@ -194,12 +194,12 @@ AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraAct
     {
         char buf[160];
         sprintf_s(buf, "[Pick] Hit primitive %d at t=%.3f (Speed=NORMAL)\n", pickedIndex, pickedT);
-        OutputDebugStringA(buf);
+        UE_LOG(buf);
         return Actors[pickedIndex];
     }
     else
     {
-        OutputDebugStringA("[Pick] No hit (Speed=FAST)\n");
+        UE_LOG("[Pick] No hit (Speed=FAST)\n");
         return nullptr;
     }
 }
