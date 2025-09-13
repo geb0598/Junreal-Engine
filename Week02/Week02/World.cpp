@@ -14,6 +14,7 @@
 #include "UI/GlobalConsole.h"
 #include "ObjectFactory.h"
 #include "GridComponent.h"
+#include "TextRenderComponent.h"
 
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
@@ -112,6 +113,12 @@ void UWorld::Initialize()
         Actors.push_back(Actor);
     }
 
+//    UTextRenderComponent* TextRenderComp = new UTextRenderComponent();
+ //   AActor* Actor = NewObject<AStaticMeshActor>();
+//    Actor->AddComponent(TextRenderComp);
+   // Actor->SetWorld(this);
+    //Actors.push_back(Actor);
+    
 
     GizmoActor = NewObject<AGizmoActor>();
     GizmoActor->SetActorTransform(FTransform(FVector{0, 0, 0}, FQuat::MakeFromEuler(FVector{0, -90, 0}),
@@ -131,8 +138,19 @@ void UWorld::Initialize()
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);
-
-    ResourceManager.CreatePrimitiveShader();
+    D3D11_INPUT_ELEMENT_DESC PrimitiveLayout[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+    ResourceManager.CreateShader(L"Primitive.hlsl", PrimitiveLayout,ARRAYSIZE(PrimitiveLayout));
+    D3D11_INPUT_ELEMENT_DESC TextBillboardLayout[] =
+    {
+        { "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "SIZE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, sizeof(FVector), D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "UVRECT", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(FVector) * 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    ResourceManager.CreateShader(L"TextBillboard.hlsl", TextBillboardLayout, ARRAYSIZE(TextBillboardLayout));
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
@@ -151,10 +169,10 @@ void UWorld::Render()
     FMatrix ModelMatrix;
     FVector rgb(1.0f, 1.0f, 1.0f);
 
-
     if (!Renderer) return;
     // === Begin Frame ===
     Renderer->BeginFrame();
+    Renderer->PrepareShader(*ResourceManager.GetShader(L"Primitive.hlsl"));
 
 
     // === Draw Grid ===
@@ -162,7 +180,6 @@ void UWorld::Render()
 
     // === Draw Primitive ===
     //Renderer->PrepareShader();
-    Renderer->PrepareShader(ResourceManager.GetPrimitiveShader());
 
 
     for (USceneComponent* Comp : GridActor->GetComponents())
@@ -234,21 +251,27 @@ void UWorld::Render()
             if (!Component) continue;
             //  
             FMatrix ModelMatrix = Component->GetWorldMatrix();
-            Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
 
             // 컴포넌트가 StaticMesh를 가진 경우만 Draw
             if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>(Component))
             {
+                Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+                Renderer->PrepareShader(*ResourceManager.GetShader(L"Primitive.hlsl"));
                 Renderer->DrawIndexedPrimitiveComponent(Primitive);
             }
-        }
 
+            if (UTextRenderComponent* Text = dynamic_cast<UTextRenderComponent*>(Component))
+            {
+                //Renderer->UpdateBillboardConstantBuffers(MainCameraActor->GetViewMatrix(), MainCameraActor->GetProjectionMatrix(), MainCameraActor->GetRight(), MainCameraActor->GetUp());
+                //Renderer->PrepareShader(*ResourceManager.GetShader(L"TextBillboard.hlsl"));
+                //Renderer->DrawIndexedPrimitiveComponent(Text);
+            }
+        }
         // 블랜드 스테이드 종료
         Renderer->OMSetBlendState(false);
     }
 
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-
     UIManager.Render();
 
 

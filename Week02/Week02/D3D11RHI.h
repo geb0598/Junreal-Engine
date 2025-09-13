@@ -26,6 +26,7 @@ public:
     void CreateBlendState() override;
 
     void UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
+    void UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp) override;
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
 
     void IASetPrimitiveTopology() override;
@@ -96,6 +97,6 @@ private:
     ID3D11Buffer* ModelCB{};
     ID3D11Buffer* ViewProjCB{};
     ID3D11Buffer* HighLightCB{};
-
+    ID3D11Buffer* BillboardCB{};
 };
 

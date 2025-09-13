@@ -1,7 +1,10 @@
+#pragma comment("lib","DirectXTK.lib")
+
 #include "ResourceManager.h"
 #include "ObjectFactory.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include "d3dtk/DDSTextureLoader.h"
 #define GRIDNUM 100
 #define AXISLENGTH 100
 
@@ -20,9 +23,10 @@ UResourceManager& UResourceManager::GetInstance()
     return *Instance;
 }
 
-void UResourceManager::Initialize(ID3D11Device* InDevice)
+void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* InContext)
 {
     Device = InDevice;
+    Context = InContext;
     CreateGridMesh(GRIDNUM,"Grid");
     CreateAxisMesh(AXISLENGTH,"Axis");
 }
@@ -46,37 +50,56 @@ FResourceData* UResourceManager::GetOrCreateMeshBuffers(const FString& FilePath)
     return ResourceData;
 }
 
-FShader& UResourceManager::GetPrimitiveShader()
+
+FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies)
 {
-    return PrimitiveShader;
+    auto it = ResourceMap.find(Name);
+    if(it!=ResourceMap.end())
+    {
+        return it->second;
+    }
+
+    FResourceData* ResourceData = new FResourceData();
+
+    CreateDynamicVertexBuffer(ResourceData, Size, Device);
+    CreateIndexBuffer(ResourceData, Indicies, Device);
+
+    ResourceMap[Name] = ResourceData;
+    return ResourceData;
 }
 
-
-void UResourceManager::CreatePrimitiveShader()
+FShader* UResourceManager::GetShader(const FWideString& Name)
 {
+    auto it = ShaderList.find(Name);
+    if(it!=ShaderList.end())
+        return ShaderList[Name];
+    return nullptr;
+}
+
+void UResourceManager::CreateShader(const FWideString& Name,const D3D11_INPUT_ELEMENT_DESC* Desc, uint32 Size)
+{
+    auto it = ShaderList.find(Name);
+    if (it != ShaderList.end()) return;
     ID3DBlob* vertexshaderCSO;
     ID3DBlob* pixelshaderCSO;
 
-    D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
+    ID3D11VertexShader* VS;
+    ID3D11PixelShader* PS;
+    ID3D11InputLayout* Layout;
+    HRESULT hr = D3DCompileFromFile(Name.c_str(), nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
 
-    Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &PrimitiveShader.SimpleVertexShader);
+    hr = Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &VS);
 
-    D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+    hr = D3DCompileFromFile(Name.c_str(), nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
 
-    Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &PrimitiveShader.SimplePixelShader);
+    hr = Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &PS);
 
-    D3D11_INPUT_ELEMENT_DESC layout[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-
-    Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &PrimitiveShader.SimpleInputLayout);
-
+    hr = Device->CreateInputLayout(Desc, Size, vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &Layout);
+    FShader* Shader = new FShader( Layout,VS,PS );
+    ShaderList[Name] = Shader;
     vertexshaderCSO->Release();
     pixelshaderCSO->Release();
 }
-
 
 UStaticMesh* UResourceManager::GetOrCreateStaticMesh(const FString& FilePath)
 {
@@ -126,22 +149,26 @@ void UResourceManager::Clear()
     ResourceMap.clear();
 
     // 이제 리소스 매니저에서 세이더를 삭제합니다
-    if (PrimitiveShader.SimpleInputLayout)
+    for (auto it : ShaderList)
     {
-        PrimitiveShader.SimpleInputLayout->Release();
-        PrimitiveShader.SimpleInputLayout = nullptr;
-    }
-    if (PrimitiveShader.SimpleVertexShader)
-    {
-        PrimitiveShader.SimpleVertexShader->Release();
-        PrimitiveShader.SimpleVertexShader = nullptr;
-    }
-    if (PrimitiveShader.SimplePixelShader)
-    {
-        PrimitiveShader.SimplePixelShader->Release();
-        PrimitiveShader.SimplePixelShader = nullptr;
-    }
 
+        if (it.second->SimpleInputLayout)
+        {
+            it.second->SimpleInputLayout->Release();
+            it.second->SimpleInputLayout = nullptr;
+        }
+        if (it.second->SimpleVertexShader)
+        {
+            it.second->SimpleVertexShader->Release();
+            it.second->SimpleVertexShader = nullptr;
+        }
+        if (it.second->SimplePixelShader)
+        {
+            it.second->SimplePixelShader->Release();
+            it.second->SimplePixelShader = nullptr;
+        }
+
+    }
     // Instance lifetime is managed by ObjectFactory
 }
 
@@ -264,8 +291,7 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
     ResourceMap[FilePath] = data;
 }
 
-
-void UResourceManager::CreateVertexBuffer(FResourceData* data, TArray<FVertexSimple>& vertices, ID3D11Device* device)
+void UResourceManager::CreateVertexBuffer(FResourceData* data, const TArray<FVertexSimple>& vertices, ID3D11Device* device)
 {
     if (vertices.empty()) return;
 
@@ -309,4 +335,90 @@ void UResourceManager::CreateIndexBuffer(FResourceData* data, const TArray<uint3
     }
 
     data->IndexCount = static_cast<uint32>(indices.size());
+}
+
+void UResourceManager::CreateDynamicVertexBuffer(FResourceData* data, uint32 Size, ID3D11Device* Device)
+{
+    if (Size == 0) return;
+
+    D3D11_BUFFER_DESC vbd = {};
+    vbd.Usage = D3D11_USAGE_DYNAMIC;
+    vbd.ByteWidth = static_cast<UINT>(sizeof(FBillboardCharInfo) * Size);
+    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    D3D11_SUBRESOURCE_DATA vinitData = {};
+
+    HRESULT hr = Device->CreateBuffer(&vbd, nullptr, &data->VertexBuffer);
+    if (FAILED(hr))
+    {
+        delete data;
+        return;
+    }
+
+    data->VertexCount = static_cast<uint32>(Size);
+    data->ByteWidth = vbd.ByteWidth;
+}
+
+
+void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBillboardCharInfo>& vertices)
+{
+    if (ResourceMap.find(Name) == ResourceMap.end()) return;
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    Context->Map(ResourceMap[Name]->VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑
+    memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardCharInfo) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라
+    Context->Unmap(ResourceMap[Name]->VertexBuffer, 0);//언맵
+}
+
+FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePath)
+{
+    auto it = TextureMap.find(FilePath);
+    if (it!=TextureMap.end())
+    {
+        return it->second;
+    }
+
+    FTextureData* Data = new FTextureData();
+    HRESULT hr = DirectX::CreateDDSTextureFromFile(Device, FilePath.c_str(), &Data->Texture, &Data->TextureSRV, 0, nullptr);
+    if (FAILED(hr))
+    {
+        int a = 0;
+        D3D11_SAMPLER_DESC SamplerDesc;
+        ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
+    }
+    D3D11_SAMPLER_DESC SamplerDesc;
+    ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
+    SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    SamplerDesc.MinLOD = 0;
+    SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    hr = Device->CreateSamplerState(&SamplerDesc, &Data->SamplerState);
+    if (FAILED(hr))
+    {
+
+    }
+
+    D3D11_BLEND_DESC blendDesc;
+    ZeroMemory(&blendDesc, sizeof(blendDesc));
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    // 멤버 변수 m_pAlphaBlendState에 저장
+    hr = Device->CreateBlendState(&blendDesc, &Data->BlendState);
+    if (FAILED(hr))
+    {
+
+    }
+    TextureMap[FilePath] = Data;
+    return TextureMap[FilePath];
 }

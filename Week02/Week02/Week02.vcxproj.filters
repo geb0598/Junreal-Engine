@@ -240,9 +240,15 @@
     <ClCompile Include="UI\Widget\SceneIOWidget.cpp">
       <Filter>소스 파일\UI\Widget</Filter>
     </ClCompile>
+    <ClCompile Include="TextRenderComponent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="ShaderW0.hlsl">
+    <FxCompile Include="Primitive.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TextBillboard.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
@@ -429,6 +435,12 @@
     </ClInclude>
     <ClInclude Include="UI\Widget\SceneIOWidget.h">
       <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="TextRenderComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CharacterInfo.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
