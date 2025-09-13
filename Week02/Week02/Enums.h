@@ -79,4 +79,17 @@ enum class EKeyInput : uint8
     // Special
     Unknown
 };
+
+//TODO EResourceType으로 재정의
+enum class ResourceType : uint8
+{
+    None = -1,
+
+    Mesh,
+    Shader,
+    Texture,
+
+    End
+};
+
 #endif /** UE_ENUMS_H */

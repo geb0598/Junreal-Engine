@@ -5,8 +5,13 @@
 #include "MeshLoader.h"
 #include "StaticMesh.h"
 #include "Object.h"
-class UResourceManager :public UObject
 
+class UResourceBase;
+class UMesh;
+class UShader;
+class UTexture;
+
+class UResourceManager :public UObject
 {
 public:
     DECLARE_CLASS(UResourceManager, UObject)
@@ -20,7 +25,8 @@ public:
 
     FShader& GetPrimitiveShader();
 
-    
+    ID3D11Device* GetDevice() { return Device; }
+
     void CreateVertexBuffer(FResourceData* data, TArray<FVertexSimple>& vertices, ID3D11Device* device);
     void CreateIndexBuffer(FResourceData* data, const TArray<uint32>& indices, ID3D11Device* device);
     void CreatePrimitiveShader();
@@ -28,6 +34,13 @@ public:
     void Clear();
     void CreateAxisMesh(float Length, const FString& FilePath);
     void CreateGridMesh(int N, const FString& FilePath);
+
+    template<typename T>
+    T* Get(const FString& InName);
+    template<typename T, typename ... Args>
+    T* Load(const FString& InName, Args&& ...);
+    template<typename T>
+    ResourceType GetResourceType();
 
 public:
     UResourceManager() = default;
@@ -39,8 +52,55 @@ protected:
 
     ID3D11Device* Device = nullptr;
 
+    //Deprecated
     TMap<FString, FResourceData*> ResourceMap;
     TMap<FString, UStaticMesh*> StaticMeshMap;
 
+    //Resource Type의 개수만큼 Array 생성 및 저장
+    TArray<TMap<FString, UResourceBase*>> Resources;
+
     FShader PrimitiveShader;
 };
+
+template<typename T>
+T* UResourceManager::Get(const FString& InName)
+{
+    uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
+    if (auto& iter = Resources[typeIndex].find(InName))
+    {
+        return *iter;
+    }
+
+    return nullptr;
+}
+
+template<typename T, typename ...Args>
+inline T* UResourceManager::Load(const FString& InName, Args&&... InArgs)
+{
+    uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
+    auto iter = Resources[typeIndex].find(InName);
+    if (iter != Resources[typeIndex].end())
+    {
+        return static_cast<T*>((*iter).second);
+    }
+    else
+    {
+        T* Resource = SpawnObject<T>();
+        Resource->Load(FilePath, Device, std::forward<Args>(InArgs)...);
+        Resources[typeIndex].Add({ InName, InObject });
+        return Resource;
+    }
+}
+
+template<typename T>
+ResourceType UResourceManager::GetResourceType()
+{
+    if (T::StaticClass() == UMesh::StaticClass())
+        return ResourceType::Mesh;
+    if (T::StaticClass() == UShader::StaticClass())
+        return ResourceType::Shader;
+    if (T::StaticClass() == UTexture::StaticClass())
+        return ResourceType::Texture;
+
+    return ResourceType::None;
+}
