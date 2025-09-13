@@ -9,6 +9,8 @@ class UFPSWidget :
 	public UWidget
 {
 public:
+	DECLARE_CLASS(UFPSWidget, UWidget)
+
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;

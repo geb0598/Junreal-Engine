@@ -9,6 +9,8 @@ class UPrimitiveSpawnWidget
 	:public UWidget
 {
 public:
+	DECLARE_CLASS(UPrimitiveSpawnWidget, UWidget)
+
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;

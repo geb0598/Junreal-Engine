@@ -14,6 +14,8 @@ class UImGuiHelper :
 	public UObject
 {
 public:
+	DECLARE_CLASS(UImGuiHelper, UObject)
+
 	UImGuiHelper();
 	~UImGuiHelper() override;
 

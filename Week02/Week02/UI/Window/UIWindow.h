@@ -1,4 +1,5 @@
 #pragma once
+#include "../../Object.h"
 #include "../../UEContainer.h"
 #include "../../Object.h"
 #include "../../ImGui/imgui.h"
@@ -75,12 +76,12 @@ class UUIWindow :
 	public UObject
 {
 	friend class UUIManager;
-
 public:
+	DECLARE_CLASS(UUIWindow, UObject)
 	UUIWindow(const FUIWindowConfig& InConfig = FUIWindowConfig());
 	~UUIWindow() override;
 
-	virtual void Initialize() = 0;
+	virtual void Initialize();
 
 	virtual void Cleanup()
 	{

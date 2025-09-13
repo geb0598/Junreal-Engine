@@ -20,8 +20,8 @@ UOutlinerWindow::UOutlinerWindow()
 	Config.UpdateWindowFlags();
 	SetConfig(Config);
 
-	AddWidget(new UTargetActorTransformWidget);
-	AddWidget(new UActorTerminationWidget);
+	AddWidget(NewObject<UTargetActorTransformWidget>());
+	AddWidget(NewObject<UActorTerminationWidget>());
 }
 
 void UOutlinerWindow::Initialize()
