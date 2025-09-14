@@ -17,9 +17,7 @@ void URenderer::BeginFrame()
     RHIDevice->ClearBackBuffer();  // 배경색
     RHIDevice->ClearDepthBuffer(1.0f, 0);                 // 깊이값 초기화
     RHIDevice->CreateBlendState();
-
     RHIDevice->IASetPrimitiveTopology();
-
     // RS
     RHIDevice->RSSetViewport();
     RHIDevice->RSSetState();
@@ -108,7 +106,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UTextRenderComponent* TextRenderCo
         Data->IndexBuffer, DXGI_FORMAT_R32_UINT, 0
     );
 
-    RHIDevice->GetDeviceContext()->PSGetSamplers(0, 1, &TextRenderComp->GetTextureData()->SamplerState);
+    RHIDevice->GetDeviceContext()->PSGetSamplers(0, 1, &TextRenderComp->GetTextureData()->SamplerState);//문제 있는 코드 
     RHIDevice->GetDeviceContext()->PSSetShaderResources(0,1,&TextRenderComp->GetTextureData()->TextureSRV);
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(Data->Topol);
     RHIDevice->GetDeviceContext()->DrawIndexed(Data->IndexCount, 0, 0);

@@ -94,16 +94,8 @@ void UWorld::Initialize()
     auto Primitives = FSceneLoader::Load("WorldData.Scene");
     for (auto Primitive : Primitives)
     {
-        FString PrimitiveType = "Cube.obj";
-        if (Primitive.Type == "Cube")
-            PrimitiveType = "Cube.obj";
-        else if (Primitive.Type == "Sphere")
-            PrimitiveType = "Sphere.obj";
-        else if (Primitive.Type == "Triangle")
-            PrimitiveType = "Triangle.obj";
-        else if (Primitive.Type == "Arrow")
-            PrimitiveType = "Arrow.obj";
-
+        FString PrimitiveType = Primitive.Type + ".obj";
+        
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
 
@@ -112,38 +104,42 @@ void UWorld::Initialize()
         Actor->SetWorld(this);
         Actors.push_back(Actor);
     }
+	InitializeMainCamera();
+    InitializeShader();
+	InitializeGizmo();
+}
 
-//    UTextRenderComponent* TextRenderComp = new UTextRenderComponent();
- //   AActor* Actor = NewObject<AStaticMeshActor>();
-//    Actor->AddComponent(TextRenderComp);
-   // Actor->SetWorld(this);
-    //Actors.push_back(Actor);
-    
-
-    GizmoActor = NewObject<AGizmoActor>();
-    GizmoActor->SetActorTransform(FTransform(FVector{0, 0, 0}, FQuat::MakeFromEuler(FVector{0, -90, 0}),
-                                             FVector{1, 1, 1}));
-    GizmoActor->SetWorld(this);
-    UIManager.SetGizmoActor(GizmoActor);
-    //AActor* GridActor = new AGridActor();
-
-    //Actors.push_back(GridActor);
-
-
+void UWorld::InitializeMainCamera()
+{
     // === 카메라 엑터 초기화 ===
     // 카메라
     MainCameraActor = NewObject<ACameraActor>();
     MainCameraActor->SetWorld(this);
-    MainCameraActor->SetActorLocation({0, 0, -10});
+    MainCameraActor->SetActorLocation({ 0, 0, -10 });
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);
+}
+
+void UWorld::InitializeGizmo()
+{
+	// === 기즈모 엑터 초기화 ===
+    GizmoActor = NewObject<AGizmoActor>();
+    GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
+        FVector{ 1, 1, 1 }));
+    GizmoActor->SetWorld(this);
+    UIManager.SetGizmoActor(GizmoActor);
+}
+
+void UWorld::InitializeShader()
+{
+
     D3D11_INPUT_ELEMENT_DESC PrimitiveLayout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-    ResourceManager.CreateShader(L"Primitive.hlsl", PrimitiveLayout,ARRAYSIZE(PrimitiveLayout));
+    ResourceManager.CreateShader(L"Primitive.hlsl", PrimitiveLayout, ARRAYSIZE(PrimitiveLayout));
     D3D11_INPUT_ELEMENT_DESC TextBillboardLayout[] =
     {
         { "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
