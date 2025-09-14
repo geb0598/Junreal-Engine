@@ -226,7 +226,8 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			// StaticMeshComponent에 메시 설정 (API가 있다면)
 			if (auto* MeshComp = NewActor->GetStaticMeshComponent())
 			{
-				MeshComp->SetStaticMesh(MeshPath);
+				MeshComp->SetMesh(MeshPath);
+				MeshComp->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
 			}
 			
 			// 액터 이름 설정

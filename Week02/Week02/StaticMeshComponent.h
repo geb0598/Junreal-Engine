@@ -18,22 +18,16 @@ protected:
     ~UStaticMeshComponent() override;
 
 public:
-    UStaticMesh* GetStaticMesh() const { return StaticMesh; }
-    void SetStaticMesh(const FString& FilePath);
-    void SetStaticMesh(UStaticMesh* InStaticMesh) { StaticMesh = InStaticMesh; }
-
-    UMesh* GetMesh() { return MeshResource; }
+    UMesh* GetMesh() const { return MeshResource; }
     void SetMesh(const FString& FilePath);
-    UShader* GetShader() { return ShaderResource; }
+    UShader* GetShader() const { return ShaderResource; }
     void SetShader(const FString& FilePath, EVertexLayoutType layoutType);
-    UTexture* GetTexture() { return TextureResource; }
+    UTexture* GetTexture() const { return TextureResource; }
     void SetTexture(const FString& FilePath);
 
 protected:
     //FString FilePath;
     //ResourceData* StaticMeshData = nullptr;
-
-    UStaticMesh* StaticMesh = nullptr;
 
     UMesh* MeshResource = nullptr;
     UShader* ShaderResource = nullptr;

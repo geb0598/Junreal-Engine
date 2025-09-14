@@ -38,6 +38,7 @@
 #include <cassert>
 
 // Core Project Headers
+#include "VertexData.h"
 #include "UEContainer.h"
 #include "Vector.h"
 #include "Name.h"

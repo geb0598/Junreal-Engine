@@ -1,16 +1,21 @@
 #ifndef UE_ENUMS_H
 #define UE_ENUMS_H
 #include "UEContainer.h"
-#include "VertexSimple.h"
 #include "Enums.h"
 #include <d3d11.h>   
 
 struct FMeshData
 {
 	// 중복 없는 정점
-	TArray<FVertexSimple> Vertices;
+	TArray<FVector> Vertices;
 	// 정점 인덱스
 	TArray<uint32> Indices;
+    // 중복 없는 정점
+    TArray<FVector4> Color;
+    // UV 좌표
+    TArray<FVector2D> UV;
+    // 노말 좌표
+    TArray<FVector4> Normal;
 };
 enum class EPrimitiveTopology
 {
@@ -124,9 +129,9 @@ enum class EVertexLayoutType : uint8
 {
     None,
 
-    Position,
     PositionColor,
-    PositionTexture,
+    PositionColorTexturNormal,
+
     PositionBillBoard,
 
     End,

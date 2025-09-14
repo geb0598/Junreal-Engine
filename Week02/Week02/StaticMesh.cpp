@@ -12,6 +12,6 @@ UStaticMesh::~UStaticMesh()
 
 void UStaticMesh::SetFilePath(const FString& InFilePath)
 {
-    FilePath = InFilePath;
-    ResourceData = UResourceManager::GetInstance().GetOrCreateMeshBuffers(InFilePath);
+    //FilePath = InFilePath;
+    //ResourceData = UResourceManager::GetInstance().GetOrCreateMeshBuffers(InFilePath);
 }

@@ -35,7 +35,6 @@ public:
     void Initialize();
 	void InitializeMainCamera();
     void InitializeGizmo();
-	void InitializeShader();
     void SetRenderer(URenderer* InRenderer);
     URenderer*& const GetRenderer()  { return Renderer; }
     template<class T>

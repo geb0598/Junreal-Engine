@@ -4,7 +4,7 @@
 #include "Actor.h"
 #include "StaticMeshActor.h"
 #include "StaticMeshComponent.h"
-#include "StaticMesh.h"
+#include "Mesh.h"
 #include "CameraActor.h"
 #include "MeshLoader.h"
 #include"Vector.h"
@@ -494,7 +494,7 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
     if (!Component) return false;
 
     FMeshData* MeshData = *(UMeshLoader::GetInstance().GetMeshCache())->Find(
-        Component->GetStaticMesh()->GetFilePath()
+        Component->GetMesh()->GetFilePath()
     );
 
     if (!MeshData) return false;
@@ -524,9 +524,9 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
         uint32 IndexNum = MeshData->Indices.Num();
         for (uint32 Idx = 0; Idx + 2 < IndexNum; Idx += 3)
         {
-            const FVertexSimple& V0 = MeshData->Vertices[MeshData->Indices[Idx + 0]];
-            const FVertexSimple& V1 = MeshData->Vertices[MeshData->Indices[Idx + 1]];
-            const FVertexSimple& V2 = MeshData->Vertices[MeshData->Indices[Idx + 2]];
+            const FVector& V0 = MeshData->Vertices[MeshData->Indices[Idx + 0]];
+            const FVector& V1 = MeshData->Vertices[MeshData->Indices[Idx + 1]];
+            const FVector& V2 = MeshData->Vertices[MeshData->Indices[Idx + 2]];
 
             FVector A = TransformPoint(V0.X, V0.Y, V0.Z);
             FVector B = TransformPoint(V1.X, V1.Y, V1.Z);
@@ -549,9 +549,9 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
         uint32 VertexNum = MeshData->Vertices.Num();
         for (uint32 Idx = 0; Idx + 2 < VertexNum; Idx += 3)
         {
-            const FVertexSimple& V0 = MeshData->Vertices[Idx + 0];
-            const FVertexSimple& V1 = MeshData->Vertices[Idx + 1];
-            const FVertexSimple& V2 = MeshData->Vertices[Idx + 2];
+            const FVector& V0 = MeshData->Vertices[Idx + 0];
+            const FVector& V1 = MeshData->Vertices[Idx + 1];
+            const FVector& V2 = MeshData->Vertices[Idx + 2];
 
             FVector A = TransformPoint(V0.X, V0.Y, V0.Z);
             FVector B = TransformPoint(V1.X, V1.Y, V1.Z);
@@ -590,7 +590,7 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
         if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(SceneComponent))
         {
             FMeshData* MeshData = *(UMeshLoader::GetInstance().GetMeshCache())->Find(
-                StaticMeshComponent->GetStaticMesh()->GetFilePath()
+                StaticMeshComponent->GetMesh()->GetFilePath()
             );
 
             if (!MeshData) return false;
@@ -620,9 +620,9 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
                 uint32 IndexNum = MeshData->Indices.Num();
                 for (uint32 idx = 0; idx + 2 < IndexNum; idx += 3)
                 {
-                    const FVertexSimple& v0 = MeshData->Vertices[MeshData->Indices[idx + 0]];
-                    const FVertexSimple& v1 = MeshData->Vertices[MeshData->Indices[idx + 1]];
-                    const FVertexSimple& v2 = MeshData->Vertices[MeshData->Indices[idx + 2]];
+                    const FVector& v0 = MeshData->Vertices[MeshData->Indices[idx + 0]];
+                    const FVector& v1 = MeshData->Vertices[MeshData->Indices[idx + 1]];
+                    const FVector& v2 = MeshData->Vertices[MeshData->Indices[idx + 2]];
 
                     FVector a = TransformPoint(v0.X, v0.Y, v0.Z);
                     FVector b = TransformPoint(v1.X, v1.Y, v1.Z);
@@ -645,9 +645,9 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
                 uint32 VertexNum = MeshData->Vertices.Num();
                 for (uint32 idx = 0; idx + 2 < VertexNum; idx += 3)
                 {
-                    const FVertexSimple& v0 = MeshData->Vertices[idx + 0];
-                    const FVertexSimple& v1 = MeshData->Vertices[idx + 1];
-                    const FVertexSimple& v2 = MeshData->Vertices[idx + 2];
+                    const FVector& v0 = MeshData->Vertices[idx + 0];
+                    const FVector& v1 = MeshData->Vertices[idx + 1];
+                    const FVector& v2 = MeshData->Vertices[idx + 2];
 
                     FVector a = TransformPoint(v0.X, v0.Y, v0.Z);
                     FVector b = TransformPoint(v1.X, v1.Y, v1.Z);
