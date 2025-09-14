@@ -56,6 +56,9 @@ void UUIWindow::OnMainWindowResized()
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	const ImVec2 currentViewportSize = viewport->WorkSize;
 
+	if (currentViewportSize.x <= 0 || currentViewportSize.y <= 0)
+		return;
+
  	const ImVec2 anchor = PositionRatio;
 	const ImVec2 pivot = { 0.f, 0.f };
 

@@ -40,17 +40,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_SIZE:
-        GetViewportSize(hWnd); // 창 크기 바뀔 때 전역 갱신
-     
-        // Renderer의 뷰포트 갱신
-        if (auto world = UUIManager::GetInstance().GetWorld())
         {
-            if (auto renderer = world->GetRenderer())
+            WPARAM sizeType = wParam;
+            if (sizeType != SIZE_MINIMIZED)
             {
-                UINT newWidth = static_cast<UINT>(CLIENTWIDTH);
-                UINT newHeight = static_cast<UINT>(CLIENTHEIGHT);
-                // Single, consistent resize path (handles RTV/DSV + viewport)
-                static_cast<D3D11RHI*>(renderer->GetRHIDevice())->ResizeSwapChain(newWidth, newHeight);
+                GetViewportSize(hWnd); // 창 크기 바뀔 때 전역 갱신
+             
+                // Renderer의 뷰포트 갱신
+                if (auto world = UUIManager::GetInstance().GetWorld())
+                {
+                    if (auto renderer = world->GetRenderer())
+                    {
+                        UINT newWidth = static_cast<UINT>(CLIENTWIDTH);
+                        UINT newHeight = static_cast<UINT>(CLIENTHEIGHT);
+                        // Single, consistent resize path (handles RTV/DSV + viewport)
+                        static_cast<D3D11RHI*>(renderer->GetRHIDevice())->ResizeSwapChain(newWidth, newHeight);
+                    }
+                    // ImGui DisplaySize가 유효할 때만 UI 윈도우 재배치
+                    ImGuiIO& io = ImGui::GetIO();
+                    if (io.DisplaySize.x > 0 && io.DisplaySize.y > 0)
+                    {
+                        UUIManager::GetInstance().RepositionImGuiWindows();
+                    }
+                }
             }
         }
         break;
