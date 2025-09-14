@@ -37,6 +37,9 @@
     <Filter Include="헤더 파일\Gizmo">
       <UniqueIdentifier>{268038a8-b619-4f95-bee7-c383690b3be4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Shape">
+      <UniqueIdentifier>{98134e6e-4ba6-48c7-9f98-78af37ec02ef}</UniqueIdentifier>
+    </Filter>
     <Filter Include="소스 파일\UI">
       <UniqueIdentifier>{697e0870-1798-42a4-80b5-ee94b51f6edf}</UniqueIdentifier>
     </Filter>
