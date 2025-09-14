@@ -45,7 +45,7 @@ UWorld::~UWorld()
     GridActor = nullptr;
 }
 
-static void DebugRTTI_UObject(const UObject* Obj, const char* Title)
+static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 {
     if (!Obj)
     {
@@ -83,7 +83,10 @@ static void DebugRTTI_UObject(const UObject* Obj, const char* Title)
         std::snprintf(buf, sizeof(buf), "%s%s", c->Name, c->Super ? " <- " : "\r\n");
         UE_LOG(buf);
     }
-    UE_LOG("================================\r\n");
+	//FString Name = Obj->GetName();
+    std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetName().c_str());
+    OutputDebugStringA(buf);
+    OutputDebugStringA("================================\r\n");
 }
 
 
