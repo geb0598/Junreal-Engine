@@ -23,6 +23,8 @@ UResourceManager& UResourceManager::GetInstance()
 void UResourceManager::Initialize(ID3D11Device* InDevice)
 {
     Device = InDevice;
+    Resources.SetNum(static_cast<uint8>(ResourceType::End));
+
     CreateGridMesh(GRIDNUM,"Grid");
     CreateAxisMesh(AXISLENGTH,"Axis");
 }
@@ -97,50 +99,66 @@ UStaticMesh* UResourceManager::GetOrCreateStaticMesh(const FString& FilePath)
 // 전체 해제
 void UResourceManager::Clear()
 {
-    for (auto& [Key, Data] : StaticMeshMap)
-    {
-        if (Data)
+    { //Deprecated Part
+        for (auto& [Key, Data] : StaticMeshMap)
         {
-            ObjectFactory::DeleteObject(Data);
-        }
-    }
-    StaticMeshMap.clear();
-
-    for (auto& [Key, Data] : ResourceMap)
-    {
-        if (Data)
-        {
-            if (Data->VertexBuffer) 
-            { 
-                Data->VertexBuffer->Release(); 
-                Data->VertexBuffer = nullptr;
-            }
-            if (Data->IndexBuffer) 
+            if (Data)
             {
-                Data->IndexBuffer->Release(); 
-                Data->IndexBuffer = nullptr; 
+                ObjectFactory::DeleteObject(Data);
             }
-            delete Data;
+        }
+        StaticMeshMap.clear();
+
+        for (auto& [Key, Data] : ResourceMap)
+        {
+            if (Data)
+            {
+                if (Data->VertexBuffer)
+                {
+                    Data->VertexBuffer->Release();
+                    Data->VertexBuffer = nullptr;
+                }
+                if (Data->IndexBuffer)
+                {
+                    Data->IndexBuffer->Release();
+                    Data->IndexBuffer = nullptr;
+                }
+                delete Data;
+            }
+        }
+        ResourceMap.clear();
+
+        // 이제 리소스 매니저에서 세이더를 삭제합니다
+        if (PrimitiveShader.SimpleInputLayout)
+        {
+            PrimitiveShader.SimpleInputLayout->Release();
+            PrimitiveShader.SimpleInputLayout = nullptr;
+        }
+        if (PrimitiveShader.SimpleVertexShader)
+        {
+            PrimitiveShader.SimpleVertexShader->Release();
+            PrimitiveShader.SimpleVertexShader = nullptr;
+        }
+        if (PrimitiveShader.SimplePixelShader)
+        {
+            PrimitiveShader.SimplePixelShader->Release();
+            PrimitiveShader.SimplePixelShader = nullptr;
         }
     }
-    ResourceMap.clear();
 
-    // 이제 리소스 매니저에서 세이더를 삭제합니다
-    if (PrimitiveShader.SimpleInputLayout)
+    for (auto& Array : Resources)
     {
-        PrimitiveShader.SimpleInputLayout->Release();
-        PrimitiveShader.SimpleInputLayout = nullptr;
+        for (auto& Resource : Array)
+        {
+            if(Resource.second)
+            {
+                DeleteObject(Resource.second);
+                Resource.second = nullptr;
+            }
+        }
+        Array.Empty();
     }
-    if (PrimitiveShader.SimpleVertexShader)
-    {
-        PrimitiveShader.SimpleVertexShader->Release();
-        PrimitiveShader.SimpleVertexShader = nullptr;
-    }
-    if (PrimitiveShader.SimplePixelShader)
-    {
-        PrimitiveShader.SimplePixelShader->Release();
-        PrimitiveShader.SimplePixelShader = nullptr;
-    }
+    Resources.Empty();
 
     // Instance lifetime is managed by ObjectFactory
 }

@@ -134,6 +134,7 @@
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="FName.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="GizmoActor.cpp" />
     <ClCompile Include="GizmoArrowComponent.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
+    <ClCompile Include="ResourceBase.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MeshLoader.cpp" />
@@ -165,10 +167,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RHIDevice.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="SelectionManager.cpp" />
     <ClCompile Include="StaticMeshActor.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UEContainer.h" />
     <ClCompile Include="UI\Factory\UIWindowFactory.cpp" />
     <ClCompile Include="UI\GlobalConsole.cpp" />
@@ -202,6 +206,7 @@
     <ClInclude Include="GizmoArrowComponent.h" />
     <ClInclude Include="GridActor.h" />
     <ClInclude Include="Name.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="ObjectFactory.h" />
     <ClInclude Include="GizmoScaleComponent.h" />
     <ClInclude Include="GizmoRotateComponent.h" />
@@ -216,6 +221,7 @@
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PrimitiveComponent.h" />
+    <ClInclude Include="ResourceBase.h" />
     <ClInclude Include="SceneComponent.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="MeshLoader.h" />
@@ -232,11 +238,13 @@
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RHIDevice.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="SelectionManager.h" />
     <ClInclude Include="StaticMeshActor.h" />
     <ClInclude Include="StaticMeshComponent.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="UI\Factory\UIWindowFactory.h" />
     <ClInclude Include="UI\GlobalConsole.h" />

@@ -41,6 +41,10 @@
 #include "UI/Window/OutlinerWindow.h"
 #include "UI/Window/UIWindow.h"
 
+#include "ResourceBase.h"
+#include "Mesh.h"
+#include "Shader.h"
+#include "Texture.h"
 // … 추가 클래스 헤더들 계속 include
 
 // 여기서 한 번에 등록
@@ -93,6 +97,11 @@ IMPLEMENT_CLASS(UExperimentalFeatureWindow)
 IMPLEMENT_CLASS(UOutlinerWindow)
 
 IMPLEMENT_CLASS(UGlobalConsole)
+
+IMPLEMENT_CLASS(UResourceBase)
+IMPLEMENT_CLASS(UMesh)
+IMPLEMENT_CLASS(UShader)
+IMPLEMENT_CLASS(UTexture)
 
 
 //IMPLEMENT_CLASS(AActor)

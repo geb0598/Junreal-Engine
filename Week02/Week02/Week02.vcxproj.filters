@@ -73,6 +73,9 @@
     <Filter Include="소스 파일\Resources">
       <UniqueIdentifier>{6e3dcf0f-cb4b-4399-b35d-d2a158ce16be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Resources">
+      <UniqueIdentifier>{0543b16f-0dd3-4786-9d1c-8930d0580672}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -242,6 +245,18 @@
     </ClCompile>
     <ClCompile Include="UI\Widget\SceneIOWidget.cpp">
       <Filter>소스 파일\UI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceBase.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>소스 파일\Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -432,6 +447,18 @@
     </ClInclude>
     <ClInclude Include="UI\Widget\SceneIOWidget.h">
       <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceBase.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>헤더 파일\Resources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
