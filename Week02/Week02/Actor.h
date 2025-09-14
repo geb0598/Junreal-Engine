@@ -68,8 +68,8 @@ public:
     USceneComponent* RootComponent = nullptr;
 
     UWorld* World = nullptr;
+    void AddComponent(USceneComponent* Component);
 protected:
     TArray<USceneComponent*> Components;
     bool bCanEverTick = true;
-    void AddComponent(USceneComponent* Component);
 };

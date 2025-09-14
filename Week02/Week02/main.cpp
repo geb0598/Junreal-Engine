@@ -134,7 +134,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     d3d11RHI.Initialize(hWnd);
     URenderer renderer(&d3d11RHI); //렌더러 생성이 가장 먼저 되어야 합니다.
 
-    UResourceManager::GetInstance().Initialize(d3d11RHI.GetDevice()); //리소스매니저 이니셜라이즈
+    UResourceManager::GetInstance().Initialize(d3d11RHI.GetDevice(),d3d11RHI.GetDeviceContext()); //리소스매니저 이니셜라이즈
     // UI Manager Initialize
     UUIManager::GetInstance().Initialize(hWnd, d3d11RHI.GetDevice(), d3d11RHI.GetDeviceContext()); //유아이매니저 이니셜라이즈
     UUIWindowFactory::CreateDefaultUILayout();
