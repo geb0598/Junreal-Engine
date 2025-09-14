@@ -1,15 +1,18 @@
 #pragma once
-#include <d3d11.h>
 #include "ObjectFactory.h"
 #include "Object.h"
 #include "CharacterInfo.h"
+#include "Shader.h"
+#include "Mesh.h"
+#include "Material.h"
+#include "Texture.h"
 
 class UStaticMesh;
 
 class UResourceBase;
 class UMesh;
-class UShader;
-class UTexture;
+class UMaterial;
+
 struct FShaderDesc
 {
     std::wstring Filename;
@@ -31,6 +34,7 @@ public:
     FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size, const TArray<uint32>& Indicies);
     //    FTextureData* GetOrCreateTexture
 
+    UMaterial* GetOrCreateMaterial(const FString& Name,  EVertexLayoutType layoutType);
 
     void CreateDynamicVertexBuffer(FResourceData* data, uint32 Size, ID3D11Device* Device);
     void UpdateDynamicVertexBuffer(const FString& name, TArray<FBillboardCharInfo>& vertices);
@@ -71,6 +75,12 @@ protected:
 
     //Resource Type의 개수만큼 Array 생성 및 저장
     TArray<TMap<FString, UResourceBase*>> Resources;
+
+    FShader PrimitiveShader;
+    TMap<FWideString,FShader*> ShaderList;
+
+private:
+    TMap<FString, UMaterial*> MaterialMap;
 };
 
 template<typename T>
@@ -128,6 +138,8 @@ ResourceType UResourceManager::GetResourceType()
         return ResourceType::Shader;
     if (T::StaticClass() == UTexture::StaticClass())
         return ResourceType::Texture;
+    if (T::StaticClass() == UMaterial::StaticClass())
+        return ResourceType::Material;
 
     return ResourceType::None;
 }

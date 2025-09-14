@@ -121,7 +121,7 @@ enum class ResourceType : uint8
     Mesh,
     Shader,
     Texture,
-
+    Material,
     End
 };
 

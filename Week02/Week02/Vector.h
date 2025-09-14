@@ -122,7 +122,23 @@ struct FVector
             std::fabs(Z - V.Z) < KINDA_SMALL_NUMBER;
     }
     bool operator!=(const FVector& V) const { return !(*this == V); }
-
+    
+    FVector ComponentMin(const FVector& B)
+    {
+        return FVector(
+            (X < B.X) ? X : B.X,
+            (Y < B.Y) ? Y : B.Y,
+            (Z < B.Z) ? Z : B.Z
+        );
+    }
+    FVector ComponentMax(const FVector& B)
+    {
+        return FVector(
+            (X > B.X) ? X : B.X,
+            (Y > B.Y) ? Y : B.Y,
+            (Z > B.Z) ? Z : B.Z
+        );
+    }
     // 크기
     float Size()         const { return std::sqrt(X * X + Y * Y + Z * Z); }
     float SizeSquared()  const { return X * X + Y * Y + Z * Z; }
@@ -150,6 +166,7 @@ struct FVector
             A.X * B.Y - A.Y * B.X
         );
     }
+
 
     // 보조 유틸
     static FVector Lerp(const FVector& A, const FVector& B, float T)
@@ -182,6 +199,9 @@ struct FVector
         float Value = std::max(minLen, std::min(maxLen, Length));
         return V * (Value / Length);
     }
+
+
+   
 };
 
 // ─────────────────────────────

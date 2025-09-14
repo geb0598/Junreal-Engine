@@ -1,10 +1,7 @@
 #include "pch.h"
 #include "PrimitiveComponent.h"
 
-UPrimitiveComponent::UPrimitiveComponent()
+void UPrimitiveComponent::SetMaterial(const FString& FilePath, EVertexLayoutType layoutType)
 {
-}
-
-UPrimitiveComponent::~UPrimitiveComponent()
-{
+    Material = UResourceManager::GetInstance().GetOrCreateMaterial(FilePath,layoutType);
 }

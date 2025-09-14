@@ -15,38 +15,11 @@ UStaticMeshComponent::~UStaticMeshComponent()
 
 }
 
-void UStaticMeshComponent::SetMesh(const FString& FilePath)
+void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
-    if (UResourceManager::GetInstance().Get<UMesh>(FilePath))
-    {
-        MeshResource = UResourceManager::GetInstance().Get<UMesh>(FilePath);
-    }
-    else
-    {
-        MeshResource = UResourceManager::GetInstance().Load<UMesh>(FilePath);
-    }
+    Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
+    Renderer->PrepareShader(GetMaterial()->GetShader());
+    Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 }
 
-void UStaticMeshComponent::SetShader(const FString& FilePath, EVertexLayoutType layoutType)
-{
-    if (UResourceManager::GetInstance().Get<UShader>(FilePath))
-    {
-        ShaderResource = UResourceManager::GetInstance().Get<UShader>(FilePath);
-    }
-    else
-    {
-        ShaderResource = UResourceManager::GetInstance().Load<UShader>(FilePath, layoutType);
-    }
-}
-
-void UStaticMeshComponent::SetTexture(const FString& FilePath)
-{
-    if (UResourceManager::GetInstance().Get<UTexture>(FilePath))
-    {
-        TextureResource = UResourceManager::GetInstance().Get<UTexture>(FilePath);
-    }
-    else
-    {
-        TextureResource = UResourceManager::GetInstance().Load<UTexture>(FilePath);
-    }
-}

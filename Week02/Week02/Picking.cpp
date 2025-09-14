@@ -494,7 +494,7 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
     if (!Component) return false;
 
     FMeshData* MeshData = *(UMeshLoader::GetInstance().GetMeshCache())->Find(
-        Component->GetMesh()->GetFilePath()
+        Component->GetMeshResource()->GetFilePath()
     );
 
     if (!MeshData) return false;
@@ -590,7 +590,7 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
         if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(SceneComponent))
         {
             FMeshData* MeshData = *(UMeshLoader::GetInstance().GetMeshCache())->Find(
-                StaticMeshComponent->GetMesh()->GetFilePath()
+                StaticMeshComponent->GetMeshResource()->GetFilePath()
             );
 
             if (!MeshData) return false;

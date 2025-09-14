@@ -1,7 +1,7 @@
 #pragma once
 #include "RHIDevice.h"
-#include "StaticMeshComponent.h"
 
+class UStaticMeshComponent;
 class UTextRenderComponent;
 class URHIDevice;
 class UShader;

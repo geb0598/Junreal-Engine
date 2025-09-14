@@ -3,8 +3,8 @@
 
 UGizmoArrowComponent::UGizmoArrowComponent()
 {
-    SetMesh("Arrow.obj");
-    SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    SetMeshResource("Arrow.obj");
+    SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 }
 
 UGizmoArrowComponent::~UGizmoArrowComponent()

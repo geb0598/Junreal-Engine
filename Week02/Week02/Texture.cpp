@@ -54,7 +54,7 @@ void UTexture::CreateSamplerState(ID3D11Device* Device)
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	HRESULT hr = Device->CreateSamplerState(&samplerDesc, &SamplerState);
-	assert(hr);
+	//assert(hr);
 }
 
 void UTexture::ReleaseResources()

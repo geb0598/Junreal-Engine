@@ -18,6 +18,7 @@ UTextRenderComponent::UTextRenderComponent()
         Indices.push_back(i * 4 + 1);
         Indices.push_back(i * 4 + 3);
     }
+	
     ResourceData =UResourceManager::GetInstance().CreateOrGetResourceData(FString("TextBillboard"),sizeof(FBillboardCharInfo)*100,Indices);
     TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(FWideString(L"Font2.dds"));
     InitCharInfoMap();

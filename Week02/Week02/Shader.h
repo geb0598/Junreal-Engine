@@ -1,7 +1,5 @@
 #pragma once
 #include "ResourceBase.h"
-#include <d3d11.h>
-#include <d3dcompiler.h>
 
 class UShader : public UResourceBase
 {
