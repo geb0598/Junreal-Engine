@@ -27,7 +27,7 @@
 #include "UI/Window/ExperimentalFeatureWindow.h"
 #include "UI/Window/OutlinerWindow.h"
 #include "UI/Window/UIWindow.h"
-
+#include "BoundingBoxComponent.h"
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -41,6 +41,8 @@ IMPLEMENT_CLASS(UActorComponent)
 IMPLEMENT_CLASS(USceneComponent)
 IMPLEMENT_CLASS(UCameraComponent)
 IMPLEMENT_CLASS(UStaticMeshComponent)
+IMPLEMENT_CLASS(UBoundingBoxComponent)
+IMPLEMENT_CLASS(UShapeComponent)
 
 IMPLEMENT_CLASS(AActor)
 IMPLEMENT_CLASS(ACameraActor)

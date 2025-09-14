@@ -245,28 +245,16 @@ void UWorld::Render()
             FMatrix ModelMatrix = Component->GetWorldMatrix();
 
             // 컴포넌트가 StaticMesh를 가진 경우만 Draw
-            if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>(Component))
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
-                Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-                Renderer->PrepareShader(Primitive->GetShader());
-                Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            }
-
-            if (UTextRenderComponent* Text = dynamic_cast<UTextRenderComponent*>(Component))
-            {
-                //Renderer->UpdateBillboardConstantBuffers(MainCameraActor->GetViewMatrix(), MainCameraActor->GetProjectionMatrix(), MainCameraActor->GetRight(), MainCameraActor->GetUp());
-                //Renderer->PrepareShader(*ResourceManager.GetShader(L"TextBillboard.hlsl"));
-                //Renderer->DrawIndexedPrimitiveComponent(Text);
+				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
             }
         }
         // 블랜드 스테이드 종료
         Renderer->OMSetBlendState(false);
     }
-
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
     UIManager.Render();
-
-
     // === End Frame ===
     Renderer->EndFrame();
 }

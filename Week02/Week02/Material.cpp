@@ -1,9 +1,3 @@
+#include "pch.h"
 #include "Material.h"
 
-UMaterial::UMaterial()
-{
-}
-
-UMaterial::~UMaterial()
-{
-}

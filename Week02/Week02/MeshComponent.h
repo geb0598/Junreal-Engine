@@ -25,7 +25,7 @@ public:
     //int GetVertexCount() const { return VertexCount; }
 
 protected:
-    UMaterial* Material;
+
     // 정점 데이터
     //FVertexSimple* Vertices;  // 정점 배열 주소
     //int VertexCount;          // 정점 개수

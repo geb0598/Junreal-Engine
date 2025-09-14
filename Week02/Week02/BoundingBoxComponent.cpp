@@ -1,3 +1,4 @@
+#include"pch.h"
 #include "BoundingBoxComponent.h"
 #include "Vector.h"
 
@@ -34,12 +35,6 @@ FBox UBoundingBoxComponent::GetWorldBox() const
     return FBox();
 }
 
-//void UBoundingBoxComponent::DrawDebug(ID3D11DeviceContext* DC)
-//{
-//    // TODO: DirectX11 라인 드로우 (12개의 edge)
-//    // VertexBuffer + Draw(24 vertices or 12 lines)
-//}
-
 FVector UBoundingBoxComponent::GetExtent() const
 {
     return (LocalMax - LocalMin) * 0.5f;
@@ -57,4 +52,11 @@ std::vector<FVector> UBoundingBoxComponent::GetLocalCorners() const
         {LocalMin.X, LocalMax.Y, LocalMax.Z},
         {LocalMax.X, LocalMax.Y, LocalMax.Z}
     };
+}
+
+void UBoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+{
+    //Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
+    //Renderer->PrepareShader(GetShader());
+    //Renderer->DrawIndexedPrimitiveComponent(GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

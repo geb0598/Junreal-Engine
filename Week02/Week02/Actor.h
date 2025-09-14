@@ -4,7 +4,8 @@
 
 class UWorld;
 class USceneComponent;
-class USceneComponent;
+class UBoundingBoxComponent;
+class UShapeComponent;
 
 class AActor : public UObject
 {
@@ -66,6 +67,7 @@ public:
 public:
     FString Name;
     USceneComponent* RootComponent = nullptr;
+    UBoundingBoxComponent* CollisionComponent = nullptr;
 
     UWorld* World = nullptr;
     void AddComponent(USceneComponent* Component);

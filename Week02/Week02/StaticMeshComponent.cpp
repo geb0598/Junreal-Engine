@@ -4,6 +4,8 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "ResourceManager.h"
+#include "D3D11RHI.h"
+#include  "Renderer.h"
 
 UStaticMeshComponent::UStaticMeshComponent()
 {
@@ -55,3 +57,11 @@ void UStaticMeshComponent::SetTexture(const FString& FilePath)
         TextureResource = UResourceManager::GetInstance().Load<UTexture>(FilePath);
     }
 }
+
+void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+{
+    Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
+    Renderer->PrepareShader(GetShader());
+    Renderer->DrawIndexedPrimitiveComponent(GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+

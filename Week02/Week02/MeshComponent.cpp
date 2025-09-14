@@ -2,7 +2,7 @@
 #include "MeshComponent.h"
 
 UMeshComponent::UMeshComponent()
-    : Material(nullptr)
+    
 {
 }
 

@@ -156,6 +156,7 @@
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="FName.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="GizmoActor.cpp" />

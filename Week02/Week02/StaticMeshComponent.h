@@ -29,6 +29,8 @@ public:
     UTexture* GetTexture() { return TextureResource; }
     void SetTexture(const FString& FilePath);
 
+    void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
+    
 protected:
     //FString FilePath;
     //ResourceData* StaticMeshData = nullptr;

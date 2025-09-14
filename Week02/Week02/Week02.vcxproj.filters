@@ -76,6 +76,9 @@
     <Filter Include="헤더 파일\Resources">
       <UniqueIdentifier>{0543b16f-0dd3-4786-9d1c-8930d0580672}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Bounding">
+      <UniqueIdentifier>{10b830a5-341c-4826-b51f-e85ad647962e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -265,6 +268,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="UEContainer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeComponent.cpp">
+      <Filter>소스 파일\Bounding</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingBoxComponent.cpp">
+      <Filter>소스 파일\Bounding</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -485,6 +497,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="UEContainer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingBoxComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeComponent.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
