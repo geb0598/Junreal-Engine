@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Name.h"
 
 TArray<FNameEntry> FNamePool::Entries;

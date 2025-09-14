@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "ObjectFactory.h"
-#include "Object.h"
 // 전역 오브젝트 배열 정의 (한 번만!)
 TArray<UObject*> GUObjectArray;
 

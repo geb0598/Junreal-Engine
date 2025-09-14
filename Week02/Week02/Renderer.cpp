@@ -1,6 +1,5 @@
-#include "Renderer.h"
+#include "pch.h"
 #include "TextRenderComponent.h"
-#include "D3D11RHI.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)

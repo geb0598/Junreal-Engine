@@ -1,29 +1,15 @@
-#include "ObjectFactory.h"   // namespace ObjectFactory, IMPLEMENT_CLASS 매크로
-#include "ActorComponent.h"
-#include"CameraActor.h"
-#include"CameraComponent.h"
-#include "InputManager.h"
-#include "World.h"
+#include "pch.h"
+
 #include "MemoryManager.h"
-#include "Material.h"
 #include "MeshComponent.h"
-#include "PrimitiveComponent.h"
-#include "ResourceManager.h"
-#include "SceneComponent.h"
 #include "SceneLoader.h"
 #include "SelectionManager.h"
-#include "StaticMesh.h"
+#include "GizmoRotateComponent.h"
+#include "GizmoScaleComponent.h"
+#include "CameraComponent.h"
+#include "CameraActor.h"
 #include "StaticMeshActor.h"
-#include "StaticMeshComponent.h"
-#include "UI/UIManager.h"
-#include "Vector.h"
-#include"GizmoRotateComponent.h"
-#include"GizmoScaleComponent.h"
-#include "Object.h"
-#include "Actor.h"
 
-#include "UI/GlobalConsole.h"
-#include "UI/UIManager.h"
 #include "UI/Factory/UIWindowFactory.h"
 #include "UI/ImGui/ImGuiHelper.h"
 #include "UI/Widget/ActorTerminationWidget.h"
@@ -41,13 +27,11 @@
 #include "UI/Window/OutlinerWindow.h"
 #include "UI/Window/UIWindow.h"
 
-#include "ResourceBase.h"
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
-// … 추가 클래스 헤더들 계속 include
 
-// 여기서 한 번에 등록
+// ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
 
@@ -102,13 +86,3 @@ IMPLEMENT_CLASS(UResourceBase)
 IMPLEMENT_CLASS(UMesh)
 IMPLEMENT_CLASS(UShader)
 IMPLEMENT_CLASS(UTexture)
-
-
-//IMPLEMENT_CLASS(AActor)
-//IMPLEMENT_CLASS(AActor)
-//IMPLEMENT_CLASS(AActor)
-//IMPLEMENT_CLASS(AActor)
-//IMPLEMENT_CLASS(AActor)
-
-
-// … 필요한 만큼 나열

@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "StaticMeshComponent.h"
-#include "ResourceManager.h"
 
 UStaticMeshComponent::UStaticMeshComponent()
 {

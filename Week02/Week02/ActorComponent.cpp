@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "ActorComponent.h"
-#include "Actor.h"
 
 UActorComponent::UActorComponent()
     : Owner(nullptr), bIsActive(true), bCanEverTick(false)

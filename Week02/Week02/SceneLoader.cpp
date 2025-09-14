@@ -1,8 +1,8 @@
+#include "pch.h"
 #include "SceneLoader.h"
 
 #include <algorithm>
 
-#include "Object.h"
 
 TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
 {

@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "Shader.h"
-#include "ResourceManager.h"
-#include <cassert>
 
 // 소멸자 구현
 UShader::~UShader()

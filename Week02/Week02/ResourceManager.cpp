@@ -1,9 +1,7 @@
-#pragma comment("lib","DirectXTK.lib")
+#include "pch.h"
 
-#include "ResourceManager.h"
+#include "pch.h"
 #include "ObjectFactory.h"
-#include <d3d11.h>
-#include <d3dcompiler.h>
 #include "d3dtk/DDSTextureLoader.h"
 #define GRIDNUM 100
 #define AXISLENGTH 100

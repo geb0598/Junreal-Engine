@@ -1,21 +1,13 @@
-#include "World.h"
-#include "Actor.h"
-#include "ResourceManager.h"
-#include "UI/UIManager.h"
-#include "InputManager.h"
+#include "pch.h"
 #include "SelectionManager.h"
 #include "Picking.h"
-#include "Renderer.h"
 #include "SceneLoader.h"
 #include "CameraActor.h"
 #include "StaticMeshActor.h"
 #include "CameraComponent.h"
-#include "Vector.h"
-#include "UI/GlobalConsole.h"
 #include "ObjectFactory.h"
 #include "GridComponent.h"
 #include "TextRenderComponent.h"
-
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
                    , UIManager(UUIManager::GetInstance())

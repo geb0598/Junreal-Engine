@@ -1,7 +1,7 @@
+#include "pch.h"
 #include "Actor.h"
 #include "SceneComponent.h"
 #include "ObjectFactory.h"
-#include "World.h"
 
 AActor::AActor()
 {

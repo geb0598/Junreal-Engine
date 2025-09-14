@@ -129,9 +129,6 @@
     <ClCompile Include="SceneComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="UEContainer.h">
-      <Filter>헤더 파일</Filter>
-    </ClCompile>
     <ClCompile Include="ActorComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -259,6 +256,12 @@
       <Filter>소스 파일\Resources</Filter>
     </ClCompile>
     <ClCompile Include="FName.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="UEContainer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -473,6 +476,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Name.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="UEContainer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

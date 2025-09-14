@@ -1,8 +1,7 @@
+#include "pch.h"
 #include "ConsoleWindow.h"
 #include "../Widget/ConsoleWidget.h"
 #include "../../ObjectFactory.h"
-#include "../GlobalConsole.h"
-#include <windows.h>
 
 UConsoleWindow::UConsoleWindow()
     : UUIWindow()

@@ -1,4 +1,4 @@
-#pragma comment(lib, "DirectXTK.lib")
+#include "pch.h"
 #include "Enums.h"
 #include "d3dtk/DDSTextureLoader.h"
 #include "TextRenderComponent.h"

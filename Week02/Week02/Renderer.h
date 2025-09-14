@@ -1,6 +1,5 @@
 #pragma once
 #include "RHIDevice.h"
-#include "Vector.h"
 #include "VertexSimple.h"
 #include "StaticMeshComponent.h"
 

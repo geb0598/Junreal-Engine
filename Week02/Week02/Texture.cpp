@@ -1,9 +1,5 @@
-//#pragma comment(lib, "DirectXTK.lib")
-
+#include "pch.h"
 #include "Texture.h"
-//#include "d3dtk/DDSTextureLoader.h"
-#include "ResourceManager.h"
-#include "UI/GlobalConsole.h"
 
 UTexture::UTexture()
 {

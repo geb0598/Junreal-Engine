@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "MeshLoader.h"
-
 
 UMeshLoader& UMeshLoader::GetInstance()
 {

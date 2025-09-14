@@ -1,6 +1,4 @@
-#include "D3D11RHI.h"
-#include "Vector.h"
-#include "UI/GlobalConsole.h"
+#include "pch.h"
 
 struct FConstants
 {

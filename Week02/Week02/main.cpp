@@ -1,30 +1,4 @@
-#include <windows.h>
-
-#pragma comment(lib, "user32")
-#pragma comment(lib, "d3d11")
-#pragma comment(lib, "d3dcompiler")
-
-#include <d3d11.h>
-#include <d3dcompiler.h>
-
-#include "ImGui/imgui.h"
-#include "ImGui/imgui_internal.h"
-#include "ImGui/imgui_impl_dx11.h"
-#include "imGui/imgui_impl_win32.h"
-#include "UI/GlobalConsole.h"
-
-// Renderer 
-#include "Renderer.h"
-#include "D3D11RHI.h"
-#include "SceneLoader.h"
-#include "UI/UIManager.h"
-
-// Input Manager
-#include "InputManager.h"
-#include "StaticMeshActor.h"
-#include "Picking.h"
-
-#include "World.h"
+#include "pch.h"
 
 // TODO: Delete it, just Test
 

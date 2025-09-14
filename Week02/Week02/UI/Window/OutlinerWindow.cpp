@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "OutlinerWindow.h"
 #include "../Widget/ActorTerminationWidget.h"
 #include "../Widget/TargetActorTransformWidget.h"
