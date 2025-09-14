@@ -17,6 +17,7 @@ public:
     UPrimitiveComponent() = default;
     virtual ~UPrimitiveComponent() = default;
 
+    void SetMaterial(const FString& FilePath, EVertexLayoutType layoutType);
 
     virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) {}
 

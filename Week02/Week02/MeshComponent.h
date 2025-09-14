@@ -11,7 +11,8 @@ protected:
 
 public:
     //메테리얼 관리
-    void SetMaterial(UMaterial* InMaterial) { Material = InMaterial; }
+    void SetMeshResource(const FString& FilePath);
+
     UMaterial* GetMaterial() const { return Material; }
 
     //// 정점 데이터 관리
@@ -29,4 +30,6 @@ protected:
     // 정점 데이터
     //FVertexSimple* Vertices;  // 정점 배열 주소
     //int VertexCount;          // 정점 개수
+
+    UMesh* MeshResource = nullptr;
 };

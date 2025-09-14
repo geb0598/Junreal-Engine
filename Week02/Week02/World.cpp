@@ -93,8 +93,8 @@ void UWorld::Initialize()
         
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
                                             Primitive.Scale));
@@ -176,7 +176,7 @@ void UWorld::Render()
         Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
         if (UStaticMeshComponent* Prim = dynamic_cast<UStaticMeshComponent*>(Comp))
         {
-            Renderer->PrepareShader(Prim->GetShader());
+            Renderer->PrepareShader(Prim->GetMaterial()->GetShader());
             Renderer->DrawIndexedPrimitiveComponent(Prim->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         }
     }
@@ -226,7 +226,7 @@ void UWorld::Render()
 
                 if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
                 {
-                    Renderer->PrepareShader(Primitive->GetShader());
+                    Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
                     Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
                 }
             }
@@ -476,8 +476,8 @@ void UWorld::LoadScene(const FString& SceneName)
                        Primitive.Scale)
         );
         StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ToObjFileName(Primitive.Type));
-        StaticMeshActor->GetStaticMeshComponent()->SetMesh(ToObjFileName(Primitive.Type));
-        StaticMeshActor->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
+        StaticMeshActor->GetStaticMeshComponent()->SetMeshResource(ToObjFileName(Primitive.Type));
+        StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
     }
 }
 

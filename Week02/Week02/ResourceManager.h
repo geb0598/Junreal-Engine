@@ -3,13 +3,13 @@
 #include "ObjectFactory.h"
 #include "Object.h"
 #include "CharacterInfo.h"
-
+#include "Shader.h"
+#include "Texture.h"
 class UStaticMesh;
 
 class UResourceBase;
 class UMesh;
-class UShader;
-class UTexture;
+
 class UMaterial;
 struct FShaderDesc
 {
