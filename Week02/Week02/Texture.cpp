@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Texture.h"
+#include <DDSTextureLoader.h>
 
 UTexture::UTexture()
 {
@@ -20,13 +21,16 @@ void UTexture::Load(const FString& InFilePath, ID3D11Device* InDevice)
 	std::wstring WFilePath;
 	WFilePath = std::wstring(InFilePath.begin(), InFilePath.end());
 
-	//HRESULT hr = DirectX::CreateDDSTextureFromFile(
-	//	InDevice,
-	//	WFilePath.c_str(),
-	//	reinterpret_cast<ID3D11Resource**>(Texture2D.GetAddressOf()),
-	//	ShaderResourceView.GetAddressOf()
-	//);
-	//assert(hr);
+	HRESULT hr = DirectX::CreateDDSTextureFromFile(
+		InDevice,
+		WFilePath.c_str(),
+		reinterpret_cast<ID3D11Resource**>(&Texture2D),
+		&ShaderResourceView
+	);
+	if (SUCCEEDED(hr))
+	{
+		UE_LOG("!!!LOAD TEXTIRE FAILED!!!");
+	}
 
 	if (Texture2D)
 	{
@@ -54,7 +58,7 @@ void UTexture::CreateSamplerState(ID3D11Device* Device)
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	HRESULT hr = Device->CreateSamplerState(&samplerDesc, &SamplerState);
-	//assert(hr);
+	assert(SUCCEEDED(hr));
 }
 
 void UTexture::ReleaseResources()

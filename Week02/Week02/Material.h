@@ -1,17 +1,18 @@
 #pragma once
-#include <d3d11.h>
-#include "Object.h"
+#include "ResourceBase.h"
+#include "Enums.h"
 
 class UShader;
 class UTexture;
-class UMaterial : public UObject
+class UMaterial : public UResourceBase
 {
-	DECLARE_CLASS(UMaterial, UObject)
+	DECLARE_CLASS(UMaterial, UResourceBase)
 public:
-    UMaterial() {};
+    UMaterial() = default;
+    void Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InLayoutType);
 
 protected:
-    ~UMaterial() override {};
+    ~UMaterial() override = default;
 
 public:
     // ───────────────
