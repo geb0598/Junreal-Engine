@@ -147,6 +147,7 @@ void UWorld::Render()
     if (!Renderer) return;
     // === Begin Frame ===
     Renderer->BeginFrame();
+    Renderer->RSSetWireframe(bIsWireframeMode);
 
     // === Draw Grid ===
     for (USceneComponent* Comp : GridActor->GetComponents())

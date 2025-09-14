@@ -68,7 +68,8 @@ void D3D11RHI::Release()
 
     // 상태 객체
     if (DepthStencilState) { DepthStencilState->Release(); DepthStencilState = nullptr; }
-    if (RasterizerState) { RasterizerState->Release();   RasterizerState = nullptr; }
+    if (DefaultRasterizerState) { DefaultRasterizerState->Release();   DefaultRasterizerState = nullptr; }
+    if (WireFrameRasterizerState) { WireFrameRasterizerState->Release();   WireFrameRasterizerState = nullptr; }
     if (BlendState) { BlendState->Release();        BlendState = nullptr; }
 
     // RTV/DSV/FrameBuffer
@@ -179,14 +180,21 @@ void D3D11RHI::IASetPrimitiveTopology()
     DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+void D3D11RHI::RSSetState(bool bIsWireframe)
+{
+    if (bIsWireframe)
+    {
+        DeviceContext->RSSetState(WireFrameRasterizerState);
+    }
+    else
+    {
+        DeviceContext->RSSetState(DefaultRasterizerState);
+    }
+}
+
 void D3D11RHI::RSSetViewport()
 {
     DeviceContext->RSSetViewports(1, &ViewportInfo);
-}
-
-void D3D11RHI::RSSetState()
-{
-    DeviceContext->RSSetState(RasterizerState);
 }
 
 void D3D11RHI::OMSetRenderTargets()
@@ -286,11 +294,17 @@ void D3D11RHI::CreateFrameBuffer()
 
 void D3D11RHI::CreateRasterizerState()
 {
-    D3D11_RASTERIZER_DESC rasterizerdesc = {};
-    rasterizerdesc.FillMode = D3D11_FILL_SOLID; // 채우기 모드
-    rasterizerdesc.CullMode = D3D11_CULL_BACK; // 백 페이스 컬링
+    D3D11_RASTERIZER_DESC deafultrasterizerdesc = {};
+    deafultrasterizerdesc.FillMode = D3D11_FILL_SOLID; // 채우기 모드
+    deafultrasterizerdesc.CullMode = D3D11_CULL_BACK; // 백 페이스 컬링
 
-    Device->CreateRasterizerState(&rasterizerdesc, &RasterizerState);
+    Device->CreateRasterizerState(&deafultrasterizerdesc, &DefaultRasterizerState);
+
+    D3D11_RASTERIZER_DESC wireframerasterizerdesc = {};
+    wireframerasterizerdesc.FillMode = D3D11_FILL_WIREFRAME; // 채우기 모드
+    wireframerasterizerdesc.CullMode = D3D11_CULL_BACK; // 백 페이스 컬링
+
+    Device->CreateRasterizerState(&wireframerasterizerdesc, &WireFrameRasterizerState);
 }
 
 void D3D11RHI::CreateConstantBuffer()
@@ -338,10 +352,15 @@ void D3D11RHI::ReleaseBlendState()
 
 void D3D11RHI::ReleaseRasterizerState()
 {
-    if (RasterizerState)
+    if (DefaultRasterizerState)
     {
-        RasterizerState->Release();
-        RasterizerState = nullptr;
+        DefaultRasterizerState->Release();
+        DefaultRasterizerState = nullptr;
+    }
+    if (WireFrameRasterizerState)
+    {
+        WireFrameRasterizerState->Release();
+        WireFrameRasterizerState = nullptr;
     }
     DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 }

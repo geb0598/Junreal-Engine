@@ -30,13 +30,11 @@ public:
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
 
     void IASetPrimitiveTopology() override;
+    void RSSetState(bool bIsWireframe) override;
     void RSSetViewport() override;
-    void RSSetState() override;
     void OMSetRenderTargets() override;
     void OMSetBlendState(bool bIsBlendMode) override;
     void Present() override;
-
-
 
     void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) override;
 
@@ -86,7 +84,8 @@ private:
     ID3D11RenderTargetView* RenderTargetView{};//
     ID3D11DepthStencilView* DepthStencilView{};//
 
-    ID3D11RasterizerState* RasterizerState{};//
+    ID3D11RasterizerState* DefaultRasterizerState{};//
+    ID3D11RasterizerState* WireFrameRasterizerState{};//
     ID3D11DepthStencilState* DepthStencilState{};
     ID3D11BlendState* BlendState{};
 

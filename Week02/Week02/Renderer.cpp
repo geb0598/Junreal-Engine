@@ -21,7 +21,6 @@ void URenderer::BeginFrame()
     RHIDevice->IASetPrimitiveTopology();
     // RS
     RHIDevice->RSSetViewport();
-    RHIDevice->RSSetState();
 
     //OM
     //RHIDevice->OMSetBlendState();
@@ -52,6 +51,11 @@ void URenderer::OMSetBlendState(bool bIsChecked)
     {
         RHIDevice->OMSetBlendState(false);
     }
+}
+
+void URenderer::RSSetWireframe(bool bIsWireframe)
+{
+    RHIDevice->RSSetState(bIsWireframe);
 }
 
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
