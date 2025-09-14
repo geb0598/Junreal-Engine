@@ -11,6 +11,13 @@ class UResourceBase;
 class UMesh;
 class UShader;
 class UTexture;
+struct FShaderDesc
+{
+    std::wstring Filename;
+    std::string EntryVS;
+    std::string EntryPS;
+    std::vector<D3D11_INPUT_ELEMENT_DESC> InputLayout;
+};
 
 class UResourceManager :public UObject
 {

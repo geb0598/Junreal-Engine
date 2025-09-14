@@ -31,9 +31,6 @@
     <Filter Include="헤더 파일\Models">
       <UniqueIdentifier>{cc23868c-daf3-4767-bd46-5041b2afedf2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\NewFilter1">
-      <UniqueIdentifier>{4137b9bd-fcda-44a9-9258-f9b883f7d422}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Gizmo">
       <UniqueIdentifier>{b6251aac-4560-4c88-9b05-afe046a3fdfd}</UniqueIdentifier>
     </Filter>
@@ -261,6 +258,9 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>소스 파일\Resources</Filter>
     </ClCompile>
+    <ClCompile Include="FName.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Primitive.hlsl">
@@ -470,6 +470,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="CharacterInfo.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Name.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

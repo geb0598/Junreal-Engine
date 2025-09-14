@@ -305,7 +305,7 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
     ResourceMap[FilePath] = data;
 }
 
-void UResourceManager::CreateVertexBuffer(FResourceData* data, const TArray<FVertexSimple>& vertices, ID3D11Device* device)
+void UResourceManager::CreateVertexBuffer(FResourceData* data, TArray<FVertexSimple>& vertices, ID3D11Device* device)
 {
     if (vertices.empty()) return;
 
@@ -327,7 +327,7 @@ void UResourceManager::CreateVertexBuffer(FResourceData* data, const TArray<FVer
 
     data->VertexCount = static_cast<uint32>(vertices.size());
     data->ByteWidth = vbd.ByteWidth;
-}
+} 
 
 void UResourceManager::CreateIndexBuffer(FResourceData* data, const TArray<uint32>& indices, ID3D11Device* device)
 {
