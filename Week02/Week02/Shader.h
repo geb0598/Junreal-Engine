@@ -1,19 +1,7 @@
 #pragma once
 #include "ResourceBase.h"
-#include "Vector.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
-
-enum class EVertexLayoutType : uint8
-{
-	None, 
-
-	Position,
-	PositionColor,
-	PositionTexture,
-
-	End,
-};
 
 class UShader : public UResourceBase
 {

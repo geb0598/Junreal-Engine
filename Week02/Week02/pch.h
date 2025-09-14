@@ -45,6 +45,7 @@
 #include "Enums.h"
 #include "UI/GlobalConsole.h"
 #include "D3D11RHI.h"
+#include "ObjectFactory.h"
 #include "World.h"
 // d3dtk
 #include "d3dtk/SimpleMath.h"

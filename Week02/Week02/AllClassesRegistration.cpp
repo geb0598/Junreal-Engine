@@ -9,6 +9,7 @@
 #include "CameraComponent.h"
 #include "CameraActor.h"
 #include "StaticMeshActor.h"
+#include "MeshLoader.h"
 
 #include "UI/Factory/UIWindowFactory.h"
 #include "UI/ImGui/ImGuiHelper.h"

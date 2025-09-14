@@ -7,13 +7,21 @@ void UMesh::Load(const FString& InFilePath, ID3D11Device* InDevice)
 {
     assert(InDevice);
 
-	FMeshData* Data = UMeshLoader::GetInstance().LoadMesh(FilePath);
+	FMeshData* Data = UMeshLoader::GetInstance().LoadMesh(InFilePath.c_str());
     CreateVertexBuffer(Data, InDevice);
     CreateIndexBuffer(Data, InDevice);
 
     VertexCount = Data->Vertices.size();
     IndexCount = Data->Indices.size();
+}
 
+void UMesh::Load(FMeshData* InData, ID3D11Device* InDevice)
+{
+    CreateVertexBuffer(InData, InDevice);
+    CreateIndexBuffer(InData, InDevice);
+
+    VertexCount = InData->Vertices.size();
+    IndexCount = InData->Indices.size();
 }
 
 void UMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
@@ -29,7 +37,7 @@ void UMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
 
     HRESULT hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
 
-    assert(hr);
+    assert(SUCCEEDED(hr));
 }
 
 void UMesh::CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
@@ -45,5 +53,6 @@ void UMesh::CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
 
     HRESULT hr = InDevice->CreateBuffer(&ibd, &iinitData, &IndexBuffer);
 
-    assert(hr);
+
+    assert(SUCCEEDED(hr));
 }

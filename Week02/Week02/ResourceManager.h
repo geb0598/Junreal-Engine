@@ -1,11 +1,10 @@
 #pragma once
 #include <d3d11.h>
-#include "UEContainer.h"
-#include "Enums.h"
-#include "MeshLoader.h"
-#include "StaticMesh.h"
+#include "ObjectFactory.h"
 #include "Object.h"
 #include "CharacterInfo.h"
+
+class UStaticMesh;
 
 class UResourceBase;
 class UMesh;
@@ -49,13 +48,16 @@ public:
     void CreateShader(const FWideString& Name, const D3D11_INPUT_ELEMENT_DESC* Desc, uint32 Size);
     // 전체 해제
     void Clear();
+
     void CreateAxisMesh(float Length, const FString& FilePath);
     void CreateGridMesh(int N, const FString& FilePath);
 
     template<typename T>
-    T* Get(const FString& InName);
+    bool Add(const FString& InFilePath, UObject* InObject);
+    template<typename T>
+    T* Get(const FString& InFilePath);
     template<typename T, typename ... Args>
-    T* Load(const FString& InName, Args&& ...);
+    T* Load(const FString& InFilePath, Args&& ...);
     template<typename T>
     ResourceType GetResourceType();
 
@@ -70,8 +72,9 @@ protected:
     ID3D11Device* Device = nullptr;
     ID3D11DeviceContext* Context = nullptr;
 
-    //Deprecated
     TMap<FString, FResourceData*> ResourceMap;
+
+    //Deprecated
     TMap<FWideString, FTextureData*> TextureMap;
     TMap<FString, UStaticMesh*> StaticMeshMap;
 
@@ -83,12 +86,26 @@ protected:
 };
 
 template<typename T>
+bool UResourceManager::Add(const FString& InFilePath, UObject* InObject)
+{
+    uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
+    auto iter = Resources[typeIndex].find(InFilePath);
+    if (iter == Resources[typeIndex].end())
+    {
+        Resources[typeIndex][InFilePath] = static_cast<T*>(InObject);
+        return true;
+    }
+    return false;
+}
+
+template<typename T>
 T* UResourceManager::Get(const FString& InFilePath)
 {
     uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
-    if (auto& iter = Resources[typeIndex].find(InFilePath))
+    auto iter = Resources[typeIndex].find(InFilePath);
+    if (iter != Resources[typeIndex].end())
     {
-        return *iter;
+        return static_cast<T*>(iter->second);
     }
 
     return nullptr;
@@ -105,9 +122,9 @@ inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)
     }
     else
     {
-        T* Resource = SpawnObject<T>();
+        T* Resource = NewObject<T>();
         Resource->Load(InFilePath, Device, std::forward<Args>(InArgs)...);
-        Resources[typeIndex].Add({ InFilePath, Resource });
+        Resources[typeIndex][InFilePath] = Resource;
         return Resource;
     }
 }

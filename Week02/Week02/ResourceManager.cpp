@@ -1,7 +1,9 @@
 #include "pch.h"
-
-#include "pch.h"
+#include "MeshLoader.h"
 #include "ObjectFactory.h"
+#include "Mesh.h"
+#include "Shader.h"
+#include "Texture.h"
 #include "d3dtk/DDSTextureLoader.h"
 #define GRIDNUM 100
 #define AXISLENGTH 100
@@ -225,6 +227,16 @@ void UResourceManager::CreateAxisMesh(float Length, const FString& FilePath)
 
     // 리소스 맵에 등록
     ResourceMap[FilePath] = data;
+
+    FMeshData* MeshData = new FMeshData();
+    MeshData->Vertices = axisVertices;
+    MeshData->Indices = axisIndices;
+
+    UMesh* Mesh = NewObject<UMesh>();
+    Mesh->Load(MeshData, Device);
+    Add<UMesh>("Axis", Mesh);
+    
+    delete MeshData;
 }
 void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
 {
@@ -301,6 +313,16 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
     CreateIndexBuffer(data, gridIndices, Device);
 
     ResourceMap[FilePath] = data;
+
+    FMeshData* MeshData = new FMeshData();
+    MeshData->Vertices = gridVertices;
+    MeshData->Indices = gridIndices;
+
+    UMesh* Mesh = NewObject<UMesh>();
+    Mesh->Load(MeshData, Device);
+    Add<UMesh>("Grid", Mesh);
+
+    delete MeshData;
 }
 
 void UResourceManager::CreateVertexBuffer(FResourceData* data, TArray<FVertexSimple>& vertices, ID3D11Device* device)

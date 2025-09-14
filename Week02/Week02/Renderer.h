@@ -5,6 +5,9 @@
 
 class UTextRenderComponent;
 class URHIDevice;
+class UShader;
+class UMesh;
+
 class URenderer
 {
 public:
@@ -19,6 +22,8 @@ public:
 
     void PrepareShader(FShader& InShader);
 
+    void PrepareShader(UShader* InShader);
+
     void OMSetBlendState(bool bIsChecked);
 
     void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
@@ -30,6 +35,8 @@ public:
     //void DrawPrimitiveComponent(UStaticMeshComponent* MeshComp);
     
     void DrawIndexedPrimitiveComponent(UStaticMeshComponent* MeshComp);
+
+    void DrawIndexedPrimitiveComponent(UMesh* MeshComp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* TextRenderComp);
 

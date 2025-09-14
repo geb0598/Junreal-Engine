@@ -92,11 +92,13 @@ void UWorld::Initialize()
         FString PrimitiveType = Primitive.Type + ".obj";
         
         AActor* Actor = NewObject<AStaticMeshActor>();
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMesh(PrimitiveType);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
                                             Primitive.Scale));
         Actor->SetWorld(this);
+
         Actors.push_back(Actor);
     }
 	InitializeMainCamera();
@@ -167,29 +169,26 @@ void UWorld::Render()
 
 
     // === Draw Grid ===
-
-
-    // === Draw Primitive ===
-    //Renderer->PrepareShader();
-
-
     for (USceneComponent* Comp : GridActor->GetComponents())
     {
         ModelMatrix = Comp->GetWorldMatrix();
         Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
         if (UStaticMeshComponent* Prim = dynamic_cast<UStaticMeshComponent*>(Comp))
         {
-            Renderer->DrawIndexedPrimitiveComponent(Prim);
+            Renderer->PrepareShader(Prim->GetShader());
+            Renderer->DrawIndexedPrimitiveComponent(Prim->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         }
     }
 
+
+    // === Draw Primitive ===
+    //Renderer->PrepareShader();
     for (AActor* Actor : Actors)
     {
         if (!Actor) continue;
 
         bool bIsSelected = SelectionManager.IsActorSelected(Actor);
         Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-        // UE_LOG("bIsSelected %d", bIsSelected);
 
         if (bIsSelected)
         {
@@ -226,7 +225,8 @@ void UWorld::Render()
 
                 if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
                 {
-                    Renderer->DrawIndexedPrimitiveComponent(Primitive);
+                    Renderer->PrepareShader(Primitive->GetShader());
+                    Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
                 }
             }
             Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
@@ -247,8 +247,8 @@ void UWorld::Render()
             if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>(Component))
             {
                 Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-                Renderer->PrepareShader(*ResourceManager.GetShader(L"Primitive.hlsl"));
-                Renderer->DrawIndexedPrimitiveComponent(Primitive);
+                Renderer->PrepareShader(Primitive->GetShader());
+                Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             }
 
             if (UTextRenderComponent* Text = dynamic_cast<UTextRenderComponent*>(Component))
@@ -487,6 +487,8 @@ void UWorld::LoadScene(const FString& SceneName)
                        Primitive.Scale)
         );
         StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ToObjFileName(Primitive.Type));
+        StaticMeshActor->GetStaticMeshComponent()->SetMesh(ToObjFileName(Primitive.Type));
+        StaticMeshActor->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
     }
 }
 

@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "TextRenderComponent.h"
+#include "Shader.h"
+#include "Mesh.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -31,6 +33,13 @@ void URenderer::PrepareShader(FShader& InShader)
     RHIDevice->GetDeviceContext()->VSSetShader(InShader.SimpleVertexShader, nullptr, 0);
     RHIDevice->GetDeviceContext()->PSSetShader(InShader.SimplePixelShader, nullptr, 0);
     RHIDevice->GetDeviceContext()->IASetInputLayout(InShader.SimpleInputLayout);
+}
+
+void URenderer::PrepareShader(UShader* InShader)
+{
+    RHIDevice->GetDeviceContext()->VSSetShader(InShader->GetVertexShader(), nullptr, 0);
+    RHIDevice->GetDeviceContext()->PSSetShader(InShader->GetPixelShader(), nullptr, 0);
+    RHIDevice->GetDeviceContext()->IASetInputLayout(InShader->GetInputLayout());
 }
 
 void URenderer::OMSetBlendState(bool bIsChecked)
@@ -89,6 +98,30 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMeshComponent* MeshComp)
 
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(dxTopology);
     RHIDevice->GetDeviceContext()->DrawIndexed(Data->IndexCount, 0, 0);
+}
+
+void URenderer::DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
+{
+    if (!InMesh || !InMesh->GetVertexBuffer() || !InMesh->GetIndexBuffer()) return;
+
+    UINT stride = sizeof(FVertexSimple);
+    UINT offset = 0;
+
+    ID3D11Buffer* VertexBuffer = InMesh->GetVertexBuffer();
+    ID3D11Buffer* IndexBuffer = InMesh->GetIndexBuffer();
+    uint32 VertexCount = InMesh->GetVertexCount();
+    uint32 IndexCount = InMesh->GetIndexCount();
+
+    RHIDevice->GetDeviceContext()->IASetVertexBuffers(
+        0, 1, &VertexBuffer, &stride, &offset
+    );
+
+    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
+        IndexBuffer, DXGI_FORMAT_R32_UINT, 0
+    );
+
+    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
+    RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
 }
 
 void URenderer::DrawIndexedPrimitiveComponent(UTextRenderComponent* TextRenderComp)

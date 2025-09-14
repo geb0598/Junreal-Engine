@@ -109,4 +109,15 @@ enum class ResourceType : uint8
     End
 };
 
+enum class EVertexLayoutType : uint8
+{
+    None,
+
+    Position,
+    PositionColor,
+    PositionTexture,
+
+    End,
+};
+
 #endif /** UE_ENUMS_H */
