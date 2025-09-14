@@ -133,6 +133,7 @@
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
+    <ClCompile Include="FName.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="GizmoActor.cpp" />
     <ClCompile Include="GizmoArrowComponent.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="GizmoActor.h" />
     <ClInclude Include="GizmoArrowComponent.h" />
     <ClInclude Include="GridActor.h" />
+    <ClInclude Include="Name.h" />
     <ClInclude Include="ObjectFactory.h" />
     <ClInclude Include="GizmoScaleComponent.h" />
     <ClInclude Include="GizmoRotateComponent.h" />
