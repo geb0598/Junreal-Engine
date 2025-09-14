@@ -480,8 +480,10 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
         return;
     }
 
-    // 백버퍼 포맷은 스왑체인과 동일. 특별한 이유 없으면 RTV desc는 nullptr로 두는 것이 안전.
-    hr = Device->CreateRenderTargetView(backBuffer, nullptr, &RenderTargetView);
+    D3D11_RENDER_TARGET_VIEW_DESC framebufferRTVdesc = {};
+    framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+    framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    hr = Device->CreateRenderTargetView(backBuffer, &framebufferRTVdesc, &RenderTargetView);
     backBuffer->Release();
     if (FAILED(hr) || !RenderTargetView) {
         UE_LOG("CreateRenderTargetView failed.\n");
@@ -551,6 +553,16 @@ void D3D11RHI::setviewort(UINT width, UINT height)
 void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
 {
     if (!SwapChain) return;
+
+    // 렌더링 완료까지 대기 (중요!)
+    if (DeviceContext) {
+        DeviceContext->Flush();
+    }
+
+    // 현재 렌더 타겟 언바인딩
+    if (DeviceContext) {
+        DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+    }
 
     // 기존 뷰 해제
     if (RenderTargetView) { RenderTargetView->Release(); RenderTargetView = nullptr; }
