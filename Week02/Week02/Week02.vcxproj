@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="AllClassesRegistration.cpp" />
+    <ClCompile Include="BoundingBoxComponent.cpp" />
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RHIDevice.cpp" />
+    <ClCompile Include="ShapeComponent.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="SelectionManager.cpp" />
     <ClCompile Include="StaticMeshActor.cpp" />
@@ -181,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActorComponent.h" />
+    <ClInclude Include="BoundingBoxComponent.h" />
     <ClInclude Include="GizmoActor.h" />
     <ClInclude Include="GizmoArrowComponent.h" />
     <ClInclude Include="GridActor.h" />
@@ -215,6 +218,7 @@
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RHIDevice.h" />
+    <ClInclude Include="ShapeComponent.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="SelectionManager.h" />

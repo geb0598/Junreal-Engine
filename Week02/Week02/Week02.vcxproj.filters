@@ -40,6 +40,9 @@
     <Filter Include="헤더 파일\Gizmo">
       <UniqueIdentifier>{268038a8-b619-4f95-bee7-c383690b3be4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Shape">
+      <UniqueIdentifier>{98134e6e-4ba6-48c7-9f98-78af37ec02ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -144,9 +147,6 @@
     <ClCompile Include="AllClassesRegistration.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="FObjectFactory.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="GizmoActor.cpp">
       <Filter>소스 파일\Gizmo</Filter>
     </ClCompile>
@@ -158,6 +158,18 @@
     </ClCompile>
     <ClCompile Include="GizmoScaleComponent.cpp">
       <Filter>소스 파일\Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="GridActor.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeComponent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingBoxComponent.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -283,9 +295,6 @@
     <ClInclude Include="SelectionManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="FObjectFactory.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="GizmoActor.h">
       <Filter>헤더 파일\Gizmo</Filter>
     </ClInclude>
@@ -297,6 +306,18 @@
     </ClInclude>
     <ClInclude Include="GizmoScaleComponent.h">
       <Filter>헤더 파일\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="GridActor.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingBoxComponent.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
