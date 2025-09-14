@@ -10,6 +10,7 @@ class UResourceBase;
 class UMesh;
 class UShader;
 class UTexture;
+class UMaterial;
 struct FShaderDesc
 {
     std::wstring Filename;
@@ -33,6 +34,9 @@ public:
     //font 렌더링을 위함(dynamicVertexBuffer 만듦.)
     FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies);
 //    FTextureData* GetOrCreateTexture
+
+    UMaterial* GetOrCreateMaterial(const FString& Name,  EVertexLayoutType layoutType);
+
 
     FShader* GetShader(const FWideString& Name);
 
@@ -83,6 +87,9 @@ protected:
 
     FShader PrimitiveShader;
     TMap<FWideString,FShader*> ShaderList;
+
+private:
+    TMap<FString, UMaterial*> MaterialMap;
 };
 
 template<typename T>
@@ -138,6 +145,8 @@ ResourceType UResourceManager::GetResourceType()
         return ResourceType::Shader;
     if (T::StaticClass() == UTexture::StaticClass())
         return ResourceType::Texture;
+    if (T::StaticClass() == UMaterial::StaticClass())
+        return ResourceType::Material;
 
     return ResourceType::None;
 }

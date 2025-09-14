@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Material.h"
 #include "d3dtk/DDSTextureLoader.h"
 #define GRIDNUM 100
 #define AXISLENGTH 100
@@ -68,6 +69,44 @@ FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, ui
 
     ResourceMap[Name] = ResourceData;
     return ResourceData;
+}
+
+UMaterial* UResourceManager::GetOrCreateMaterial(const FString& Name , EVertexLayoutType layoutType)
+{
+    auto it = MaterialMap.find(Name);
+    if (it != MaterialMap.end())
+        return it->second;
+
+    // FName → FString 변환
+    FString BaseName = Name;
+
+    // Shader, Texture 로드
+    UShader* Shader;
+    UTexture* Texture;
+
+    if (UResourceManager::GetInstance().Get<UShader>(Name))
+    {
+        Shader = UResourceManager::GetInstance().Get<UShader>(Name);
+    }
+    else
+    {
+        Shader = UResourceManager::GetInstance().Load<UShader>(Name, layoutType);
+    }
+    if (UResourceManager::GetInstance().Get<UTexture>(Name))
+    {
+        Texture= UResourceManager::GetInstance().Get<UTexture>(Name);
+    }
+    else
+    {
+        Texture= UResourceManager::GetInstance().Load<UTexture>(Name);
+    }
+    // Material 생성
+    UMaterial* Mat = NewObject<UMaterial>();
+    if (Shader)  Mat->SetShader(Shader);
+    if (Texture) Mat->SetTexture(Texture);
+
+    MaterialMap[Name] = Mat;
+    return Mat;
 }
 
 FShader* UResourceManager::GetShader(const FWideString& Name)

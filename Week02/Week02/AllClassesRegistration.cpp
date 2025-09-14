@@ -31,7 +31,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
-
+#include "Material.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -85,6 +85,7 @@ IMPLEMENT_CLASS(UOutlinerWindow)
 
 IMPLEMENT_CLASS(UGlobalConsole)
 
+IMPLEMENT_CLASS(UMaterial)
 IMPLEMENT_CLASS(UResourceBase)
 IMPLEMENT_CLASS(UMesh)
 IMPLEMENT_CLASS(UShader)
