@@ -1,0 +1,20 @@
+#pragma once
+#include "SceneComponent.h"
+#include "Picking.h"
+class UShapeComponent : public USceneComponent
+{
+public:
+    DECLARE_CLASS(UShapeComponent, USceneComponent)
+
+    UShapeComponent() = default;
+    virtual ~UShapeComponent() = default;
+
+    // 충돌 검사 시 재정의
+    virtual bool IntersectsRay(const FRay& Ray) const { return false; }
+
+    
+
+    // Shape 크기(예: 박스=XYZ, 스피어=반지름) 정의
+    virtual FVector GetExtent() const { return FVector(1, 1, 1); }
+};
+

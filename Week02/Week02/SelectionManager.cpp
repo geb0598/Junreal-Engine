@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SelectionManager.h"
 #include "Actor.h"
 

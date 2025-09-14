@@ -1,8 +1,5 @@
-#include "InputManager.h"
-#include <cstring> // for memcpy
-#include <cstdio>  // for sprintf_s
+#include "pch.h"
 #include <windowsx.h> // GET_X_LPARAM / GET_Y_LPARAM
-#include "UI/GlobalConsole.h"
 
 #ifndef GET_X_LPARAM
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))

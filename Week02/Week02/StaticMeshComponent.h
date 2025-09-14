@@ -3,6 +3,11 @@
 #include "Enums.h"
 #include "StaticMesh.h"
 
+class StaticMesh;
+class UMesh;
+class UShader;
+class UTexture;
+
 class UStaticMeshComponent : public UMeshComponent
 {
 public:
@@ -17,10 +22,21 @@ public:
     void SetStaticMesh(const FString& FilePath);
     void SetStaticMesh(UStaticMesh* InStaticMesh) { StaticMesh = InStaticMesh; }
 
+    UMesh* GetMesh() { return MeshResource; }
+    void SetMesh(const FString& FilePath);
+    UShader* GetShader() { return ShaderResource; }
+    void SetShader(const FString& FilePath, EVertexLayoutType layoutType);
+    UTexture* GetTexture() { return TextureResource; }
+    void SetTexture(const FString& FilePath);
+
 protected:
     //FString FilePath;
     //ResourceData* StaticMeshData = nullptr;
 
-    UStaticMesh* StaticMesh;
+    UStaticMesh* StaticMesh = nullptr;
+
+    UMesh* MeshResource = nullptr;
+    UShader* ShaderResource = nullptr;
+    UTexture* TextureResource = nullptr;
 };
 

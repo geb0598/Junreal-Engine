@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ConsoleWidget.h"
 #include "../../ObjectFactory.h"
 #include "../GlobalConsole.h"
@@ -6,6 +7,9 @@
 #include <cctype>
 #include <cstring>
 #include <algorithm>
+
+using std::max;
+using std::min;
 
 UConsoleWidget::UConsoleWidget()
     : UWidget("Console Widget")

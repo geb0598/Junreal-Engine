@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Picking.h"
 #include "Actor.h"
 #include "StaticMeshActor.h"

@@ -1,7 +1,7 @@
+#include "pch.h"
 #include "CameraActor.h"
-#include "SceneComponent.h"
-#include "CameraComponent.h"
 #include "ObjectFactory.h"
+#include "CameraComponent.h"
 
 
 ACameraActor::ACameraActor()

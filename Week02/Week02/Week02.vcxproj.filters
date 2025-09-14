@@ -31,14 +31,14 @@
     <Filter Include="헤더 파일\Models">
       <UniqueIdentifier>{cc23868c-daf3-4767-bd46-5041b2afedf2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\NewFilter1">
-      <UniqueIdentifier>{4137b9bd-fcda-44a9-9258-f9b883f7d422}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Gizmo">
       <UniqueIdentifier>{b6251aac-4560-4c88-9b05-afe046a3fdfd}</UniqueIdentifier>
     </Filter>
     <Filter Include="헤더 파일\Gizmo">
       <UniqueIdentifier>{268038a8-b619-4f95-bee7-c383690b3be4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Shape">
+      <UniqueIdentifier>{98134e6e-4ba6-48c7-9f98-78af37ec02ef}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\UI">
       <UniqueIdentifier>{697e0870-1798-42a4-80b5-ee94b51f6edf}</UniqueIdentifier>
@@ -72,6 +72,9 @@
     </Filter>
     <Filter Include="소스 파일\Resources">
       <UniqueIdentifier>{6e3dcf0f-cb4b-4399-b35d-d2a158ce16be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Resources">
+      <UniqueIdentifier>{0543b16f-0dd3-4786-9d1c-8930d0580672}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,9 +131,6 @@
     </ClCompile>
     <ClCompile Include="SceneComponent.cpp">
       <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="UEContainer.h">
-      <Filter>헤더 파일</Filter>
     </ClCompile>
     <ClCompile Include="ActorComponent.cpp">
       <Filter>소스 파일</Filter>
@@ -243,9 +243,36 @@
     <ClCompile Include="UI\Widget\SceneIOWidget.cpp">
       <Filter>소스 파일\UI\Widget</Filter>
     </ClCompile>
+    <ClCompile Include="TextRenderComponent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceBase.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="FName.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="UEContainer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="ShaderW0.hlsl">
+    <FxCompile Include="Primitive.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TextBillboard.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
@@ -432,6 +459,33 @@
     </ClInclude>
     <ClInclude Include="UI\Widget\SceneIOWidget.h">
       <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceBase.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="TextRenderComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CharacterInfo.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Name.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="UEContainer.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

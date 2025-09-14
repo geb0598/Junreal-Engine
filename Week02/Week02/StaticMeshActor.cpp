@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "StaticMeshActor.h"
 #include "ObjectFactory.h"
 

@@ -1,20 +1,4 @@
-/** UEContainers.h */
-#ifndef UE_CONTAINERS_H
-#define UE_CONTAINERS_H
-
-#include <vector>
-#include <map>
-#include <set>
-#include <unordered_set>
-#include <unordered_map>
-#include <queue>
-#include <stack>
-#include <list>
-#include <deque>
-#include <string>
-#include <array>
-#include <algorithm>
-#include <functional>
+#pragma once
 
 /** UE5 스타일 기본 타입 정의 */
 typedef int int32;
@@ -565,4 +549,4 @@ public:
 #define TPriorityQueue(T) TQueue<T, EQueueMode::Priority>
 #define TPriorityQueueWithCompare(T, Compare) TQueue<T, EQueueMode::Priority, Compare>
 
-#endif /** UE_CONTAINERS_H */
+

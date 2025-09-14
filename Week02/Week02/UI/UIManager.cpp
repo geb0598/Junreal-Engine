@@ -1,14 +1,11 @@
-#include "UIManager.h"
+#include "pch.h"
 #include "Window/UIWindow.h"
 #include "ImGui/ImGuiHelper.h"
 #include "Widget/Widget.h"
-#include "GlobalConsole.h"
 #include "../ImGui/imgui.h"
 #include "../ImGui/imgui_internal.h"
 #include "../ImGui/imgui_impl_dx11.h"
 #include "../imGui/imgui_impl_win32.h"
-#include "../World.h"
-#include "../Vector.h"
 
 
 UUIManager::UUIManager()

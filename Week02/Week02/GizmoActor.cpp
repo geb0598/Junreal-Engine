@@ -1,10 +1,9 @@
+#include "pch.h"
 #include "GizmoActor.h"
 #include "GizmoArrowComponent.h"
 #include "GizmoScaleComponent.h"
 #include "GizmoRotateComponent.h"
 #include "CameraActor.h"
-#include"InputManager.h"
-#include <cmath>
 
 AGizmoActor::AGizmoActor()
 {

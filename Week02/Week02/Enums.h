@@ -20,6 +20,7 @@ enum class EPrimitiveTopology
     TriangleList,
     TriangleStrip
 };
+
 struct FResourceData
 {
     ID3D11Buffer* VertexBuffer = nullptr;
@@ -27,7 +28,10 @@ struct FResourceData
     uint32 VertexCount = 0;     // 정점 개수
     uint32 IndexCount = 0;     // 버텍스 점의 개수 
     uint32 ByteWidth = 0;       // 전체 버텍스 데이터 크기 (sizeof(FVertexSimple) * VertexCount)
+    uint32 Stride = 0;
+    uint32 Offset = 0;
     EPrimitiveTopology Topology = EPrimitiveTopology::TriangleList;
+    D3D11_PRIMITIVE_TOPOLOGY Topol = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 };
 
 
@@ -36,6 +40,14 @@ struct FShader
     ID3D11InputLayout* SimpleInputLayout = nullptr;
     ID3D11VertexShader* SimpleVertexShader = nullptr;
     ID3D11PixelShader* SimplePixelShader = nullptr;
+};
+
+struct FTextureData
+{
+    ID3D11Resource* Texture = nullptr;
+    ID3D11ShaderResourceView* TextureSRV = nullptr;
+    ID3D11BlendState* BlendState = nullptr;
+    ID3D11SamplerState* SamplerState = nullptr;
 };
 
 enum class EResourceType
@@ -51,6 +63,7 @@ enum class EPrimitiveType
     Triangle,
     Arrow
 };
+
 
 enum class EGizmoMode : uint8
 {
@@ -79,4 +92,44 @@ enum class EKeyInput : uint8
     // Special
     Unknown
 };
+
+enum class ResourceDataType : uint8
+{
+
+};
+
+enum class EVertexType : uint8
+{
+    None = -1,
+
+    VertexSimple,
+    VertexDynamic,
+
+    End, 
+};
+
+//TODO EResourceType으로 재정의
+enum class ResourceType : uint8
+{
+    None = -1,
+
+    Mesh,
+    Shader,
+    Texture,
+
+    End
+};
+
+enum class EVertexLayoutType : uint8
+{
+    None,
+
+    Position,
+    PositionColor,
+    PositionTexture,
+    PositionBillBoard,
+
+    End,
+};
+
 #endif /** UE_ENUMS_H */

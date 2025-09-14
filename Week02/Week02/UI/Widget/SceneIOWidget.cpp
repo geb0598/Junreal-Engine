@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SceneIOWidget.h"
 #include "../../ObjectFactory.h"
 #include "../GlobalConsole.h"

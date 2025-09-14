@@ -1,6 +1,4 @@
-#include "D3D11RHI.h"
-#include "Vector.h"
-#include "UI/GlobalConsole.h"
+#include "pch.h"
 
 struct FConstants
 {
@@ -31,6 +29,13 @@ struct HighLightBufferType
     uint32 Gizmo;
 };
 
+struct BillboardBufferType
+{
+    FMatrix ViewProj;
+    FVector cameraRight;
+    FVector cameraUp;
+};
+
 void D3D11RHI::Initialize(HWND hWindow)
 {
     // 이곳에서 Device, DeviceContext, viewport, swapchain를 초기화한다
@@ -38,7 +43,7 @@ void D3D11RHI::Initialize(HWND hWindow)
     CreateFrameBuffer();
     CreateRasterizerState();
     CreateConstantBuffer();
-    UResourceManager::GetInstance().Initialize(Device);
+    UResourceManager::GetInstance().Initialize(Device,DeviceContext);
 }
 
 void D3D11RHI::Release()
@@ -132,6 +137,22 @@ void D3D11RHI::UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& 
         DeviceContext->Unmap(ViewProjCB, 0);
         DeviceContext->VSSetConstantBuffers(1, 1, &ViewProjCB); // b1 슬롯
     }
+}
+
+void D3D11RHI::UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix,
+    const FVector& CameraRight, const FVector& CameraUp)
+{
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    DeviceContext->Map(BillboardCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    auto* dataPtr = reinterpret_cast<BillboardBufferType*>(mapped.pData);
+
+    // HLSL 기본 row-major와 맞추기 위해 전치
+    dataPtr->ViewProj = ViewMatrix*ProjMatrix;
+    dataPtr->cameraRight = CameraRight;
+    dataPtr->cameraUp = CameraUp;
+
+    DeviceContext->Unmap(BillboardCB, 0);
+    DeviceContext->VSSetConstantBuffers(0, 1, &BillboardCB); // b0 슬롯
 }
 
 void D3D11RHI::UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
@@ -296,6 +317,13 @@ void D3D11RHI::CreateConstantBuffer()
     hlDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     hlDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&hlDesc, nullptr, &HighLightCB);
+
+    D3D11_BUFFER_DESC billboardDesc = {};
+    billboardDesc.Usage = D3D11_USAGE_DYNAMIC;
+    billboardDesc.ByteWidth = sizeof(HighLightBufferType);
+    billboardDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    billboardDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    Device->CreateBuffer(&billboardDesc, nullptr, &BillboardCB);
 }
 
 
