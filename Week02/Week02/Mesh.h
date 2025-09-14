@@ -8,8 +8,8 @@ class UMesh : public UResourceBase
 public:
     DECLARE_CLASS(UMesh, UResourceBase)
 
-    void Load(const FString& InFilePath, ID3D11Device* InDevice);
-    void Load(FMeshData* InData, ID3D11Device* InDevice);
+    void Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexType InVertexType = EVertexType::VertexSimple);
+    void Load(FMeshData* InData, ID3D11Device* InDevice, EVertexType InVertexType = EVertexType::VertexSimple);
 
     ID3D11Buffer* GetVertexBuffer() const { return VertexBuffer; }
     ID3D11Buffer* GetIndexBuffer() const { return IndexBuffer; }

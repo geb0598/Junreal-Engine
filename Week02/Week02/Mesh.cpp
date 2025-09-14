@@ -3,7 +3,7 @@
 #include "MeshLoader.h"
 #include "ResourceManager.h"
 
-void UMesh::Load(const FString& InFilePath, ID3D11Device* InDevice)
+void UMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexType InVertexType)
 {
     assert(InDevice);
 
@@ -15,7 +15,7 @@ void UMesh::Load(const FString& InFilePath, ID3D11Device* InDevice)
     IndexCount = Data->Indices.size();
 }
 
-void UMesh::Load(FMeshData* InData, ID3D11Device* InDevice)
+void UMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexType InVertexType)
 {
     CreateVertexBuffer(InData, InDevice);
     CreateIndexBuffer(InData, InDevice);

@@ -47,6 +47,11 @@ void UShader::CreateInputLayout(ID3D11Device* Device, EVertexLayoutType LayoutTy
         layout = FVertexPositionTexture::GetLayout();
         layoutCount = FVertexPositionTexture::GetLayoutCount();
         break;
+
+    case EVertexLayoutType::PositionBillBoard:
+        layout = FVertexPositionBillBoard::GetLayout();
+        layoutCount = FVertexPositionBillBoard::GetLayoutCount();
+        break;
     }
 
     HRESULT hr = Device->CreateInputLayout(

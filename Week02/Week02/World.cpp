@@ -92,6 +92,7 @@ void UWorld::Initialize()
         FString PrimitiveType = Primitive.Type + ".obj";
         
         AActor* Actor = NewObject<AStaticMeshActor>();
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMesh(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
 

@@ -20,6 +20,7 @@ enum class EPrimitiveTopology
     TriangleList,
     TriangleStrip
 };
+
 struct FResourceData
 {
     ID3D11Buffer* VertexBuffer = nullptr;
@@ -97,6 +98,16 @@ enum class ResourceDataType : uint8
 
 };
 
+enum class EVertexType : uint8
+{
+    None = -1,
+
+    VertexSimple,
+    VertexDynamic,
+
+    End, 
+};
+
 //TODO EResourceType으로 재정의
 enum class ResourceType : uint8
 {
@@ -116,6 +127,7 @@ enum class EVertexLayoutType : uint8
     Position,
     PositionColor,
     PositionTexture,
+    PositionBillBoard,
 
     End,
 };
