@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "GridActor.h"
 #include "GizmoActor.h"
+#include <map>
 
 // Forward Declarations
 class UResourceManager;
@@ -54,6 +55,9 @@ public:
 
 
     const TArray<AActor*>& GetActors() { return Actors; }
+    
+    /** Generate unique name for actor based on type */
+    FString GenerateUniqueActorName(const FString& ActorType);
 
     /** === 타임 / 틱 === */
     virtual void Tick(float DeltaSeconds);
@@ -89,7 +93,10 @@ private:
 
     /** === 액터 관리 === */
     TArray<AActor*> Actors;
-
+    
+    // Object naming system
+    std::map<FString, int32> ObjectTypeCounts;
+    
     /** == 기즈모 == */
     AGizmoActor* GizmoActor;
 

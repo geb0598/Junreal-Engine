@@ -446,26 +446,6 @@ bool UWorldOutlinerWidget::PassesSearchFilter(AActor* Actor) const
 
 void UWorldOutlinerWidget::RenderToolbar()
 {
-    // Object creation buttons
-    if (ImGui::Button("+ Cube"))
-    {
-        CreateNewActor("Cube");
-    }
-    ImGui::SameLine();
-    
-    if (ImGui::Button("+ Sphere"))
-    {
-        CreateNewActor("Sphere");
-    }
-    ImGui::SameLine();
-    
-    if (ImGui::Button("+ Triangle"))
-    {
-        CreateNewActor("Triangle");
-    }
-    
-    ImGui::Separator();
-    
     // Filter toggles
     ImGui::Checkbox("Selected Only", &bShowOnlySelectedObjects);
     ImGui::SameLine();
@@ -526,45 +506,3 @@ void UWorldOutlinerWidget::SyncSelectionToViewport(AActor* Actor)
     // The 3D viewport will automatically respond to selection changes
 }
 
-void UWorldOutlinerWidget::CreateNewActor(const FString& ActorType)
-{
-    UWorld* World = GetCurrentWorld();
-    if (!World)
-    {
-        UE_LOG("Cannot create actor: No world available");
-        return;
-    }
-    
-    // Create new StaticMeshActor
-    AStaticMeshActor* NewActor = NewObject<AStaticMeshActor>();
-    if (!NewActor)
-    {
-        UE_LOG("Failed to create new actor");
-        return;
-    }
-    
-    // Set mesh resource based on type
-    FString MeshPath = ActorType + ".obj";
-    NewActor->GetStaticMeshComponent()->SetMeshResource(MeshPath);
-    NewActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-    
-    // Set a default position (offset from origin)
-    FVector SpawnLocation = FVector(0, 0, 0);
-    if (SelectionManager->GetSelectedActor())
-    {
-        // Spawn near selected actor
-        SpawnLocation = SelectionManager->GetSelectedActor()->GetActorLocation() + FVector(2, 0, 0);
-    }
-    
-    NewActor->SetActorLocation(SpawnLocation);
-    NewActor->SetWorld(World);
-    
-    // Add to world
-    World->AddActor(NewActor);
-    
-    // Select the newly created actor
-    HandleActorSelection(NewActor);
-    
-    UE_LOG("Created new %s actor at (%.1f, %.1f, %.1f)", 
-           ActorType.c_str(), SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
-}

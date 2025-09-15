@@ -399,6 +399,14 @@ float UWorld::GetTimeSeconds() const
     return 0.0f;
 }
 
+FString UWorld::GenerateUniqueActorName(const FString& ActorType)
+{
+    // Get current count for this type
+    int32& CurrentCount = ObjectTypeCounts[ActorType];
+    FString UniqueName = ActorType + "_" + std::to_string(CurrentCount);
+    CurrentCount++;
+    return UniqueName;
+}
 
 //
 // 액터 제거
