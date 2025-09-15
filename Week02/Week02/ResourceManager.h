@@ -1,7 +1,6 @@
 #pragma once
 #include "ObjectFactory.h"
 #include "Object.h"
-#include "CharacterInfo.h"
 #include "Shader.h"
 #include "Mesh.h"
 #include "Material.h"
@@ -31,19 +30,21 @@ public:
     ID3D11Device* GetDevice() { return Device; }
 
     //font 렌더링을 위함(dynamicVertexBuffer 만듦.)
-    FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size, const TArray<uint32>& Indicies);
+    //FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size, const TArray<uint32>& Indicies);
     //    FTextureData* GetOrCreateTexture
 
     UMaterial* GetOrCreateMaterial(const FString& Name,  EVertexLayoutType layoutType);
 
-    void CreateDynamicVertexBuffer(FResourceData* data, uint32 Size, ID3D11Device* Device);
-    void UpdateDynamicVertexBuffer(const FString& name, TArray<FBillboardCharInfo>& vertices);
+    void CreateTextBillboardTexture();
+
+    void UpdateDynamicVertexBuffer(const FString& name, TArray<FBillboardVertexInfo_GPU>& vertices);
     FTextureData* CreateOrGetTextureData(const FWideString& FilePath);
 
     // 전체 해제
     void Clear();
 
     void CreateAxisMesh(float Length, const FString& FilePath);
+    void CreateTextBillboardMesh();
     void CreateGridMesh(int N, const FString& FilePath);
     void CreateDefaultShader();
 
@@ -111,7 +112,7 @@ T* UResourceManager::Get(const FString& InFilePath)
 }
 
 template<typename T, typename ...Args>
-inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)
+inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)//있으면 긁어오고 없으면 만듦
 {
     uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
     auto iter = Resources[typeIndex].find(InFilePath);
@@ -119,7 +120,7 @@ inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)
     {
         return static_cast<T*>((*iter).second);
     }
-    else
+    else//없으면 해당 리소스의 Load실행
     {
         T* Resource = NewObject<T>();
         Resource->Load(InFilePath, Device, std::forward<Args>(InArgs)...);

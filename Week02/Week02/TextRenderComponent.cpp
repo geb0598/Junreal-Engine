@@ -3,8 +3,8 @@
 #include "d3dtk/DDSTextureLoader.h"
 #include "TextRenderComponent.h"
 #include "ResourceManager.h"
-#include "CharacterInfo.h"
-
+#include "VertexData.h"
+#include "CameraActor.h"
 UTextRenderComponent::UTextRenderComponent()
 {
     TArray<uint32> Indices;
@@ -19,9 +19,16 @@ UTextRenderComponent::UTextRenderComponent()
         Indices.push_back(i * 4 + 3);
     }
 	
+
+    //if(UResourceManager::GetInstance().Get<UMaterial>())
+    MeshResource = UResourceManager::GetInstance().Get<UMesh>("TextBillboard");
+    Material = NewObject<UMaterial>();
+
     
-    ResourceData =UResourceManager::GetInstance().CreateOrGetResourceData(FString("TextBillboard"),sizeof(FBillboardCharInfo)*100,Indices);
-    TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(FWideString(L"Font2.dds"));
+    
+    //UResourceManager::GetInstance().Load<UMaterial>(AttachParent->GetWorldLocation(),);
+    //ResourceData =UResourceManager::GetInstance().CreateOrGetResourceData(FString("TextBillboard"),sizeof(FBillboardCharInfo)*100,Indices);
+    //TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(FWideString(L"Font2.dds"));
     InitCharInfoMap();
 }
 
@@ -39,7 +46,7 @@ void UTextRenderComponent::InitCharInfoMap()
     const int COLROW = 16;
 
     FTextureData* Data = new FTextureData();
-    for (wchar_t c = 32; c <= 126;++c)
+    for (char c = 32; c <= 126;++c)
     {
         int key = c - 32;
         int col = key % COLROW;
@@ -48,40 +55,50 @@ void UTextRenderComponent::InitCharInfoMap()
         float pixelX = col * SUBTEX_WH;
         float pixelY = row * SUBTEX_WH;
 
-        FCharacterInfo CharInfo;
-        CharInfo.Info.X = col / TEXTURE_WH;
-        CharInfo.Info.Y = row / TEXTURE_WH;
-        CharInfo.Info.Z = SUBTEX_WH / TEXTURE_WH;
-        CharInfo.Info.W = CharInfo.Info.Z;
+        FBillboardVertexInfo CharInfo;
+        CharInfo.UVRect.X = pixelX / TEXTURE_WH;
+        CharInfo.UVRect.Y = pixelY / TEXTURE_WH;
+        CharInfo.UVRect.Z = SUBTEX_WH / TEXTURE_WH;
+        CharInfo.UVRect.W = CharInfo.UVRect.Z;
 
         CharInfoMap[c] = CharInfo;
     }
 }
 
-TArray<FBillboardCharInfo> UTextRenderComponent::CreateVerticesForString(const FString& text, const FVector& StartPos) {
-    TArray<FBillboardCharInfo> vertices;
+TArray<FBillboardVertexInfo_GPU> UTextRenderComponent::CreateVerticesForString(const FString& text, const FVector& StartPos) {
+    TArray<FBillboardVertexInfo_GPU> vertices;
     FVector currentPos = StartPos;
     for (char c : text) {
-        FBillboardCharInfo info;
-        info.WorldPosition = currentPos;
-        info.CharSize = { 1.0f, 1.0f };
-        info.UVRect = CharInfoMap[c]; // Step 1에서 만든 데이터 사용
+        FBillboardVertexInfo_GPU info;
+        info.Position[0] = currentPos.X;
+        info.Position[1] = currentPos.Y;
+        info.Position[2] = currentPos.Z;
+
+        info.CharSize[0] = 1.f;
+        info.CharSize[1] = 1.f;
+
+        info.UVRect[0] = CharInfoMap[c].UVRect.X;
+        info.UVRect[1] = CharInfoMap[c].UVRect.Y;
+        info.UVRect[2] = CharInfoMap[c].UVRect.Z;
+        info.UVRect[3] = CharInfoMap[c].UVRect.W;
+
 
         vertices.push_back(info); // 1번
-        vertices.push_back(info); // 2번
-        vertices.push_back(info); // 3번
-        vertices.push_back(info); // 4번
 
-        currentPos.X += info.CharSize.X; // 커서 이동
+        currentPos.X += info.CharSize[0]; // 커서 이동
     }
     return vertices;
 }
 
 void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj)
 {
-    //URenderer::UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)
-    //AttachParent->GetOwner()->GetWorld()->GetC
-    //Renderer->UpdateBillboardConstantBuffers(View,Proj,)
-//    Renderer->PrepareShader(GetMaterial()->GetShader());
-  //  Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Material->Load("TextBillboard.dds", Renderer->GetRHIDevice()->GetDevice(), EVertexLayoutType::PositionBillBoard);//texture 불러오기 초기화는 ResourceManager Initialize() -> CreateTextBillboardTexture();
+    ACameraActor* CameraActor =  GetOwner()->GetWorld()->GetCameraActor();
+    FVector CamRight = CameraActor->GetActorRight();
+    FVector CamUp = CameraActor->GetActorUp();
+    Renderer->UpdateBillboardConstantBuffers(View, Proj, CamRight, CamUp);
+    Renderer->PrepareShader(GetMaterial()->GetShader());
+    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString("A", FVector(0.f, 0.f, 0.f));
+    UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", vertices);
+    Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

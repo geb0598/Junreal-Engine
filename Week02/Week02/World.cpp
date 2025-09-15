@@ -103,7 +103,8 @@ void UWorld::Initialize()
     }
     
     AActor* Actor = NewObject<AActor>();
-    UTextRenderComponent* TextComp = new UTextRenderComponent;
+    UTextRenderComponent* TextComp =  NewObject<UTextRenderComponent>();
+    TextComp->SetOwner(Actor);
     Actor->AddComponent(TextComp);
     Actor->SetWorld(this);
     Actors.push_back(Actor);

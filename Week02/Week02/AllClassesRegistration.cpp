@@ -27,6 +27,7 @@
 #include "UI/Window/ExperimentalFeatureWindow.h"
 #include "UI/Window/OutlinerWindow.h"
 #include "UI/Window/UIWindow.h"
+#include "TextRenderComponent.h"
 #include "BoundingBoxComponent.h"
 #include "Mesh.h"
 #include "Shader.h"
@@ -55,6 +56,7 @@ IMPLEMENT_CLASS(UStaticMesh)
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)
 IMPLEMENT_CLASS(UGizmoRotateComponent)
+IMPLEMENT_CLASS(UTextRenderComponent)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)

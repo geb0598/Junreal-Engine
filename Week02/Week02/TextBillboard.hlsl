@@ -10,7 +10,7 @@ cbuffer CameraInfo : register(b0)
 struct VS_INPUT
 {
     float3 centerPos : WORLDPOSITION;
-    float3 size : SIZE;
+    float2 size : SIZE;
     float4 uvRect : UVRECT;
     uint vertexId : SV_VertexID; // GPU가 자동으로 부여하는 고유 정점 ID
 };
@@ -28,23 +28,21 @@ SamplerState linearSampler : register(s0);
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
-
-    // 1. 하드코딩된 '단위 사각형'의 꼭짓점 오프셋. (-0.5 ~ 0.5)
     float2 cornerOffsets[4] =
     {
-        float2(-0.5f, 0.5f), // 좌상단 (인덱스 0)
-        float2(0.5f, 0.5f), // 우상단 (인덱스 1)
-        float2(-0.5f, -0.5f), // 좌하단 (인덱스 2)
-        float2(0.5f, -0.5f) // 우하단 (인덱스 3)
+        float2(-0.5f, 0.5f), 
+        float2(0.5f, 0.5f), 
+        float2(-0.5f, -0.5f), 
+        float2(0.5f, -0.5f) 
     };
-    // 주의: 이 순서는 인덱스 버퍼의 패턴과 일치해야 합니다.
     uint cornerId = input.vertexId % 4;
 
     // 2. 단위 오프셋에 실제 문자 크기를 곱하여 2D 오프셋 계산
     float2 offset = cornerOffsets[cornerId] * input.size.xy;
 
     // 3. [빌보드 계산] 2D 오프셋을 카메라 방향에 맞춰 3D 오프셋으로 변환
-    float3 worldOffset = offset.x * cameraRight_worldspace - offset.y * cameraUp_worldspace;
+    // 수정된 코드
+    float3 worldOffset = offset.x * cameraRight_worldspace + offset.y * cameraUp_worldspace;
 
     // 4. [최종 위치 생성] 입력받은 '월드 좌표 중심점'에 3D 오프셋을 더함
     float3 finalPos_worldspace = input.centerPos + worldOffset;

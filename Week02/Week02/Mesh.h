@@ -18,6 +18,7 @@ public:
     ID3D11Buffer* GetIndexBuffer() const { return IndexBuffer; }
     uint32 GetVertexCount() { return VertexCount; }
     uint32 GetIndexCount() { return IndexCount; }
+    void SetIndexCount(uint32 Cnt) { IndexCount = Cnt; }
 
 private:
     void CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice, EVertexLayoutType InVertexType);

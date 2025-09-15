@@ -97,24 +97,28 @@ void URenderer::DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOP
     RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
 }
 
-void URenderer::DrawIndexedPrimitiveComponent(UTextRenderComponent* TextRenderComp)
+void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
-    FResourceData* Data = TextRenderComp->GetResourceData();
-    //TODO : Set Shader
-    TArray<FBillboardCharInfo> Infos = TextRenderComp->CreateVerticesForString(FString("Hello"), FVector(0, 0, 0));
-    UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", Infos);
-    UINT Stride = sizeof(FBillboardCharInfo);
+    UINT Stride = sizeof(FBillboardVertexInfo_GPU);
+    ID3D11Buffer* VertexBuff = Comp->GetMeshResource()->GetVertexBuffer();
+    ID3D11Buffer* IndexBuff = Comp->GetMeshResource()->GetIndexBuffer();
+
+    RHIDevice->GetDeviceContext()->IASetInputLayout(Comp->GetMaterial()->GetShader()->GetInputLayout());
+
+    
     RHIDevice->GetDeviceContext()->IASetVertexBuffers(
-        0, 1, &Data->VertexBuffer,&Stride, &Data->Offset
+        0, 1, &VertexBuff, &Stride, 0
     );
     RHIDevice->GetDeviceContext()->IASetIndexBuffer(
-        Data->IndexBuffer, DXGI_FORMAT_R32_UINT, 0
+        IndexBuff, DXGI_FORMAT_R32_UINT, 0
     );
 
-    RHIDevice->GetDeviceContext()->PSGetSamplers(0, 1, &TextRenderComp->GetTextureData()->SamplerState);//문제 있는 코드 
-    RHIDevice->GetDeviceContext()->PSSetShaderResources(0,1,&TextRenderComp->GetTextureData()->TextureSRV);
-    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(Data->Topol);
-    RHIDevice->GetDeviceContext()->DrawIndexed(Data->IndexCount, 0, 0);
+    ID3D11SamplerState* SamplerState = Comp->GetMaterial()->GetTexture()->GetSamplerState();
+    ID3D11ShaderResourceView* TextureSRV = Comp->GetMaterial()->GetTexture()->GetShaderResourceView();
+    RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &SamplerState);
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &TextureSRV);
+    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
+    RHIDevice->GetDeviceContext()->DrawIndexed(Comp->GetMeshResource()->GetIndexCount(), 0, 0);
 }
 
 void URenderer::EndFrame()

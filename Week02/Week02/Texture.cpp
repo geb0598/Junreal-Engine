@@ -27,7 +27,7 @@ void UTexture::Load(const FString& InFilePath, ID3D11Device* InDevice)
 		reinterpret_cast<ID3D11Resource**>(&Texture2D),
 		&ShaderResourceView
 	);
-	if (SUCCEEDED(hr))
+	if (FAILED(hr))
 	{
 		UE_LOG("!!!LOAD TEXTIRE FAILED!!!");
 	}

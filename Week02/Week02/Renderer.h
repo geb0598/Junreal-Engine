@@ -35,7 +35,7 @@ public:
 
     void DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
-    void DrawIndexedPrimitiveComponent(UTextRenderComponent* TextRenderComp);
+    void DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
 	void EndFrame();
 

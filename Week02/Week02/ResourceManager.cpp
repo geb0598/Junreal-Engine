@@ -29,26 +29,30 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     Context = InContext;
     CreateGridMesh(GRIDNUM,"Grid");
     CreateAxisMesh(AXISLENGTH,"Axis");
+    CreateTextBillboardMesh();//"TextBillboard"
+
+    CreateTextBillboardTexture();
 
     CreateDefaultShader();
+    
 }
 
-FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies)
-{
-    auto it = ResourceMap.find(Name);
-    if(it!=ResourceMap.end())
-    {
-        return it->second;
-    }
-
-    FResourceData* ResourceData = new FResourceData();
-
-    CreateDynamicVertexBuffer(ResourceData, Size, Device);
-    //CreateIndexBuffer(ResourceData, Indicies, Device);
-
-    ResourceMap[Name] = ResourceData;
-    return ResourceData;
-}
+//FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies)
+//{
+//    auto it = ResourceMap.find(Name);
+//    if(it!=ResourceMap.end())
+//    {
+//        return it->second;
+//    }
+//
+//    FResourceData* ResourceData = new FResourceData();
+//
+//    CreateDynamicVertexBuffer(ResourceData, Size, Device);
+//    //CreateIndexBuffer(ResourceData, Indicies, Device);
+//
+//    ResourceMap[Name] = ResourceData;
+//    return ResourceData;
+//}
 
 UMaterial* UResourceManager::GetOrCreateMaterial(const FString& Name, EVertexLayoutType layoutType)
 {
@@ -185,6 +189,34 @@ void UResourceManager::CreateAxisMesh(float Length, const FString& FilePath)
 
     UMeshLoader::GetInstance().AddMeshData("Axis", MeshData);
 }
+
+void UResourceManager::CreateTextBillboardMesh()
+{
+    TArray<uint32> Indices;
+    for (uint32 i = 0;i < 100;i++)
+    {
+        Indices.push_back(i * 4 + 0);
+        Indices.push_back(i * 4 + 1);
+        Indices.push_back(i * 4 + 2);
+
+        Indices.push_back(i * 4 + 2);
+        Indices.push_back(i * 4 + 1);
+        Indices.push_back(i * 4 + 3);
+    }
+
+
+    //if(UResourceManager::GetInstance().Get<UMaterial>())
+    UMesh* Mesh = NewObject<UMesh>();
+    FMeshData* BillboardData = new FMeshData;
+    BillboardData->Indices = Indices;
+    BillboardData->Vertices.resize(100);
+    BillboardData->Color.resize(100);
+    BillboardData->UV.resize(100);
+    Mesh->Load(BillboardData, Device, EVertexLayoutType::PositionBillBoard);
+    Add<UMesh>("TextBillboard", Mesh);
+    UMeshLoader::GetInstance().AddMeshData("TextBillboard", BillboardData);
+}
+
 void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
 {
     if (ResourceMap[FilePath])
@@ -277,37 +309,22 @@ void UResourceManager::CreateDefaultShader()
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 
-void UResourceManager::CreateDynamicVertexBuffer(FResourceData* data, uint32 Size, ID3D11Device* Device)
+
+void UResourceManager::CreateTextBillboardTexture()
 {
-    if (Size == 0) return;
-
-    D3D11_BUFFER_DESC vbd = {};
-    vbd.Usage = D3D11_USAGE_DYNAMIC;
-    vbd.ByteWidth = static_cast<UINT>(sizeof(FBillboardCharInfo) * Size);
-    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-    D3D11_SUBRESOURCE_DATA vinitData = {};
-
-    HRESULT hr = Device->CreateBuffer(&vbd, nullptr, &data->VertexBuffer);
-    if (FAILED(hr))
-    {
-        delete data;
-        return;
-    }
-
-    data->VertexCount = static_cast<uint32>(Size);
-    data->ByteWidth = vbd.ByteWidth;
+    UTexture* TextBillboardTexture = NewObject<UTexture>();
+    TextBillboardTexture->Load("TextBillboard.dds",Device);
 }
 
 
-void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBillboardCharInfo>& vertices)
+void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBillboardVertexInfo_GPU>& vertices)
 {
-    if (ResourceMap.find(Name) == ResourceMap.end()) return;
+    UMesh* Mesh = Get<UMesh>(Name);
+    Mesh->SetIndexCount(vertices.size());
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    Context->Map(ResourceMap[Name]->VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑
-    memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardCharInfo) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라
-    Context->Unmap(ResourceMap[Name]->VertexBuffer, 0);//언맵
+    Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑
+    memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardVertexInfo_GPU) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라
+    Context->Unmap(Mesh->GetVertexBuffer(), 0);//언맵
 }
 
 FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePath)

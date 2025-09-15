@@ -32,7 +32,9 @@ public:
     // ───────────────
     // Owner Actor
     // ───────────────
-    void SetOwner(AActor* InOwner) { Owner = InOwner; }
+    void SetOwner(AActor* InOwner) {
+        Owner = InOwner;
+    }
     AActor* GetOwner() const { return Owner; }
 
 protected:
