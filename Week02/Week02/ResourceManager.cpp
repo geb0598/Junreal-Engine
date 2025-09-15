@@ -314,6 +314,7 @@ void UResourceManager::CreateTextBillboardTexture()
 {
     UTexture* TextBillboardTexture = NewObject<UTexture>();
     TextBillboardTexture->Load("TextBillboard.dds",Device);
+    Add<UTexture>("TextBillboard.dds", TextBillboardTexture);
 }
 
 

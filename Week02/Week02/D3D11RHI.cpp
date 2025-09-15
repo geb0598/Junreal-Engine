@@ -42,6 +42,7 @@ void D3D11RHI::Initialize(HWND hWindow)
     CreateDeviceAndSwapChain(hWindow);
     CreateFrameBuffer();
     CreateRasterizerState();
+    CreateBlendState();
     CreateConstantBuffer();
     UResourceManager::GetInstance().Initialize(Device,DeviceContext);
 }
@@ -104,7 +105,7 @@ void D3D11RHI::CreateBlendState()
     rt.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;  // (프리멀티면 ONE / INV_SRC_ALPHA)
     rt.BlendOp = D3D11_BLEND_OP_ADD;
     rt.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rt.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    rt.DestBlendAlpha = D3D11_BLEND_ZERO;
     rt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     rt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     Device->CreateBlendState(&bd, &BlendState);
@@ -334,7 +335,7 @@ void D3D11RHI::CreateConstantBuffer()
 
     D3D11_BUFFER_DESC billboardDesc = {};
     billboardDesc.Usage = D3D11_USAGE_DYNAMIC;
-    billboardDesc.ByteWidth = sizeof(HighLightBufferType);
+    billboardDesc.ByteWidth = sizeof(BillboardBufferType);
     billboardDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     billboardDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&billboardDesc, nullptr, &BillboardCB);

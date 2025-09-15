@@ -42,8 +42,8 @@ void UTexture::Load(const FString& InFilePath, ID3D11Device* InDevice)
 	}
 
 	CreateSamplerState(InDevice);
-
-	UE_LOG("Successfully loaded DDS texture: %s", WFilePath);
+	//UE_LOG("test output : %s",FString("helloworld"));
+	UE_LOG("Successfully loaded DDS texture: %s", InFilePath);
 }
 
 void UTexture::CreateSamplerState(ID3D11Device* Device)
