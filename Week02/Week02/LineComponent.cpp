@@ -27,10 +27,6 @@ void ULineComponent::GetWorldLineData(TArray<FVector>& OutStartPoints, TArray<FV
             OutColors.push_back(Line->GetColor());
         }
     }
-
-    OutStartPoints.clear();
-    OutEndPoints.clear();
-    OutColors.clear();
     return;
 }
 

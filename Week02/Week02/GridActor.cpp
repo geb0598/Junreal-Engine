@@ -83,17 +83,17 @@ void AGridActor::CreateAxisLines(float Length, const FVector& Origin)
     // X축 (빨강) - 원점에서 +X 방향
     LineComponent->AddLine(Origin, 
                           Origin + FVector(Length, 0.0f, 0.0f), 
-                          FVector4(1.0f, 0.0f, 0.0f, 1.0f));
+                          FVector4(0.0f, 1.0f, 0.0f, 1.0f));
     
     // Y축 (초록) - 원점에서 +Y 방향
     LineComponent->AddLine(Origin, 
                           Origin + FVector(0.0f, Length, 0.0f), 
-                          FVector4(0.0f, 1.0f, 0.0f, 1.0f));
+                          FVector4(0.0f, 0.0f, 1.0f, 1.0f));
     
     // Z축 (파랑) - 원점에서 +Z 방향
     LineComponent->AddLine(Origin, 
                           Origin + FVector(0.0f, 0.0f, Length), 
-                          FVector4(0.0f, 0.0f, 1.0f, 1.0f));
+                          FVector4(1.0f, 0.0f, 0.0f, 1.0f));
 }
 
 void AGridActor::ClearLines()
@@ -110,7 +110,7 @@ void AGridActor::RegenerateGrid()
     ClearLines();
     
     // Generate new grid and axis lines with current settings
-    CreateGridLines(GridSize, CellSize, FVector());
     CreateAxisLines(AxisLength, FVector());
+    CreateGridLines(GridSize, CellSize, FVector());
 }
 

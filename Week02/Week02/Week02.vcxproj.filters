@@ -287,6 +287,9 @@
     <FxCompile Include="TextBillboard.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="CollisionDebug.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -327,9 +330,6 @@
     </ClInclude>
     <ClInclude Include="Triangle.h">
       <Filter>헤더 파일\Models</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexSimple.h">
-      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Cube.h">
       <Filter>헤더 파일\Models</Filter>
@@ -503,6 +503,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="ShapeComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexData.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

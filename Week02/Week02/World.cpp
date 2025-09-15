@@ -7,6 +7,7 @@
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
+#include"BoundingBoxComponent.h"
 #include "Mesh.h"
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
@@ -97,15 +98,23 @@ void UWorld::Initialize()
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-
+		Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+        //추후 변경 필요 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
             Primitive.Scale));
         Actor->SetWorld(this);
 
         Actors.push_back(Actor);
     }
-    InitializeMainCamera();
-    InitializeGizmo();
+    
+    AActor* Actor = NewObject<AActor>();
+    UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
+    Actor->AddComponent(TextComp);
+    Actor->SetWorld(this);
+    Actors.push_back(Actor);
+
+	InitializeMainCamera();
+	InitializeGizmo();
 }
 
 void UWorld::InitializeMainCamera()
@@ -196,11 +205,10 @@ void UWorld::Render()
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 0, 0, 1);
                 }
 
-                if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
+                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>((*Components)[i]))
                 {
                     Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
-                    Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
-                    Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
                     Renderer->RSSetState(ViewModeIndex);
                 }
             }
@@ -218,13 +226,16 @@ void UWorld::Render()
 
             // 모든 PrimitiveComponent 처리 (각자의 Render 메서드를 호출)
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
                 Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+               if( Primitive->GetClass() == UTextRenderComponent::StaticClass()){
+                   UE_LOG("UBoundingBoxComponent");
+               }
+            }
         }
+        // 블랜드 스테이드 종료
+        Renderer->OMSetBlendState(false);
     }
-    // 블랜드 스테이드 종료
-    Renderer->OMSetBlendState(false);
-
-    // === End Line Batch (render all accumulated lines) ===
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);

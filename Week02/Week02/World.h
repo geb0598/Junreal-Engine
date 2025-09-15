@@ -50,6 +50,8 @@ public:
     void CreateNewScene();
     void LoadScene(const FString& SceneName);
     void SaveScene(const FString& SceneName);
+    ACameraActor* GetCameraActor() { return MainCameraActor; }
+
 
     const TArray<AActor*>& GetActors() { return Actors; }
 
