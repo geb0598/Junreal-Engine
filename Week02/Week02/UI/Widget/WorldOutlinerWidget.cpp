@@ -4,6 +4,7 @@
 #include "../../ImGui/imgui.h"
 #include "../../World.h"
 #include "../../Actor.h"
+#include "../../StaticMeshActor.h"
 #include "../../SelectionManager.h"
 #include <algorithm>
 #include <string>
@@ -31,8 +32,24 @@ void UWorldOutlinerWidget::Initialize()
 
 void UWorldOutlinerWidget::Update()
 {
-    // Refresh actor tree if world changed
-    RefreshActorTree();
+    // Check if we need to refresh (world changed or actors added/removed)
+    static size_t LastActorCount = 0;
+    
+    UWorld* World = GetCurrentWorld();
+    if (World)
+    {
+        size_t CurrentActorCount = World->GetActors().size();
+        if (CurrentActorCount != LastActorCount)
+        {
+            RefreshActorTree();
+            LastActorCount = CurrentActorCount;
+        }
+    }
+    else if (LastActorCount != 0)
+    {
+        RefreshActorTree();
+        LastActorCount = 0;
+    }
     
     // Sync selection from viewport
     SyncSelectionFromViewport();
@@ -259,6 +276,18 @@ void UWorldOutlinerWidget::HandleActorSelection(AActor* Actor)
     SelectionManager->ClearSelection();
     SelectionManager->SelectActor(Actor);
     
+    // Sync with UIManager for gizmo positioning
+    if (UIManager)
+    {
+        UIManager->SetPickedActor(Actor);
+        
+        // If there's a gizmo actor, position it at the selected actor
+        if (UIManager->GetGizmoActor() && Actor)
+        {
+            UIManager->GetGizmoActor()->SetActorLocation(Actor->GetActorLocation());
+        }
+    }
+    
     UE_LOG("WorldOutliner: Selected actor %s", Actor->GetName().c_str());
 }
 
@@ -309,8 +338,44 @@ void UWorldOutlinerWidget::RenderContextMenu()
         if (ContextMenuTarget)
         {
             ImGui::Text("Actor: %s", ContextMenuTarget->GetName().c_str());
+            const char* ClassName = "Unknown";
+            if (ContextMenuTarget->GetClass())
+            {
+                ClassName = ContextMenuTarget->GetClass()->Name;
+            }
+            ImGui::Text("Type: %s", ClassName);
             ImGui::Separator();
             
+            // Selection actions
+            if (ImGui::MenuItem("Focus in Viewport"))
+            {
+                HandleActorSelection(ContextMenuTarget);
+            }
+            
+            ImGui::Separator();
+            
+            // Transform actions
+            if (ImGui::MenuItem("Reset Transform"))
+            {
+                if (ContextMenuTarget)
+                {
+                    ContextMenuTarget->SetActorLocation(FVector(0, 0, 0));
+                    ContextMenuTarget->SetActorRotation(FQuat::Identity());
+                    ContextMenuTarget->SetActorScale(FVector(1, 1, 1));
+                }
+            }
+            
+            if (ImGui::MenuItem("Reset Position"))
+            {
+                if (ContextMenuTarget)
+                {
+                    ContextMenuTarget->SetActorLocation(FVector(0, 0, 0));
+                }
+            }
+            
+            ImGui::Separator();
+            
+            // Edit actions
             if (ImGui::MenuItem("Rename"))
             {
                 HandleActorRename(ContextMenuTarget);
@@ -323,10 +388,13 @@ void UWorldOutlinerWidget::RenderContextMenu()
             
             ImGui::Separator();
             
+            // Danger zone
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
             if (ImGui::MenuItem("Delete"))
             {
                 HandleActorDelete(ContextMenuTarget);
             }
+            ImGui::PopStyleColor();
         }
         
         ImGui::EndPopup();
@@ -378,6 +446,26 @@ bool UWorldOutlinerWidget::PassesSearchFilter(AActor* Actor) const
 
 void UWorldOutlinerWidget::RenderToolbar()
 {
+    // Object creation buttons
+    if (ImGui::Button("+ Cube"))
+    {
+        CreateNewActor("Cube");
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("+ Sphere"))
+    {
+        CreateNewActor("Sphere");
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("+ Triangle"))
+    {
+        CreateNewActor("Triangle");
+    }
+    
+    ImGui::Separator();
+    
     // Filter toggles
     ImGui::Checkbox("Selected Only", &bShowOnlySelectedObjects);
     ImGui::SameLine();
@@ -436,4 +524,47 @@ void UWorldOutlinerWidget::SyncSelectionToViewport(AActor* Actor)
 {
     // Selection is already handled via SelectionManager
     // The 3D viewport will automatically respond to selection changes
+}
+
+void UWorldOutlinerWidget::CreateNewActor(const FString& ActorType)
+{
+    UWorld* World = GetCurrentWorld();
+    if (!World)
+    {
+        UE_LOG("Cannot create actor: No world available");
+        return;
+    }
+    
+    // Create new StaticMeshActor
+    AStaticMeshActor* NewActor = NewObject<AStaticMeshActor>();
+    if (!NewActor)
+    {
+        UE_LOG("Failed to create new actor");
+        return;
+    }
+    
+    // Set mesh resource based on type
+    FString MeshPath = ActorType + ".obj";
+    NewActor->GetStaticMeshComponent()->SetMeshResource(MeshPath);
+    NewActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    
+    // Set a default position (offset from origin)
+    FVector SpawnLocation = FVector(0, 0, 0);
+    if (SelectionManager->GetSelectedActor())
+    {
+        // Spawn near selected actor
+        SpawnLocation = SelectionManager->GetSelectedActor()->GetActorLocation() + FVector(2, 0, 0);
+    }
+    
+    NewActor->SetActorLocation(SpawnLocation);
+    NewActor->SetWorld(World);
+    
+    // Add to world
+    World->AddActor(NewActor);
+    
+    // Select the newly created actor
+    HandleActorSelection(NewActor);
+    
+    UE_LOG("Created new %s actor at (%.1f, %.1f, %.1f)", 
+           ActorType.c_str(), SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
 }

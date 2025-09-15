@@ -95,4 +95,7 @@ private:
     // Selection synchronization
     void SyncSelectionFromViewport();
     void SyncSelectionToViewport(AActor* Actor);
+    
+    // Object creation
+    void CreateNewActor(const FString& ActorType);
 };
