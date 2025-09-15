@@ -53,6 +53,7 @@ public:
     void AddActorLocalLocation(const FVector& DeltaRot);
 
     void SetWorld(UWorld* InWorld) { World = InWorld; }
+    UWorld* GetWorld() const { return World; }
 
 
 

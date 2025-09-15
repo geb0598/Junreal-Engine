@@ -6,15 +6,16 @@ class UTextRenderComponent : public UMeshComponent
 public:
 	DECLARE_CLASS(UTextRenderComponent, UMeshComponent)
 	UTextRenderComponent();
+	~UTextRenderComponent() override;
 
 protected:
-	~UTextRenderComponent() override;
 
 public:
 	void InitCharInfoMap();
 	TArray<FBillboardCharInfo> CreateVerticesForString(const FString& text,const FVector& StartPos);
 	FResourceData* GetResourceData() { return ResourceData; }
 	FTextureData* GetTextureData() { return TextureData; }
+	virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
 	void SetText(FString Txt);
 private:
 	FString Text;
