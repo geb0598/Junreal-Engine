@@ -250,6 +250,7 @@
     <ClCompile Include="UI\Widget\PrimitiveSpawnWidget.cpp" />
     <ClCompile Include="UI\Widget\SceneIOWidget.cpp" />
     <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp" />
+    <ClCompile Include="UI\Widget\WorldOutlinerWidget.cpp" />
     <ClCompile Include="UI\Widget\Widget.cpp" />
     <ClCompile Include="UI\Window\ConsoleWindow.cpp" />
     <ClCompile Include="UI\Window\ControlPanelWindow.cpp" />

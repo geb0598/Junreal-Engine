@@ -190,16 +190,35 @@ void UUIWindow::RenderWidget() const
 {
 	for (auto* Widget : Widgets)
 	{
-		Widget->RenderWidget();
-		Widget->PostProcess(); // 선택
+		if (Widget != nullptr)  // Null check to prevent crashes
+		{
+			Widget->RenderWidget();
+			Widget->PostProcess(); // 선택
+		}
 	}
 }
 
 void UUIWindow::Update() const
 {
-	for (UWidget* Widget : Widgets)
+	for (size_t i = 0; i < Widgets.size(); ++i)
 	{
-		Widget->Update();
+		UWidget* Widget = Widgets[i];
+		if (Widget != nullptr)  // Null check to prevent crashes
+		{
+			try
+			{
+				Widget->Update();
+			}
+			catch (...)
+			{
+				UE_LOG("UIWindow::Update() - Exception in widget %zu (%s)", i, 
+				       Widget->GetName().empty() ? "Unknown" : Widget->GetName().c_str());
+			}
+		}
+		else
+		{
+			UE_LOG("UIWindow::Update() - Null widget at index %zu", i);
+		}
 	}
 }
 
