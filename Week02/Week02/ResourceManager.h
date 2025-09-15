@@ -82,7 +82,7 @@ protected:
 private:
     TMap<FString, UMaterial*> MaterialMap;
 };
-
+//-----definition
 template<typename T>
 bool UResourceManager::Add(const FString& InFilePath, UObject* InObject)
 {

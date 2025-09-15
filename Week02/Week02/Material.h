@@ -25,8 +25,6 @@ public:
     UTexture* GetTexture();
 
 private:
-
-	
 	UShader* Shader = nullptr;
 	UTexture* Texture= nullptr;
 };
