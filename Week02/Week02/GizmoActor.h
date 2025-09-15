@@ -6,6 +6,10 @@ class UGizmoArrowComponent;
 class UGizmoScaleComponent;
 class UGizmoRotateComponent;
 class ACameraActor;
+class USelectionManager;
+class UInputManager;
+class UUIManager;
+class CPickingSystem;
 
 class AGizmoActor : public AActor
 {
@@ -13,6 +17,7 @@ public:
     DECLARE_CLASS(AGizmoActor, AActor)
     AGizmoActor();
 
+    virtual void Tick(float DeltaSeconds) override;
 protected:
     ~AGizmoActor() override;
 
@@ -50,6 +55,13 @@ public:
     EGizmoMode GetGizmoMode() const;
 
     void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera);
+    
+    // Gizmo interaction methods
+    void SetTargetActor(AActor* InTargetActor) { TargetActor = InTargetActor; }
+    AActor* GetTargetActor() const { return TargetActor; }
+    void SetCameraActor(ACameraActor* InCameraActor) { CameraActor = InCameraActor; }
+    ACameraActor* GetCameraActor() const { return CameraActor; }
+
 protected:
 
     UGizmoArrowComponent* ArrowX;
@@ -70,6 +82,23 @@ protected:
     bool bIsHovering = false;
     EGizmoMode CurrentMode;
     EGizmoSpace CurrentSpace = EGizmoSpace::World;
+    
+    // Interaction state
+    AActor* TargetActor = nullptr;
+    ACameraActor* CameraActor = nullptr;
+    
+    // Manager references
+    USelectionManager* SelectionManager = nullptr;
+    UInputManager* InputManager = nullptr;
+    UUIManager* UIManager = nullptr;
+    
+    // Gizmo interaction methods
+    void ProcessGizmoInteraction(float DeltaSeconds);
+    void ProcessGizmoHovering();
+    void ProcessGizmoDragging(float DeltaSeconds);
+    void ProcessGizmoModeSwitch();
+    void UpdateGizmoPosition();
+    void UpdateComponentVisibility();
 };
 
 

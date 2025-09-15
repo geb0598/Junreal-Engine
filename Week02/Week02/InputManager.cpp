@@ -177,6 +177,11 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (!imguiWantsMouse)
         {
             UpdateMouseButton(RightButton, true);
+            if (bEnableDebugLogging) UE_LOG("InputManager: Right Mouse DOWN");
+        }
+        else
+        {
+            if (bEnableDebugLogging) UE_LOG("InputManager: Right Mouse DOWN blocked by ImGui");
         }
         break;
         
@@ -184,6 +189,11 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (!imguiWantsMouse)
         {
             UpdateMouseButton(RightButton, false);
+            if (bEnableDebugLogging) UE_LOG("InputManager: Right Mouse UP");
+        }
+        else
+        {
+            if (bEnableDebugLogging) UE_LOG("InputManager: Right Mouse UP blocked by ImGui");
         }
         break;
         

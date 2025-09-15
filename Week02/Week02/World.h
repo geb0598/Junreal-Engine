@@ -33,10 +33,20 @@ protected:
 public:
     /** 초기화 */
     void Initialize();
-	void InitializeMainCamera();
+    void InitializeMainCamera();
+    void InitializeGrid();
     void InitializeGizmo();
+    
+    // 액터 인터페이스 관리
+    void SetupActorReferences();
+    void UpdateActorInteractions(float DeltaSeconds);
+    
+    // 선택 및 피킹 처리
+    void ProcessActorSelection();
+
     void SetRenderer(URenderer* InRenderer);
     URenderer*& const GetRenderer()  { return Renderer; }
+
     template<class T>
     T* SpawnActor(const FTransform& Transform);
 
@@ -52,7 +62,6 @@ public:
     void SaveScene(const FString& SceneName);
     ACameraActor* GetCameraActor() { return MainCameraActor; }
     
-    // Camera movement speed control
     float GetCameraMoveSpeed() const { return CameraMoveSpeed; }
     void SetCameraMoveSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; }
 
@@ -71,6 +80,7 @@ public:
 
     /** === 렌더 === */
     void Render();
+    void RenderGizmoActor();
 
     
     /** === 레벨 / 월드 구성 === */
@@ -98,6 +108,8 @@ private:
     TArray<FPrimitiveData> Primitives;
 
     /** === 액터 관리 === */
+    TArray<AActor*> EngineActors;
+    /** === 액터 관리 === */
     TArray<AActor*> Actors;
     
     // Object naming system
@@ -106,15 +118,9 @@ private:
     /** == 기즈모 == */
     AGizmoActor* GizmoActor;
 
-    /** === 에디터 카메라 조작 === */
-    void ProcessEditorCameraInput(float DeltaSeconds);
-    void ProcessCameraRotation(float DeltaSeconds);
-    void ProcessCameraMovement(float DeltaSeconds);
-    
-    // 카메라 설정
-    float MouseSensitivity = 0.1f;  // 0.005f -> 0.1f로 증가 (20배)
+    // 카메라 설정 (CameraActor로 이동: 이동 속도만 월드에서 유지)
     float CameraMoveSpeed = 5.0f;
-
+    
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 };
 

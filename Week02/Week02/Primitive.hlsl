@@ -21,22 +21,6 @@ cbuffer HighLightBuffer : register(b2)
     int GIzmo;
 }
 
-// 그리드 파라미터 (b3)
-cbuffer GridParams : register(b3)
-{
-    float CellSize; // 한 칸 간격(월드 유닛). 예: 1.0
-    float LineWidth; // 라인 두께(픽셀 단위). 예: 1.0
-    int MajorEvery; // 메이저 라인 간격(몇 칸마다 굵게). 예: 10
-    float AxisWidth; // X/Z 축 두께(월드 유닛). 예: 0.02
-
-    float4 MinorColor; // (r,g,b,a) 예: (0.5,0.5,0.5,0.8)
-    float4 MajorColor; // (r,g,b,a) 예: (0.7,0.7,0.7,0.9)
-    float3 AxisXColor; // X축(빨강) 예: (1,0.2,0.2)
-    float _pad0;
-    float3 AxisZColor; // Z축(파랑) 예: (0.2,0.4,1)
-    float _pad1;
-}
-
 struct VS_INPUT
 {
     float3 position : POSITION; // Input position from vertex buffer

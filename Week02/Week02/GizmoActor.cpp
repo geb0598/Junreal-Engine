@@ -4,6 +4,10 @@
 #include "GizmoScaleComponent.h"
 #include "GizmoRotateComponent.h"
 #include "CameraActor.h"
+#include "SelectionManager.h"
+#include "InputManager.h"
+#include "UI/UIManager.h"
+#include "Picking.h"
 
 AGizmoActor::AGizmoActor()
 {
@@ -112,6 +116,38 @@ AGizmoActor::AGizmoActor()
     ScaleY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // Z축
 
     CurrentMode = EGizmoMode::Translate;
+    
+    // 매니저 참조 초기화
+    SelectionManager = &USelectionManager::GetInstance();
+    InputManager = &UInputManager::GetInstance();
+    UIManager = &UUIManager::GetInstance();
+}
+
+void AGizmoActor::Tick(float DeltaSeconds)
+{
+    if (!SelectionManager) SelectionManager = &USelectionManager::GetInstance();
+    if (!InputManager) InputManager = &UInputManager::GetInstance();
+    if (!UIManager) UIManager = &UUIManager::GetInstance();
+    
+    // 컴포넌트 활성화 상태 업데이트
+    UpdateComponentVisibility();
+    
+    if (SelectionManager->HasSelection() && CameraActor)
+    {
+        TargetActor = SelectionManager->GetSelectedActor();
+        
+        // 기즈모 위치를 선택된 액터 위치로 업데이트
+        if (TargetActor)
+        {
+            SetActorLocation(TargetActor->GetActorLocation());
+        }
+        
+        ProcessGizmoInteraction(DeltaSeconds);
+    }
+    else
+    {
+        TargetActor = nullptr;
+    }
 }
 
 AGizmoActor::~AGizmoActor()
@@ -305,10 +341,10 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
     {
         // 안정적인 축 방향 계산
         FVector2D ScreenAxis = GetStableAxisDirection(Axis, Camera);
-        
+
         // 스크린 공간에서 마우스 이동과 축 방향의 내적으로 이동량 계산
         float Movement = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y) * Sensitivity * 200.0f;
-        
+
         // 일관된 방향으로 이동 (Y축 특수 처리 제거)
         FVector CurrentLocation = Target->GetActorLocation();
         Target->SetActorLocation(CurrentLocation + Axis * Movement);
@@ -324,17 +360,17 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
         case 3: Axis = FVector(0, 1, 0); break;
         case 2: Axis = FVector(0, 0, 1); break;
         }
-        
+
         // 안정적인 축 방향 계산
         FVector2D ScreenAxis = GetStableAxisDirection(Axis, Camera);
-        
+
         // 스크린 공간에서 마우스 이동과 축 방향의 내적으로 스케일 변화량 계산
         float Movement = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y) * Sensitivity * 50.0f;
-        
+
         // 일관된 방향으로 스케일 조정 (Y축 특수 처리 제거)
         FVector CurrentScale = Target->GetActorScale();
         Target->SetActorScale(CurrentScale + Axis * Movement);
-       
+
         break;
     }
     case EGizmoMode::Rotate:
@@ -424,8 +460,9 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
                 break;
             }
             }
+
             FQuat NewRot = DeltaQuat * CurrentRot; // 월드 기준 회전
-            
+
             Target->SetActorRotation(NewRot);
 
 
@@ -435,4 +472,100 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
     }
 }
 
+void AGizmoActor::ProcessGizmoInteraction(float DeltaSeconds)
+{
+    if (!TargetActor || !CameraActor) return;
 
+    UpdateGizmoPosition();
+
+    ProcessGizmoModeSwitch();
+
+    // 기즈모 드래그
+    ProcessGizmoDragging(DeltaSeconds);
+
+    // 기즈모 호버링
+    if (!InputManager->GetIsGizmoDragging())
+    {
+        ProcessGizmoHovering();
+    }
+}
+
+void AGizmoActor::UpdateGizmoPosition()
+{
+    if (!TargetActor) return;
+
+    SetActorLocation(TargetActor->GetActorLocation());
+}
+
+void AGizmoActor::ProcessGizmoHovering()
+{
+    if (!CameraActor) return;
+
+    uint32 HoveringResult = CPickingSystem::IsHoveringGizmo(this, CameraActor);
+
+    // 드래그 시작 감지
+    if (!InputManager->GetIsGizmoDragging() && HoveringResult > 0 && InputManager->IsMouseButtonPressed(LeftButton))
+    {
+        InputManager->SetIsGizmoDragging(true);
+        InputManager->SetDraggingAxis(HoveringResult);
+        UE_LOG("기즈모 드래그 시작: 축 %d", HoveringResult);
+    }
+}
+
+void AGizmoActor::ProcessGizmoDragging(float DeltaSeconds)
+{
+    if (!InputManager->GetIsGizmoDragging() || !TargetActor || !CameraActor) return;
+
+    if (InputManager->IsMouseButtonDown(LeftButton))
+    {
+        FVector2D MouseDelta = InputManager->GetMouseDelta();
+        if ((MouseDelta.X * MouseDelta.X + MouseDelta.Y * MouseDelta.Y) > 0.0f)
+        {
+            OnDrag(TargetActor, InputManager->GetDraggingAxis(), MouseDelta.X, MouseDelta.Y, CameraActor);
+
+            SetActorLocation(TargetActor->GetActorLocation());
+        }
+    }
+
+    if (InputManager->IsMouseButtonReleased(LeftButton))
+    {
+        InputManager->SetIsGizmoDragging(false);
+        InputManager->SetDraggingAxis(0);
+    }
+}
+
+void AGizmoActor::ProcessGizmoModeSwitch()
+{
+    // 스페이스 키로 기즈모 모드 전환
+    if (InputManager->IsKeyPressed(VK_SPACE))
+    {
+        int GizmoModeIndex = static_cast<int>(GetMode());
+        GizmoModeIndex = (GizmoModeIndex + 1) % 3;  // 3 = enum 개수
+        EGizmoMode NewGizmoMode = static_cast<EGizmoMode>(GizmoModeIndex);
+        NextMode(NewGizmoMode);
+    }
+}
+
+void AGizmoActor::UpdateComponentVisibility()
+{
+    // 선택된 액터가 없으면 모든 기즈모 컴포넌트를 비활성화
+    bool bHasSelection = SelectionManager && SelectionManager->HasSelection();
+    
+    // Arrow Components (Translate 모드)
+    bool bShowArrows = bHasSelection && (CurrentMode == EGizmoMode::Translate);
+    if (ArrowX) ArrowX->SetActive(bShowArrows);
+    if (ArrowY) ArrowY->SetActive(bShowArrows);
+    if (ArrowZ) ArrowZ->SetActive(bShowArrows);
+    
+    // Rotate Components (Rotate 모드)
+    bool bShowRotates = bHasSelection && (CurrentMode == EGizmoMode::Rotate);
+    if (RotateX) RotateX->SetActive(bShowRotates);
+    if (RotateY) RotateY->SetActive(bShowRotates);
+    if (RotateZ) RotateZ->SetActive(bShowRotates);
+    
+    // Scale Components (Scale 모드)
+    bool bShowScales = bHasSelection && (CurrentMode == EGizmoMode::Scale);
+    if (ScaleX) ScaleX->SetActive(bShowScales);
+    if (ScaleY) ScaleY->SetActive(bShowScales);
+    if (ScaleZ) ScaleZ->SetActive(bShowScales);
+}

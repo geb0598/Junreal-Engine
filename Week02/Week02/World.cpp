@@ -15,13 +15,6 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 , InputManager(UInputManager::GetInstance())
 , SelectionManager(USelectionManager::GetInstance())
 {
-    GridActor = NewObject<AGridActor>();
-    GridActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, 0, 0 }),
-        FVector{ 1, 1, 1 }));
-    GridActor->SetWorld(this);
-
-    // Add GridActor to Actors array so it gets rendered in the main loop
-    Actors.push_back(GridActor);
 }
 
 
@@ -115,19 +108,35 @@ void UWorld::Initialize()
     Actors.push_back(Actor);
 
 	InitializeMainCamera();
+    InitializeGrid();
 	InitializeGizmo();
+	
+	// 액터 간 참조 설정
+	SetupActorReferences();
 }
 
 void UWorld::InitializeMainCamera()
 {
-    // === 카메라 엑터 초기화 ===
-    // 카메라
     MainCameraActor = NewObject<ACameraActor>();
     MainCameraActor->SetWorld(this);
     MainCameraActor->SetActorLocation({ 0, 0, -10 });
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);
+
+    EngineActors.Add(MainCameraActor);
+}
+
+void UWorld::InitializeGrid()
+{
+    GridActor = NewObject<AGridActor>();
+    GridActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, 0, 0 }),
+        FVector{ 1, 1, 1 }));
+    GridActor->SetWorld(this);
+
+    // Add GridActor to Actors array so it gets rendered in the main loop
+    EngineActors.push_back(GridActor);
+    //EngineActors.push_back(GridActor);
 }
 
 void UWorld::InitializeGizmo()
@@ -137,6 +146,13 @@ void UWorld::InitializeGizmo()
     GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
         FVector{ 1, 1, 1 }));
     GizmoActor->SetWorld(this);
+    
+    // 기즈모에 카메라 참조 설정
+    if (MainCameraActor)
+    {
+        GizmoActor->SetCameraActor(MainCameraActor);
+    }
+    
     UIManager.SetGizmoActor(GizmoActor);
 }
 
@@ -145,9 +161,7 @@ void UWorld::SetRenderer(URenderer* InRenderer)
     Renderer = InRenderer;
 }
 
-// 순수 누적 방식의 카메라 회전 상태 (전역)
-float CameraYawDeg = 0.0f; // 월드 Up(Y) 기준 Yaw (무제한 누적)
-float CameraPitchDeg = 0.0f; // 로컬 Right 기준 Pitch (제한됨)
+// 카메라 회전 상태는 이제 CameraActor에서 관리됨
 
 void UWorld::Render()
 {
@@ -165,78 +179,35 @@ void UWorld::Render()
 
     // === Draw Actors ===
     Renderer->RSSetState(ViewModeIndex);
-    for (AActor* Actor : Actors)
-    {
-        if (!Actor) continue;
 
+    TArray<AActor*> AllActors;
+    AllActors.reserve(Actors.size() + EngineActors.size());
+    AllActors.insert(AllActors.end(), Actors.begin(), Actors.end());
+    AllActors.insert(AllActors.end(), EngineActors.begin(), EngineActors.end());
+    for (AActor* Actor : AllActors)
+    {
         bool bIsSelected = SelectionManager.IsActorSelected(Actor);
         Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-
-        if (bIsSelected)
-        {
-            TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
-
-            EGizmoMode GizmoMode = GizmoActor->GetGizmoMode();
-
-            for (int32 i = 0; i < Components->Num(); ++i)
-            {
-                ModelMatrix = (*Components)[i]->GetWorldMatrix();
-                Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-
-                // 드래그 중이면 드래그하는 축만
-                if (InputManager.GetIsGizmoDragging())
-                {
-                    if (InputManager.GetDraggingAxis() == i + 1)
-                    {
-                        Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 1, 0, 1);
-                    }
-                    else
-                    {
-                        Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 0, 0, 1);
-                    }
-                }
-                // 아니면 호버링 한 축만
-                else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
-                {
-                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 1, 0, 1);
-                }
-                else
-                {
-                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 0, 0, 1);
-                }
-
-                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>((*Components)[i]))
-                {
-                    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
-                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                    Renderer->RSSetState(ViewModeIndex);
-                }
-            }
-            Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-
-            // 알파 블랜딩을 위한 blendstate
-            Renderer->OMSetBlendState(true);
-        }
-
-
-        // 액터의 모든 렌더러블 컴포넌트 렌더
         for (USceneComponent* Component : Actor->GetComponents())
         {
             if (!Component) continue;
 
-            // 모든 PrimitiveComponent 처리 (각자의 Render 메서드를 호출)
+            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+            {
+                if (!ActorComp->IsActive()) continue;
+            }
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Renderer->RSSetState(ViewModeIndex);
                 Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                   if( Primitive->GetClass() == UTextRenderComponent::StaticClass()){
-                       UE_LOG("UBoundingBoxComponent");
-                   }
             }
         }
         // 블랜드 스테이드 종료
         Renderer->OMSetBlendState(false);
     }
+
+    RenderGizmoActor();
+
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
@@ -249,141 +220,21 @@ void UWorld::Render()
 
 void UWorld::Tick(float DeltaSeconds)
 {
-    // 액터 로직 업데이트
     for (AActor* Actor : Actors)
     {
         if (Actor) Actor->Tick(DeltaSeconds);
     }
-
-    // 기즈모 드래그 상태 관리를 위한 정적 변수들
-    // static bool bIsDragging = false;
-    // static uint32 DraggingAxis = 0;
-
-    if (MainCameraActor)
+    for (AActor* EngineActor : EngineActors)
     {
-        // 선택된 액터가 있을 때 기즈모 호버링을 위한 상시 피킹 추가 가동
-        if (SelectionManager.HasSelection())
-        {
-            //기즈모 위치조정
-            GizmoActor->SetActorLocation(SelectionManager.GetSelectedActor()->GetActorLocation());
-
-            // 어느 기즈모가 호버링 됐는지 출력 return 1 or 2 or 3
-            uint32 HoveringResult = CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor);
-
-            // 드래그 시작 감지
-            if (!InputManager.GetIsGizmoDragging() && HoveringResult > 0 && InputManager.IsMouseButtonPressed(
-                LeftButton))
-            {
-                InputManager.SetIsGizmoDragging(true);
-                InputManager.SetDraggingAxis(HoveringResult);
-                UE_LOG("Start dragging axis: %d", InputManager.GetDraggingAxis());
-            }
-
-            //여기서 모드 가져옴
-            EGizmoMode GizmoMode = GizmoActor->GetGizmoMode();
-
-            // 드래그 중일 때 액터 이동
-            if (InputManager.GetIsGizmoDragging() && InputManager.IsMouseButtonDown(LeftButton))
-            {
-                FVector2D MouseDelta = InputManager.GetMouseDelta();
-                if ((MouseDelta.X * MouseDelta.X + MouseDelta.Y * MouseDelta.Y) > 0.0f)
-                {
-                    //AActor* SelectedActor = SelectionManager.GetSelectedActor();
-
-                    // 모드에 따라서 Picked Actor 행동 결정
-
-                    AActor* SelectedActor = SelectionManager.GetSelectedActor();
-                    CPickingSystem::DragActorWithGizmo(SelectedActor, GizmoActor, InputManager.GetDraggingAxis(), MouseDelta, MainCameraActor, GizmoMode);
-
-                    // 기즈모 위치도 함께 업데이트
-                    GizmoActor->SetActorLocation(SelectedActor->GetActorLocation());
-
-                    UE_LOG("Dragging axis %d, delta: (%.3f, %.3f)", InputManager.GetDraggingAxis(), MouseDelta.X,
-                        MouseDelta.Y);
-                }
-            }
-
-            // 드래그 종료 감지
-            if (InputManager.GetIsGizmoDragging() && InputManager.IsMouseButtonReleased(LeftButton))
-            {
-                InputManager.SetIsGizmoDragging(false);
-                InputManager.SetDraggingAxis(0);
-                UE_LOG("Stop dragging");
-            }
-            if (InputManager.IsKeyPressed(VK_SPACE))
-            {
-                int GizmoModeIndex = static_cast<int>(GizmoActor->GetMode());
-                GizmoModeIndex = (GizmoModeIndex + 1) % 3;  // 3 = enum 개수
-                EGizmoMode GizmoMode = static_cast<EGizmoMode>(GizmoModeIndex);
-                GizmoActor->NextMode(GizmoMode);
-            }
-        }
-
-        // 좌클릭으로 피킹 (기즈모 드래그 중이 아닐 때만)
-        if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
-        {
-            // PickingSystem을 사용한 피킹 처리
-            if (AActor* PickedActor = CPickingSystem::PerformPicking(Actors, MainCameraActor))
-            {
-                // SelectionManager를 통해 액터 선택
-                SelectionManager.SelectActor(PickedActor);
-
-                // 색 강조를 위한 플래그
-                UIManager.SetPickedActor(PickedActor);
-
-                GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
-            }
-            else
-            {
-                //TUUIManager.GetPickedActor()->ClearPickedFlag();
-
-                UIManager.ResetPickedActor();
-                // 선택 해제
-                SelectionManager.ClearSelection();
-            }
-        }
-
-        // 에디터 카메라 조작
-        ProcessEditorCameraInput(DeltaSeconds);
-
-        // 드래그 종료시
-        if (InputManager.IsMouseButtonReleased(RightButton))
-        {
-            FVector UICameraDeg = UIManager.GetTempCameraRotation();
-            CameraYawDeg = UICameraDeg.Y;
-            CameraPitchDeg = UICameraDeg.X;
-        }
-        //UE_LOG("Real CAMERA ROTATION    Pitch : %f  Yaw : %f", CameraPitchDeg, CameraYawDeg);
+        if (EngineActor) EngineActor->Tick(DeltaSeconds);
     }
+    GizmoActor->Tick(DeltaSeconds);
+
+    ProcessActorSelection();
+
+    //Input Manager가 카메라 후에 업데이트 되어야함
     InputManager.Update();
     UIManager.Update(DeltaSeconds);
-
-
-    // for (int i = 0; i < 1000; i++)
-    // {
-    //     FTransform SpawnActorTF(
-    //         FVector(
-    //             (static_cast<float>(rand()) / RAND_MAX) * 10.0f - 5.0f,
-    //             0,
-    //             (static_cast<float>(rand()) / RAND_MAX) * 10.0f - 5.0f
-    //         ),
-    //         FQuat::MakeFromEuler({ 0, 0, 0 }),
-    //         FVector(
-    //             static_cast<float>(rand()) / RAND_MAX * 2.0f + 1.0f,
-    //             static_cast<float>(rand()) / RAND_MAX * 2.0f + 1.0f,
-    //             static_cast<float>(rand()) / RAND_MAX * 2.0f + 1.0f
-    //         )
-    //     );
-    //
-    //     AStaticMeshActor* SpawnedActor = SpawnActor<AStaticMeshActor>(SpawnActorTF);
-    //     //여기에 타입셋하는 코드 추가
-    //     int32 Random = rand() % 3;
-    //     const char* Mesh =
-    //         (Random == 0) ? "Sphere.obj" :
-    //         (Random == 1) ? "Cube.obj" :
-    //         "Triangle.obj";
-    //     SpawnedActor->GetStaticMeshComponent()->SetStaticMesh(Mesh);
-    // }
 }
 
 float UWorld::GetTimeSeconds() const
@@ -475,6 +326,44 @@ void UWorld::LoadScene(const FString& SceneName)
     }
 }
 
+// 액터 인터페이스 관리 메소드들
+void UWorld::SetupActorReferences()
+{
+    if (GizmoActor && MainCameraActor)
+    {
+        GizmoActor->SetCameraActor(MainCameraActor);
+    }
+
+}
+
+void UWorld::ProcessActorSelection()
+{
+    if (!MainCameraActor) return;
+    
+    if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
+    {
+        if (AActor* PickedActor = CPickingSystem::PerformPicking(Actors, MainCameraActor))
+        {
+            SelectionManager.SelectActor(PickedActor);
+            UIManager.SetPickedActor(PickedActor);
+            if (GizmoActor)
+            {
+                GizmoActor->SetTargetActor(PickedActor);
+                GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
+            }
+        }
+        else
+        {
+            UIManager.ResetPickedActor();
+            SelectionManager.ClearSelection();
+            if (GizmoActor)
+            {
+                GizmoActor->SetTargetActor(nullptr);
+            }
+        }
+    }
+}
+
 
 void UWorld::SaveScene(const FString& SceneName)
 {
@@ -497,103 +386,65 @@ void UWorld::SaveScene(const FString& SceneName)
 }
 
 
-//
-// 에디터 카메라 조작 구현
-//
-void UWorld::ProcessEditorCameraInput(float DeltaSeconds)
+void UWorld::RenderGizmoActor()
 {
-    if (!MainCameraActor) return;
-
-    // 우클릭 드래그로 카메라 회전 및 이동
-    if (InputManager.IsMouseButtonDown(RightButton))
+    if (!GizmoActor || !Renderer || !MainCameraActor) return;
+    
+    if (!SelectionManager.HasSelection()) return;
+    
+    FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
+    FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
+    FMatrix ModelMatrix;
+    FVector rgb(1.0f, 1.0f, 1.0f);
+    
+    TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
+    if (!Components) return;
+    
+    for (uint32 i = 0; i < Components->Num(); ++i)
     {
-        ProcessCameraRotation(DeltaSeconds);
-        ProcessCameraMovement(DeltaSeconds);
+        USceneComponent* Component = (*Components)[i];
+        if (!Component) continue;
+        
+        // 컴포넌트 활성 상태 확인
+        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+        {
+            if (!ActorComp->IsActive()) continue;
+        }
+        
+        ModelMatrix = Component->GetWorldMatrix();
+        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+
+        // 드래그 중이면 드래그하는 축만 하이라이트
+        if (InputManager.GetIsGizmoDragging())
+        {
+            if (InputManager.GetDraggingAxis() == i + 1)
+            {
+                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+            }
+            else
+            {
+                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+            }
+        }
+        // 드래그 중이 아니면 호버링 한 축만 하이라이트
+        else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
+        {
+            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+        }
+        else
+        {
+            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+        }
+
+        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+        {
+            Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
+            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+            Renderer->RSSetState(ViewModeIndex);
+        }
     }
-    //else
-    //{
-    //    FVector UICameraDeg = UIManager.GetTempCamerarotation();
-    //    CameraYawDeg = UICameraDeg.Y;
-    //    CameraPitchDeg = UICameraDeg.X;
-    //}
-}
-
-
-static inline float Clamp(float v, float a, float b) { return v < a ? a : (v > b ? b : v); }
-
-void UWorld::ProcessCameraRotation(float DeltaSeconds)
-{
-    if (!MainCameraActor) return;
-
-
-    //FVector UICameraDeg = UIManager.GetTempCamerarotation();
-    //CameraYawDeg += UICameraDeg.Y; // 월드 Up(Y) 기준 Yaw (무제한 누적)
-    //CameraPitchDeg += UICameraDeg.X; // 로컬 Right 기준 Pitch (제한됨)
-
-
-    FVector2D MouseDelta = InputManager.GetMouseDelta();
-    if (MouseDelta.X == 0.0f && MouseDelta.Y == 0.0f) return;
-
-    // 1) Pitch/Yaw만 누적 (Roll은 UIManager에서 관리하는 값으로 고정)
-    CameraYawDeg += MouseDelta.X * MouseSensitivity;
-    CameraPitchDeg += MouseDelta.Y * MouseSensitivity;
-
-    // 각도 정규화 및 Pitch 제한
-    CameraYawDeg = NormalizeAngleDeg(CameraYawDeg); // -180 ~ 180 범위로 정규화
-    CameraPitchDeg = Clamp(CameraPitchDeg, -89.0f, 89.0f); // Pitch는 짐벌락 방지를 위해 제한
-
-    // 2) UIManager의 저장된 Roll 값을 가져와서 축별 쿼터니언 합성
-    float CurrentRoll = UIManager.GetStoredRoll();
-
-    // 축별 개별 쿼터니언 생성
-    FQuat PitchQuat = FQuat::FromAxisAngle(FVector(0, 1, 0), DegreeToRadian(CameraPitchDeg));
-    FQuat YawQuat = FQuat::FromAxisAngle(FVector(0, 0, 1), DegreeToRadian(CameraYawDeg));
-    FQuat RollQuat = FQuat::FromAxisAngle(FVector(1, 0, 0), DegreeToRadian(CurrentRoll));
-
-    // RzRxRy 순서로 회전 합성 (Roll(Z) → Pitch(X) → Yaw(Y))
-    FQuat FinalRotation = YawQuat * PitchQuat * RollQuat;
-    FinalRotation.Normalize();
-
-    MainCameraActor->SetActorRotation(FinalRotation);
-
-    // 3) UIManager에 마우스로 변경된 Pitch/Yaw 값 동기화
-    UIManager.UpdateMouseRotation(CameraPitchDeg, CameraYawDeg);
-}
-
-
-static inline FVector RotateByQuat(const FVector& Vector, const FQuat& Quat)
-{
-    return Quat.RotateVector(Vector);
-}
-
-void UWorld::ProcessCameraMovement(float DeltaSeconds)
-{
-    if (!MainCameraActor) return;
-
-    FVector Move(0, 0, 0);
-
-    // 1) 카메라 회전(쿼터니언)에서 로컬 기저 추출 (스케일 영향 제거)
-    const FQuat Quat = MainCameraActor->GetActorRotation(); // (x,y,z,w)
-    // DirectX LH 기준: Right=+X, Up=+Y, Forward=+Z
-    const FVector Right = Quat.RotateVector(FVector(0, 1, 0)).GetNormalized();
-    const FVector Up = Quat.RotateVector(FVector(0, 0, 1)).GetNormalized();
-    const FVector Forward = Quat.RotateVector(FVector(1, 0, 0)).GetNormalized();
-
-    // 2) 입력 누적 (WASD + QE)
-    if (InputManager.IsKeyDown('W')) Move += Forward;
-    if (InputManager.IsKeyDown('S')) Move -= Forward;
-    if (InputManager.IsKeyDown('D')) Move += Right;
-    if (InputManager.IsKeyDown('A')) Move -= Right;
-    if (InputManager.IsKeyDown('E')) Move += Up;
-    if (InputManager.IsKeyDown('Q')) Move -= Up;
-
-    // 3) 이동 적용
-    if (Move.SizeSquared() > 0.0f)
-    {
-        const float speed = CameraMoveSpeed * DeltaSeconds * 2.5f;
-        Move = Move.GetNormalized() * speed;
-
-        const FVector P = MainCameraActor->GetActorLocation();
-        MainCameraActor->SetActorLocation(P + Move);
-    }
+    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+    
+    // 알파 블랜딩을 위한 blendstate
+    Renderer->OMSetBlendState(true);
 }
