@@ -121,9 +121,11 @@ enum class ResourceType : uint8
     None = -1,
 
     Mesh,
+    DynamicMesh,
     Shader,
     Texture,
     Material,
+
     End
 };
 
@@ -135,15 +137,20 @@ enum class EVertexLayoutType : uint8
     PositionColorTexturNormal,
 
     PositionBillBoard,
+    PositionCollisionDebug,
 
     End,
 };
 
 enum class EViewModeIndex : uint32
 {
+    None,
+
     VMI_Lit,
     VMI_Unlit,
     VMI_Wireframe,
+
+    End,
 };
 
 #endif /** UE_ENUMS_H */

@@ -1,10 +1,10 @@
 #pragma once
-#include "PrimitiveComponent.h"
+#include "MeshComponent.h"
 #include "Picking.h"
-class UShapeComponent : public UPrimitiveComponent
+class UShapeComponent : public UMeshComponent
 {
 public:
-    DECLARE_CLASS(UShapeComponent, USceneComponent)
+    DECLARE_CLASS(UShapeComponent, UMeshComponent)
 
     UShapeComponent() = default;
     virtual ~UShapeComponent() = default;

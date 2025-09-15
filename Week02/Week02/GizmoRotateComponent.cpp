@@ -4,7 +4,6 @@
 UGizmoRotateComponent::UGizmoRotateComponent()
 {
     SetMeshResource("RotationHandle.obj");
-   // SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
     SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 }
 

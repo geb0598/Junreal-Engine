@@ -1,8 +1,10 @@
 #pragma once
 #include "RHIDevice.h"
+#include "DynamicMesh.h"
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
+class UMeshComponent;
 class URHIDevice;
 class UShader;
 class UMesh;
@@ -37,10 +39,26 @@ public:
 
     void DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
+    // Batch Line Rendering System
+    void BeginLineBatch();
+    void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f));
+    void AddLines(const TArray<FVector>& StartPoints, const TArray<FVector>& EndPoints, const TArray<FVector4>& Colors);
+    void EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
+    void ClearLineBatch();
+
 	void EndFrame();
 
     URHIDevice*&const  GetRHIDevice() { return RHIDevice; }
 private:
 	URHIDevice* RHIDevice;
+
+    // Batch Line Rendering System using UDynamicMesh for efficiency
+    UDynamicMesh* DynamicLineMesh = nullptr;
+    FMeshData* LineBatchData = nullptr;
+    UShader* LineShader = nullptr;
+    bool bLineBatchActive = false;
+    static const uint32 MAX_LINES = 10000;  // Maximum lines per batch
+
+    void InitializeLineBatch();
 };
 

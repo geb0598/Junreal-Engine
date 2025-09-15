@@ -287,6 +287,9 @@
     <FxCompile Include="TextBillboard.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="CollisionDebug.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">

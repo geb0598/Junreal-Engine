@@ -14,17 +14,27 @@ void UMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayou
     
     VertexType = InVertexType;  // 버텍스 타입 저장
 
-	FMeshData* Data = UMeshLoader::GetInstance().LoadMesh(InFilePath.c_str());
-    CreateVertexBuffer(Data, InDevice, InVertexType);
-    CreateIndexBuffer(Data, InDevice);
+    MeshDataCPU = UMeshLoader::GetInstance().LoadMesh(InFilePath.c_str());
+//	FMeshData* Data = UMeshLoader::GetInstance().LoadMesh(InFilePath.c_str());
+    CreateVertexBuffer(MeshDataCPU, InDevice, InVertexType);
+    CreateIndexBuffer(MeshDataCPU, InDevice);
 
-    VertexCount = Data->Vertices.size();
-    IndexCount = Data->Indices.size();
+    VertexCount = MeshDataCPU->Vertices.size();
+    IndexCount = MeshDataCPU->Indices.size();
 }
 
 void UMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
 {
     VertexType = InVertexType;  // 버텍스 타입 저장
+
+    if (VertexBuffer)
+    {
+        VertexBuffer->Release();
+    }
+    if (IndexBuffer)
+    {
+        IndexBuffer->Release();
+    }
     
     CreateVertexBuffer(InData, InDevice, InVertexType);
     CreateIndexBuffer(InData, InDevice);

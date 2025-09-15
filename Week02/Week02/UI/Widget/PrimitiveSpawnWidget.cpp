@@ -228,10 +228,11 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			{
 				MeshComp->SetMeshResource(MeshPath);
 				MeshComp->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+				Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
 			}
 			
-			// 액터 이름 설정
-			FString ActorName = FString(GetPrimitiveTypeName(SelectedPrimitiveType)) + "_" + std::to_string(i);
+			// 액터 이름 설정 - World에서 unique name 생성
+			FString ActorName = World->GenerateUniqueActorName(GetPrimitiveTypeName(SelectedPrimitiveType));
 			NewActor->SetName(ActorName);
 			
 			SuccessCount++;

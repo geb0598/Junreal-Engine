@@ -7,17 +7,21 @@
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
+#include"BoundingBoxComponent.h"
 #include "Mesh.h"
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
-                   , UIManager(UUIManager::GetInstance())
-                   , InputManager(UInputManager::GetInstance())
-                   , SelectionManager(USelectionManager::GetInstance())
+, UIManager(UUIManager::GetInstance())
+, InputManager(UInputManager::GetInstance())
+, SelectionManager(USelectionManager::GetInstance())
 {
     GridActor = NewObject<AGridActor>();
-    GridActor->SetActorTransform(FTransform(FVector{0, 0, 0}, FQuat::MakeFromEuler(FVector{0, 0, 0}),
-                                            FVector{1, 1, 1}));
+    GridActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, 0, 0 }),
+        FVector{ 1, 1, 1 }));
     GridActor->SetWorld(this);
+
+    // Add GridActor to Actors array so it gets rendered in the main loop
+    Actors.push_back(GridActor);
 }
 
 
@@ -66,7 +70,7 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 
     // 3) 정확한 타입 비교 (파생 제외)
     std::snprintf(buf, sizeof(buf), "[RTTI] EXACT ACameraActor = %d\r\n",
-                  (int)(Obj->GetClass() == ACameraActor::StaticClass()));
+        (int)(Obj->GetClass() == ACameraActor::StaticClass()));
     UE_LOG(buf);
 
     // 4) 상속 체인 출력
@@ -76,7 +80,7 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
         std::snprintf(buf, sizeof(buf), "%s%s", c->Name, c->Super ? " <- " : "\r\n");
         UE_LOG(buf);
     }
-	//FString Name = Obj->GetName();
+    //FString Name = Obj->GetName();
     std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetName().c_str());
     OutputDebugStringA(buf);
     OutputDebugStringA("================================\r\n");
@@ -90,13 +94,14 @@ void UWorld::Initialize()
     for (auto Primitive : Primitives)
     {
         FString PrimitiveType = Primitive.Type + ".obj";
-        
+
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-
+		Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+        //추후 변경 필요 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
-                                            Primitive.Scale));
+            Primitive.Scale));
         Actor->SetWorld(this);
 
         Actors.push_back(Actor);
@@ -127,7 +132,7 @@ void UWorld::InitializeMainCamera()
 
 void UWorld::InitializeGizmo()
 {
-	// === 기즈모 엑터 초기화 ===
+    // === 기즈모 엑터 초기화 ===
     GizmoActor = NewObject<AGizmoActor>();
     GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
         FVector{ 1, 1, 1 }));
@@ -154,23 +159,11 @@ void UWorld::Render()
     if (!Renderer) return;
     // === Begin Frame ===
     Renderer->BeginFrame();
-    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
 
-    // === Draw Grid ===
-    for (USceneComponent* Comp : GridActor->GetComponents())
-    {
-        ModelMatrix = Comp->GetWorldMatrix();
-        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-        if (UStaticMeshComponent* Prim = dynamic_cast<UStaticMeshComponent*>(Comp))
-        {
-            Renderer->PrepareShader(Prim->GetMaterial()->GetShader());
-            Renderer->DrawIndexedPrimitiveComponent(Prim->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-        }
-    }
+    // === Begin Line Batch for all actors ===
+    Renderer->BeginLineBatch();
 
-
-    // === Draw Primitive ===
-    //Renderer->PrepareShader();
+    // === Draw Actors ===
     Renderer->RSSetState(ViewModeIndex);
     for (AActor* Actor : Actors)
     {
@@ -212,11 +205,10 @@ void UWorld::Render()
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 0, 0, 1);
                 }
 
-                if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
+                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>((*Components)[i]))
                 {
                     Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
-                    Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
-                    Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
                     Renderer->RSSetState(ViewModeIndex);
                 }
             }
@@ -227,27 +219,32 @@ void UWorld::Render()
         }
 
 
-        // 액터의 모든 컴포넌트 순회
+        // 액터의 모든 렌더러블 컴포넌트 렌더
         for (USceneComponent* Component : Actor->GetComponents())
         {
             if (!Component) continue;
-            //  
-            FMatrix ModelMatrix = Component->GetWorldMatrix();
 
-            // 컴포넌트가 StaticMesh를 가진 경우만 Draw
+            // 모든 PrimitiveComponent 처리 (각자의 Render 메서드를 호출)
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
-				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                Renderer->RSSetState(ViewModeIndex);
+                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                   if( Primitive->GetClass() == UTextRenderComponent::StaticClass()){
+                       UE_LOG("UBoundingBoxComponent");
+                   }
             }
         }
         // 블랜드 스테이드 종료
         Renderer->OMSetBlendState(false);
     }
+    Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
     UIManager.Render();
     // === End Frame ===
     Renderer->EndFrame();
 }
+
 
 
 void UWorld::Tick(float DeltaSeconds)
@@ -302,7 +299,7 @@ void UWorld::Tick(float DeltaSeconds)
                     GizmoActor->SetActorLocation(SelectedActor->GetActorLocation());
 
                     UE_LOG("Dragging axis %d, delta: (%.3f, %.3f)", InputManager.GetDraggingAxis(), MouseDelta.X,
-                           MouseDelta.Y);
+                        MouseDelta.Y);
                 }
             }
 
@@ -358,8 +355,8 @@ void UWorld::Tick(float DeltaSeconds)
         }
         //UE_LOG("Real CAMERA ROTATION    Pitch : %f  Yaw : %f", CameraPitchDeg, CameraYawDeg);
     }
-	InputManager.Update();
-	UIManager.Update(DeltaSeconds);
+    InputManager.Update();
+    UIManager.Update(DeltaSeconds);
 
 
     // for (int i = 0; i < 1000; i++)
@@ -394,6 +391,14 @@ float UWorld::GetTimeSeconds() const
     return 0.0f;
 }
 
+FString UWorld::GenerateUniqueActorName(const FString& ActorType)
+{
+    // Get current count for this type
+    int32& CurrentCount = ObjectTypeCounts[ActorType];
+    FString UniqueName = ActorType + "_" + std::to_string(CurrentCount);
+    CurrentCount++;
+    return UniqueName;
+}
 
 //
 // 액터 제거
@@ -462,8 +467,8 @@ void UWorld::LoadScene(const FString& SceneName)
     {
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
             FTransform(Primitive.Location,
-                       FQuat::MakeFromEuler(Primitive.Rotation),
-                       Primitive.Scale)
+                FQuat::MakeFromEuler(Primitive.Rotation),
+                Primitive.Scale)
         );
         StaticMeshActor->GetStaticMeshComponent()->SetMeshResource(ToObjFileName(Primitive.Type));
         StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
@@ -520,7 +525,7 @@ void UWorld::ProcessCameraRotation(float DeltaSeconds)
 {
     if (!MainCameraActor) return;
 
-    
+
     //FVector UICameraDeg = UIManager.GetTempCamerarotation();
     //CameraYawDeg += UICameraDeg.Y; // 월드 Up(Y) 기준 Yaw (무제한 누적)
     //CameraPitchDeg += UICameraDeg.X; // 로컬 Right 기준 Pitch (제한됨)

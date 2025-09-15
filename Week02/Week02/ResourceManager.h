@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Texture.h"
+#include "DynamicMesh.h"
 
 class UStaticMesh;
 
@@ -46,6 +47,9 @@ public:
     void CreateAxisMesh(float Length, const FString& FilePath);
     void CreateTextBillboardMesh();
     void CreateGridMesh(int N, const FString& FilePath);
+    void CreateBoxWireframeMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
+    //FMeshData* CreateWireBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
+   // void CreateBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
     void CreateDefaultShader();
 
     template<typename T>
@@ -135,6 +139,8 @@ ResourceType UResourceManager::GetResourceType()
 {
     if (T::StaticClass() == UMesh::StaticClass())
         return ResourceType::Mesh;
+    if (T::StaticClass() == UDynamicMesh::StaticClass())
+        return ResourceType::DynamicMesh;
     if (T::StaticClass() == UShader::StaticClass())
         return ResourceType::Shader;
     if (T::StaticClass() == UTexture::StaticClass())

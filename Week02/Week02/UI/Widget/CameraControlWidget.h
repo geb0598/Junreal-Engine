@@ -25,7 +25,7 @@ private:
 	ACameraActor* GetCurrentCamera() const;
 	
 	// UI 상태 변수들
-	float UiFovY = 80.f;
+	float UiFovY = 60.f;  // CameraComponent 기본값과 맞춤
 	float UiNearZ = 0.1f;
 	float UiFarZ = 1000.f;
 	int   CameraModeIndex = 0;

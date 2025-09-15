@@ -5,6 +5,7 @@
 UBoundingBoxComponent::UBoundingBoxComponent()
     : LocalMin(FVector{}), LocalMax(FVector{})
 {
+    SetMaterial("CollisionDebug.hlsl", EVertexLayoutType::PositionCollisionDebug);
 }
 
 void UBoundingBoxComponent::SetFromVertices(const std::vector<FVector>& Verts)
@@ -17,6 +18,9 @@ void UBoundingBoxComponent::SetFromVertices(const std::vector<FVector>& Verts)
         LocalMin = LocalMin.ComponentMin(v);
         LocalMax = LocalMax.ComponentMax(v);
     }
+    FString MeshName = FString("AABB_") + AttachParent->GetName();
+    UResourceManager::GetInstance().CreateBoxWireframeMesh(LocalMin, LocalMax, MeshName);
+    SetMeshResource(MeshName);
 }
 
 FBox UBoundingBoxComponent::GetWorldBox() const
@@ -56,7 +60,8 @@ std::vector<FVector> UBoundingBoxComponent::GetLocalCorners() const
 
 void UBoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
-    //Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
-    //Renderer->PrepareShader(GetShader());
-    //Renderer->DrawIndexedPrimitiveComponent(GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Renderer->RSSetState(EViewModeIndex::VMI_Wireframe);
+    Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
+    Renderer->PrepareShader(GetMaterial()->GetShader());
+    Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 }

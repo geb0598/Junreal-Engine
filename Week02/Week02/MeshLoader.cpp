@@ -97,6 +97,14 @@ FMeshData* UMeshLoader::LoadMesh(const std::filesystem::path& FilePath)
                 Faces.push_back(ParseFaceBuffer(FaceBuffer));
             }
         }
+        else if (Prefix == "l") // line (바운딩박스 OBJ용)
+        {
+            FString LineBuffer;
+            while (Tokenizer >> LineBuffer)
+            {
+                Faces.push_back(ParseFaceBuffer(LineBuffer));
+            }
+        }
     }
     FMeshData* MeshData = new FMeshData();
     TMap<FVertexKey, uint32> UniqueVertexMap;

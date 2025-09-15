@@ -20,6 +20,7 @@ public:
     uint32 GetIndexCount() { return IndexCount; }
     void SetIndexCount(uint32 Cnt) { IndexCount = Cnt; }
 
+    const FMeshData* GetMeshData() const { return MeshDataCPU; }
 private:
     void CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice, EVertexLayoutType InVertexType);
     void CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice);
@@ -30,4 +31,6 @@ private:
     uint32 VertexCount = 0;     // 정점 개수
     uint32 IndexCount = 0;     // 버텍스 점의 개수 
     EVertexLayoutType VertexType = EVertexLayoutType::PositionColor;  // 버텍스 타입
+
+    FMeshData* MeshDataCPU = nullptr;  // CPU-side mesh data 보관
 };

@@ -19,7 +19,6 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
 {
     Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
     Renderer->PrepareShader(GetMaterial()->GetShader());
-    Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+    Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 

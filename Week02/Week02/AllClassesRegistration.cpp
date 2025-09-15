@@ -10,6 +10,8 @@
 #include "CameraActor.h"
 #include "StaticMeshActor.h"
 #include "MeshLoader.h"
+#include "LineComponent.h"
+#include "Line.h"
 
 #include "UI/Factory/UIWindowFactory.h"
 #include "UI/ImGui/ImGuiHelper.h"
@@ -21,6 +23,7 @@
 #include "UI/Widget/PrimitiveSpawnWidget.h"
 #include "UI/Widget/SceneIOWidget.h"
 #include "UI/Widget/TargetActorTransformWidget.h"
+#include "UI/Widget/WorldOutlinerWidget.h"
 #include "UI/Widget/Widget.h"
 #include "UI/Window/ConsoleWindow.h"
 #include "UI/Window/ControlPanelWindow.h"
@@ -33,6 +36,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Material.h"
+#include "DynamicMesh.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -56,6 +60,8 @@ IMPLEMENT_CLASS(UStaticMesh)
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)
 IMPLEMENT_CLASS(UGizmoRotateComponent)
+IMPLEMENT_CLASS(ULineComponent)
+IMPLEMENT_CLASS(ULine)
 IMPLEMENT_CLASS(UTextRenderComponent)
 
 // Managers / Systems
@@ -78,6 +84,7 @@ IMPLEMENT_CLASS(UInputInformationWidget)
 IMPLEMENT_CLASS(UPrimitiveSpawnWidget)
 IMPLEMENT_CLASS(USceneIOWidget)
 IMPLEMENT_CLASS(UTargetActorTransformWidget)
+IMPLEMENT_CLASS(UWorldOutlinerWidget)
 
 IMPLEMENT_CLASS(UUIWindow)
 IMPLEMENT_CLASS(UConsoleWindow)
@@ -92,3 +99,4 @@ IMPLEMENT_CLASS(UResourceBase)
 IMPLEMENT_CLASS(UMesh)
 IMPLEMENT_CLASS(UShader)
 IMPLEMENT_CLASS(UTexture)
+IMPLEMENT_CLASS(UDynamicMesh)

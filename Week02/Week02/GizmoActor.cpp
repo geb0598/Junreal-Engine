@@ -30,6 +30,11 @@ AGizmoActor::AGizmoActor()
     ArrowY->SetRelativeScale({1, 1, 3});
     ArrowZ->SetRelativeScale({1, 1, 3});
 
+    if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -180))); // X축//빨
+    if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90)));//초
+    if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축//파
+
+
     AddComponent(ArrowX);
     AddComponent(ArrowY);
     AddComponent(ArrowZ);
@@ -66,8 +71,11 @@ AGizmoActor::AGizmoActor()
     GizmoRotateComponents.Add(RotateX);
     GizmoRotateComponents.Add(RotateY);
     GizmoRotateComponents.Add(RotateZ);
-    RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // X축
-    RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // Z축
+
+    if (RotateX)         RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // X축
+    if (RotateY)         RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축
+
+    if (RotateZ)          RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
 
     //======= Scale Component 생성 =======
     ScaleX = NewObject<UGizmoScaleComponent>();
@@ -89,6 +97,10 @@ AGizmoActor::AGizmoActor()
     ScaleX->SetRelativeScale({ 0.02, 0.02, 0.02 });
     ScaleY->SetRelativeScale({ 0.02, 0.02, 0.02 });
     ScaleZ->SetRelativeScale({ 0.02, 0.02, 0.02 });
+
+    if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
+    if (ScaleY) ScaleY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 00))); // Z축//초
+    if (ScaleZ) ScaleZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));//파
 
     AddComponent(ScaleX);
     AddComponent(ScaleY);

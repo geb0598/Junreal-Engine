@@ -1,0 +1,36 @@
+# UnrealEd OBJ exporter (BoundingBox Wireframe - Unit Cube)
+
+v -0.5 -0.5 -0.5
+v  0.5 -0.5 -0.5
+v  0.5  0.5 -0.5
+v -0.5  0.5 -0.5
+v -0.5 -0.5  0.5
+v  0.5 -0.5  0.5
+v  0.5  0.5  0.5
+v -0.5  0.5  0.5
+
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+g UnrealEdObject
+s 0
+
+# 바닥 (z = -0.5)
+l 1 2
+l 2 3
+l 3 4
+l 4 1
+
+# 천장 (z = +0.5)
+l 5 6
+l 6 7
+l 7 8
+l 8 5
+
+# 수직 연결
+l 1 5
+l 2 6
+l 3 7
+l 4 8

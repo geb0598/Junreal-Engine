@@ -51,9 +51,19 @@ public:
     void LoadScene(const FString& SceneName);
     void SaveScene(const FString& SceneName);
     ACameraActor* GetCameraActor() { return MainCameraActor; }
+    
+    // Camera movement speed control
+    float GetCameraMoveSpeed() const { return CameraMoveSpeed; }
+    void SetCameraMoveSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; }
+
+    EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }
+    void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
 
     const TArray<AActor*>& GetActors() { return Actors; }
+    
+    /** Generate unique name for actor based on type */
+    FString GenerateUniqueActorName(const FString& ActorType);
 
     /** === 타임 / 틱 === */
     virtual void Tick(float DeltaSeconds);
@@ -89,7 +99,10 @@ private:
 
     /** === 액터 관리 === */
     TArray<AActor*> Actors;
-
+    
+    // Object naming system
+    std::map<FString, int32> ObjectTypeCounts;
+    
     /** == 기즈모 == */
     AGizmoActor* GizmoActor;
 
@@ -102,8 +115,7 @@ private:
     float MouseSensitivity = 0.1f;  // 0.005f -> 0.1f로 증가 (20배)
     float CameraMoveSpeed = 5.0f;
 
-    bool bIsWireframeMode = false;
-    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Lit;
+    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 };
 
 template<class T>
