@@ -52,6 +52,10 @@ public:
     void LoadScene(const FString& SceneName);
     void SaveScene(const FString& SceneName);
     ACameraActor* GetCameraActor() { return MainCameraActor; }
+    
+    // Camera movement speed control
+    float GetCameraMoveSpeed() const { return CameraMoveSpeed; }
+    void SetCameraMoveSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; }
 
 
     const TArray<AActor*>& GetActors() { return Actors; }

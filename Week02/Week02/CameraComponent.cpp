@@ -37,7 +37,10 @@ FMatrix UCameraComponent::GetProjectionMatrix() const
     }
     else
     {
-        return FMatrix::OrthoLH(CLIENTWIDTH, CLIENTHEIGHT,
+        float orthoHeight = 2.0f * tanf((FieldOfView * PI / 180.0f) * 0.5f) * 10.0f;
+        float orthoWidth = orthoHeight * aspect;
+        
+        return FMatrix::OrthoLH(orthoWidth, orthoHeight,
             NearClip, FarClip);
     }
 }
