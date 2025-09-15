@@ -15,6 +15,7 @@ protected:
 public:
     UStaticMeshComponent* GetStaticMeshComponent() const { return StaticMeshComponent; }
     void SetStaticMeshComponent(UStaticMeshComponent* InStaticMeshComponent);
+	void SetCollisionComponent();
 
 protected:
     UStaticMeshComponent* StaticMeshComponent;

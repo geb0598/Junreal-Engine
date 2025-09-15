@@ -45,6 +45,9 @@ public:
 
     void CreateAxisMesh(float Length, const FString& FilePath);
     void CreateGridMesh(int N, const FString& FilePath);
+    void CreateBoxWireframeMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
+    //FMeshData* CreateWireBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
+   // void CreateBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
     void CreateDefaultShader();
 
     template<typename T>

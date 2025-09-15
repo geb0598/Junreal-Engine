@@ -7,6 +7,7 @@
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
+#include"BoundingBoxComponent.h"
 #include "Mesh.h"
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
@@ -94,7 +95,8 @@ void UWorld::Initialize()
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-
+		Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+        //추후 변경 필요 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
                                             Primitive.Scale));
         Actor->SetWorld(this);
@@ -211,12 +213,13 @@ void UWorld::Render()
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, i + 1, 0, 0, 1);
                 }
 
-                if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
+                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>((*Components)[i]))
                 {
-                    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
-                    Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
-                    Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                    Renderer->RSSetState(ViewModeIndex);
+                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                    /*    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
+                        Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
+                        Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                        Renderer->RSSetState(ViewModeIndex);*/
                 }
             }
             Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
@@ -236,7 +239,10 @@ void UWorld::Render()
             // 컴포넌트가 StaticMesh를 가진 경우만 Draw
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
-				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+               if( Primitive->GetClass() == UTextRenderComponent::StaticClass()){
+                   UE_LOG("UBoundingBoxComponent");
+               }
             }
         }
         // 블랜드 스테이드 종료

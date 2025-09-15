@@ -4,11 +4,14 @@
 #include "ObjectFactory.h"
 #include "ShapeComponent.h"
 #include "BoundingBoxComponent.h"   
+#include "MeshComponent.h"
 AActor::AActor()
 {
     Name = "DefaultActor";
     RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
     CollisionComponent = CreateDefaultSubobject<UBoundingBoxComponent>(FName("CollisionBox"));
+ 
+    
 }
 
 AActor::~AActor()

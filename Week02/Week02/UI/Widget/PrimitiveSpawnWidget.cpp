@@ -228,6 +228,7 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			{
 				MeshComp->SetMeshResource(MeshPath);
 				MeshComp->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+				Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
 			}
 			
 			// 액터 이름 설정
