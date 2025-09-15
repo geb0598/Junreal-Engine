@@ -151,15 +151,19 @@ void UCameraControlWidget::SyncFromCamera()
 	if (!Camera) 
 		return;
 
-	// 카메라 컴포넌트에서 설정 가져오기
+	// 카메라 컴포넌트에서 실제 설정 값 가져오기
 	if (UCameraComponent* CameraComp = Camera->GetCameraComponent())
 	{
-		// FOV, Near, Far 값들을 카메라 컴포넌트에서 가져오기 (만약 API가 있다면)
-		// 현재는 기본값 사용
-		UiFovY = 80.0f;
-		UiNearZ = 0.1f; 
-		UiFarZ = 1000.0f;
-		CameraModeIndex = 0; // 기본적으로 Perspective
+		// 실제 카메라 컴포넌트에서 값 읽어오기
+		UiFovY = CameraComp->GetFOV();
+		UiNearZ = CameraComp->GetNearClip();
+		UiFarZ = CameraComp->GetFarClip();
+		
+		// 프로젝션 모드 설정
+		CameraModeIndex = (CameraComp->GetProjectionMode() == ECameraProjectionMode::Perspective) ? 0 : 1;
+		
+		UE_LOG("CameraControl: Synced from camera - FOV=%.1f, Near=%.4f, Far=%.1f, Mode=%d", 
+			UiFovY, UiNearZ, UiFarZ, CameraModeIndex);
 	}
 }
 
@@ -174,15 +178,19 @@ void UCameraControlWidget::PushToCamera()
 	UiFarZ = FMath::Max(UiNearZ + 0.0001f, UiFarZ);
 	UiFovY = FMath::Clamp(UiFovY, 1.0f, 170.0f);
 
-	// 카메라 컴포넌트에 설정 적용 (API가 있다면)
+	// 카메라 컴포넌트에 실제 설정 적용
 	if (UCameraComponent* CameraComp = Camera->GetCameraComponent())
 	{
 		// 카메라 설정 업데이트
-		// CameraComp->SetFOV(UiFovY);
-		// CameraComp->SetNearClipPlane(UiNearZ);
-		// CameraComp->SetFarClipPlane(UiFarZ);
+		CameraComp->SetFOV(UiFovY);
+		CameraComp->SetNearClipPlane(UiNearZ);
+		CameraComp->SetFarClipPlane(UiFarZ);
 		
-		// 현재는 로그만 출력
-		UE_LOG("CameraControl: FOV=%.1f, Near=%.4f, Far=%.1f", UiFovY, UiNearZ, UiFarZ);
+		// 프로젝션 모드 설정
+		ECameraProjectionMode NewMode = (CameraModeIndex == 0) ? ECameraProjectionMode::Perspective : ECameraProjectionMode::Orthographic;
+		CameraComp->SetProjectionMode(NewMode);
+		
+		UE_LOG("CameraControl: Applied to camera - FOV=%.1f, Near=%.4f, Far=%.1f, Mode=%s", 
+			UiFovY, UiNearZ, UiFarZ, (CameraModeIndex == 0) ? "Perspective" : "Orthographic");
 	}
 }

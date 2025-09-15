@@ -298,12 +298,14 @@ void D3D11RHI::CreateRasterizerState()
     D3D11_RASTERIZER_DESC deafultrasterizerdesc = {};
     deafultrasterizerdesc.FillMode = D3D11_FILL_SOLID; // 채우기 모드
     deafultrasterizerdesc.CullMode = D3D11_CULL_BACK; // 백 페이스 컬링
+    deafultrasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
 
     Device->CreateRasterizerState(&deafultrasterizerdesc, &DefaultRasterizerState);
 
     D3D11_RASTERIZER_DESC wireframerasterizerdesc = {};
     wireframerasterizerdesc.FillMode = D3D11_FILL_WIREFRAME; // 채우기 모드
     wireframerasterizerdesc.CullMode = D3D11_CULL_BACK; // 백 페이스 컬링
+    wireframerasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
 
     Device->CreateRasterizerState(&wireframerasterizerdesc, &WireFrameRasterizerState);
 }

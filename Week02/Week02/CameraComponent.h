@@ -21,6 +21,8 @@ public:
     void SetFOV(float NewFOV) { FieldOfView = NewFOV; }
     void SetAspectRatio(float NewAspect) { AspectRatio = NewAspect; }
     void SetClipPlanes(float NewNear, float NewFar) { NearClip = NewNear; FarClip = NewFar; }
+    void SetNearClipPlane(float NewNear) { NearClip = NewNear; }
+    void SetFarClipPlane(float NewFar) { FarClip = NewFar; }
     void SetProjectionMode(ECameraProjectionMode Mode) { ProjectionMode = Mode; }
 
     float GetFOV() const { return FieldOfView; }
