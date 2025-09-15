@@ -37,22 +37,46 @@ private:
     bool bShowHiddenObjects = true;
     FString SearchFilter = "";
     
+    // Node types for tree hierarchy
+    enum class ETreeNodeType
+    {
+        Category,
+        Actor
+    };
+    
     // Actor Management
     struct FActorTreeNode
     {
+        ETreeNodeType NodeType = ETreeNodeType::Actor;
         AActor* Actor = nullptr;
+        FString CategoryName = "";
         TArray<FActorTreeNode*> Children;
         FActorTreeNode* Parent = nullptr;
         bool bIsExpanded = true;
         bool bIsVisible = true;
         
-        FActorTreeNode(AActor* InActor) : Actor(InActor) {}
+        // Constructor for Actor node
+        FActorTreeNode(AActor* InActor) : NodeType(ETreeNodeType::Actor), Actor(InActor) {}
+        
+        // Constructor for Category node
+        FActorTreeNode(const FString& InCategoryName) : NodeType(ETreeNodeType::Category), CategoryName(InCategoryName) {}
+        
         ~FActorTreeNode() 
         {
             for (auto* Child : Children)
             {
                 delete Child;
             }
+        }
+        
+        // Helper methods
+        bool IsCategory() const { return NodeType == ETreeNodeType::Category; }
+        bool IsActor() const { return NodeType == ETreeNodeType::Actor; }
+        FString GetDisplayName() const 
+        {
+            if (IsCategory()) return CategoryName;
+            if (IsActor() && Actor) return Actor->GetName();
+            return "Unknown";
         }
     };
     
@@ -63,6 +87,7 @@ private:
     void RefreshActorTree();
     void BuildActorHierarchy();
     void RenderActorNode(FActorTreeNode* Node, int32 Depth = 0);
+    void RenderCategoryNode(FActorTreeNode* CategoryNode, int32 Depth = 0);
     bool ShouldShowActor(AActor* Actor) const;
     void HandleActorSelection(AActor* Actor);
     void HandleActorVisibilityToggle(AActor* Actor);
@@ -91,6 +116,14 @@ private:
     void ClearActorTree();
     FActorTreeNode* FindNodeByActor(AActor* Actor);
     void ExpandParentsOfSelected();
+    
+    // Category management
+    FActorTreeNode* FindOrCreateCategoryNode(const FString& CategoryName);
+    FString GetActorCategory(AActor* Actor) const;
+    void BuildCategorizedHierarchy();
+    void HandleCategorySelection(FActorTreeNode* CategoryNode);
+    void ExpandAllCategories();
+    void CollapseAllCategories();
     
     // Selection synchronization
     void SyncSelectionFromViewport();

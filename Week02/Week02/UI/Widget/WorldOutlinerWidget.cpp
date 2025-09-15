@@ -84,9 +84,13 @@ void UWorldOutlinerWidget::RenderWidget()
     
     for (auto* RootNode : RootNodes)
     {
-        if (RootNode && ShouldShowActor(RootNode->Actor))
+        if (RootNode)
         {
-            RenderActorNode(RootNode);
+            // Categories are always shown, individual actors are filtered
+            if (RootNode->IsCategory() || ShouldShowActor(RootNode->Actor))
+            {
+                RenderActorNode(RootNode);
+            }
         }
     }
     
@@ -140,22 +144,24 @@ void UWorldOutlinerWidget::BuildActorHierarchy()
     if (!World)
         return;
     
-    const TArray<AActor*>& Actors = World->GetActors();
-    
-    // For now, create flat hierarchy (TODO: implement parent-child relationships)
-    for (AActor* Actor : Actors)
-    {
-        if (Actor)
-        {
-            FActorTreeNode* Node = new FActorTreeNode(Actor);
-            RootNodes.push_back(Node);
-        }
-    }
+    // Build categorized hierarchy instead of flat
+    BuildCategorizedHierarchy();
 }
 
 void UWorldOutlinerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
 {
-    if (!Node || !Node->Actor)
+    if (!Node)
+        return;
+    
+    // Handle category nodes
+    if (Node->IsCategory())
+    {
+        RenderCategoryNode(Node, Depth);
+        return;
+    }
+    
+    // Handle actor nodes
+    if (!Node->Actor)
         return;
     
     AActor* Actor = Node->Actor;
@@ -182,7 +188,7 @@ void UWorldOutlinerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     // Create unique ID for ImGui
     ImGui::PushID(Actor);
     
-    // Visibility toggle button
+    // Visibility toggle button (only for actors)
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     const char* VisibilityIcon = Node->bIsVisible ? "👁" : "🚫";
     if (ImGui::SmallButton(VisibilityIcon))
@@ -460,13 +466,13 @@ void UWorldOutlinerWidget::RenderToolbar()
     ImGui::SameLine();
     if (ImGui::Button("Expand All"))
     {
-        // TODO: Expand all nodes
+        ExpandAllCategories();
     }
     
     ImGui::SameLine();
     if (ImGui::Button("Collapse All"))
     {
-        // TODO: Collapse all nodes
+        CollapseAllCategories();
     }
 }
 
@@ -484,11 +490,25 @@ UWorldOutlinerWidget::FActorTreeNode* UWorldOutlinerWidget::FindNodeByActor(AAct
     if (!Actor)
         return nullptr;
     
-    // Simple linear search for now (TODO: optimize with hash map)
-    for (FActorTreeNode* Node : RootNodes)
+    // Search through categories and their children
+    for (FActorTreeNode* RootNode : RootNodes)
     {
-        if (Node && Node->Actor == Actor)
-            return Node;
+        if (!RootNode)
+            continue;
+            
+        // Check if this root node is the actor (for backward compatibility)
+        if (RootNode->IsActor() && RootNode->Actor == Actor)
+            return RootNode;
+            
+        // Search within category children
+        if (RootNode->IsCategory())
+        {
+            for (FActorTreeNode* Child : RootNode->Children)
+            {
+                if (Child && Child->IsActor() && Child->Actor == Actor)
+                    return Child;
+            }
+        }
     }
     
     return nullptr;
@@ -504,5 +524,163 @@ void UWorldOutlinerWidget::SyncSelectionToViewport(AActor* Actor)
 {
     // Selection is already handled via SelectionManager
     // The 3D viewport will automatically respond to selection changes
+}
+
+// Category Management Implementation
+FString UWorldOutlinerWidget::GetActorCategory(AActor* Actor) const
+{
+    if (!Actor)
+        return "Unknown";
+    
+    FString ActorName = Actor->GetName();
+    
+    // Extract category from actor name (assumes format: "Type_Number")
+    size_t UnderscorePos = ActorName.find('_');
+    if (UnderscorePos != std::string::npos)
+    {
+        return ActorName.substr(0, UnderscorePos);
+    }
+    
+    // Fallback: use the full name as category if no underscore found
+    return ActorName;
+}
+
+UWorldOutlinerWidget::FActorTreeNode* UWorldOutlinerWidget::FindOrCreateCategoryNode(const FString& CategoryName)
+{
+    // Look for existing category node in root nodes
+    for (FActorTreeNode* Node : RootNodes)
+    {
+        if (Node && Node->IsCategory() && Node->CategoryName == CategoryName)
+        {
+            return Node;
+        }
+    }
+    
+    // Create new category node if not found
+    FActorTreeNode* CategoryNode = new FActorTreeNode(CategoryName);
+    RootNodes.push_back(CategoryNode);
+    return CategoryNode;
+}
+
+void UWorldOutlinerWidget::BuildCategorizedHierarchy()
+{
+    UWorld* World = GetCurrentWorld();
+    if (!World)
+        return;
+    
+    const TArray<AActor*>& Actors = World->GetActors();
+    
+    // Group actors by category
+    for (AActor* Actor : Actors)
+    {
+        if (!Actor)
+            continue;
+            
+        FString CategoryName = GetActorCategory(Actor);
+        FActorTreeNode* CategoryNode = FindOrCreateCategoryNode(CategoryName);
+        
+        // Create actor node and add to category
+        FActorTreeNode* ActorNode = new FActorTreeNode(Actor);
+        ActorNode->Parent = CategoryNode;
+        CategoryNode->Children.push_back(ActorNode);
+    }
+}
+
+void UWorldOutlinerWidget::HandleCategorySelection(FActorTreeNode* CategoryNode)
+{
+    if (!CategoryNode || !CategoryNode->IsCategory())
+        return;
+        
+    // Toggle category expansion
+    CategoryNode->bIsExpanded = !CategoryNode->bIsExpanded;
+    
+    UE_LOG("WorldOutliner: Toggled category %s: %s", 
+           CategoryNode->CategoryName.c_str(), 
+           CategoryNode->bIsExpanded ? "Expanded" : "Collapsed");
+}
+
+void UWorldOutlinerWidget::RenderCategoryNode(FActorTreeNode* CategoryNode, int32 Depth)
+{
+    if (!CategoryNode || !CategoryNode->IsCategory())
+        return;
+        
+    ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+    
+    // Categories are always expandable
+    if (!CategoryNode->Children.empty())
+    {
+        if (CategoryNode->bIsExpanded)
+        {
+            NodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
+        }
+    }
+    else
+    {
+        // Empty category - show as leaf
+        NodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    }
+    
+    // Create unique ID for ImGui using category name
+    ImGui::PushID(CategoryNode->CategoryName.c_str());
+    
+    // Category icon (folder icon)
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+    const char* CategoryIcon = CategoryNode->bIsExpanded ? "📂" : "📁";
+    if (ImGui::SmallButton(CategoryIcon))
+    {
+        HandleCategorySelection(CategoryNode);
+    }
+    ImGui::PopStyleColor();
+    
+    ImGui::SameLine();
+    
+    // Category name with object count
+    FString DisplayText = CategoryNode->CategoryName + " (" + std::to_string(CategoryNode->Children.size()) + ")";
+    bool bNodeOpen = ImGui::TreeNodeEx(DisplayText.c_str(), NodeFlags);
+    
+    // Handle category click
+    if (ImGui::IsItemClicked())
+    {
+        HandleCategorySelection(CategoryNode);
+    }
+    
+    // Update expansion state based on ImGui tree state
+    CategoryNode->bIsExpanded = bNodeOpen;
+    
+    // Render child actors if category is expanded
+    if (bNodeOpen && !CategoryNode->Children.empty())
+    {
+        for (FActorTreeNode* Child : CategoryNode->Children)
+        {
+            RenderActorNode(Child, Depth + 1);
+        }
+        ImGui::TreePop();
+    }
+    
+    ImGui::PopID();
+}
+
+void UWorldOutlinerWidget::ExpandAllCategories()
+{
+    for (FActorTreeNode* RootNode : RootNodes)
+    {
+        if (RootNode && RootNode->IsCategory())
+        {
+            RootNode->bIsExpanded = true;
+        }
+    }
+    UE_LOG("WorldOutliner: Expanded all categories");
+}
+
+void UWorldOutlinerWidget::CollapseAllCategories()
+{
+    for (FActorTreeNode* RootNode : RootNodes)
+    {
+        if (RootNode && RootNode->IsCategory())
+        {
+            RootNode->bIsExpanded = false;
+        }
+    }
+    UE_LOG("WorldOutliner: Collapsed all categories");
 }
 
