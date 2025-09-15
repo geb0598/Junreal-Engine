@@ -7,6 +7,8 @@ class UControlPanelWindow;
 class UExperimentalFeatureWindow;
 class UOutlinerWindow;
 class UCameraPanelWindow;
+class UWorldOutlinerWidget;
+class UDetailsPanelWidget;
 
 /**
  * @brief UI 윈도우 도킹 방향
@@ -35,4 +37,9 @@ public:
 	static UOutlinerWindow* CreateOutlinerWindow(EUIDockDirection InDockDirection = EUIDockDirection::Center);
 	static UExperimentalFeatureWindow*
 		CreateExperimentalFeatureWindow(EUIDockDirection InDockDirection = EUIDockDirection::Right);
+	
+	// Object Management Widgets (Unreal Engine style)
+	static UWorldOutlinerWidget* CreateWorldOutlinerWidget(EUIDockDirection InDockDirection = EUIDockDirection::Left);
+	static UDetailsPanelWidget* CreateDetailsPanelWidget(EUIDockDirection InDockDirection = EUIDockDirection::Right);
+	static void CreateObjectManagementLayout(); // Creates both outliner and details panel
 };
