@@ -80,7 +80,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         // Single, consistent resize path (handles RTV/DSV + viewport)
                         static_cast<D3D11RHI*>(renderer->GetRHIDevice())->ResizeSwapChain(newWidth, newHeight);
                     }
-                    // ImGui DisplaySize가 유효할 때만 UI 도우 재배치
+                    // ImGui DisplaySize가 유효할 때만 UI 윈도우 재배치
                     ImGuiIO& io = ImGui::GetIO();
                     if (io.DisplaySize.x > 0 && io.DisplaySize.y > 0)
                     {
