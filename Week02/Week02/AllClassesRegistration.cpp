@@ -21,6 +21,7 @@
 #include "UI/Widget/PrimitiveSpawnWidget.h"
 #include "UI/Widget/SceneIOWidget.h"
 #include "UI/Widget/TargetActorTransformWidget.h"
+#include "UI/Widget/WorldOutlinerWidget.h"
 #include "UI/Widget/Widget.h"
 #include "UI/Window/ConsoleWindow.h"
 #include "UI/Window/ControlPanelWindow.h"
@@ -76,6 +77,7 @@ IMPLEMENT_CLASS(UInputInformationWidget)
 IMPLEMENT_CLASS(UPrimitiveSpawnWidget)
 IMPLEMENT_CLASS(USceneIOWidget)
 IMPLEMENT_CLASS(UTargetActorTransformWidget)
+IMPLEMENT_CLASS(UWorldOutlinerWidget)
 
 IMPLEMENT_CLASS(UUIWindow)
 IMPLEMENT_CLASS(UConsoleWindow)
