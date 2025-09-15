@@ -7,11 +7,8 @@
 AActor::AActor()
 {
     Name = "DefaultActor";
-    RootComponent = NewObject<USceneComponent>();
-    RootComponent->SetOwner(this); // 추후 구현
-    AddComponent(RootComponent);
-	CollisionComponent = NewObject<UBoundingBoxComponent>();
-	CollisionComponent->SetOwner(this);
+    RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
+    CollisionComponent = CreateDefaultSubobject<UBoundingBoxComponent>(FName("CollisionBox"));
 }
 
 AActor::~AActor()
