@@ -221,8 +221,6 @@ void UWorld::Render()
 void UWorld::Tick(float DeltaSeconds)
 {
     //순서 바꾸면 안댐
-    ProcessActorSelection();
-
     for (AActor* Actor : Actors)
     {
         if (Actor) Actor->Tick(DeltaSeconds);
@@ -233,6 +231,7 @@ void UWorld::Tick(float DeltaSeconds)
     }
     GizmoActor->Tick(DeltaSeconds);
 
+    ProcessActorSelection();
     //Input Manager가 카메라 후에 업데이트 되어야함
     InputManager.Update();
     UIManager.Update(DeltaSeconds);

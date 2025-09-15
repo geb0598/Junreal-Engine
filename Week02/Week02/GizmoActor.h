@@ -57,7 +57,7 @@ public:
     void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera);
     
     // Gizmo interaction methods
-    void SetTargetActor(AActor* InTargetActor) { TargetActor = InTargetActor; }
+    void SetTargetActor(AActor* InTargetActor) { TargetActor = InTargetActor; Tick(0.f);  }
     AActor* GetTargetActor() const { return TargetActor; }
     void SetCameraActor(ACameraActor* InCameraActor) { CameraActor = InCameraActor; }
     ACameraActor* GetCameraActor() const { return CameraActor; }
