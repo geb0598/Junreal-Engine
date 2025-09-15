@@ -41,7 +41,7 @@ public:
 
     virtual void IASetPrimitiveTopology() = 0;
     virtual void RSSetViewport() = 0;
-    virtual void RSSetState(bool bIsWireframe) = 0;
+    virtual void RSSetState(EViewModeIndex ViewModeIndex) = 0;
     virtual void OMSetRenderTargets() = 0;
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;
     virtual void Present() = 0;

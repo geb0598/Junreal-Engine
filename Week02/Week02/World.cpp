@@ -146,7 +146,7 @@ void UWorld::Render()
     if (!Renderer) return;
     // === Begin Frame ===
     Renderer->BeginFrame();
-    Renderer->RSSetWireframe(bIsWireframeMode);
+    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
 
     // === Draw Grid ===
     for (USceneComponent* Comp : GridActor->GetComponents())
@@ -163,6 +163,7 @@ void UWorld::Render()
 
     // === Draw Primitive ===
     //Renderer->PrepareShader();
+    Renderer->RSSetState(ViewModeIndex);
     for (AActor* Actor : Actors)
     {
         if (!Actor) continue;
@@ -205,8 +206,10 @@ void UWorld::Render()
 
                 if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
                 {
+                    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
                     Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
                     Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    Renderer->RSSetState(ViewModeIndex);
                 }
             }
             Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);

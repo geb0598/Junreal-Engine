@@ -30,7 +30,7 @@ public:
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
 
     void IASetPrimitiveTopology() override;
-    void RSSetState(bool bIsWireframe) override;
+    void RSSetState(EViewModeIndex ViewModeIndex) override;
     void RSSetViewport() override;
     void OMSetRenderTargets() override;
     void OMSetBlendState(bool bIsBlendMode) override;

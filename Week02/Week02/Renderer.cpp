@@ -53,9 +53,9 @@ void URenderer::OMSetBlendState(bool bIsChecked)
     }
 }
 
-void URenderer::RSSetWireframe(bool bIsWireframe)
+void URenderer::RSSetState(EViewModeIndex ViewModeIndex)
 {
-    RHIDevice->RSSetState(bIsWireframe);
+    RHIDevice->RSSetState(ViewModeIndex);
 }
 
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)

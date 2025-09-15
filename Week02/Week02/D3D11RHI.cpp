@@ -180,9 +180,9 @@ void D3D11RHI::IASetPrimitiveTopology()
     DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void D3D11RHI::RSSetState(bool bIsWireframe)
+void D3D11RHI::RSSetState(EViewModeIndex ViewModeIndex)
 {
-    if (bIsWireframe)
+    if (ViewModeIndex == EViewModeIndex::VMI_Wireframe)
     {
         DeviceContext->RSSetState(WireFrameRasterizerState);
     }
