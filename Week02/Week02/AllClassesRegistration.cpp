@@ -10,6 +10,8 @@
 #include "CameraActor.h"
 #include "StaticMeshActor.h"
 #include "MeshLoader.h"
+#include "LineComponent.h"
+#include "Line.h"
 
 #include "UI/Factory/UIWindowFactory.h"
 #include "UI/ImGui/ImGuiHelper.h"
@@ -33,6 +35,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Material.h"
+#include "DynamicMesh.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -56,6 +59,8 @@ IMPLEMENT_CLASS(UStaticMesh)
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)
 IMPLEMENT_CLASS(UGizmoRotateComponent)
+IMPLEMENT_CLASS(ULineComponent)
+IMPLEMENT_CLASS(ULine)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)
@@ -92,3 +97,4 @@ IMPLEMENT_CLASS(UResourceBase)
 IMPLEMENT_CLASS(UMesh)
 IMPLEMENT_CLASS(UShader)
 IMPLEMENT_CLASS(UTexture)
+IMPLEMENT_CLASS(UDynamicMesh)

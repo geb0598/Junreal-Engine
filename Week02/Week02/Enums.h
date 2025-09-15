@@ -119,9 +119,11 @@ enum class ResourceType : uint8
     None = -1,
 
     Mesh,
+    DynamicMesh,
     Shader,
     Texture,
     Material,
+
     End
 };
 

@@ -26,6 +26,15 @@ void UMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayou
 void UMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
 {
     VertexType = InVertexType;  // 버텍스 타입 저장
+
+    if (VertexBuffer)
+    {
+        VertexBuffer->Release();
+    }
+    if (IndexBuffer)
+    {
+        IndexBuffer->Release();
+    }
     
     CreateVertexBuffer(InData, InDevice, InVertexType);
     CreateIndexBuffer(InData, InDevice);

@@ -114,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
-    _CrtSetBreakAlloc(0); // Uncomment and set alloc ID to break on specific leak
+    _CrtSetBreakAlloc(179403); // Uncomment and set alloc ID to break on specific leak
 #endif
 
     // _CrtSetBreakAlloc(346);
@@ -126,7 +126,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     WCHAR Title[] = L"Game Tech Lab";
 
     // 각종 메시지를 처리할 함수인 WndProc의 함수 포인터를 WindowClass 구조체에 넣는다.
-    WNDCLASSW wndclass = {0, WndProc, 0, 0, 0, 0, 0, 0, 0, WindowClass};
+    WNDCLASSW wndclass = { 0, WndProc, 0, 0, 0, 0, 0, 0, 0, WindowClass };
 
     // 윈도우 클래스 등록
     RegisterClassW(&wndclass);
@@ -134,119 +134,115 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // 저장된 창 크기 로드 (없으면 기본값 1024x1024)
     int windowWidth = 1024, windowHeight = 1024;
     LoadWindowSize(windowWidth, windowHeight);
-    
+
     // 윈도우 생성
     HWND hWnd = CreateWindowExW(0, WindowClass, Title, WS_POPUP | WS_VISIBLE | WS_OVERLAPPEDWINDOW,
-                                CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight,
-                                nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight,
+        nullptr, nullptr, hInstance, nullptr);
 
     //종횡비 계산
     GetViewportSize(hWnd);
 
     {
-    D3D11RHI d3d11RHI;
-    d3d11RHI.Initialize(hWnd);
-    URenderer renderer(&d3d11RHI); //렌더러 생성이 가장 먼저 되어야 합니다.
+        D3D11RHI d3d11RHI;
+        d3d11RHI.Initialize(hWnd);
+        URenderer renderer(&d3d11RHI); //렌더러 생성이 가장 먼저 되어야 합니다.
 
-    UResourceManager::GetInstance().Initialize(d3d11RHI.GetDevice(),d3d11RHI.GetDeviceContext()); //리소스매니저 이니셜라이즈
-    // UI Manager Initialize
-    UUIManager::GetInstance().Initialize(hWnd, d3d11RHI.GetDevice(), d3d11RHI.GetDeviceContext()); //유아이매니저 이니셜라이즈
-    UUIWindowFactory::CreateDefaultUILayout();
-    
-    // InputManager 초기화 (TUUIManager 이후)
-    UInputManager::GetInstance().Initialize(hWnd); //인풋 매니저 이니셜라이즈
+        UResourceManager::GetInstance().Initialize(d3d11RHI.GetDevice(), d3d11RHI.GetDeviceContext()); //리소스매니저 이니셜라이즈
+        // UI Manager Initialize
+        UUIManager::GetInstance().Initialize(hWnd, d3d11RHI.GetDevice(), d3d11RHI.GetDeviceContext()); //유아이매니저 이니셜라이즈
+        UUIWindowFactory::CreateDefaultUILayout();
 
-    //======================================================================================================================      
+        // InputManager 초기화 (TUUIManager 이후)
+        UInputManager::GetInstance().Initialize(hWnd); //인풋 매니저 이니셜라이즈
 
-    UWorld* World = NewObject<UWorld>();
-    World->SetRenderer(&renderer);
-    World->Initialize(); //월드 생성 
+        //======================================================================================================================      
 
-
-    //스폰을 위한 월드셋
-    UUIManager::GetInstance().SetWorld(World);
-    //======================================================================================================================      
-    LARGE_INTEGER Frequency;
-    QueryPerformanceFrequency(&Frequency);
-
-    LARGE_INTEGER PrevTime, CurrTime;
-    QueryPerformanceCounter(&PrevTime);
-
-    FVector CameraLocation{0, 0, -10.f};
-
-    UInputManager& InputMgr = UInputManager::GetInstance();
-
-    bool bIsExit = false;
-    while (bIsExit == false)
-    {
-        MSG msg;
-
-        QueryPerformanceCounter(&CurrTime);
-
-        // 프레임 간 시간 (초 단위)
-        float DeltaSeconds = static_cast<float>(
-            (CurrTime.QuadPart - PrevTime.QuadPart) / double(Frequency.QuadPart)
-        );
-        PrevTime = CurrTime;
+        UWorld* World = NewObject<UWorld>();
+        World->SetRenderer(&renderer);
+        World->Initialize(); //월드 생성 
 
 
-        // 이제 Tick 호출
-        World->Tick(DeltaSeconds);
-        World->Render();
-        //UE_LOG("Hello World %d", 2025);
+        //스폰을 위한 월드셋
+        UUIManager::GetInstance().SetWorld(World);
+        //======================================================================================================================      
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency(&Frequency);
 
-        // 처리할 메시지가 더 이상 없을때 까지 수행
-        while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        LARGE_INTEGER PrevTime, CurrTime;
+        QueryPerformanceCounter(&PrevTime);
+
+        FVector CameraLocation{ 0, 0, -10.f };
+
+        UInputManager& InputMgr = UInputManager::GetInstance();
+
+        bool bIsExit = false;
+        while (bIsExit == false)
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            MSG msg;
 
-            if (msg.message == WM_QUIT)
+            QueryPerformanceCounter(&CurrTime);
+
+            // 프레임 간 시간 (초 단위)
+            float DeltaSeconds = static_cast<float>(
+                (CurrTime.QuadPart - PrevTime.QuadPart) / double(Frequency.QuadPart)
+                );
+            PrevTime = CurrTime;
+
+
+            // 이제 Tick 호출
+            World->Tick(DeltaSeconds);
+            World->Render();
+            //UE_LOG("Hello World %d", 2025);
+
+            // 처리할 메시지가 더 이상 없을때 까지 수행
+            while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
             {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+
+                if (msg.message == WM_QUIT)
+                {
+                    bIsExit = true;
+                    break;
+                }
+            }
+
+            if (InputMgr.IsKeyPressed(VK_ESCAPE))
+            {
+                UE_LOG("ESC Key Pressed - Exiting!\n");
                 bIsExit = true;
-                break;
+            }
+
+            // 마우스 위치 실시간 출력 (매 60프레임마다)
+            static int frameCount = 0;
+            frameCount++;
+            if (frameCount % 60 == 0) // 60프레임마다 출력
+            {
+                FVector2D mousePos = InputMgr.GetMousePosition();
+                FVector2D mouseDelta = InputMgr.GetMouseDelta();
+                char debugMsg[128];
+                //sprintf_s(debugMsg, "Mouse Pos: (%.1f, %.1f), Delta: (%.1f, %.1f)\n",
+                //          mousePos.X, mousePos.Y, mouseDelta.X, mouseDelta.Y);
+                //UE_LOG(debugMsg);
             }
         }
 
-        if (InputMgr.IsKeyPressed(VK_ESCAPE))
+        // 전역 변수 CLIENTWIDTH/HEIGHT를 사용해서 저장 (더 안전)
+        if (CLIENTWIDTH > 100 && CLIENTHEIGHT > 100)
         {
-            UE_LOG("ESC Key Pressed - Exiting!\n");
-            bIsExit = true;
+            // 클라이언트 영역에 프레임 사이즈 추가해서 전체 창 크기 계산
+            int totalWidth = (int)CLIENTWIDTH + 16;  // 대략적인 좌우 프레임
+            int totalHeight = (int)CLIENTHEIGHT + 39; // 대략적인 타이틀바 + 상하 프레임
+            SaveWindowSize(totalWidth, totalHeight);
         }
-
-        // 마우스 위치 실시간 출력 (매 60프레임마다)
-        static int frameCount = 0;
-        frameCount++;
-        if (frameCount % 60 == 0) // 60프레임마다 출력
+        else
         {
-            FVector2D mousePos = InputMgr.GetMousePosition();
-            FVector2D mouseDelta = InputMgr.GetMouseDelta();
-            char debugMsg[128];
-            //sprintf_s(debugMsg, "Mouse Pos: (%.1f, %.1f), Delta: (%.1f, %.1f)\n",
-            //          mousePos.X, mousePos.Y, mouseDelta.X, mouseDelta.Y);
-            //UE_LOG(debugMsg);
+            printf("Invalid client size (%.0f x %.0f), not saving\n", CLIENTWIDTH, CLIENTHEIGHT);
         }
+        UUIManager::GetInstance().Release();
+        ObjectFactory::DeleteAll(true);
     }
-    
-    // 전역 변수 CLIENTWIDTH/HEIGHT를 사용해서 저장 (더 안전)
-    if (CLIENTWIDTH > 100 && CLIENTHEIGHT > 100)
-    {
-        // 클라이언트 영역에 프레임 사이즈 추가해서 전체 창 크기 계산
-        int totalWidth = (int)CLIENTWIDTH + 16;  // 대략적인 좌우 프레임
-        int totalHeight = (int)CLIENTHEIGHT + 39; // 대략적인 타이틀바 + 상하 프레임
-        SaveWindowSize(totalWidth, totalHeight);
-    }
-    else
-    {
-        printf("Invalid client size (%.0f x %.0f), not saving\n", CLIENTWIDTH, CLIENTHEIGHT);
-    }
-    ObjectFactory::DeleteAll(true);
-
-    //// ImGui 콘솔 버퍼 비우기 (CRT 누수 리포트에서 제외)
-    //ImGuiConsole::Shutdown();
-
-    } // end app scope: ensure destructors run before leak dump
-
 
     return 0;
 }
