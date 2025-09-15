@@ -35,7 +35,6 @@ public:
     void Initialize();
 	void InitializeMainCamera();
     void InitializeGizmo();
-	void InitializeShader();
     void SetRenderer(URenderer* InRenderer);
     URenderer*& const GetRenderer()  { return Renderer; }
     template<class T>
@@ -100,6 +99,8 @@ private:
     // 카메라 설정
     float MouseSensitivity = 0.1f;  // 0.005f -> 0.1f로 증가 (20배)
     float CameraMoveSpeed = 5.0f;
+
+    bool bIsWireframeMode = false;
 };
 
 template<class T>

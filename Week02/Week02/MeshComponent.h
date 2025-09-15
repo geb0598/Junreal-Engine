@@ -1,5 +1,6 @@
 #pragma once
 #include "PrimitiveComponent.h"
+
 class UMeshComponent : public UPrimitiveComponent
 {
 public:
@@ -10,23 +11,15 @@ protected:
     ~UMeshComponent() override;
 
 public:
-    //메테리얼 관리
-    void SetMaterial(UMaterial* InMaterial) { Material = InMaterial; }
-    UMaterial* GetMaterial() const { return Material; }
+    virtual void SetMeshResource(const FString& FilePath);
+    virtual UMesh* GetMeshResource() const { return MeshResource; }
 
-    //// 정점 데이터 관리
-    //void SetVertices(FVertexSimple* InVertices, int InCount)
-    //{
-    //    Vertices = InVertices;
-    //    VertexCount = InCount;
-    //}
-
-    //FVertexSimple* GetVertices() const { return Vertices; }
-    //int GetVertexCount() const { return VertexCount; }
 
 protected:
-    UMaterial* Material;
+
     // 정점 데이터
     //FVertexSimple* Vertices;  // 정점 배열 주소
     //int VertexCount;          // 정점 개수
+
+    UMesh* MeshResource = nullptr;
 };

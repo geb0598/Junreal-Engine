@@ -2,13 +2,16 @@
 #include "Actor.h"
 #include "SceneComponent.h"
 #include "ObjectFactory.h"
-
+#include "ShapeComponent.h"
+#include "BoundingBoxComponent.h"   
 AActor::AActor()
 {
     Name = "DefaultActor";
     RootComponent = NewObject<USceneComponent>();
+    RootComponent->SetOwner(this); // 추후 구현
     AddComponent(RootComponent);
-    // RootComponent->Owner = this; // 추후 구현
+	CollisionComponent = NewObject<UBoundingBoxComponent>();
+	CollisionComponent->SetOwner(this);
 }
 
 AActor::~AActor()

@@ -1,7 +1,5 @@
 #pragma once
 #include "ResourceBase.h"
-#include <d3d11.h>
-#include <d3dcompiler.h>
 
 class UShader : public UResourceBase
 {
@@ -28,19 +26,6 @@ private:
 	void ReleaseResources();
 };
 
-struct FVertexPosition
-{
-	static const D3D11_INPUT_ELEMENT_DESC* GetLayout()
-	{
-		static const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-		};
-		return layout;
-	}
-
-	static uint32 GetLayoutCount() { return 1; }
-};
-
 struct FVertexPositionColor
 {
 	static const D3D11_INPUT_ELEMENT_DESC* GetLayout()
@@ -51,17 +36,18 @@ struct FVertexPositionColor
 		};
 		return layout;
 	}
-
 	static uint32 GetLayoutCount() { return 2; }
 };
 
-struct FVertexPositionTexture
+struct FVertexPositionColorTexturNormal
 {
 	static const D3D11_INPUT_ELEMENT_DESC* GetLayout()
 	{
 		static const D3D11_INPUT_ELEMENT_DESC layout[] = {
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 		};
 		return layout;
 	}

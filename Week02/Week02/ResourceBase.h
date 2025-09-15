@@ -8,7 +8,10 @@ public:
 	DECLARE_CLASS(UResourceBase, UObject)
 
 	UResourceBase() = default;
-	~UResourceBase() = default;
+	virtual ~UResourceBase() {}
+
+	const FString& GetFilePath() const { return FilePath; }
+	void SetFilePath(const FString& InFilePath) { FilePath = InFilePath; }
 
 protected:
 	FString FilePath;

@@ -6,8 +6,8 @@
 #include "StaticMeshActor.h"
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
-#include "GridComponent.h"
 #include "TextRenderComponent.h"
+#include "Mesh.h"
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
                    , UIManager(UUIManager::GetInstance())
@@ -92,9 +92,8 @@ void UWorld::Initialize()
         FString PrimitiveType = Primitive.Type + ".obj";
         
         AActor* Actor = NewObject<AStaticMeshActor>();
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
                                             Primitive.Scale));
@@ -103,7 +102,6 @@ void UWorld::Initialize()
         Actors.push_back(Actor);
     }
 	InitializeMainCamera();
-    InitializeShader();
 	InitializeGizmo();
 }
 
@@ -129,24 +127,6 @@ void UWorld::InitializeGizmo()
     UIManager.SetGizmoActor(GizmoActor);
 }
 
-void UWorld::InitializeShader()
-{
-
-    D3D11_INPUT_ELEMENT_DESC PrimitiveLayout[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-    ResourceManager.CreateShader(L"Primitive.hlsl", PrimitiveLayout, ARRAYSIZE(PrimitiveLayout));
-    D3D11_INPUT_ELEMENT_DESC TextBillboardLayout[] =
-    {
-        { "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "SIZE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, sizeof(FVector), D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "UVRECT", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(FVector) * 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    };
-    ResourceManager.CreateShader(L"TextBillboard.hlsl", TextBillboardLayout, ARRAYSIZE(TextBillboardLayout));
-}
-
 void UWorld::SetRenderer(URenderer* InRenderer)
 {
     Renderer = InRenderer;
@@ -166,8 +146,7 @@ void UWorld::Render()
     if (!Renderer) return;
     // === Begin Frame ===
     Renderer->BeginFrame();
-    Renderer->PrepareShader(*ResourceManager.GetShader(L"Primitive.hlsl"));
-
+    Renderer->RSSetWireframe(bIsWireframeMode);
 
     // === Draw Grid ===
     for (USceneComponent* Comp : GridActor->GetComponents())
@@ -176,8 +155,8 @@ void UWorld::Render()
         Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
         if (UStaticMeshComponent* Prim = dynamic_cast<UStaticMeshComponent*>(Comp))
         {
-            Renderer->PrepareShader(Prim->GetShader());
-            Renderer->DrawIndexedPrimitiveComponent(Prim->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+            Renderer->PrepareShader(Prim->GetMaterial()->GetShader());
+            Renderer->DrawIndexedPrimitiveComponent(Prim->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         }
     }
 
@@ -226,8 +205,8 @@ void UWorld::Render()
 
                 if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>((*Components)[i]))
                 {
-                    Renderer->PrepareShader(Primitive->GetShader());
-                    Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    Renderer->PrepareShader(Primitive->GetMaterial()->GetShader());
+                    Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
                 }
             }
             Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
@@ -245,28 +224,16 @@ void UWorld::Render()
             FMatrix ModelMatrix = Component->GetWorldMatrix();
 
             // 컴포넌트가 StaticMesh를 가진 경우만 Draw
-            if (UStaticMeshComponent* Primitive = Cast<UStaticMeshComponent>(Component))
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
-                Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-                Renderer->PrepareShader(Primitive->GetShader());
-                Renderer->DrawIndexedPrimitiveComponent(Primitive->GetMesh(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            }
-
-            if (UTextRenderComponent* Text = dynamic_cast<UTextRenderComponent*>(Component))
-            {
-                //Renderer->UpdateBillboardConstantBuffers(MainCameraActor->GetViewMatrix(), MainCameraActor->GetProjectionMatrix(), MainCameraActor->GetRight(), MainCameraActor->GetUp());
-                //Renderer->PrepareShader(*ResourceManager.GetShader(L"TextBillboard.hlsl"));
-                //Renderer->DrawIndexedPrimitiveComponent(Text);
+				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
             }
         }
         // 블랜드 스테이드 종료
         Renderer->OMSetBlendState(false);
     }
-
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
     UIManager.Render();
-
-
     // === End Frame ===
     Renderer->EndFrame();
 }
@@ -487,9 +454,8 @@ void UWorld::LoadScene(const FString& SceneName)
                        FQuat::MakeFromEuler(Primitive.Rotation),
                        Primitive.Scale)
         );
-        StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ToObjFileName(Primitive.Type));
-        StaticMeshActor->GetStaticMeshComponent()->SetMesh(ToObjFileName(Primitive.Type));
-        StaticMeshActor->GetStaticMeshComponent()->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
+        StaticMeshActor->GetStaticMeshComponent()->SetMeshResource(ToObjFileName(Primitive.Type));
+        StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
     }
 }
 
@@ -506,7 +472,7 @@ void UWorld::SaveScene(const FString& SceneName)
         Data.Scale = Actor->GetActorScale();
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
-            FString FilePath = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetFilePath();
+            FString FilePath = MeshActor->GetStaticMeshComponent()->GetMeshResource()->GetFilePath();
             Data.Type = RemoveObjExtension(FilePath);
         }
         Primitives.push_back(Data);

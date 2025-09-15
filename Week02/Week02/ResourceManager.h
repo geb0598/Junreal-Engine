@@ -1,15 +1,18 @@
 #pragma once
-#include <d3d11.h>
 #include "ObjectFactory.h"
 #include "Object.h"
 #include "CharacterInfo.h"
+#include "Shader.h"
+#include "Mesh.h"
+#include "Material.h"
+#include "Texture.h"
 
 class UStaticMesh;
 
 class UResourceBase;
 class UMesh;
-class UShader;
-class UTexture;
+class UMaterial;
+
 struct FShaderDesc
 {
     std::wstring Filename;
@@ -23,34 +26,26 @@ class UResourceManager :public UObject
 public:
     DECLARE_CLASS(UResourceManager, UObject)
     static UResourceManager& GetInstance();
-    void Initialize(ID3D11Device* InDevice,ID3D11DeviceContext* InContext);
+    void Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* InContext);
 
-    UStaticMesh* GetOrCreateStaticMesh(const FString& FilePath);
-
-    // 버텍스 버퍼 로드 (없으면 생성)
-    FResourceData* GetOrCreateMeshBuffers(const FString& FilePath);
-
-    //font 렌더링을 위함(dynamicVertexBuffer 만듦.)
-    FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies);
-//    FTextureData* GetOrCreateTexture
-
-    FShader* GetShader(const FWideString& Name);
-
-    
     ID3D11Device* GetDevice() { return Device; }
 
-    void CreateVertexBuffer(FResourceData* data, TArray<FVertexSimple>& vertices, ID3D11Device* device);
-    void CreateIndexBuffer(FResourceData* data, const TArray<uint32>& indices, ID3D11Device* device);
-    //void CreateIndexBuffer(FResourceData* data, const uint32 Size, ID3D11Device* device);
+    //font 렌더링을 위함(dynamicVertexBuffer 만듦.)
+    FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size, const TArray<uint32>& Indicies);
+    //    FTextureData* GetOrCreateTexture
+
+    UMaterial* GetOrCreateMaterial(const FString& Name,  EVertexLayoutType layoutType);
+
     void CreateDynamicVertexBuffer(FResourceData* data, uint32 Size, ID3D11Device* Device);
     void UpdateDynamicVertexBuffer(const FString& name, TArray<FBillboardCharInfo>& vertices);
     FTextureData* CreateOrGetTextureData(const FWideString& FilePath);
-    void CreateShader(const FWideString& Name, const D3D11_INPUT_ELEMENT_DESC* Desc, uint32 Size);
+
     // 전체 해제
     void Clear();
 
     void CreateAxisMesh(float Length, const FString& FilePath);
     void CreateGridMesh(int N, const FString& FilePath);
+    void CreateDefaultShader();
 
     template<typename T>
     bool Add(const FString& InFilePath, UObject* InObject);
@@ -83,6 +78,9 @@ protected:
 
     FShader PrimitiveShader;
     TMap<FWideString,FShader*> ShaderList;
+
+private:
+    TMap<FString, UMaterial*> MaterialMap;
 };
 
 template<typename T>
@@ -93,6 +91,7 @@ bool UResourceManager::Add(const FString& InFilePath, UObject* InObject)
     if (iter == Resources[typeIndex].end())
     {
         Resources[typeIndex][InFilePath] = static_cast<T*>(InObject);
+        Resources[typeIndex][InFilePath]->SetFilePath(InFilePath);
         return true;
     }
     return false;
@@ -124,6 +123,7 @@ inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)
     {
         T* Resource = NewObject<T>();
         Resource->Load(InFilePath, Device, std::forward<Args>(InArgs)...);
+        Resource->SetFilePath(InFilePath);
         Resources[typeIndex][InFilePath] = Resource;
         return Resource;
     }
@@ -138,6 +138,8 @@ ResourceType UResourceManager::GetResourceType()
         return ResourceType::Shader;
     if (T::StaticClass() == UTexture::StaticClass())
         return ResourceType::Texture;
+    if (T::StaticClass() == UMaterial::StaticClass())
+        return ResourceType::Material;
 
     return ResourceType::None;
 }

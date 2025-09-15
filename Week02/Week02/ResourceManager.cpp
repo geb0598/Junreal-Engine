@@ -1,10 +1,8 @@
 #include "pch.h"
 #include "MeshLoader.h"
 #include "ObjectFactory.h"
-#include "Mesh.h"
-#include "Shader.h"
-#include "Texture.h"
 #include "d3dtk/DDSTextureLoader.h"
+
 #define GRIDNUM 100
 #define AXISLENGTH 100
 
@@ -31,27 +29,9 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     Context = InContext;
     CreateGridMesh(GRIDNUM,"Grid");
     CreateAxisMesh(AXISLENGTH,"Axis");
+
+    CreateDefaultShader();
 }
-
-FResourceData* UResourceManager::GetOrCreateMeshBuffers(const FString& FilePath)
-{
-    auto it = ResourceMap.find(FilePath);
-    if (it != ResourceMap.end())
-    {
-        return it->second; 
-    }
-
-    FMeshData* MeshData = UMeshLoader::GetInstance().LoadMesh(FilePath.c_str());
-
-    FResourceData* ResourceData = new FResourceData();
-
-    CreateVertexBuffer(ResourceData, MeshData->Vertices, Device);
-    CreateIndexBuffer(ResourceData, MeshData->Indices, Device);
- 
-    ResourceMap[FilePath] = ResourceData;
-    return ResourceData;
-}
-
 
 FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies)
 {
@@ -64,59 +44,48 @@ FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, ui
     FResourceData* ResourceData = new FResourceData();
 
     CreateDynamicVertexBuffer(ResourceData, Size, Device);
-    CreateIndexBuffer(ResourceData, Indicies, Device);
+    //CreateIndexBuffer(ResourceData, Indicies, Device);
 
     ResourceMap[Name] = ResourceData;
     return ResourceData;
 }
 
-FShader* UResourceManager::GetShader(const FWideString& Name)
+UMaterial* UResourceManager::GetOrCreateMaterial(const FString& Name, EVertexLayoutType layoutType)
 {
-    auto it = ShaderList.find(Name);
-    if(it!=ShaderList.end())
-        return ShaderList[Name];
-    return nullptr;
-}
-
-void UResourceManager::CreateShader(const FWideString& Name,const D3D11_INPUT_ELEMENT_DESC* Desc, uint32 Size)
-{
-    auto it = ShaderList.find(Name);
-    if (it != ShaderList.end()) return;
-    ID3DBlob* vertexshaderCSO;
-    ID3DBlob* pixelshaderCSO;
-
-    ID3D11VertexShader* VS;
-    ID3D11PixelShader* PS;
-    ID3D11InputLayout* Layout;
-    HRESULT hr = D3DCompileFromFile(Name.c_str(), nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
-
-    hr = Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &VS);
-
-    hr = D3DCompileFromFile(Name.c_str(), nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
-
-    hr = Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &PS);
-
-    hr = Device->CreateInputLayout(Desc, Size, vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &Layout);
-    FShader* Shader = new FShader( Layout,VS,PS );
-    ShaderList[Name] = Shader;
-    vertexshaderCSO->Release();
-    pixelshaderCSO->Release();
-}
-
-UStaticMesh* UResourceManager::GetOrCreateStaticMesh(const FString& FilePath)
-{
-    auto it = StaticMeshMap.find(FilePath);
-    if (it != StaticMeshMap.end())
-    {
+    auto it = MaterialMap.find(Name);
+    if (it != MaterialMap.end())
         return it->second;
+
+    // FName → FString 변환
+    FString BaseName = Name;
+
+    // Shader, Texture 로드
+    UShader* Shader;
+    UTexture* Texture;
+
+    if (UResourceManager::GetInstance().Get<UShader>(Name))
+    {
+        Shader = UResourceManager::GetInstance().Get<UShader>(Name);
     }
+    else
+    {
+        Shader = UResourceManager::GetInstance().Load<UShader>(Name, layoutType);
+    }
+    if (UResourceManager::GetInstance().Get<UTexture>(Name))
+    {
+        Texture = UResourceManager::GetInstance().Get<UTexture>(Name);
+    }
+    else
+    {
+        Texture = UResourceManager::GetInstance().Load<UTexture>(Name);
+    }
+    // Material 생성
+    UMaterial* Mat = NewObject<UMaterial>();
+    if (Shader)  Mat->SetShader(Shader);
+    if (Texture) Mat->SetTexture(Texture);
 
-    UStaticMesh* StaticMesh = NewObject<UStaticMesh>();
-    StaticMesh->SetFilePath(FilePath);
-
-    StaticMeshMap.Add(FilePath, StaticMesh);
-    // StaticMeshMap[FilePath] = StaticMesh;
-    return StaticMesh;
+    MaterialMap[Name] = Mat;
+    return Mat;
 }
 
 // 전체 해제
@@ -150,23 +119,6 @@ void UResourceManager::Clear()
             }
         }
         ResourceMap.clear();
-
-        // 이제 리소스 매니저에서 세이더를 삭제합니다
-        if (PrimitiveShader.SimpleInputLayout)
-        {
-            PrimitiveShader.SimpleInputLayout->Release();
-            PrimitiveShader.SimpleInputLayout = nullptr;
-        }
-        if (PrimitiveShader.SimpleVertexShader)
-        {
-            PrimitiveShader.SimpleVertexShader->Release();
-            PrimitiveShader.SimpleVertexShader = nullptr;
-        }
-        if (PrimitiveShader.SimplePixelShader)
-        {
-            PrimitiveShader.SimplePixelShader->Release();
-            PrimitiveShader.SimplePixelShader = nullptr;
-        }
     }
 
     for (auto& Array : Resources)
@@ -194,49 +146,44 @@ void UResourceManager::CreateAxisMesh(float Length, const FString& FilePath)
         return;
     }
 
-    TArray<FVertexSimple> axisVertices;
+    TArray<FVector> axisVertices;
+    TArray<FVector4> axisColors;
     TArray<uint32> axisIndices;
 
     // X축 (빨강)
-    axisVertices.push_back({ 0.0f, 0.0f, 0.0f, 1,0,0,1 });       // 원점
-    axisVertices.push_back({ Length, 0.0f, 0.0f, 1,0,0,1 });     // +X
+    axisVertices.push_back(FVector(0.0f, 0.0f, 0.0f));       // 원점
+    axisVertices.push_back(FVector(Length, 0.0f, 0.0f));     // +X
+    axisColors.push_back(FVector4(1.0f, 0.0f, 0.0f, 1.0f));  // 빨강
+    axisColors.push_back(FVector4(1.0f, 0.0f, 0.0f, 1.0f));  // 빨강
     axisIndices.push_back(0);
     axisIndices.push_back(1);
 
     // Y축 (초록)
-    axisVertices.push_back({ 0.0f, 0.0f, 0.0f, 0,0,1,1 });       // 원점
-    axisVertices.push_back({ 0.0f, Length, 0.0f, 0,0,1,1 });     // +Y
+    axisVertices.push_back(FVector(0.0f, 0.0f, 0.0f));       // 원점
+    axisVertices.push_back(FVector(0.0f, Length, 0.0f));     // +Y
+    axisColors.push_back(FVector4(0.0f, 1.0f, 0.0f, 1.0f));  // 초록
+    axisColors.push_back(FVector4(0.0f, 1.0f, 0.0f, 1.0f));  // 초록
     axisIndices.push_back(2);
     axisIndices.push_back(3);
 
     // Z축 (파랑)
-    axisVertices.push_back({ 0.0f, 0.0f, 0.0f, 0,1,0,1 });       // 원점
-    axisVertices.push_back({ 0.0f, 0.0f, Length, 0,1,0,1 });     // +Z
+    axisVertices.push_back(FVector(0.0f, 0.0f, 0.0f));       // 원점
+    axisVertices.push_back(FVector(0.0f, 0.0f, Length));     // +Z
+    axisColors.push_back(FVector4(0.0f, 0.0f, 1.0f, 1.0f));  // 파랑
+    axisColors.push_back(FVector4(0.0f, 0.0f, 1.0f, 1.0f));  // 파랑
     axisIndices.push_back(4);
     axisIndices.push_back(5);
 
-    // 리소스 데이터 생성
-    FResourceData* data = new FResourceData();
-    data->VertexCount = axisVertices.size();
-    data->IndexCount = axisIndices.size();
-    data->Topology = EPrimitiveTopology::LineList;
-
-    // 버퍼 생성
-    CreateVertexBuffer(data, axisVertices, Device);
-    CreateIndexBuffer(data, axisIndices, Device);
-
-    // 리소스 맵에 등록
-    ResourceMap[FilePath] = data;
-
     FMeshData* MeshData = new FMeshData();
     MeshData->Vertices = axisVertices;
+    MeshData->Color = axisColors;
     MeshData->Indices = axisIndices;
 
     UMesh* Mesh = NewObject<UMesh>();
     Mesh->Load(MeshData, Device);
     Add<UMesh>("Axis", Mesh);
-    
-    delete MeshData;
+
+    UMeshLoader::GetInstance().AddMeshData("Axis", MeshData);
 }
 void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
 {
@@ -244,7 +191,8 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
     {
         return;
     }
-    TArray<FVertexSimple> gridVertices;
+    TArray<FVector> gridVertices;
+    TArray<FVector4> gridColors;
     TArray<uint32> gridIndices;
     // Z축 방향 선
     for (int i = -N; i <= N; i++)
@@ -259,8 +207,10 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
         if (i % 10 == 0) { r = g = b = 1.0f; }
 
         // 정점 2개 추가 (Z축 방향 라인)
-        gridVertices.push_back({ (float)i, 0.0f, (float)-N, r,g,b,1 });
-        gridVertices.push_back({ (float)i, 0.0f, (float)N, r,g,b,1 });
+        gridVertices.push_back(FVector((float)i, 0.0f, (float)-N));
+        gridVertices.push_back(FVector((float)i, 0.0f, (float)N));
+        gridColors.push_back(FVector4(r, g, b, 1.0f));
+        gridColors.push_back(FVector4(r, g, b, 1.0f));
 
         // 인덱스 추가
         uint32 base = static_cast<uint32>(gridVertices.size());
@@ -282,8 +232,10 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
         if (j % 10 == 0) { r = g = b = 1.0f; }
 
         // 정점 2개 추가 (X축 방향 라인)
-        gridVertices.push_back({ (float)-N, 0.0f, (float)j, r,g,b,1 });
-        gridVertices.push_back({ (float)N, 0.0f, (float)j, r,g,b,1 });
+        gridVertices.push_back(FVector((float)-N, 0.0f, (float)j));
+        gridVertices.push_back(FVector((float)N, 0.0f, (float)j));
+        gridColors.push_back(FVector4(r, g, b, 1.0f));
+        gridColors.push_back(FVector4(r, g, b, 1.0f));
 
         // 인덱스 추가
         uint32 base = static_cast<uint32>(gridVertices.size());
@@ -291,84 +243,38 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
         gridIndices.push_back(base - 1);
     }
 
-    gridVertices.push_back({ 0.0f, 0.0f, (float)-N, 1.0f,1.0f,1.0f,1.0f });
-    gridVertices.push_back({ 0.0f, 0.0f, 0.0f, 1.0f,1.0f,1.0f,1.0f });
+    gridVertices.push_back(FVector(0.0f, 0.0f, (float)-N));
+    gridVertices.push_back(FVector(0.0f, 0.0f, 0.0f));
+    gridColors.push_back(FVector4(1.0f, 1.0f, 1.0f, 1.0f));
+    gridColors.push_back(FVector4(1.0f, 1.0f, 1.0f, 1.0f));
     uint32 base = static_cast<uint32>(gridVertices.size());
     gridIndices.push_back(base - 2);
     gridIndices.push_back(base - 1);
 
-    gridVertices.push_back({ (float)-N, 0.0f, 0.0f, 1.0f,1.0f,1.0f,1.0f });
-    gridVertices.push_back({ 0.0f, 0.0f, 0.0f, 1.0f,1.0f,1.0f,1.0f });
+    gridVertices.push_back(FVector((float)-N, 0.0f, 0.0f));
+    gridVertices.push_back(FVector(0.0f, 0.0f, 0.0f));
+    gridColors.push_back(FVector4(1.0f, 1.0f, 1.0f, 1.0f));
+    gridColors.push_back(FVector4(1.0f, 1.0f, 1.0f, 1.0f));
     base = static_cast<uint32>(gridVertices.size());
     gridIndices.push_back(base - 2);
     gridIndices.push_back(base - 1);
 
-    FResourceData* data = new FResourceData();
-    data->VertexCount = gridVertices.size();
-    data->IndexCount = gridIndices.size();
-    data->Topology = EPrimitiveTopology::LineList;
-
-    // 버퍼 생성
-    CreateVertexBuffer(data, gridVertices,Device);
-    CreateIndexBuffer(data, gridIndices, Device);
-
-    ResourceMap[FilePath] = data;
-
     FMeshData* MeshData = new FMeshData();
     MeshData->Vertices = gridVertices;
+    MeshData->Color = gridColors;
     MeshData->Indices = gridIndices;
 
     UMesh* Mesh = NewObject<UMesh>();
     Mesh->Load(MeshData, Device);
     Add<UMesh>("Grid", Mesh);
 
-    delete MeshData;
+    UMeshLoader::GetInstance().AddMeshData("Grid", MeshData);
 }
 
-void UResourceManager::CreateVertexBuffer(FResourceData* data, TArray<FVertexSimple>& vertices, ID3D11Device* device)
+void UResourceManager::CreateDefaultShader()
 {
-    if (vertices.empty()) return;
-
-    D3D11_BUFFER_DESC vbd = {};
-    vbd.Usage = D3D11_USAGE_DEFAULT;
-    vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexSimple) * vertices.size());
-    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vbd.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA vinitData = {};
-    vinitData.pSysMem = vertices.data();
-
-    HRESULT hr = device->CreateBuffer(&vbd, &vinitData, &data->VertexBuffer);
-    if (FAILED(hr))
-    {
-        delete data;
-        return;
-    }
-
-    data->VertexCount = static_cast<uint32>(vertices.size());
-    data->ByteWidth = vbd.ByteWidth;
-} 
-
-void UResourceManager::CreateIndexBuffer(FResourceData* data, const TArray<uint32>& indices, ID3D11Device* device)
-{
-    if (indices.empty()) return;
-
-    D3D11_BUFFER_DESC ibd = {};
-    ibd.Usage = D3D11_USAGE_DEFAULT;
-    ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * indices.size());
-    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    ibd.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA iinitData = {};
-    iinitData.pSysMem = indices.data();
-
-    HRESULT hr = device->CreateBuffer(&ibd, &iinitData, &data->IndexBuffer);
-    if (FAILED(hr))
-    {
-        return;
-    }
-
-    data->IndexCount = static_cast<uint32>(indices.size());
+    Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 
 void UResourceManager::CreateDynamicVertexBuffer(FResourceData* data, uint32 Size, ID3D11Device* Device)

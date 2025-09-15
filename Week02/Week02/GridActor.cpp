@@ -10,12 +10,10 @@ AGridActor::AGridActor()
     AddComponent(GroundGrid) ;
     AddComponent(AxisGrid);
 
-    GroundGrid->SetStaticMesh("Grid");
-    GroundGrid->SetMesh("Grid");
-    GroundGrid->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
-    AxisGrid->SetStaticMesh("Axis");
-    AxisGrid->SetMesh("Axis");
-    AxisGrid->SetShader("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    GroundGrid->SetMeshResource("Grid");
+    GroundGrid->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    AxisGrid->SetMeshResource("Axis");
+    AxisGrid->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 }
 
 AGridActor::~AGridActor()

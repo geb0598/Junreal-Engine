@@ -1,9 +1,33 @@
 #include "pch.h"
+#include <fstream>
 
 // TODO: Delete it, just Test
 
 float CLIENTWIDTH = 1024.0f;
 float CLIENTHEIGHT = 1024.0f;
+
+// 창 크기 저장/로드 함수
+void SaveWindowSize(int width, int height)
+{
+    std::ofstream file("window_config.txt");
+    if (file.is_open())
+    {
+        file << width << " " << height << std::endl;
+        file.close();
+    }
+}
+
+bool LoadWindowSize(int& width, int& height)
+{
+    std::ifstream file("window_config.txt");
+    if (file.is_open())
+    {
+        file >> width >> height;
+        file.close();
+        return true;
+    }
+    return false;
+}
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 #   define _CRTDBG_MAP_ALLOC
@@ -40,17 +64,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_SIZE:
-        GetViewportSize(hWnd); // 창 크기 바뀔 때 전역 갱신
-     
-        // Renderer의 뷰포트 갱신
-        if (auto world = UUIManager::GetInstance().GetWorld())
         {
-            if (auto renderer = world->GetRenderer())
+            WPARAM sizeType = wParam;
+            if (sizeType != SIZE_MINIMIZED)
             {
-                UINT newWidth = static_cast<UINT>(CLIENTWIDTH);
-                UINT newHeight = static_cast<UINT>(CLIENTHEIGHT);
-                // Single, consistent resize path (handles RTV/DSV + viewport)
-                static_cast<D3D11RHI*>(renderer->GetRHIDevice())->ResizeSwapChain(newWidth, newHeight);
+                GetViewportSize(hWnd); // 창 크기 바뀔 때 전역 갱신
+             
+                // Renderer의 뷰포트 갱신
+                if (auto world = UUIManager::GetInstance().GetWorld())
+                {
+                    if (auto renderer = world->GetRenderer())
+                    {
+                        UINT newWidth = static_cast<UINT>(CLIENTWIDTH);
+                        UINT newHeight = static_cast<UINT>(CLIENTHEIGHT);
+                        // Single, consistent resize path (handles RTV/DSV + viewport)
+                        static_cast<D3D11RHI*>(renderer->GetRHIDevice())->ResizeSwapChain(newWidth, newHeight);
+                    }
+                    // ImGui DisplaySize가 유효할 때만 UI 도우 재배치
+                    ImGuiIO& io = ImGui::GetIO();
+                    if (io.DisplaySize.x > 0 && io.DisplaySize.y > 0)
+                    {
+                        UUIManager::GetInstance().RepositionImGuiWindows();
+                    }
+                }
             }
         }
         break;
@@ -95,9 +131,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // 윈도우 클래스 등록
     RegisterClassW(&wndclass);
 
-    // 1024 X 1024 크기에 윈도우 생성
+    // 저장된 창 크기 로드 (없으면 기본값 1024x1024)
+    int windowWidth = 1024, windowHeight = 1024;
+    LoadWindowSize(windowWidth, windowHeight);
+    
+    // 윈도우 생성
     HWND hWnd = CreateWindowExW(0, WindowClass, Title, WS_POPUP | WS_VISIBLE | WS_OVERLAPPEDWINDOW,
-                                CW_USEDEFAULT, CW_USEDEFAULT, 1024, 1024,
+                                CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight,
                                 nullptr, nullptr, hInstance, nullptr);
 
     //종횡비 계산
@@ -187,10 +227,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             //UE_LOG(debugMsg);
         }
     }
-
-    // 먼저 UI를 명시적으로 종료 (ImGui 백엔드/컨텍스트 정리)
-    UUIManager::GetInstance().Release();
-
+    
+    // 전역 변수 CLIENTWIDTH/HEIGHT를 사용해서 저장 (더 안전)
+    if (CLIENTWIDTH > 100 && CLIENTHEIGHT > 100)
+    {
+        // 클라이언트 영역에 프레임 사이즈 추가해서 전체 창 크기 계산
+        int totalWidth = (int)CLIENTWIDTH + 16;  // 대략적인 좌우 프레임
+        int totalHeight = (int)CLIENTHEIGHT + 39; // 대략적인 타이틀바 + 상하 프레임
+        SaveWindowSize(totalWidth, totalHeight);
+    }
+    else
+    {
+        printf("Invalid client size (%.0f x %.0f), not saving\n", CLIENTWIDTH, CLIENTHEIGHT);
+    }
     ObjectFactory::DeleteAll(true);
 
     //// ImGui 콘솔 버퍼 비우기 (CRT 누수 리포트에서 제외)

@@ -31,11 +31,6 @@ UMeshLoader::FFace UMeshLoader::ParseFaceBuffer(const FString& FaceBuffer)
     return Face;
 }
 
-UMeshLoader::UMeshLoader()
-{
-
-}
-
 UMeshLoader::~UMeshLoader()
 {
     for (auto& it : MeshCache)
@@ -46,6 +41,7 @@ UMeshLoader::~UMeshLoader()
         }
         it.second = nullptr;
     }
+    MeshCache.Empty();
 }
 FMeshData* UMeshLoader::LoadMesh(const std::filesystem::path& FilePath)
 {
@@ -119,14 +115,16 @@ FMeshData* UMeshLoader::LoadMesh(const std::filesystem::path& FilePath)
         {
             uint32 newIndex = static_cast<uint32>(MeshData->Vertices.size());
 
-            MeshData->Vertices.push_back(
-                FVertexSimple(
-                    Pos.x, Pos.y, Pos.z,
-                    static_cast<float>(rand()) / RAND_MAX,
-                    static_cast<float>(rand()) / RAND_MAX,
-                    static_cast<float>(rand()) / RAND_MAX,
-                    1.0f)
-            );
+            // 위치 데이터 추가
+            MeshData->Vertices.push_back(FVector(Pos.x, Pos.y, Pos.z));
+            
+            // 랜덤 색상 추가
+            MeshData->Color.push_back(FVector4(
+                static_cast<float>(rand()) / RAND_MAX,
+                static_cast<float>(rand()) / RAND_MAX,
+                static_cast<float>(rand()) / RAND_MAX,
+                1.0f
+            ));
 
             MeshData->Indices.push_back(newIndex);
             UniqueVertexMap[key] = newIndex;
@@ -138,7 +136,20 @@ FMeshData* UMeshLoader::LoadMesh(const std::filesystem::path& FilePath)
     return MeshData;
 }
 
+void UMeshLoader::AddMeshData(const FString& InName, FMeshData* InMeshData)
+{
+    if (MeshCache.Contains(InName))
+    {
+        delete MeshCache[InName];
+    }
+    MeshCache[InName] = InMeshData;
+}
+
 const TMap<FString, FMeshData*>* UMeshLoader::GetMeshCache()
 {
     return &MeshCache;
+}
+
+UMeshLoader::UMeshLoader()
+{
 }

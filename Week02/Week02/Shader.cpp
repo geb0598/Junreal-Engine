@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Shader.h"
 
-// 소멸자 구현
 UShader::~UShader()
 {
     ReleaseResources();
@@ -33,19 +32,14 @@ void UShader::CreateInputLayout(ID3D11Device* Device, EVertexLayoutType LayoutTy
 
     switch (LayoutType)
     {
-    case EVertexLayoutType::Position:
-        layout = FVertexPosition::GetLayout();
-        layoutCount = FVertexPosition::GetLayoutCount();
-        break;
-
     case EVertexLayoutType::PositionColor:
         layout = FVertexPositionColor::GetLayout();
         layoutCount = FVertexPositionColor::GetLayoutCount();
         break;
 
-    case EVertexLayoutType::PositionTexture:
-        layout = FVertexPositionTexture::GetLayout();
-        layoutCount = FVertexPositionTexture::GetLayoutCount();
+    case EVertexLayoutType::PositionColorTexturNormal:
+        layout = FVertexPositionColorTexturNormal::GetLayout();
+        layoutCount = FVertexPositionColorTexturNormal::GetLayoutCount();
         break;
 
     case EVertexLayoutType::PositionBillBoard:

@@ -21,7 +21,6 @@ void URenderer::BeginFrame()
     RHIDevice->IASetPrimitiveTopology();
     // RS
     RHIDevice->RSSetViewport();
-    RHIDevice->RSSetState();
 
     //OM
     //RHIDevice->OMSetBlendState();
@@ -54,6 +53,11 @@ void URenderer::OMSetBlendState(bool bIsChecked)
     }
 }
 
+void URenderer::RSSetWireframe(bool bIsWireframe)
+{
+    RHIDevice->RSSetState(bIsWireframe);
+}
+
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
     RHIDevice->UpdateConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
@@ -67,37 +71,6 @@ void URenderer::UpdateHighLightConstantBuffer(const float InPicked, const FVecto
 void URenderer::UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)
 {
     RHIDevice->UpdateBillboardConstantBuffers(ViewMatrix, ProjMatrix, CameraRight, CameraUp);
-}
-
-void URenderer::DrawIndexedPrimitiveComponent(UStaticMeshComponent* MeshComp)
-{
-    if (!MeshComp || !MeshComp->GetStaticMesh() || !MeshComp->GetStaticMesh()->GetResourceData()) return;
-
-    FResourceData* Data = MeshComp->GetStaticMesh()->GetResourceData();
-    //TODO : Set Shader
-    UINT stride = sizeof(FVertexSimple);
-    UINT offset = 0;
-
-    RHIDevice->GetDeviceContext()->IASetVertexBuffers(
-        0, 1, &Data->VertexBuffer, &stride, &offset
-    );
-
-    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
-        Data->IndexBuffer, DXGI_FORMAT_R32_UINT, 0
-    );
-
-    D3D11_PRIMITIVE_TOPOLOGY dxTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    switch (Data->Topology)
-    {
-    case EPrimitiveTopology::PointList:     dxTopology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST; break;
-    case EPrimitiveTopology::LineList:      dxTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST; break;
-    case EPrimitiveTopology::LineStrip:     dxTopology = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP; break;
-    case EPrimitiveTopology::TriangleList:  dxTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST; break;
-    case EPrimitiveTopology::TriangleStrip: dxTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP; break;
-    }
-
-    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(dxTopology);
-    RHIDevice->GetDeviceContext()->DrawIndexed(Data->IndexCount, 0, 0);
 }
 
 void URenderer::DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)

@@ -156,6 +156,7 @@
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="FName.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="GizmoActor.cpp" />
@@ -334,7 +335,7 @@
     <ClInclude Include="UI\Window\OutlinerWindow.h" />
     <ClInclude Include="UI\Window\UIWindow.h" />
     <ClInclude Include="Vector.h" />
-    <ClInclude Include="VertexSimple.h" />
+    <ClInclude Include="VertexData.h" />
     <ClInclude Include="World.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

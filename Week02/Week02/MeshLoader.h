@@ -3,7 +3,6 @@
 #include <vector>
 #include <cassert>
 #include <fstream>
-#include "VertexSimple.h"
 #include "UEContainer.h"
 #include "Enums.h"
 #include "Object.h"
@@ -66,6 +65,7 @@ public:
 
     // OBJ 파일 파싱 → 버텍스/인덱스 버퍼 리턴
     FMeshData* LoadMesh(const std::filesystem::path& FilePath);
+    void AddMeshData(const FString& InName, FMeshData* InMeshData);
     const TMap<FString, FMeshData*>* GetMeshCache();
 
     UMeshLoader();
