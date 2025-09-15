@@ -9,7 +9,10 @@ extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, uint32 msg, WPARAM wPar
 
 UImGuiHelper::UImGuiHelper() = default;
 
-UImGuiHelper::~UImGuiHelper() = default;
+UImGuiHelper::~UImGuiHelper()
+{
+	Release();
+}
 
 /**
  * @brief ImGui 초기화 함수

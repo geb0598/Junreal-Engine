@@ -64,6 +64,7 @@ void D3D11RHI::Release()
     if (HighLightCB) { HighLightCB->Release(); HighLightCB = nullptr; }
     if (ModelCB) { ModelCB->Release(); ModelCB = nullptr; }
     if (ViewProjCB) { ViewProjCB->Release(); ViewProjCB = nullptr; }
+    if (BillboardCB) { BillboardCB->Release(); BillboardCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체

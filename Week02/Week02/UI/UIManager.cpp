@@ -10,17 +10,12 @@
 
 UUIManager::UUIManager()
 {
-	ImGuiHelper = new UImGuiHelper();
+	ImGuiHelper = NewObject<UImGuiHelper>();
 	Initialize();
 }
 
 UUIManager::~UUIManager()
 {
-	if (ImGuiHelper)
-	{
-		delete ImGuiHelper;
-		ImGuiHelper = nullptr;
-	}
 }
 
 UUIManager& UUIManager::GetInstance()
@@ -85,7 +80,7 @@ void UUIManager::Shutdown()
 	// ImGui 정리
 	if (ImGuiHelper)
 	{
-		ImGuiHelper->Release();
+		DeleteObject(ImGuiHelper);
 	}
 
 	// 모든 UI 윈도우 정리
