@@ -180,6 +180,9 @@ AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraAct
     {
         AActor* Actor = Actors[i];
         if (!Actor) continue;
+        
+        // Skip hidden actors for picking
+        if (Actor->GetActorHiddenInGame()) continue;
 
         float hitDistance;
         if (CheckActorPicking(Actor, ray, hitDistance))

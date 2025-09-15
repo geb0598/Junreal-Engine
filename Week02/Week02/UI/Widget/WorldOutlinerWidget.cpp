@@ -184,6 +184,9 @@ void UWorldOutlinerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     // Create unique ID for ImGui
     ImGui::PushID(Actor);
     
+    // Sync node visibility with actual actor state each frame
+    Node->bIsVisible = Actor->IsActorVisible();
+    
     // Visibility toggle button (only for actors)
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     const char* VisibilityIcon = Node->bIsVisible ? "O" : "X";
@@ -294,11 +297,15 @@ void UWorldOutlinerWidget::HandleActorVisibilityToggle(AActor* Actor)
     if (!Actor)
         return;
     
-    // Find the node and toggle visibility
+    // Toggle the actor's actual visibility state
+    bool bNewVisible = Actor->GetActorHiddenInGame(); // If hidden, make visible
+    Actor->SetActorHiddenInGame(!bNewVisible);
+    
+    // Update the node to match the actor's state
     FActorTreeNode* Node = FindNodeByActor(Actor);
     if (Node)
     {
-        Node->bIsVisible = !Node->bIsVisible;
+        Node->bIsVisible = Actor->IsActorVisible();
         UE_LOG("WorldOutliner: Toggled visibility for %s: %s", 
                Actor->GetName().c_str(), Node->bIsVisible ? "Visible" : "Hidden");
     }
@@ -592,7 +599,28 @@ void UWorldOutlinerWidget::BuildCategorizedHierarchy()
         // Create actor node and add to category
         FActorTreeNode* ActorNode = new FActorTreeNode(Actor);
         ActorNode->Parent = CategoryNode;
+        // Initialize node visibility from actor's actual visibility state
+        ActorNode->bIsVisible = Actor->IsActorVisible();
         CategoryNode->Children.push_back(ActorNode);
+    }
+    
+    // Initialize category visibility based on child actors
+    for (FActorTreeNode* CategoryNode : RootNodes)
+    {
+        if (CategoryNode && CategoryNode->IsCategory())
+        {
+            // Category is visible if any child is visible
+            bool bAnyCategoryChildVisible = false;
+            for (FActorTreeNode* Child : CategoryNode->Children)
+            {
+                if (Child && Child->bIsVisible)
+                {
+                    bAnyCategoryChildVisible = true;
+                    break;
+                }
+            }
+            CategoryNode->bIsVisible = bAnyCategoryChildVisible;
+        }
     }
 }
 
@@ -607,6 +635,29 @@ void UWorldOutlinerWidget::HandleCategorySelection(FActorTreeNode* CategoryNode)
     UE_LOG("WorldOutliner: Toggled category %s: %s", 
            CategoryNode->CategoryName.c_str(), 
            CategoryNode->bIsExpanded ? "Expanded" : "Collapsed");
+}
+
+void UWorldOutlinerWidget::HandleCategoryVisibilityToggle(FActorTreeNode* CategoryNode)
+{
+    if (!CategoryNode || !CategoryNode->IsCategory())
+        return;
+        
+    // Toggle category visibility
+    CategoryNode->bIsVisible = !CategoryNode->bIsVisible;
+    
+    // Apply visibility to all child actors
+    for (FActorTreeNode* Child : CategoryNode->Children)
+    {
+        if (Child && Child->IsActor() && Child->Actor)
+        {
+            Child->Actor->SetActorHiddenInGame(!CategoryNode->bIsVisible);
+            Child->bIsVisible = CategoryNode->bIsVisible;
+        }
+    }
+    
+    UE_LOG("WorldOutliner: Toggled category visibility %s: %s", 
+           CategoryNode->CategoryName.c_str(), 
+           CategoryNode->bIsVisible ? "Visible" : "Hidden");
 }
 
 void UWorldOutlinerWidget::RenderCategoryNode(FActorTreeNode* CategoryNode, int32 Depth)
@@ -633,12 +684,12 @@ void UWorldOutlinerWidget::RenderCategoryNode(FActorTreeNode* CategoryNode, int3
     // Create unique ID for ImGui using category name
     ImGui::PushID(CategoryNode->CategoryName.c_str());
     
-    // Category icon (folder icon)
+    // Category visibility toggle button
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    const char* CategoryIcon = CategoryNode->bIsExpanded ? "📂" : "📁";
-    if (ImGui::SmallButton(CategoryIcon))
+    const char* VisibilityIcon = CategoryNode->bIsVisible ? "O" : "X";
+    if (ImGui::SmallButton(VisibilityIcon))
     {
-        HandleCategorySelection(CategoryNode);
+        HandleCategoryVisibilityToggle(CategoryNode);
     }
     ImGui::PopStyleColor();
     

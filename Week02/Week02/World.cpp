@@ -161,8 +161,6 @@ void UWorld::SetRenderer(URenderer* InRenderer)
     Renderer = InRenderer;
 }
 
-// 카메라 회전 상태는 이제 CameraActor에서 관리됨
-
 void UWorld::Render()
 {
     FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
@@ -186,6 +184,8 @@ void UWorld::Render()
     AllActors.insert(AllActors.end(), EngineActors.begin(), EngineActors.end());
     for (AActor* Actor : AllActors)
     {
+        if (!Actor) continue;
+        if (Actor->GetActorHiddenInGame()) continue;
         bool bIsSelected = SelectionManager.IsActorSelected(Actor);
         Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
         for (USceneComponent* Component : Actor->GetComponents())
