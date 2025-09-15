@@ -74,11 +74,12 @@ public:
     // ──────────────────────────────
     USceneComponent* GetAttachParent() const { return AttachParent; }
     const TArray<USceneComponent*>& GetAttachChildren() const { return AttachChildren; }
+    UWorld* GetWorld() { return AttachParent->GetWorld(); }
 
 protected:
-    FVector RelativeLocation;
+    FVector RelativeLocation{ 0,0,0 };
     FQuat   RelativeRotation;
-    FVector RelativeScale;
+    FVector RelativeScale{ 1,1,1 };
 
     
     // Hierarchy
