@@ -56,16 +56,29 @@ struct FVertexPositionColorTexturNormal
 };
 
 struct FVertexPositionBillBoard
+
 {
+
 	static const D3D11_INPUT_ELEMENT_DESC* GetLayout()
+
 	{
+
 		static const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{ "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "SIZE", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float) * 3,0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{ "UVRECT", 0, DXGI_FORMAT_R32G32B32_FLOAT, sizeof(float)*3 + sizeof(float)*2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+
+		{ "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+		{ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+
+		{ "UVRECT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
+
 		};
+
 		return layout;
+
 	}
 
+
+
 	static uint32 GetLayoutCount() { return 3; }
+
 };
