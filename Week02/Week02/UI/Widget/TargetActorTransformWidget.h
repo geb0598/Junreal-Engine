@@ -1,10 +1,12 @@
 #pragma once
 #include "Widget.h"
 #include "../../Vector.h"
+#include "../../Enums.h"
 
 class UUIManager;
 class UWorld;
 class AActor;
+class AGizmoActor;
 
 class UTargetActorTransformWidget
 	: public UWidget
@@ -38,6 +40,10 @@ private:
 	bool bRotationChanged = false;
 	bool bPositionChanged = false;
 	bool bUniformScale = true;
+	
+	// 기즈모 설정
+	EGizmoSpace CurrentGizmoSpace = EGizmoSpace::World;
+	AGizmoActor* GizmoActor = nullptr;
 	
 	// 월드 정보 (옵션)
 	uint32 WorldActorCount = 0;

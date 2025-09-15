@@ -129,9 +129,7 @@ void AGizmoActor::Tick(float DeltaSeconds)
     if (!InputManager) InputManager = &UInputManager::GetInstance();
     if (!UIManager) UIManager = &UUIManager::GetInstance();
     
-    // 컴포넌트 활성화 상태 업데이트
-    UpdateComponentVisibility();
-    
+    // 컴포넌트 활성화 상태 업데이트    
     if (SelectionManager->HasSelection() && CameraActor)
     {
         TargetActor = SelectionManager->GetSelectedActor();
@@ -139,6 +137,7 @@ void AGizmoActor::Tick(float DeltaSeconds)
         // 기즈모 위치를 선택된 액터 위치로 업데이트
         if (TargetActor)
         {
+            SetSpaceWorldMatrix(CurrentSpace, TargetActor);
             SetActorLocation(TargetActor->GetActorLocation());
         }
         
@@ -148,6 +147,7 @@ void AGizmoActor::Tick(float DeltaSeconds)
     {
         TargetActor = nullptr;
     }
+    UpdateComponentVisibility();
 }
 
 AGizmoActor::~AGizmoActor()
@@ -353,12 +353,24 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
     }
     case EGizmoMode::Scale:
     {
-        // Scale 모드에서는 월드 축 고정 사용
-        switch (GizmoAxis)
+        // Determine axis for screen projection
+        if (CurrentSpace == EGizmoSpace::World)
         {
-        case 1: Axis = FVector(1, 0, 0); break;
-        case 3: Axis = FVector(0, 1, 0); break;
-        case 2: Axis = FVector(0, 0, 1); break;
+            switch (GizmoAxis)
+            {
+            case 1: Axis = FVector(1, 0, 0); break;
+            case 2: Axis = FVector(0, 1, 0); break;
+            case 3: Axis = FVector(0, 0, 1); break;
+            }
+        }
+        else if (CurrentSpace == EGizmoSpace::Local)
+        {
+            switch (GizmoAxis)
+            {
+            case 1: Axis = Target->GetActorRight();   break; // Local X
+            case 2: Axis = Target->GetActorForward(); break; // Local Y
+            case 3: Axis = Target->GetActorUp();      break; // Local Z
+            }
         }
 
         // 안정적인 축 방향 계산
@@ -367,9 +379,23 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
         // 스크린 공간에서 마우스 이동과 축 방향의 내적으로 스케일 변화량 계산
         float Movement = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y) * Sensitivity * 50.0f;
 
-        // 일관된 방향으로 스케일 조정 (Y축 특수 처리 제거)
-        FVector CurrentScale = Target->GetActorScale();
-        Target->SetActorScale(CurrentScale + Axis * Movement);
+        FVector NewScale = Target->GetActorScale();
+
+        // Apply movement to the correct local axis based on which gizmo was dragged
+        switch (GizmoAxis)
+        {
+            case 1: // X Axis
+                NewScale.X += Movement;
+                break;
+            case 2: // Y Axis
+                NewScale.Y += Movement;
+                break;
+            case 3: // Z Axis
+                NewScale.Z += Movement;
+                break;
+        }
+
+        Target->SetActorScale(NewScale);
 
         break;
     }
@@ -531,6 +557,7 @@ void AGizmoActor::ProcessGizmoDragging(float DeltaSeconds)
     {
         InputManager->SetIsGizmoDragging(false);
         InputManager->SetDraggingAxis(0);
+        SetSpaceWorldMatrix(CurrentSpace, TargetActor);
     }
 }
 

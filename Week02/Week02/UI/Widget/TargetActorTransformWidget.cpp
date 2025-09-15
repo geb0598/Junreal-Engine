@@ -5,6 +5,7 @@
 #include "../../Actor.h"
 #include "../../World.h"
 #include "../../Vector.h"
+#include "../../GizmoActor.h"
 #include <string>
 
 using namespace std;
@@ -24,6 +25,15 @@ void UTargetActorTransformWidget::Initialize()
 {
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
+	
+	// GizmoActor 참조 획득
+	GizmoActor = UIManager->GetGizmoActor();
+	
+	// 초기 기즈모 스페이스 모드 설정
+	if (GizmoActor)
+	{
+		CurrentGizmoSpace = GizmoActor->GetSpace();
+	}
 }
 
 AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
@@ -51,6 +61,12 @@ void UTargetActorTransformWidget::Update()
 		}
 	}
 	
+	// GizmoActor 참조 업데이트
+	if (!GizmoActor && UIManager)
+	{
+		GizmoActor = UIManager->GetGizmoActor();
+	}
+	
 	// 월드 정보 업데이트 (옵션)
 	if (UIManager && UIManager->GetWorld())
 	{
@@ -67,6 +83,21 @@ void UTargetActorTransformWidget::RenderWidget()
 	ImGui::Separator();
 
 	ImGui::Text("Transform Editor");
+	
+	// 기즈모 스페이스 모드 선택
+	if (GizmoActor)
+	{
+		const char* spaceItems[] = { "World", "Local" };
+		int currentSpaceIndex = static_cast<int>(CurrentGizmoSpace);
+		
+		if (ImGui::Combo("Gizmo Space", &currentSpaceIndex, spaceItems, IM_ARRAYSIZE(spaceItems)))
+		{
+			CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
+			
+			GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
+		}
+		ImGui::Separator();
+	}
 	
 	if (SelectedActor)
 	{
@@ -120,6 +151,28 @@ void UTargetActorTransformWidget::RenderWidget()
 		{
 			UpdateTransformFromActor();
 			ResetChangeFlags();
+		}
+		
+		// 기즈모 스페이스 빠른 전환 버튼
+		if (GizmoActor)
+		{
+			ImGui::Separator();
+			const char* buttonText = CurrentGizmoSpace == EGizmoSpace::World ? 
+				"Switch to Local" : "Switch to World";
+			
+			if (ImGui::Button(buttonText))
+			{
+				// 스페이스 모드 전환
+				CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ? 
+					EGizmoSpace::Local : EGizmoSpace::World;
+				
+				// 기즈모 액터에 스페이스 설정 적용
+				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
+			}
+			
+			ImGui::SameLine();
+			ImGui::Text("Current: %s", 
+				CurrentGizmoSpace == EGizmoSpace::World ? "World" : "Local");
 		}
 		
 		ImGui::Spacing();
