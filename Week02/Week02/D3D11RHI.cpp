@@ -31,9 +31,12 @@ struct HighLightBufferType
 
 struct BillboardBufferType
 {
-    FMatrix ViewProj;
-    FVector cameraRight;
-    FVector cameraUp;
+    FVector pos;
+    FMatrix View;
+    FMatrix Proj;
+    FMatrix InverseViewMat;
+    /*FVector cameraRight;
+    FVector cameraUp;*/
 };
 
 void D3D11RHI::Initialize(HWND hWindow)
@@ -141,7 +144,7 @@ void D3D11RHI::UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& 
     }
 }
 
-void D3D11RHI::UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix,
+void D3D11RHI::UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix,
     const FVector& CameraRight, const FVector& CameraUp)
 {
     D3D11_MAPPED_SUBRESOURCE mapped;
@@ -149,9 +152,12 @@ void D3D11RHI::UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const F
     auto* dataPtr = reinterpret_cast<BillboardBufferType*>(mapped.pData);
 
     // HLSL 기본 row-major와 맞추기 위해 전치
-    dataPtr->ViewProj = ViewMatrix*ProjMatrix;
-    dataPtr->cameraRight = CameraRight;
-    dataPtr->cameraUp = CameraUp;
+    dataPtr->pos = pos;
+    dataPtr->View = ViewMatrix;
+    dataPtr->Proj = ProjMatrix;
+    dataPtr->InverseViewMat = ViewMatrix.InverseAffine();
+    //dataPtr->cameraRight = CameraRight;
+    //dataPtr->cameraUp = CameraUp;
 
     DeviceContext->Unmap(BillboardCB, 0);
     DeviceContext->VSSetConstantBuffers(0, 1, &BillboardCB); // b0 슬롯

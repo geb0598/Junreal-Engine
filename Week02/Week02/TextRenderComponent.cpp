@@ -67,28 +67,71 @@ void UTextRenderComponent::InitCharInfoMap()
 
 TArray<FBillboardVertexInfo_GPU> UTextRenderComponent::CreateVerticesForString(const FString& text, const FVector& StartPos) {
     TArray<FBillboardVertexInfo_GPU> vertices;
-    FVector currentPos = StartPos;
-    for (char c : text) {
-        FBillboardVertexInfo_GPU info;
-        info.Position[0] = currentPos.X;
-        info.Position[1] = currentPos.Y;
-        info.Position[2] = currentPos.Z;
+    auto* CharUVInfo = CharInfoMap.Find('A');
+    float charWidth = (CharUVInfo->UVRect.Z) / (CharUVInfo->UVRect.W); //
+    float CharHeight = 1.f;
+    float CursorX = -charWidth*(text.size()/2);
+    int vertexBaseIndex = 0;
+    for (char c : text)
+    {
+        auto* CharUVInfo = CharInfoMap.Find(c);
+        if (!CharUVInfo) continue;
 
-        info.CharSize[0] = 1.f;
-        info.CharSize[1] = 1.f;
+        float u = CharUVInfo->UVRect.X;
+        float v = CharUVInfo->UVRect.Y;
+        float w = CharUVInfo->UVRect.Z; //32 / 512
+        float h = CharUVInfo->UVRect.W; //32 / 512
 
-        info.UVRect[0] = CharInfoMap[c].UVRect.X;
-        info.UVRect[1] = CharInfoMap[c].UVRect.Y;
-        info.UVRect[2] = CharInfoMap[c].UVRect.Z;
-        info.UVRect[3] = CharInfoMap[c].UVRect.W;
+        //float charWidth = (w / h);
 
+        FBillboardVertexInfo_GPU Info;
+        //1
+        Info.Position[0] = CursorX;
+        Info.Position[1] = CharHeight;
+        Info.Position[2] = 0.f;
 
-        vertices.push_back(info); // 1번
-        vertices.push_back(info); // 2번
-        vertices.push_back(info); // 3번
-        vertices.push_back(info); // 4번
+        Info.CharSize[0] = 1.f;
+        Info.CharSize[1] = 1.f;
 
-        currentPos.X += info.CharSize[0]; // 커서 이동
+        Info.UVRect[0] = u;
+        Info.UVRect[1] = v;
+        vertices.push_back(Info);
+        //2
+        Info.Position[0] = CursorX+charWidth;
+        Info.Position[1] = CharHeight;
+        Info.Position[2] = 0.f;
+
+        Info.CharSize[0] = 1.f;
+        Info.CharSize[1] = 1.f;
+
+        Info.UVRect[0] = u+w;
+        Info.UVRect[1] = v;
+        vertices.push_back(Info);
+        //3
+        Info.Position[0] = CursorX;
+        Info.Position[1] = 0.f;
+        Info.Position[2] = 0.f;
+
+        Info.CharSize[0] = 1.f;
+        Info.CharSize[1] = 1.f;
+
+        Info.UVRect[0] = u;
+        Info.UVRect[1] = v+h;
+        vertices.push_back(Info);
+        //4
+        Info.Position[0] = CursorX+charWidth;
+        Info.Position[1] = 0.f;
+        Info.Position[2] = 0.f;
+
+        Info.CharSize[0] = 1.f;
+        Info.CharSize[1] = 1.f;
+
+        Info.UVRect[0] = u+w;
+        Info.UVRect[1] = v+h;
+        vertices.push_back(Info);
+
+        CursorX += charWidth;
+        vertexBaseIndex += 4;
     }
     return vertices;
 }
@@ -100,9 +143,14 @@ void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, cons
     ACameraActor* CameraActor =  GetOwner()->GetWorld()->GetCameraActor();
     FVector CamRight = CameraActor->GetActorRight();
     FVector CamUp = CameraActor->GetActorUp();
-    Renderer->UpdateBillboardConstantBuffers(View, Proj, CamRight, CamUp);
+
+
+    FVector cameraPosition = CameraActor->GetActorLocation();
+    Renderer->UpdateBillboardConstantBuffers(GetWorldLocation(), View, Proj, CamRight, CamUp);
+
+
     Renderer->PrepareShader(GetMaterial()->GetShader());
-    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString("HELLOWORLD", FVector(1.f, 1.f, 0.f));
+    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString("HELLOWORLD", FVector(1.f, 1.f, 0.f));//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
     UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", vertices);
     Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     Renderer->OMSetBlendState(false);
