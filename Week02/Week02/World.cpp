@@ -167,6 +167,9 @@ void UWorld::Render()
     for (AActor* Actor : Actors)
     {
         if (!Actor) continue;
+        
+        // Skip rendering if actor is hidden
+        if (Actor->GetActorHiddenInGame()) continue;
 
         bool bIsSelected = SelectionManager.IsActorSelected(Actor);
         Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
