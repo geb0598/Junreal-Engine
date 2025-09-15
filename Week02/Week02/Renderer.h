@@ -25,7 +25,7 @@ public:
 
     void OMSetBlendState(bool bIsChecked);
 
-    void RSSetWireframe(bool bIsWireframe);
+    void RSSetState(EViewModeIndex ViewModeIndex);
 
     void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
 

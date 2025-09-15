@@ -101,6 +101,7 @@ private:
     float CameraMoveSpeed = 5.0f;
 
     bool bIsWireframeMode = false;
+    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Wireframe;
 };
 
 template<class T>
