@@ -80,7 +80,7 @@ TArray<FBillboardCharInfo> UTextRenderComponent::CreateVerticesForString(const F
 void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj)
 {
     //URenderer::UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)
-    AttachParent->GetOwner()->GetWorld()->GetC
+    //AttachParent->GetOwner()->GetWorld()->GetC
     //Renderer->UpdateBillboardConstantBuffers(View,Proj,)
 //    Renderer->PrepareShader(GetMaterial()->GetShader());
   //  Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
