@@ -508,10 +508,10 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
             // out = [X Y Z 1] * M
             FVector4 V4(X, Y, Z, 1.0f);
             FVector4 Out;
-            Out.X = V4.X * M.M[0][0] + V4.Y * M.M[0][1] + V4.Z * M.M[0][2] + V4.W * M.M[0][3];
-            Out.Y = V4.X * M.M[1][0] + V4.Y * M.M[1][1] + V4.Z * M.M[1][2] + V4.W * M.M[1][3];
-            Out.Z = V4.X * M.M[2][0] + V4.Y * M.M[2][1] + V4.Z * M.M[2][2] + V4.W * M.M[2][3];
-            Out.W = V4.X * M.M[3][0] + V4.Y * M.M[3][1] + V4.Z * M.M[3][2] + V4.W * M.M[3][3];
+            Out.X = V4.X * M.M[0][0] + V4.Y * M.M[1][0] + V4.Z * M.M[2][0] + V4.W * M.M[3][0];
+            Out.Y = V4.X * M.M[0][1] + V4.Y * M.M[1][1] + V4.Z * M.M[2][1] + V4.W * M.M[3][1];
+            Out.Z = V4.X * M.M[0][2] + V4.Y * M.M[1][2] + V4.Z * M.M[2][2] + V4.W * M.M[3][2];
+            Out.W = V4.X * M.M[0][3] + V4.Y * M.M[1][3] + V4.Z * M.M[2][3] + V4.W * M.M[3][3];
             return FVector(Out.X, Out.Y, Out.Z);
         };
 
@@ -604,10 +604,10 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
                     // out = [X Y Z 1] * M
                     FVector4 v4(x, y, z, 1.0f);
                     FVector4 out;
-                    out.X = v4.X * M.M[0][0] + v4.Y * M.M[0][1] + v4.Z * M.M[0][2] + v4.W * M.M[0][3];
-                    out.Y = v4.X * M.M[1][0] + v4.Y * M.M[1][1] + v4.Z * M.M[1][2] + v4.W * M.M[1][3];
-                    out.Z = v4.X * M.M[2][0] + v4.Y * M.M[2][1] + v4.Z * M.M[2][2] + v4.W * M.M[2][3];
-                    out.W = v4.X * M.M[3][0] + v4.Y * M.M[3][1] + v4.Z * M.M[3][2] + v4.W * M.M[3][3];
+                    out.X = v4.X * M.M[0][0] + v4.Y * M.M[1][0] + v4.Z * M.M[2][0] + v4.W * M.M[3][0];
+                    out.Y = v4.X * M.M[0][1] + v4.Y * M.M[1][1] + v4.Z * M.M[2][1] + v4.W * M.M[3][1];
+                    out.Z = v4.X * M.M[0][2] + v4.Y * M.M[1][2] + v4.Z * M.M[2][2] + v4.W * M.M[3][2];
+                    out.W = v4.X * M.M[0][3] + v4.Y * M.M[1][3] + v4.Z * M.M[2][3] + v4.W * M.M[3][3];
                     return FVector(out.X, out.Y, out.Z);
                 };
 
