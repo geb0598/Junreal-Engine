@@ -122,6 +122,7 @@ private:
     FString GetActorCategory(AActor* Actor) const;
     void BuildCategorizedHierarchy();
     void HandleCategorySelection(FActorTreeNode* CategoryNode);
+    void HandleCategoryVisibilityToggle(FActorTreeNode* CategoryNode);
     void ExpandAllCategories();
     void CollapseAllCategories();
     

@@ -82,8 +82,14 @@ public:
     UBoundingBoxComponent* CollisionComponent = nullptr;
 
     UWorld* World = nullptr;
+    
+    // Visibility properties
+    void SetActorHiddenInGame(bool bNewHidden) { bHiddenInGame = bNewHidden; }
+    bool GetActorHiddenInGame() const { return bHiddenInGame; }
+    bool IsActorVisible() const { return !bHiddenInGame; }
     void AddComponent(USceneComponent* Component);
 protected:
     TArray<USceneComponent*> Components;
     bool bCanEverTick = true;
+    bool bHiddenInGame = false;
 };
