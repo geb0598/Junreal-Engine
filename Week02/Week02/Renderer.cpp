@@ -106,8 +106,9 @@ void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMIT
     RHIDevice->GetDeviceContext()->IASetInputLayout(Comp->GetMaterial()->GetShader()->GetInputLayout());
 
     
+    UINT offset = 0;
     RHIDevice->GetDeviceContext()->IASetVertexBuffers(
-        0, 1, &VertexBuff, &Stride, 0
+        0, 1, &VertexBuff, &Stride, &offset
     );
     RHIDevice->GetDeviceContext()->IASetIndexBuffer(
         IndexBuff, DXGI_FORMAT_R32_UINT, 0
