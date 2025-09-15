@@ -150,7 +150,7 @@ size_t UDynamicMesh::GetVertexSize(EVertexLayoutType InVertexType)
         case EVertexLayoutType::PositionColor:
             return sizeof(FVertexSimple);
         case EVertexLayoutType::PositionBillBoard:
-            return sizeof(FBillboardCharInfo);
+            return sizeof(FBillboardVertexInfo);
         // Add other vertex types as needed
         default:
             return sizeof(FVertexSimple);

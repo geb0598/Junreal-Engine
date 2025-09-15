@@ -7,15 +7,17 @@
 struct FMeshData
 {
 	// 중복 없는 정점
-	TArray<FVector> Vertices;
+	TArray<FVector> Vertices;//also can be billboard world position
 	// 정점 인덱스
 	TArray<uint32> Indices;
     // 중복 없는 정점
-    TArray<FVector4> Color;
+    TArray<FVector4> Color;//also can be UVRect
     // UV 좌표
-    TArray<FVector2D> UV;
+    TArray<FVector2D> UV;//also can be Billboard size
     // 노말 좌표
     TArray<FVector4> Normal;
+    //
+    
 };
 enum class EPrimitiveTopology
 {

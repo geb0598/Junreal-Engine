@@ -3,7 +3,6 @@
 #include "Object.h"
 #include "GridActor.h"
 #include "GizmoActor.h"
-#include <map>
 
 // Forward Declarations
 class UResourceManager;

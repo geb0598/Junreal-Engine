@@ -27,7 +27,7 @@ void UTexture::Load(const FString& InFilePath, ID3D11Device* InDevice)
 		reinterpret_cast<ID3D11Resource**>(&Texture2D),
 		&ShaderResourceView
 	);
-	if (SUCCEEDED(hr))
+	if (FAILED(hr))
 	{
 		UE_LOG("!!!LOAD TEXTIRE FAILED!!!");
 	}
@@ -42,8 +42,8 @@ void UTexture::Load(const FString& InFilePath, ID3D11Device* InDevice)
 	}
 
 	CreateSamplerState(InDevice);
-
-	UE_LOG("Successfully loaded DDS texture: %s", WFilePath);
+	//UE_LOG("test output : %s",FString("helloworld"));
+	UE_LOG("Successfully loaded DDS texture: %s", InFilePath);
 }
 
 void UTexture::CreateSamplerState(ID3D11Device* Device)

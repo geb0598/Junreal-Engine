@@ -279,7 +279,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActorComponent.h" />
-    <ClInclude Include="CharacterInfo.h" />
     <ClInclude Include="BoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />
     <ClInclude Include="GizmoActor.h" />

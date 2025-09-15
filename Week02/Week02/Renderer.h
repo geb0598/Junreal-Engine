@@ -4,6 +4,7 @@
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
+class UMeshComponent;
 class URHIDevice;
 class UShader;
 class UMesh;
@@ -32,11 +33,11 @@ public:
 
     void UpdateHighLightConstantBuffer(const float InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo);
 
-    void UpdateBillboardConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp);
+    void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp);
 
     void DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
-    void DrawIndexedPrimitiveComponent(UTextRenderComponent* TextRenderComp);
+    void DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
     // Batch Line Rendering System
     void BeginLineBatch();

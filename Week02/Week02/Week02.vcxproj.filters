@@ -487,9 +487,6 @@
     <ClInclude Include="TextRenderComponent.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CharacterInfo.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Name.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
