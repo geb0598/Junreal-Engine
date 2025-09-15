@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "OutlinerWindow.h"
 #include "../Widget/WorldOutlinerWidget.h"
-#include "../Widget/ActorTerminationWidget.h"
-#include "../Widget/TargetActorTransformWidget.h"
 
 // UE_LOG 대체 매크로
 #define UE_LOG(fmt, ...)
@@ -34,21 +32,7 @@ UOutlinerWindow::UOutlinerWindow()
 		UE_LOG("OutlinerWindow: Failed to create WorldOutlinerWidget");
 	}
 	
-	// Add Transform Widget for selected actor
-	UTargetActorTransformWidget* TransformWidget = NewObject<UTargetActorTransformWidget>();
-	if (TransformWidget)
-	{
-		AddWidget(TransformWidget);
-		UE_LOG("OutlinerWindow: TargetActorTransformWidget created successfully");
-	}
-	
-	// Add Actor Termination Widget
-	UActorTerminationWidget* TerminationWidget = NewObject<UActorTerminationWidget>();
-	if (TerminationWidget)
-	{
-		AddWidget(TerminationWidget);
-		UE_LOG("OutlinerWindow: ActorTerminationWidget created successfully");
-	}
+	// Transform and termination widgets moved to Control Panel for better UX
 }
 
 void UOutlinerWindow::Initialize()

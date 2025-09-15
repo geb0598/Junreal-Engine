@@ -142,9 +142,13 @@ enum class EVertexLayoutType : uint8
 
 enum class EViewModeIndex : uint32
 {
+    None,
+
     VMI_Lit,
     VMI_Unlit,
     VMI_Wireframe,
+
+    End,
 };
 
 #endif /** UE_ENUMS_H */

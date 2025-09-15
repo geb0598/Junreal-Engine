@@ -17,10 +17,8 @@ UStaticMeshComponent::~UStaticMeshComponent()
 
 void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
-	Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
     Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
     Renderer->PrepareShader(GetMaterial()->GetShader());
     Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 }
 

@@ -105,9 +105,6 @@ private:
     AActor* DropTarget = nullptr;
     void HandleDragDrop();
     
-    // Search & Filter
-    void RenderSearchBar();
-    bool PassesSearchFilter(AActor* Actor) const;
     
     // Toolbar
     void RenderToolbar();

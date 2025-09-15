@@ -2,6 +2,8 @@
 #include "ControlPanelWindow.h"
 #include "../Widget/CameraControlWidget.h"
 #include "../Widget/FPSWidget.h"
+#include "../Widget/TargetActorTransformWidget.h"
+#include "../Widget/ActorTerminationWidget.h"
 #include "../Widget/PrimitiveSpawnWidget.h"
 #include "../Widget/SceneIOWidget.h"
 
@@ -29,6 +31,8 @@ UControlPanelWindow::UControlPanelWindow()
 	SetConfig(Config);
 
 	AddWidget(NewObject<UFPSWidget>());
+	AddWidget(NewObject<UTargetActorTransformWidget>());
+	AddWidget(NewObject<UActorTerminationWidget>());
 	AddWidget(NewObject<UPrimitiveSpawnWidget>());
 	AddWidget(NewObject<USceneIOWidget>());
 	AddWidget(NewObject<UCameraControlWidget>());

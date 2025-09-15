@@ -57,6 +57,8 @@ void UActorTerminationWidget::RenderWidget()
 	{
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No Actor Selected For Deletion");
 	}
+
+	ImGui::Separator();
 }
 
 /**

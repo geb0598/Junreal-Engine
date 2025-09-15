@@ -158,7 +158,6 @@ void UWorld::Render()
     if (!Renderer) return;
     // === Begin Frame ===
     Renderer->BeginFrame();
-    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
 
     // === Begin Line Batch for all actors ===
     Renderer->BeginLineBatch();
@@ -227,10 +226,11 @@ void UWorld::Render()
             // 모든 PrimitiveComponent 처리 (각자의 Render 메서드를 호출)
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
+                Renderer->RSSetState(ViewModeIndex);
                 Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-               if( Primitive->GetClass() == UTextRenderComponent::StaticClass()){
-                   UE_LOG("UBoundingBoxComponent");
-               }
+                   if( Primitive->GetClass() == UTextRenderComponent::StaticClass()){
+                       UE_LOG("UBoundingBoxComponent");
+                   }
             }
         }
         // 블랜드 스테이드 종료

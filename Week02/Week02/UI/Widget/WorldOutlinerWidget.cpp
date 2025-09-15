@@ -64,10 +64,6 @@ void UWorldOutlinerWidget::RenderWidget()
     RenderToolbar();
     ImGui::Separator();
     
-    // Search bar
-    RenderSearchBar();
-    ImGui::Spacing();
-    
     // World status
     UWorld* World = GetCurrentWorld();
     if (!World)
@@ -190,7 +186,7 @@ void UWorldOutlinerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     
     // Visibility toggle button (only for actors)
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    const char* VisibilityIcon = Node->bIsVisible ? "👁" : "🚫";
+    const char* VisibilityIcon = Node->bIsVisible ? "O" : "X";
     if (ImGui::SmallButton(VisibilityIcon))
     {
         HandleActorVisibilityToggle(Actor);
@@ -264,10 +260,6 @@ bool UWorldOutlinerWidget::ShouldShowActor(AActor* Actor) const
     
     // Filter by selection
     if (bShowOnlySelectedObjects && !SelectionManager->IsActorSelected(Actor))
-        return false;
-    
-    // Filter by search
-    if (!PassesSearchFilter(Actor))
         return false;
     
     return true;
@@ -412,44 +404,6 @@ void UWorldOutlinerWidget::RenderContextMenu()
     }
 }
 
-void UWorldOutlinerWidget::RenderSearchBar()
-{
-    ImGui::Text("Search:");
-    ImGui::SameLine();
-    
-    char SearchBuffer[256];
-    strcpy_s(SearchBuffer, SearchFilter.c_str());
-    
-    if (ImGui::InputText("##SearchFilter", SearchBuffer, sizeof(SearchBuffer)))
-    {
-        SearchFilter = SearchBuffer;
-    }
-    
-    ImGui::SameLine();
-    if (ImGui::Button("Clear"))
-    {
-        SearchFilter = "";
-    }
-}
-
-bool UWorldOutlinerWidget::PassesSearchFilter(AActor* Actor) const
-{
-    if (SearchFilter.empty())
-        return true;
-    
-    if (!Actor)
-        return false;
-    
-    // Case-insensitive search in actor name
-    std::string ActorName = Actor->GetName();
-    std::string Filter = SearchFilter;
-    
-    std::transform(ActorName.begin(), ActorName.end(), ActorName.begin(), ::tolower);
-    std::transform(Filter.begin(), Filter.end(), Filter.begin(), ::tolower);
-    
-    return ActorName.find(Filter) != std::string::npos;
-}
-
 void UWorldOutlinerWidget::RenderToolbar()
 {
     // Filter toggles
@@ -457,7 +411,63 @@ void UWorldOutlinerWidget::RenderToolbar()
     ImGui::SameLine();
     ImGui::Checkbox("Show Hidden", &bShowHiddenObjects);
     
+    // View Mode selection
+    ImGui::Text("View Mode:");
     ImGui::SameLine();
+    
+    const char* ViewModeNames[] = { "Lit", "Unlit", "Wireframe" };
+    
+    UWorld* World = GetCurrentWorld();
+    if (World)
+    {
+        // Convert enum value to UI index (subtract 1 because enum starts with None=0)
+        EViewModeIndex CurrentEnum = World->GetViewModeIndex();
+        int CurrentViewMode = 0; // Default to Lit
+        
+        switch (CurrentEnum)
+        {
+        case EViewModeIndex::VMI_Lit:
+            CurrentViewMode = 0;
+            break;
+        case EViewModeIndex::VMI_Unlit:
+            CurrentViewMode = 1;
+            break;
+        case EViewModeIndex::VMI_Wireframe:
+            CurrentViewMode = 2;
+            break;
+        default:
+            CurrentViewMode = 0;
+            break;
+        }
+        
+        if (ImGui::Combo("##ViewMode", &CurrentViewMode, ViewModeNames, IM_ARRAYSIZE(ViewModeNames)))
+        {
+            // Convert UI index back to enum value
+            EViewModeIndex NewEnum = EViewModeIndex::VMI_Lit;
+            switch (CurrentViewMode)
+            {
+            case 0:
+                NewEnum = EViewModeIndex::VMI_Lit;
+                break;
+            case 1:
+                NewEnum = EViewModeIndex::VMI_Unlit;
+                break;
+            case 2:
+                NewEnum = EViewModeIndex::VMI_Wireframe;
+                break;
+            }
+            World->SetViewModeIndex(NewEnum);
+        }
+    }
+    else
+    {
+        // Disabled combo when no world is available
+        ImGui::BeginDisabled();
+        int DummyViewMode = 0;
+        ImGui::Combo("##ViewMode", &DummyViewMode, ViewModeNames, IM_ARRAYSIZE(ViewModeNames));
+        ImGui::EndDisabled();
+    }
+    
     if (ImGui::Button("Refresh"))
     {
         RefreshActorTree();
