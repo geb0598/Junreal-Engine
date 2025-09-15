@@ -27,8 +27,8 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     Resources.SetNum(static_cast<uint8>(ResourceType::End));
 
     Context = InContext;
-    CreateGridMesh(GRIDNUM,"Grid");
-    CreateAxisMesh(AXISLENGTH,"Axis");
+    //CreateGridMesh(GRIDNUM,"Grid");
+    //CreateAxisMesh(AXISLENGTH,"Axis");
 
     CreateDefaultShader();
 }
@@ -91,16 +91,7 @@ UMaterial* UResourceManager::GetOrCreateMaterial(const FString& Name, EVertexLay
 // 전체 해제
 void UResourceManager::Clear()
 {
-    { //Deprecated Part
-        for (auto& [Key, Data] : StaticMeshMap)
-        {
-            if (Data)
-            {
-                ObjectFactory::DeleteObject(Data);
-            }
-        }
-        StaticMeshMap.clear();
-
+    {////////////// Deprecated //////////////
         for (auto& [Key, Data] : ResourceMap)
         {
             if (Data)
@@ -119,6 +110,31 @@ void UResourceManager::Clear()
             }
         }
         ResourceMap.clear();
+
+
+        // TextureMap 해제
+        for (auto& [Key, Data] : TextureMap)
+        {
+            if (Data)
+            {
+                if (Data->Texture) { Data->Texture->Release(); Data->Texture = nullptr; }
+                if (Data->TextureSRV) { Data->TextureSRV->Release(); Data->TextureSRV = nullptr; }
+                if (Data->SamplerState) { Data->SamplerState->Release(); Data->SamplerState = nullptr; }
+                if (Data->BlendState) { Data->BlendState->Release(); Data->BlendState = nullptr; }
+                delete Data;
+            }
+        }
+        TextureMap.clear();
+
+        // MaterialMap 해제
+        for (auto& [Key, Mat] : MaterialMap)
+        {
+            if (Mat)
+            {
+                ObjectFactory::DeleteObject(Mat);
+            }
+        }
+        MaterialMap.clear();
     }
 
     for (auto& Array : Resources)

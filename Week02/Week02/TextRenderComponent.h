@@ -6,9 +6,9 @@ class UTextRenderComponent : public UMeshComponent
 public:
 	DECLARE_CLASS(UTextRenderComponent, UMeshComponent)
 	UTextRenderComponent();
-	~UTextRenderComponent() override;
 
 protected:
+	~UTextRenderComponent() override;
 
 public:
 	void InitCharInfoMap();

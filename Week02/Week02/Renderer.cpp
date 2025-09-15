@@ -6,12 +6,17 @@
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
 {
-
+    InitializeLineBatch();
 }
+
 URenderer::~URenderer()
 {
-
+    if (LineBatchData)
+    {
+        delete LineBatchData;
+    }
 }
+
 void URenderer::BeginFrame()
 {
     // 백버퍼/깊이버퍼를 클리어
@@ -122,4 +127,134 @@ void URenderer::EndFrame()
     RHIDevice->Present();
 }
 
+void URenderer::InitializeLineBatch()
+{
+    // Create UDynamicMesh for efficient line batching
+    DynamicLineMesh = UResourceManager::GetInstance().Load<UDynamicMesh>("Line");
+    
+    // Initialize with maximum capacity (MAX_LINES * 2 vertices, MAX_LINES * 2 indices)
+    uint32 maxVertices = MAX_LINES * 2;
+    uint32 maxIndices = MAX_LINES * 2;
+    DynamicLineMesh->Load(maxVertices, maxIndices, RHIDevice->GetDevice(), EVertexLayoutType::PositionColor);
+
+    // Create FMeshData for accumulating line data
+    LineBatchData = new FMeshData();
+    
+    // Load line shader
+    LineShader = UResourceManager::GetInstance().Load<UShader>("ShaderLine.hlsl", EVertexLayoutType::PositionColor);
+}
+
+void URenderer::BeginLineBatch()
+{
+    if (!LineBatchData) return;
+    
+    bLineBatchActive = true;
+    
+    // Clear previous batch data
+    LineBatchData->Vertices.clear();
+    LineBatchData->Color.clear();
+    LineBatchData->Indices.clear();
+}
+
+void URenderer::AddLine(const FVector& Start, const FVector& End, const FVector4& Color)
+{
+    if (!bLineBatchActive || !LineBatchData) return;
+    
+    uint32 startIndex = static_cast<uint32>(LineBatchData->Vertices.size());
+    
+    // Add vertices
+    LineBatchData->Vertices.push_back(Start);
+    LineBatchData->Vertices.push_back(End);
+    
+    // Add colors
+    LineBatchData->Color.push_back(Color);
+    LineBatchData->Color.push_back(Color);
+    
+    // Add indices for line (2 vertices per line)
+    LineBatchData->Indices.push_back(startIndex);
+    LineBatchData->Indices.push_back(startIndex + 1);
+}
+
+void URenderer::AddLines(const TArray<FVector>& StartPoints, const TArray<FVector>& EndPoints, const TArray<FVector4>& Colors)
+{
+    if (!bLineBatchActive || !LineBatchData) return;
+    
+    // Validate input arrays have same size
+    if (StartPoints.size() != EndPoints.size() || StartPoints.size() != Colors.size())
+        return;
+    
+    uint32 startIndex = static_cast<uint32>(LineBatchData->Vertices.size());
+    
+    // Reserve space for efficiency
+    size_t lineCount = StartPoints.size();
+    LineBatchData->Vertices.reserve(LineBatchData->Vertices.size() + lineCount * 2);
+    LineBatchData->Color.reserve(LineBatchData->Color.size() + lineCount * 2);
+    LineBatchData->Indices.reserve(LineBatchData->Indices.size() + lineCount * 2);
+    
+    // Add all lines at once
+    for (size_t i = 0; i < lineCount; ++i)
+    {
+        uint32 currentIndex = startIndex + static_cast<uint32>(i * 2);
+        
+        // Add vertices
+        LineBatchData->Vertices.push_back(StartPoints[i]);
+        LineBatchData->Vertices.push_back(EndPoints[i]);
+        
+        // Add colors
+        LineBatchData->Color.push_back(Colors[i]);
+        LineBatchData->Color.push_back(Colors[i]);
+        
+        // Add indices for line (2 vertices per line)
+        LineBatchData->Indices.push_back(currentIndex);
+        LineBatchData->Indices.push_back(currentIndex + 1);
+    }
+}
+
+void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+{
+    if (!bLineBatchActive || !LineBatchData || !DynamicLineMesh || LineBatchData->Vertices.empty())
+    {
+        bLineBatchActive = false;
+        return;
+    }
+    
+    // Efficiently update dynamic mesh data (no buffer recreation!)
+    if (!DynamicLineMesh->UpdateData(LineBatchData, RHIDevice->GetDeviceContext()))
+    {
+        bLineBatchActive = false;
+        return;
+    }
+    
+    // Set up rendering state
+    UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+    PrepareShader(LineShader);
+    
+    // Render using dynamic mesh
+    if (DynamicLineMesh->GetCurrentVertexCount() > 0 && DynamicLineMesh->GetCurrentIndexCount() > 0)
+    {
+        UINT stride = sizeof(FVertexSimple);
+        UINT offset = 0;
+        
+        ID3D11Buffer* vertexBuffer = DynamicLineMesh->GetVertexBuffer();
+        ID3D11Buffer* indexBuffer = DynamicLineMesh->GetIndexBuffer();
+        
+        RHIDevice->GetDeviceContext()->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+        RHIDevice->GetDeviceContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+        RHIDevice->GetDeviceContext()->DrawIndexed(DynamicLineMesh->GetCurrentIndexCount(), 0, 0);
+    }
+    
+    bLineBatchActive = false;
+}
+
+void URenderer::ClearLineBatch()
+{
+    if (!LineBatchData) return;
+    
+    LineBatchData->Vertices.clear();
+    LineBatchData->Color.clear();
+    LineBatchData->Indices.clear();
+    
+    bLineBatchActive = false;
+}
 

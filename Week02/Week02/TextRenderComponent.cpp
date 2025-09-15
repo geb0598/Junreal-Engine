@@ -27,7 +27,7 @@ UTextRenderComponent::UTextRenderComponent()
 
 UTextRenderComponent::~UTextRenderComponent()
 {
-
+    CharInfoMap.clear();
 }
 
 
@@ -38,7 +38,7 @@ void UTextRenderComponent::InitCharInfoMap()
     const float SUBTEX_WH = 32.f;
     const int COLROW = 16;
 
-    FTextureData* Data = new FTextureData();
+    //FTextureData* Data = new FTextureData();
     for (wchar_t c = 32; c <= 126;++c)
     {
         int key = c - 32;

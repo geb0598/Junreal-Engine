@@ -1,5 +1,5 @@
 #pragma once
-#include "PrimitiveComponent.h"
+#include "MeshComponent.h"
 #include "Picking.h"
 class UShapeComponent : public UMeshComponent
 {

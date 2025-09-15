@@ -438,14 +438,14 @@ struct alignas(16) FMatrix
         );
     }
 
-    // 행렬 * 4D 벡터
+    // 행렬 * 4D 벡터 (row-vector: v' = v * M)
     FVector4 operator*(const FVector4& V) const
     {
         return FVector4(
-            M[0][0] * V.X + M[0][1] * V.Y + M[0][2] * V.Z + M[0][3] * V.W,
-            M[1][0] * V.X + M[1][1] * V.Y + M[1][2] * V.Z + M[1][3] * V.W,
-            M[2][0] * V.X + M[2][1] * V.Y + M[2][2] * V.Z + M[2][3] * V.W,
-            M[3][0] * V.X + M[3][1] * V.Y + M[3][2] * V.Z + M[3][3] * V.W
+            V.X * M[0][0] + V.Y * M[1][0] + V.Z * M[2][0] + V.W * M[3][0],
+            V.X * M[0][1] + V.Y * M[1][1] + V.Z * M[2][1] + V.W * M[3][1],
+            V.X * M[0][2] + V.Y * M[1][2] + V.Z * M[2][2] + V.W * M[3][2],
+            V.X * M[0][3] + V.Y * M[1][3] + V.Z * M[2][3] + V.W * M[3][3]
         );
     }
 
@@ -547,6 +547,21 @@ struct alignas(16) FMatrix
     static FMatrix PerspectiveFovLH(float FovY, float Aspect, float Zn, float Zf);
     static FMatrix OrthoLH(float Width, float Height, float Zn, float Zf);
 };
+
+// ─────────────────────────────
+// 전역 연산자들
+// ─────────────────────────────
+
+// FVector4 * FMatrix (row-vector: v' = v * M)
+inline FVector4 operator*(const FVector4& V, const FMatrix& M)
+{
+    return FVector4(
+        V.X * M.M[0][0] + V.Y * M.M[1][0] + V.Z * M.M[2][0] + V.W * M.M[3][0],
+        V.X * M.M[0][1] + V.Y * M.M[1][1] + V.Z * M.M[2][1] + V.W * M.M[3][1],
+        V.X * M.M[0][2] + V.Y * M.M[1][2] + V.Z * M.M[2][2] + V.W * M.M[3][2],
+        V.X * M.M[0][3] + V.Y * M.M[1][3] + V.Z * M.M[2][3] + V.W * M.M[3][3]
+    );
+}
 
 // ─────────────────────────────
 // FTransform (position/rotation/scale)
@@ -819,7 +834,7 @@ inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
     R.M[3][2] = Translation.Z;
     R.M[3][3] = 1.0f;
 
-    return YUpToZUp*R; // 결과 = S * R(q) * T
+    return YUpToZUp * R; // 결과 = S * R(q) * T
 }
 
 

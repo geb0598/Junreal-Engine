@@ -155,7 +155,10 @@
     <ClCompile Include="BoundingBoxComponent.cpp" />
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
+    <ClCompile Include="DynamicMesh.cpp" />
     <ClCompile Include="FName.cpp" />
+    <ClCompile Include="Line.cpp" />
+    <ClCompile Include="LineComponent.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
@@ -264,6 +267,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="ShaderLine.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="TextBillboard.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
@@ -272,9 +281,12 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="CharacterInfo.h" />
     <ClInclude Include="BoundingBoxComponent.h" />
+    <ClInclude Include="DynamicMesh.h" />
     <ClInclude Include="GizmoActor.h" />
     <ClInclude Include="GizmoArrowComponent.h" />
     <ClInclude Include="GridActor.h" />
+    <ClInclude Include="Line.h" />
+    <ClInclude Include="LineComponent.h" />
     <ClInclude Include="Name.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="ObjectFactory.h" />
