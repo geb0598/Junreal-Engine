@@ -55,6 +55,8 @@ public:
     void SetWorld(UWorld* InWorld) { World = InWorld; }
     UWorld* GetWorld() const { return World; }
 
+    USceneComponent* GetRootComponent() { return RootComponent; }
+
 
 
 

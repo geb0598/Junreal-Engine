@@ -96,16 +96,15 @@ void UWorld::Initialize()
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
             Primitive.Scale));
         Actor->SetWorld(this);
-
+        UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
+        TextComp->SetOwner(Actor);
+        Actor->AddComponent(TextComp);
+        Actor->SetWorld(this);
+        TextComp->SetupAttachment( Actor->GetRootComponent());
+//        Actors.push_back(Actor);
         Actors.push_back(Actor);
     }
     
-    AActor* Actor = NewObject<AActor>();
-    UTextRenderComponent* TextComp =  NewObject<UTextRenderComponent>();
-    TextComp->SetOwner(Actor);
-    Actor->AddComponent(TextComp);
-    Actor->SetWorld(this);
-    Actors.push_back(Actor);
 
 	InitializeMainCamera();
     InitializeGrid();
