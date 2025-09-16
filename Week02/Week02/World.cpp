@@ -439,7 +439,13 @@ void UWorld::RenderGizmoActor()
         if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
         {
             Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
+            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+            Renderer->OMSetBlendState(true); // 필요 시
+
             Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+            // 상태 복구
+            Renderer->OMSetBlendState(false);
+            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
             Renderer->RSSetState(ViewModeIndex);
         }
     }

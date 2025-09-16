@@ -2,7 +2,16 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include "Vector.h"
-
+enum class EComparisonFunc
+{
+    Always,
+    LessEqual,
+    GreaterEqual,
+    // 필요하면 추가
+      // 필요시 추가
+    Disable,
+    LessEqualReadOnly,
+};
 class URHIDevice
 {
 public:
@@ -28,6 +37,7 @@ public:
     virtual void CreateRasterizerState() = 0;
     virtual void CreateConstantBuffer() = 0;
     virtual void CreateBlendState() = 0;
+	virtual void CreateDepthStencilState() = 0;
     virtual void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) = 0;
 
     // update
@@ -44,6 +54,7 @@ public:
     virtual void RSSetState(EViewModeIndex ViewModeIndex) = 0;
     virtual void OMSetRenderTargets() = 0;
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;
+    virtual void OmSetDepthStencilState(EComparisonFunc Func) = 0;
     virtual void Present() = 0;
 };
 

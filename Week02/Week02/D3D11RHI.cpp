@@ -47,6 +47,7 @@ void D3D11RHI::Initialize(HWND hWindow)
     CreateRasterizerState();
     CreateBlendState();
     CreateConstantBuffer();
+	CreateDepthStencilState();
     UResourceManager::GetInstance().Initialize(Device,DeviceContext);
 }
 
@@ -113,6 +114,38 @@ void D3D11RHI::CreateBlendState()
     rt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     rt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     Device->CreateBlendState(&bd, &BlendState);
+}
+
+void D3D11RHI::CreateDepthStencilState()
+{
+    D3D11_DEPTH_STENCIL_DESC desc = {};
+    desc.StencilEnable = FALSE;
+
+    // 1) 기본: LessEqual + Write ALL
+    desc.DepthEnable = TRUE;
+    desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    Device->CreateDepthStencilState(&desc, &DepthStencilStateLessEqualWrite);
+
+    // 2) ReadOnly: LessEqual + Write ZERO
+    desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    Device->CreateDepthStencilState(&desc, &DepthStencilStateLessEqualReadOnly);
+
+    // 3) AlwaysNoWrite: Always + Write ZERO (기즈모/오버레이 용)
+    desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+    // DepthEnable은 TRUE 유지 (읽기 의미는 없지만 상태 일관성을 위해)
+    Device->CreateDepthStencilState(&desc, &DepthStencilStateAlwaysNoWrite);
+
+    // 4) Disable: DepthEnable FALSE (테스트/쓰기 모두 무시)
+    desc.DepthEnable = FALSE;
+    // DepthWriteMask/Func는 무시되지만 값은 그대로 둬도 됨
+    Device->CreateDepthStencilState(&desc, &DepthStencilStateDisable);
+
+    // 5) (선택) GreaterEqual + Write ALL
+    desc.DepthEnable = TRUE;
+    desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+    Device->CreateDepthStencilState(&desc, &DepthStencilStateGreaterEqualWrite);
 }
 
 //이거 두개를 나눔
@@ -415,6 +448,22 @@ void D3D11RHI::ReleaseDeviceAndSwapChain()
         Device = nullptr;
     }
 
+}
+
+void D3D11RHI::OmSetDepthStencilState(EComparisonFunc Func)
+{
+    switch (Func)
+    {
+    case EComparisonFunc::Always:
+        DeviceContext->OMSetDepthStencilState(DepthStencilStateAlwaysNoWrite, 0);
+        break;
+    case EComparisonFunc::LessEqual:
+        DeviceContext->OMSetDepthStencilState(DepthStencilStateLessEqualWrite, 0);
+        break;
+    case EComparisonFunc::GreaterEqual:
+        DeviceContext->OMSetDepthStencilState(DepthStencilStateGreaterEqualWrite, 0);
+        break;
+    }
 }
 
 void D3D11RHI::CreateShader(ID3D11InputLayout** SimpleInputLayout, ID3D11VertexShader** SimpleVertexShader, ID3D11PixelShader** SimplePixelShader)
