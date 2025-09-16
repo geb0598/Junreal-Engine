@@ -39,6 +39,10 @@ void USelectionManager::DeselectActor(AActor* Actor)
 
 void USelectionManager::ClearSelection()
 {
+    for (AActor* Actor : SelectedActors)
+    {
+        Actor->SetIsPicked(false);
+    }
     SelectedActors.clear();
 }
 

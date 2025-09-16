@@ -47,9 +47,7 @@ float4 mainPS(PS_INPUT input) : SV_Target
 {
     float4 color = fontAtlas.Sample(linearSampler, input.tex);
 
-    // color의 알파 값이 0.5보다 작으면 그 픽셀을 아예 그리지 않고 버림
-    // 임계값 0.5는 결과물을 보면서 적절히 조절해야 합니다.
-    clip(color.a - 0.5f);
+    clip(color.a - 0.5f); // alpha - 0.5f < 0 이면 해당픽셀 렌더링 중단
 
     return color;
 }

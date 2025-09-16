@@ -5,10 +5,15 @@
 #include "ShapeComponent.h"
 #include "AABoundingBoxComponent.h"   
 #include "MeshComponent.h"
+#include "TextRenderComponent.h"
 AActor::AActor()
 {
     Name = "DefaultActor";
-    RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));    
+    RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
+    CollisionComponent = CreateDefaultSubobject<UAABoundingBoxComponent>(FName("CollisionBox"));
+    UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
+    TextComp->SetOwner(this);
+    AddComponent(TextComp);    
 }
 
 AActor::~AActor()
@@ -29,6 +34,7 @@ AActor::~AActor()
         }
     }
     Components.Empty();
+    //TextComp->SetupAttachment(GetRootComponent());
 }
 
 void AActor::BeginPlay()
@@ -188,5 +194,6 @@ void AActor::AddComponent(USceneComponent* Component)
     if (!RootComponent)
     {
         RootComponent = Component;
+        //Component->SetupAttachment(RootComponent);
     }
 }
