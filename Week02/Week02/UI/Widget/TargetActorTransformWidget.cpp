@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "TargetActorTransformWidget.h"
-#include "../UIManager.h"
-#include "../../ImGui/imgui.h"
-#include "../../Actor.h"
-#include "../../World.h"
-#include "../../Vector.h"
-#include "../../GizmoActor.h"
+#include "UI/UIManager.h"
+#include "ImGui/imgui.h"
+#include "Actor.h"
+#include "World.h"
+#include "Vector.h"
+#include "GizmoActor.h"
 #include <string>
 
 using namespace std;
@@ -17,6 +17,7 @@ UTargetActorTransformWidget::UTargetActorTransformWidget()
 	: UWidget("Target Actor Transform Widget")
 	, UIManager(&UUIManager::GetInstance())
 {
+
 }
 
 UTargetActorTransformWidget::~UTargetActorTransformWidget() = default;
@@ -77,6 +78,21 @@ void UTargetActorTransformWidget::RenderWidget()
 	ImGui::Text("World Information");
 	ImGui::Text("Actor Count: %u", WorldActorCount);
 	ImGui::Separator();
+
+	AGridActor* gridActor = UIManager->GetWorld()->GetGridActor();
+	if (gridActor)
+	{
+		float currentLineSize = gridActor->GetLineSize();
+		if (ImGui::DragFloat("Grid Spacing", &currentLineSize, 0.1f, 0.1f, 1000.0f))
+		{
+			gridActor->SetLineSize(currentLineSize);
+			EditorINI["GridSpacing"] = std::to_string(currentLineSize);
+		}
+	}
+	else
+	{
+		ImGui::Text("GridActor not found in the world.");
+	}
 
 	ImGui::Text("Transform Editor");
 	

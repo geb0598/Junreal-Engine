@@ -6,27 +6,50 @@
 float CLIENTWIDTH = 1024.0f;
 float CLIENTHEIGHT = 1024.0f;
 
-// 창 크기 저장/로드 함수
-void SaveWindowSize(int width, int height)
+void LoadIniFile()
 {
-    std::ofstream file("window_config.txt");
-    if (file.is_open())
+    std::ifstream infile("editor.ini");
+
+    if (!infile.is_open())
     {
-        file << width << " " << height << std::endl;
-        file.close();
+        return;
     }
+
+    std::string line;
+    while (std::getline(infile, line))
+    {
+        if (line.empty() || line[0] == ';')
+        {
+            continue;
+        }
+
+        size_t delimiterPos = line.find('=');
+        if (delimiterPos != FString::npos)
+        {
+            FString key = line.substr(0, delimiterPos);
+            std::string value = line.substr(delimiterPos + 1);
+
+            key.erase(0, key.find_first_not_of(" \t"));
+            key.erase(key.find_last_not_of(" \t") + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+
+            EditorINI[key] = value;
+        }
+    }
+
+    infile.close();
+    return;
 }
 
-bool LoadWindowSize(int& width, int& height)
+void SaveIniFile()
 {
-    std::ifstream file("window_config.txt");
-    if (file.is_open())
+    std::ofstream outfile("editor.ini");
+    for (const auto& pair : EditorINI)
     {
-        file >> width >> height;
-        file.close();
-        return true;
+        outfile << pair.first << " = " << pair.second << std::endl;
     }
-    return false;
+    outfile.close();
 }
 
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -79,6 +102,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         UINT newHeight = static_cast<UINT>(CLIENTHEIGHT);
                         // Single, consistent resize path (handles RTV/DSV + viewport)
                         static_cast<D3D11RHI*>(renderer->GetRHIDevice())->ResizeSwapChain(newWidth, newHeight);
+                        EditorINI["WindowWidth"] = std::to_string(newWidth);
+                        EditorINI["WindowHeight"] = std::to_string(newHeight);
                     }
                     // ImGui DisplaySize가 유효할 때만 UI 윈도우 재배치
                     ImGuiIO& io = ImGui::GetIO();
@@ -116,8 +141,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
     _CrtSetBreakAlloc(0); // Uncomment and set alloc ID to break on specific leak
 #endif
-
-    // _CrtSetBreakAlloc(346);
+    LoadIniFile();
 
     // 윈도우 클래스 이름
     WCHAR WindowClass[] = L"JungleWindowClass";
@@ -133,7 +157,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // 저장된 창 크기 로드 (없으면 기본값 1024x1024)
     int windowWidth = 1024, windowHeight = 1024;
-    LoadWindowSize(windowWidth, windowHeight);
+
+    if (EditorINI.count("WindowWidth"))
+    {
+        try
+        {
+            windowWidth = stoi(EditorINI["WindowWidth"]);
+        }
+        catch (...)
+        {
+        }
+    }
+    if (EditorINI.count("WindowHeight"))
+    {
+        try
+        {
+            windowHeight = std::stof(EditorINI["WindowHeight"]);
+        }
+        catch (...)
+        {
+        }
+    }
 
     // 윈도우 생성
     HWND hWnd = CreateWindowExW(0, WindowClass, Title, WS_POPUP | WS_VISIBLE | WS_OVERLAPPEDWINDOW,
@@ -222,27 +266,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 FVector2D mousePos = InputMgr.GetMousePosition();
                 FVector2D mouseDelta = InputMgr.GetMouseDelta();
                 char debugMsg[128];
-                //sprintf_s(debugMsg, "Mouse Pos: (%.1f, %.1f), Delta: (%.1f, %.1f)\n",
-                //          mousePos.X, mousePos.Y, mouseDelta.X, mouseDelta.Y);
-                //UE_LOG(debugMsg);
             }
-        }
-
-        // 전역 변수 CLIENTWIDTH/HEIGHT를 사용해서 저장 (더 안전)
-        if (CLIENTWIDTH > 100 && CLIENTHEIGHT > 100)
-        {
-            // 클라이언트 영역에 프레임 사이즈 추가해서 전체 창 크기 계산
-            int totalWidth = (int)CLIENTWIDTH + 16;  // 대략적인 좌우 프레임
-            int totalHeight = (int)CLIENTHEIGHT + 39; // 대략적인 타이틀바 + 상하 프레임
-            SaveWindowSize(totalWidth, totalHeight);
-        }
-        else
-        {
-            printf("Invalid client size (%.0f x %.0f), not saving\n", CLIENTWIDTH, CLIENTHEIGHT);
         }
         UUIManager::GetInstance().Release();
         ObjectFactory::DeleteAll(true);
     }
+    SaveIniFile();
 
     return 0;
 }

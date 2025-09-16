@@ -134,6 +134,7 @@ void UWorld::InitializeGrid()
     GridActor = NewObject<AGridActor>();
     GridActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, 0, 0 }),
         FVector{ 1, 1, 1 }));
+    GridActor->Initialize();
     GridActor->SetWorld(this);
 
     // Add GridActor to Actors array so it gets rendered in the main loop

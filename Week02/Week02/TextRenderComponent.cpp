@@ -154,6 +154,7 @@ void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, cons
         TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString(FString("UUID : ") + FString(std::to_string(Owner->UUID)), Owner->GetActorLocation());//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
         UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", vertices);
         Renderer->OMSetBlendState(true);
+        Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
         Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Renderer->OMSetBlendState(false);
     }

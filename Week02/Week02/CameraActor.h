@@ -43,6 +43,9 @@ public:
     void SetCameraYaw(float Yaw) { CameraYawDeg = Yaw; }
     void SetCameraPitch(float Pitch) { CameraPitchDeg = Pitch; }
 
+    float GetCameraSpeed() { return CameraMoveSpeed; }
+    void SetCameraSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; EditorINI["CameraSpeed"] = std::to_string(CameraMoveSpeed); }
+
 private:
     UCameraComponent* CameraComponent = nullptr;
     

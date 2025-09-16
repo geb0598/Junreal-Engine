@@ -65,3 +65,5 @@
 #include "InputManager.h"
 #include "UI/UIManager.h"
 #include "ResourceManager.h"
+
+extern TMap<FString, FString> EditorINI;

@@ -7,6 +7,7 @@ class AGridActor : public AActor
 public:
     DECLARE_CLASS(AGridActor, AActor);
     AGridActor();
+    void Initialize();
 
 protected:
     ~AGridActor() override;
@@ -18,13 +19,8 @@ public:
     void ClearLines();
     
     // Grid settings
-    void SetGridSize(int32 NewGridSize) { GridSize = NewGridSize; RegenerateGrid(); }
-    void SetCellSize(float NewCellSize) { CellSize = NewCellSize; RegenerateGrid(); }
-    void SetAxisLength(float NewLength) { AxisLength = NewLength; RegenerateGrid(); }
-    
-    int32 GetGridSize() const { return GridSize; }
-    float GetCellSize() const { return CellSize; }
-    float GetAxisLength() const { return AxisLength; }
+    float GetLineSize() { return LineSize; }
+    void SetLineSize(float NewLineSize) { LineSize = NewLineSize; SetActorScale({ NewLineSize, NewLineSize, NewLineSize }); }
     
     // Component access
     ULineComponent* GetLineComponent() const { return LineComponent; }
@@ -35,8 +31,10 @@ private:
     ULineComponent* LineComponent;
     
     // Grid settings
-    int32 GridSize = 50;
+    int32 GridSize = 100;
     float CellSize = 1.0f;
-    float AxisLength = 50.0f;
+    float AxisLength = 100.0f;
+
+    float LineSize = 1.f;
 };
 

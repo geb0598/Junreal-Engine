@@ -61,13 +61,11 @@ public:
     void LoadScene(const FString& SceneName);
     void SaveScene(const FString& SceneName);
     ACameraActor* GetCameraActor() { return MainCameraActor; }
-    
-    float GetCameraMoveSpeed() const { return CameraMoveSpeed; }
-    void SetCameraMoveSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; }
 
     EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }
     void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
+    AGridActor* GetGridActor() { return GridActor; }
 
     const TArray<AActor*>& GetActors() { return Actors; }
     
@@ -118,8 +116,6 @@ private:
     /** == 기즈모 == */
     AGizmoActor* GizmoActor;
 
-    // 카메라 설정 (CameraActor로 이동: 이동 속도만 월드에서 유지)
-    float CameraMoveSpeed = 5.0f;
     
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 };

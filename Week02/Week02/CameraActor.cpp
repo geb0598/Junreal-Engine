@@ -17,6 +17,23 @@ ACameraActor::ACameraActor()
     CameraComponent = NewObject<UCameraComponent>();
     CameraComponent->SetupAttachment(RootComponent);
     Components.Add(CameraComponent);
+
+    if(EditorINI.count("CameraSpeed"))
+    {
+        try
+        {
+            float temp = std::stof(EditorINI["CameraSpeed"]);
+            SetCameraSpeed(temp);
+        }
+        catch (...)
+        {
+            SetCameraSpeed(10.f);
+        }
+    }
+    else
+    {
+        SetCameraSpeed(10.f);
+    }
 }
 
 void ACameraActor::Tick(float DeltaSeconds)
