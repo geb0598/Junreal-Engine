@@ -39,7 +39,7 @@ private:
 	bool bScaleChanged = false;
 	bool bRotationChanged = false;
 	bool bPositionChanged = false;
-	bool bUniformScale = true;
+	bool bUniformScale = false;
 	
 	// 기즈모 설정
 	EGizmoSpace CurrentGizmoSpace = EGizmoSpace::World;

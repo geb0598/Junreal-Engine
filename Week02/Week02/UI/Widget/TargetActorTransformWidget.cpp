@@ -48,23 +48,19 @@ void UTargetActorTransformWidget::Update()
 {
 	// UIManager를 통해 현재 선택된 액터 가져오기
 	AActor* CurrentSelectedActor = GetCurrentSelectedActor();
-	
-	// 선택된 액터가 변경되었는지 확인
-	if (SelectedActor != CurrentSelectedActor)
-	{
-		SelectedActor = CurrentSelectedActor;
-		
-		// 새로운 액터가 선택되었으면 트랜스폼 정보 업데이트
-		if (SelectedActor)
-		{
-			UpdateTransformFromActor();
-		}
-	}
-	
+	SelectedActor = CurrentSelectedActor;
+
 	// GizmoActor 참조 업데이트
 	if (!GizmoActor && UIManager)
 	{
 		GizmoActor = UIManager->GetGizmoActor();
+	}
+
+	if (SelectedActor)
+	{
+		// 액터가 선택되어 있으면 항상 트랜스폼 정보를 업데이트하여
+		// 기즈모 조작을 실시간으로 UI에 반영합니다.
+		UpdateTransformFromActor();
 	}
 	
 	// 월드 정보 업데이트 (옵션)
@@ -177,16 +173,6 @@ void UTargetActorTransformWidget::RenderWidget()
 		
 		ImGui::Spacing();
 		ImGui::Separator();
-		
-		// 현재 액터의 실제 트랜스폼 정보 표시 (읽기 전용)
-		FVector ActualLocation = SelectedActor->GetActorLocation();
-		FVector ActualRotation = SelectedActor->GetActorRotation().ToEuler();
-		FVector ActualScale = SelectedActor->GetActorScale();
-		
-		ImGui::Text("Actual Transform:");
-		ImGui::Text("  Pos: (%.2f, %.2f, %.2f)", ActualLocation.X, ActualLocation.Y, ActualLocation.Z);
-		ImGui::Text("  Rot: (%.1f, %.1f, %.1f)", ActualRotation.X, ActualRotation.Y, ActualRotation.Z);
-		ImGui::Text("  Scale: (%.2f, %.2f, %.2f)", ActualScale.X, ActualScale.Y, ActualScale.Z);
 	}
 	else
 	{
