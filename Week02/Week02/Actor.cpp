@@ -11,8 +11,9 @@ AActor::AActor()
     Name = "DefaultActor";
     RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
     CollisionComponent = CreateDefaultSubobject<UBoundingBoxComponent>(FName("CollisionBox"));
- 
-    
+    UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
+    TextComp->SetOwner(this);
+    AddComponent(TextComp);    
 }
 
 AActor::~AActor()
@@ -33,9 +34,6 @@ AActor::~AActor()
         }
     }
     Components.Empty();
-    UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
-    TextComp->SetOwner(this);
-    AddComponent(TextComp);
     //TextComp->SetupAttachment(GetRootComponent());
 }
 
