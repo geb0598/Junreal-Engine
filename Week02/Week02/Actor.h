@@ -57,6 +57,8 @@ public:
 
     USceneComponent* GetRootComponent() { return RootComponent; }
 
+    void SetIsPicked(bool picked) { bIsPicked = picked; }
+    bool GetIsPicked() { return bIsPicked; }
 
 
 
@@ -92,6 +94,7 @@ public:
     void AddComponent(USceneComponent* Component);
 protected:
     TArray<USceneComponent*> Components;
+    bool bIsPicked = false;
     bool bCanEverTick = true;
     bool bHiddenInGame = false;
 };
