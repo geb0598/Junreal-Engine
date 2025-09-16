@@ -11,6 +11,7 @@ enum class EAttachmentRule
     KeepWorld
 };
 
+class URenderer;
 class USceneComponent : public UActorComponent
 {
 public:

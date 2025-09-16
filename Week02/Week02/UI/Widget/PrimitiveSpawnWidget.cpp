@@ -219,7 +219,6 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			case 0: MeshPath = "Cube.obj"; break;
 			case 1: MeshPath = "Sphere.obj"; break; 
 			case 2: MeshPath = "Triangle.obj"; break;
-			case 3: MeshPath = "Arrow.obj"; break;
 			default: MeshPath = "Cube.obj"; break;
 			}
 			
@@ -228,7 +227,15 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			{
 				MeshComp->SetMeshResource(MeshPath);
 				MeshComp->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-				Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+				if (MeshPath == "Sphere.obj")
+				{
+					Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent(EPrimitiveType::Sphere);
+					//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+				}
+				else
+				{
+					Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent();
+				}
 			}
 			
 			// 액터 이름 설정 - World에서 unique name 생성

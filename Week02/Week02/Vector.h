@@ -199,9 +199,6 @@ struct FVector
         float Value = std::max(minLen, std::min(maxLen, Length));
         return V * (Value / Length);
     }
-
-
-   
 };
 
 // ─────────────────────────────
@@ -213,6 +210,25 @@ struct FVector4
     FVector4(float InX = 0, float InY = 0, float InZ = 0, float InW = 0)
         : X(InX), Y(InY), Z(InZ), W(InW)
     {
+    }
+
+    FVector4 ComponentMin(const FVector4& B)
+    {
+        return FVector4(
+            (X < B.X) ? X : B.X,
+            (Y < B.Y) ? Y : B.Y,
+            (Z < B.Z) ? Z : B.Z,
+            (W < B.W) ? W : B.W
+        );
+    }
+    FVector4 ComponentMax(const FVector4& B)
+    {
+        return FVector4(
+            (X > B.X) ? X : B.X,
+            (Y > B.Y) ? Y : B.Y,
+            (Z > B.Z) ? Z : B.Z,
+            (W > B.W) ? W : B.W
+        );
     }
 };
 
@@ -547,6 +563,16 @@ struct alignas(16) FMatrix
     static FMatrix PerspectiveFovLH(float FovY, float Aspect, float Zn, float Zf);
     static FMatrix OrthoLH(float Width, float Height, float Zn, float Zf);
 };
+
+//Without Last RC
+inline FVector operator*(const FVector& V, const FMatrix& S)
+{
+    FVector Result;
+    Result.X = V.X * S.M[0][0] + V.Y * S.M[1][0] + V.Z * S.M[2][0];
+    Result.Y = V.X * S.M[0][1] + V.Y * S.M[1][1] + V.Z * S.M[2][1];
+    Result.Z = V.X * S.M[0][2] + V.Y * S.M[1][2] + V.Z * S.M[2][2];
+    return Result;
+}
 
 // ─────────────────────────────
 // 전역 연산자들

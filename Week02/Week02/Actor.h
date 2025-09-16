@@ -4,7 +4,7 @@
 
 class UWorld;
 class USceneComponent;
-class UBoundingBoxComponent;
+class UAABoundingBoxComponent;
 class UShapeComponent;
 
 class AActor : public UObject
@@ -79,7 +79,7 @@ public:
 public:
     FString Name;
     USceneComponent* RootComponent = nullptr;
-    UBoundingBoxComponent* CollisionComponent = nullptr;
+    UAABoundingBoxComponent* CollisionComponent = nullptr;
 
     UWorld* World = nullptr;
     

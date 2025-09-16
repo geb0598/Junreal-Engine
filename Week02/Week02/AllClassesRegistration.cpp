@@ -31,7 +31,7 @@
 #include "UI/Window/OutlinerWindow.h"
 #include "UI/Window/UIWindow.h"
 #include "TextRenderComponent.h"
-#include "BoundingBoxComponent.h"
+#include "AABoundingBoxComponent.h"
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -46,7 +46,7 @@ IMPLEMENT_CLASS(UActorComponent)
 IMPLEMENT_CLASS(USceneComponent)
 IMPLEMENT_CLASS(UCameraComponent)
 IMPLEMENT_CLASS(UStaticMeshComponent)
-IMPLEMENT_CLASS(UBoundingBoxComponent)
+IMPLEMENT_CLASS(UAABoundingBoxComponent)
 IMPLEMENT_CLASS(UShapeComponent)
 
 IMPLEMENT_CLASS(AActor)

@@ -21,6 +21,5 @@ public:
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
     
 protected:
-
 };
 

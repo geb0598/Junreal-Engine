@@ -22,5 +22,4 @@ void UMeshComponent::SetMeshResource(const FString& FilePath)
     {
         MeshResource = UResourceManager::GetInstance().Load<UMesh>(FilePath);
     }
-
 }

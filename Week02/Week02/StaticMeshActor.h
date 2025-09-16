@@ -8,14 +8,14 @@ public:
     DECLARE_CLASS(AStaticMeshActor, AActor)
 
     AStaticMeshActor();
-
+    virtual void Tick(float DeltaTime) override;
 protected:
     ~AStaticMeshActor() override;
 
 public:
     UStaticMeshComponent* GetStaticMeshComponent() const { return StaticMeshComponent; }
     void SetStaticMeshComponent(UStaticMeshComponent* InStaticMeshComponent);
-	void SetCollisionComponent();
+	void SetCollisionComponent(EPrimitiveType InType = EPrimitiveType::Default);
 
 protected:
     UStaticMeshComponent* StaticMeshComponent;

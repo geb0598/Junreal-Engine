@@ -35,7 +35,4 @@ public:
 private:
     TArray<ULine*> Lines;
     bool bLinesVisible = true;
-    bool bNeedsUpdate = true;
-    
-    void MarkNeedsUpdate() { bNeedsUpdate = true; }
-};
+ };

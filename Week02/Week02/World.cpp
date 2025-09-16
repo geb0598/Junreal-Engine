@@ -7,7 +7,7 @@
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
-#include"BoundingBoxComponent.h"
+#include "AABoundingBoxComponent.h"
 #include "Mesh.h"
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
@@ -91,7 +91,10 @@ void UWorld::Initialize()
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-		Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+		if(PrimitiveType == "Sphere.obj")
+            Cast<AStaticMeshActor>(Actor)->SetCollisionComponent(EPrimitiveType::Sphere);
+        else
+            Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();
         //추후 변경 필요 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
             Primitive.Scale));
@@ -321,8 +324,18 @@ void UWorld::LoadScene(const FString& SceneName)
                 FQuat::MakeFromEuler(Primitive.Rotation),
                 Primitive.Scale)
         );
+        FString MeshType = ToObjFileName(Primitive.Type);
         StaticMeshActor->GetStaticMeshComponent()->SetMeshResource(ToObjFileName(Primitive.Type));
         StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+        if (MeshType == "Sphere.obj")
+        {
+            Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent(EPrimitiveType::Sphere);
+            //컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+        }
+        else
+        {
+            Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent();
+        }
     }
 }
 

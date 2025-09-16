@@ -33,7 +33,6 @@ void ULineComponent::GetWorldLineData(TArray<FVector>& OutStartPoints, TArray<FV
 ULineComponent::ULineComponent()
 {
     bLinesVisible = true;
-    bNeedsUpdate = true;
 }
 
 ULineComponent::~ULineComponent()
@@ -48,7 +47,6 @@ ULine* ULineComponent::AddLine(const FVector& StartPoint, const FVector& EndPoin
     NewLine->SetColor(Color);
     
     Lines.push_back(NewLine);
-    MarkNeedsUpdate();
     
     return NewLine;
 }
@@ -62,7 +60,6 @@ void ULineComponent::RemoveLine(ULine* Line)
     {
         DeleteObject(*it);
         Lines.erase(it);
-        MarkNeedsUpdate();
     }
 }
 
@@ -76,7 +73,6 @@ void ULineComponent::ClearLines()
         }
     }
     Lines.Empty();
-    MarkNeedsUpdate();
 }
 
 void ULineComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)

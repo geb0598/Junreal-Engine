@@ -63,15 +63,6 @@ enum class EResourceType
     IndexBuffer
 };
 
-enum class EPrimitiveType 
-{ 
-    Cube, 
-    Sphere, 
-    Triangle,
-    Arrow
-};
-
-
 enum class EGizmoMode : uint8
 {
     Translate,
@@ -149,6 +140,16 @@ enum class EViewModeIndex : uint32
     VMI_Lit,
     VMI_Unlit,
     VMI_Wireframe,
+
+    End,
+};
+
+enum class EPrimitiveType : uint32
+{
+    None,
+
+    Default,
+    Sphere,
 
     End,
 };

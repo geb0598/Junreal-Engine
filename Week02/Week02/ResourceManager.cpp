@@ -383,7 +383,6 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
 void UResourceManager::CreateDefaultShader()
 {
     Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
-    Load<UShader>("CollisionDebug.hlsl", EVertexLayoutType::PositionColor);
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 
