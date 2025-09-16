@@ -64,13 +64,14 @@ private:
     void CreateFrameBuffer() override;
     void CreateRasterizerState() override;
     void CreateConstantBuffer() override;
-    
+    void CreateDepthStencilState() override;
     // release
     void ReleaseBlendState();
     void ReleaseRasterizerState(); // rs
     void ReleaseFrameBuffer(); // fb, rtv
     void ReleaseDeviceAndSwapChain();
  
+	void OmSetDepthStencilState(EComparisonFunc Func) override;
     
 private:
     //24
@@ -87,6 +88,13 @@ private:
     ID3D11RasterizerState* DefaultRasterizerState{};//
     ID3D11RasterizerState* WireFrameRasterizerState{};//
     ID3D11DepthStencilState* DepthStencilState{};
+
+    ID3D11DepthStencilState* DepthStencilStateLessEqualWrite = nullptr;      // 기본
+    ID3D11DepthStencilState* DepthStencilStateLessEqualReadOnly = nullptr;   // 읽기 전용
+    ID3D11DepthStencilState* DepthStencilStateAlwaysNoWrite = nullptr;       // 기즈모/오버레이
+    ID3D11DepthStencilState* DepthStencilStateDisable = nullptr;              // 깊이 테스트/쓰기 모두 끔
+    ID3D11DepthStencilState* DepthStencilStateGreaterEqualWrite = nullptr;   // 선택사항
+
     ID3D11BlendState* BlendState{};
 
     ID3D11Texture2D* FrameBuffer{};//

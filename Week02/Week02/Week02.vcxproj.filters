@@ -294,6 +294,9 @@
     <ClCompile Include="UI\Widget\WorldOutlinerWidget.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="OBoundingBoxComponent.cpp">
+      <Filter>소스 파일\Bounding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Primitive.hlsl">
@@ -509,9 +512,6 @@
     <ClInclude Include="UEContainer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="ShapeComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="VertexData.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -525,6 +525,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="AABoundingBoxComponent.h">
+      <Filter>헤더 파일\Bounding</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeComponent.h">
+      <Filter>헤더 파일\Bounding</Filter>
+    </ClInclude>
+    <ClInclude Include="OBoundingBoxComponent.h">
       <Filter>헤더 파일\Bounding</Filter>
     </ClInclude>
   </ItemGroup>

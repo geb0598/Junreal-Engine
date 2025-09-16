@@ -153,6 +153,7 @@
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="AABoundingBoxComponent.cpp" />
+    <ClCompile Include="OBoundingBoxComponent.cpp" />
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="DynamicMesh.cpp" />
@@ -277,6 +278,7 @@
   <ItemGroup>
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
+    <ClInclude Include="OBoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />
     <ClInclude Include="GizmoActor.h" />
     <ClInclude Include="GizmoArrowComponent.h" />
