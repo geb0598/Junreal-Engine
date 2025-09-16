@@ -5,6 +5,7 @@
 #include "ShapeComponent.h"
 #include "BoundingBoxComponent.h"   
 #include "MeshComponent.h"
+#include "TextRenderComponent.h"
 AActor::AActor()
 {
     Name = "DefaultActor";
@@ -32,6 +33,10 @@ AActor::~AActor()
         }
     }
     Components.Empty();
+    UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
+    TextComp->SetOwner(this);
+    AddComponent(TextComp);
+    //TextComp->SetupAttachment(GetRootComponent());
 }
 
 void AActor::BeginPlay()
@@ -191,5 +196,6 @@ void AActor::AddComponent(USceneComponent* Component)
     if (!RootComponent)
     {
         RootComponent = Component;
+        //Component->SetupAttachment(RootComponent);
     }
 }

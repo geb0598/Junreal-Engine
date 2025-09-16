@@ -145,11 +145,11 @@ void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, cons
 
 
     FVector cameraPosition = CameraActor->GetActorLocation();
-    Renderer->UpdateBillboardConstantBuffers(GetWorldLocation(), View, Proj, CamRight, CamUp);
+    Renderer->UpdateBillboardConstantBuffers(Owner->GetActorLocation()+FVector(0.f,0.f,1.f)* Owner->GetActorScale().Z, View, Proj, CamRight, CamUp);
 
 
     Renderer->PrepareShader(GetMaterial()->GetShader());
-    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString("changEun", FVector(1.f, 1.f, 0.f));//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
+    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString(FString("UUID : ")+FString(std::to_string(Owner->UUID)), Owner->GetActorLocation());//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
     UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", vertices);
     Renderer->OMSetBlendState(true);
     Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
