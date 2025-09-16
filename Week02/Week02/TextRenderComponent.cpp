@@ -138,7 +138,6 @@ TArray<FBillboardVertexInfo_GPU> UTextRenderComponent::CreateVerticesForString(c
 
 void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj)
 {
-    Renderer->OMSetBlendState(true);
     Material->Load("TextBillboard.dds", Renderer->GetRHIDevice()->GetDevice(), EVertexLayoutType::PositionBillBoard);//texture 불러오기 초기화는 ResourceManager Initialize() -> CreateTextBillboardTexture();
     ACameraActor* CameraActor =  GetOwner()->GetWorld()->GetCameraActor();
     FVector CamRight = CameraActor->GetActorRight();
@@ -150,8 +149,9 @@ void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, cons
 
 
     Renderer->PrepareShader(GetMaterial()->GetShader());
-    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString("HELLOWORLD", FVector(1.f, 1.f, 0.f));//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
+    TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString("changEun", FVector(1.f, 1.f, 0.f));//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
     UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", vertices);
+    Renderer->OMSetBlendState(true);
     Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     Renderer->OMSetBlendState(false);
 }
