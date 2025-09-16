@@ -2,6 +2,22 @@
 #include "BoundingBoxComponent.h"
 #include "Vector.h"
 
+std::vector<FVector> MakeVerticesFromFBox(const FBox& Box)
+{
+    const FVector& Min = Box.Min;
+    const FVector& Max = Box.Max;
+
+    return {
+        {Min.X, Min.Y, Min.Z},
+        {Max.X, Min.Y, Min.Z},
+        {Min.X, Max.Y, Min.Z},
+        {Max.X, Max.Y, Min.Z},
+        {Min.X, Min.Y, Max.Z},
+        {Max.X, Min.Y, Max.Z},
+        {Min.X, Max.Y, Max.Z},
+        {Max.X, Max.Y, Max.Z}
+    };
+}
 UBoundingBoxComponent::UBoundingBoxComponent()
     : LocalMin(FVector{}), LocalMax(FVector{})
 {
@@ -58,9 +74,35 @@ std::vector<FVector> UBoundingBoxComponent::GetLocalCorners() const
     };
 }
 
+
+FBox UBoundingBoxComponent::GetWorldOBBFromAttachParent() const
+{
+	
+    if (!AttachParent) return FBox();
+
+    // AttachParent의 로컬 코너들
+    auto corners = GetLocalCorners();
+
+    // 월드 변환된 첫 번째 점으로 초기화
+    FVector MinW = AttachParent->GetWorldTransform().TransformPosition(corners[0]);
+    FVector MaxW = MinW;
+
+    for (auto& c : corners)
+    {
+        FVector wc = AttachParent->GetWorldTransform().TransformPosition(c);
+        MinW = MinW.ComponentMin(wc);
+        MaxW = MaxW.ComponentMax(wc);
+    }
+    //BBWorldMatrix
+    return FBox(MinW, MaxW);
+}
+
 void UBoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
-	Renderer->RSSetState(EViewModeIndex::VMI_Wireframe);
+    /*if(OOBB)
+    SetupAttachment(NULL);*///OOBB시  조건문 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    Renderer->RSSetState(EViewModeIndex::VMI_Wireframe);
     Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
     Renderer->PrepareShader(GetMaterial()->GetShader());
     Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);

@@ -132,6 +132,11 @@ void URenderer::EndFrame()
     RHIDevice->Present();
 }
 
+void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
+{
+    RHIDevice->OmSetDepthStencilState(Func);
+}
+
 void URenderer::InitializeLineBatch()
 {
     // Create UDynamicMesh for efficient line batching

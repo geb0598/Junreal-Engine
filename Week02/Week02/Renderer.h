@@ -48,6 +48,8 @@ public:
 
 	void EndFrame();
 
+    void OMSetDepthStencilState(EComparisonFunc Func);
+
     URHIDevice*&const  GetRHIDevice() { return RHIDevice; }
 private:
 	URHIDevice* RHIDevice;

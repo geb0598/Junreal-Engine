@@ -186,6 +186,9 @@ void UWorld::Render()
         if (!Actor) continue;
         if (Actor->GetActorHiddenInGame()) continue;
         bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+        if (bIsSelected) {
+            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+        }
         Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
         for (USceneComponent* Component : Actor->GetComponents())
         {
@@ -199,6 +202,7 @@ void UWorld::Render()
             {
                 Renderer->RSSetState(ViewModeIndex);
                 Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
             }
         }
         // 블랜드 스테이드 종료
@@ -438,7 +442,13 @@ void UWorld::RenderGizmoActor()
         if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
         {
             Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
+            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+            Renderer->OMSetBlendState(true); // 필요 시
+
             Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+            // 상태 복구
+            Renderer->OMSetBlendState(false);
+            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
             Renderer->RSSetState(ViewModeIndex);
         }
     }

@@ -29,6 +29,8 @@ public:
     // 로컬 기준 8개 꼭짓점 반환
     std::vector<FVector> GetLocalCorners() const;
 
+    FBox GetWorldOBBFromAttachParent() const;
+
 	void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
     // Debug 렌더링용
     // void DrawDebug(ID3D11DeviceContext* DC);
