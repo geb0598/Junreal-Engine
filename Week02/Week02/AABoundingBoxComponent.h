@@ -29,8 +29,6 @@ public:
 
     TArray<FVector4> GetLocalCorners() const;
 
-    // 로컬 공간에서의 Extent (절반 크기)
-    FVector GetExtent() const;
 
     void SetPrimitiveType(EPrimitiveType InType) { PrimitiveType = InType; }
 

@@ -76,17 +76,17 @@ void AGridActor::CreateAxisLines(float Length, const FVector& Origin)
 {
     if (!LineComponent) return;
         
-    // X축 (빨강) - 원점에서 +X 방향
+    // 변환 전 X축 - 원점에서 +X 방향 => 변환 후 Y축
     LineComponent->AddLine(Origin, 
                           Origin + FVector(Length * CellSize, 0.0f, 0.0f),
                           FVector4(0.0f, 1.0f, 0.0f, 1.0f));
     
-    // Y축 (초록) - 원점에서 +Y 방향
+    // 변환 전 Y축 - 원점에서 +Y 방향 => 변환 후 Z축
     LineComponent->AddLine(Origin, 
                           Origin + FVector(0.0f, Length * CellSize, 0.0f),
                           FVector4(0.0f, 0.0f, 1.0f, 1.0f));
     
-    // Z축 (파랑) - 원점에서 +Z 방향
+    // 변환 전 Z축 - 원점에서 +Z 방향 => 변환 후 X축
     LineComponent->AddLine(Origin, 
                           Origin + FVector(0.0f, 0.0f, Length * CellSize),
                           FVector4(1.0f, 0.0f, 0.0f, 1.0f));

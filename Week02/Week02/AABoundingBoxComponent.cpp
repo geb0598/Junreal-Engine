@@ -36,16 +36,16 @@ void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMat
         TArray<FVector> End;
         TArray<FVector4> Color;
 
-        FBound WorldBound;
+        FBound WorldBound = GetWorldBoundFromCube();
         
-        if (PrimitiveType == EPrimitiveType::Sphere)
-        {
-            WorldBound = GetWorldBoundFromSphere();
-        }
-        else
-        {
-            WorldBound = GetWorldBoundFromCube();
-        }
+        //if (PrimitiveType == EPrimitiveType::Sphere)
+        //{
+        //    WorldBound = GetWorldBoundFromSphere();
+        //}
+        //else
+        //{
+        //    WorldBound = GetWorldBoundFromCube();
+        //}
 
         CreateLineData(WorldBound.Min, WorldBound.Max, Start, End, Color);
         Renderer->AddLines(Start, End, Color);
@@ -98,31 +98,6 @@ FBound UAABoundingBoxComponent::GetWorldBoundFromSphere() const
     FVector Min = WorldCenter - WorldScaleExtents;
     FVector Max = WorldCenter + WorldScaleExtents;
     return FBound(Min, Max);
-}
-
-static void LocalSphereToWorldAABB(const FVector& InSphereLocation, const FMatrix& InMatrix, FBound& Out)
-{
-    // 1) 중심 이동(평행이동 포함)
-    const FVector cw = InSphereLocation;
-
-    // 2) 선형부의 열(column) L2 노름 * r  => 축별 엑스텐트
-    const float m00 = InMatrix.M[0][0], m10 = InMatrix.M[1][0], m20 = InMatrix.M[2][0]; // col 0
-    const float m01 = InMatrix.M[0][1], m11 = InMatrix.M[1][1], m21 = InMatrix.M[2][1]; // col 1
-    const float m02 = InMatrix.M[0][2], m12 = InMatrix.M[1][2], m22 = InMatrix.M[2][2]; // col 2
-
-    FVector ew;
-    ew.X = sqrtf(m00 * m00 + m10 * m10 + m20 * m20);
-    ew.Y = sqrtf(m01 * m01 + m11 * m11 + m21 * m21);
-    ew.Z = sqrtf(m02 * m02 + m12 * m12 + m22 * m22);
-
-    // 3) 최종 AABB
-    Out.Min = cw - ew;
-    Out.Max = cw + ew;
-}
-
-FVector UAABoundingBoxComponent::GetExtent() const
-{
-    return (LocalMax - LocalMin) * 0.5f;
 }
 
 TArray<FVector4> UAABoundingBoxComponent::GetLocalCorners() const
