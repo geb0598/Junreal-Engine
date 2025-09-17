@@ -32,6 +32,14 @@ void USceneManagerWidget::Initialize()
 
 void USceneManagerWidget::Update()
 {
+    // 지연된 새로고침 처리 (렌더링 중 iterator invalidation 방지)
+    if (bNeedRefreshNextFrame)
+    {
+        RefreshActorTree();
+        bNeedRefreshNextFrame = false;
+        return; // 이번 프레임은 새로고침만 하고 끝
+    }
+    
     // Check if we need to refresh (world changed or actors added/removed)
     static size_t LastActorCount = 0;
     
@@ -44,6 +52,47 @@ void USceneManagerWidget::Update()
             RefreshActorTree();
             LastActorCount = CurrentActorCount;
         }
+        
+        // 추가: 트리의 액터들이 실제로 World에 존재하는지 확인
+        bool bNeedRefresh = false;
+        const TArray<AActor*>& WorldActors = World->GetActors();
+        
+        for (auto* RootNode : RootNodes)
+        {
+            if (RootNode && RootNode->IsActor())
+            {
+                // 노드의 액터가 null이거나, World에 없으면 새로고침
+                if (!RootNode->Actor || 
+                    std::find(WorldActors.begin(), WorldActors.end(), RootNode->Actor) == WorldActors.end())
+                {
+                    bNeedRefresh = true;
+                    break;
+                }
+            }
+            
+            // 카테고리 노드의 자식들도 확인
+            if (RootNode && RootNode->IsCategory())
+            {
+                for (auto* Child : RootNode->Children)
+                {
+                    if (Child && Child->IsActor())
+                    {
+                        if (!Child->Actor || 
+                            std::find(WorldActors.begin(), WorldActors.end(), Child->Actor) == WorldActors.end())
+                        {
+                            bNeedRefresh = true;
+                            break;
+                        }
+                    }
+                }
+                if (bNeedRefresh) break;
+            }
+        }
+        
+        if (bNeedRefresh)
+        {
+            RequestDelayedRefresh();
+        }
     }
     else if (LastActorCount != 0)
     {
@@ -53,6 +102,14 @@ void USceneManagerWidget::Update()
     
     // Sync selection from viewport
     SyncSelectionFromViewport();
+    
+    // 정기적으로 SelectionManager 정리 (매 프레임마다 하지 않고 가끔씩)
+    static int32 CleanupCounter = 0;
+    CleanupCounter++;
+    if (CleanupCounter % 60 == 0 && SelectionManager) // 약 1초마다
+    {
+        SelectionManager->CleanupInvalidActors();
+    }
 }
 
 void USceneManagerWidget::RenderWidget()
@@ -78,14 +135,57 @@ void USceneManagerWidget::RenderWidget()
     // Actor tree view
     ImGui::BeginChild("ActorTreeView", ImVec2(0, -30), true);
     
-    for (auto* RootNode : RootNodes)
+    // 렌더링 전에 트리 유효성 사전 검사
+    bool bTreeNeedsRefresh = false;
+    if (World)
     {
-        if (RootNode)
+        const TArray<AActor*>& WorldActors = World->GetActors();
+        for (auto* RootNode : RootNodes)
         {
-            // Categories are always shown, individual actors are filtered
-            if (RootNode->IsCategory() || ShouldShowActor(RootNode->Actor))
+            if (RootNode && RootNode->IsActor())
             {
-                RenderActorNode(RootNode);
+                if (!RootNode->Actor || 
+                    std::find(WorldActors.begin(), WorldActors.end(), RootNode->Actor) == WorldActors.end())
+                {
+                    bTreeNeedsRefresh = true;
+                    break;
+                }
+            }
+            if (RootNode && RootNode->IsCategory())
+            {
+                for (auto* Child : RootNode->Children)
+                {
+                    if (Child && Child->IsActor())
+                    {
+                        if (!Child->Actor || 
+                            std::find(WorldActors.begin(), WorldActors.end(), Child->Actor) == WorldActors.end())
+                        {
+                            bTreeNeedsRefresh = true;
+                            break;
+                        }
+                    }
+                }
+                if (bTreeNeedsRefresh) break;
+            }
+        }
+    }
+    
+    if (bTreeNeedsRefresh)
+    {
+        ImGui::Text("로딩 중...");
+        RequestDelayedRefresh();
+    }
+    else
+    {
+        for (auto* RootNode : RootNodes)
+        {
+            if (RootNode)
+            {
+                // Categories are always shown, individual actors are filtered
+                if (RootNode->IsCategory() || ShouldShowActor(RootNode->Actor))
+                {
+                    RenderActorNode(RootNode);
+                }
             }
         }
     }
@@ -100,10 +200,23 @@ void USceneManagerWidget::RenderWidget()
     
     // Status bar
     ImGui::Separator();
-    AActor* SelectedActor = SelectionManager->GetSelectedActor();
+    AActor* SelectedActor = SelectionManager ? SelectionManager->GetSelectedActor() : nullptr;
     if (SelectedActor)
     {
-        ImGui::Text("Selected: %s", SelectedActor->GetName().c_str());
+        // 액터 이름을 가져오기 전에 안전성 확인
+        try 
+        {
+            ImGui::Text("Selected: %s", SelectedActor->GetName().c_str());
+        }
+        catch (...)
+        {
+            ImGui::Text("Selected: [Invalid Actor]");
+            // 유효하지 않은 액터를 정리
+            if (SelectionManager)
+            {
+                SelectionManager->CleanupInvalidActors();
+            }
+        }
     }
     else
     {
@@ -158,7 +271,7 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     
     // Handle actor nodes
     if (!Node->Actor)
-        return;
+        return; // 이미 사전 검사에서 걸러졌어야 하지만 방어 코드
     
     AActor* Actor = Node->Actor;
     
@@ -184,6 +297,14 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     // Create unique ID for ImGui
     ImGui::PushID(Actor);
     
+    // 액터 유효성 재확인 - 삭제된 액터일 수 있음
+    if (!Actor)
+    {
+        ImGui::PopID();
+        RefreshActorTree();
+        return;
+    }
+    
     // Sync node visibility with actual actor state each frame
     Node->bIsVisible = Actor->IsActorVisible();
     
@@ -199,6 +320,11 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     ImGui::SameLine();
     
     // Actor name and tree node
+    if (!Actor)
+    {
+        return;
+    }
+
     bool bNodeOpen = ImGui::TreeNodeEx(Actor->GetName().c_str(), NodeFlags);
     
     // Handle selection
@@ -533,8 +659,22 @@ USceneManagerWidget::FActorTreeNode* USceneManagerWidget::FindNodeByActor(AActor
 
 void USceneManagerWidget::SyncSelectionFromViewport()
 {
-    // This would be called to sync selection from 3D viewport to outliner
-    // Currently the selection system is already centralized via SelectionManager
+    // SelectionManager에서 null 액터들을 정리
+    if (SelectionManager)
+    {
+        SelectionManager->CleanupInvalidActors();
+    }
+    
+    // 선택된 액터가 null인지 확인
+    AActor* SelectedActor = SelectionManager ? SelectionManager->GetSelectedActor() : nullptr;
+    if (!SelectedActor)
+    {
+        // 선택된 액터가 null이면 UI를 업데이트
+        if (UIManager)
+        {
+            UIManager->ResetPickedActor();
+        }
+    }
 }
 
 void USceneManagerWidget::SyncSelectionToViewport(AActor* Actor)

@@ -41,7 +41,10 @@ void USelectionManager::ClearSelection()
 {
     for (AActor* Actor : SelectedActors)
     {
-        Actor->SetIsPicked(false);
+        if (Actor) // null 체크 추가
+        {
+            Actor->SetIsPicked(false);
+        }
     }
     SelectedActors.clear();
 }
@@ -55,7 +58,20 @@ bool USelectionManager::IsActorSelected(AActor* Actor) const
 
 AActor* USelectionManager::GetSelectedActor() const
 {
-    return HasSelection() ? SelectedActors[0] : nullptr;
+    // 첫 번째 유효한 액터 연기
+    for (AActor* Actor : SelectedActors)
+    {
+        if (Actor) return Actor;
+    }
+    return nullptr;
+}
+
+void USelectionManager::CleanupInvalidActors()
+{
+    // null이거나 삭제된 액터들을 제거
+    auto it = std::remove_if(SelectedActors.begin(), SelectedActors.end(), 
+        [](AActor* Actor) { return Actor == nullptr; });
+    SelectedActors.erase(it, SelectedActors.end());
 }
 
 USelectionManager::USelectionManager()

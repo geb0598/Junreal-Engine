@@ -49,7 +49,27 @@ void UTargetActorTransformWidget::Update()
 {
 	// UIManager를 통해 현재 선택된 액터 가져오기
 	AActor* CurrentSelectedActor = GetCurrentSelectedActor();
-	SelectedActor = CurrentSelectedActor;
+	if (SelectedActor != CurrentSelectedActor)
+	{
+		SelectedActor = CurrentSelectedActor;
+		// 새로 선택된 액터의 이름 캐시
+		if (SelectedActor)
+		{
+			try
+			{
+				CachedActorName = SelectedActor->GetName();
+			}
+			catch (...)
+			{
+				CachedActorName = "[Invalid Actor]";
+				SelectedActor = nullptr;
+			}
+		}
+		else
+		{
+			CachedActorName = "";
+		}
+	}
 
 	// GizmoActor 참조 업데이트
 	if (!GizmoActor && UIManager)
@@ -113,9 +133,9 @@ void UTargetActorTransformWidget::RenderWidget()
 	
 	if (SelectedActor)
 	{
-		// 액터 이름 표시
+		// 액터 이름 표시 (캐시된 이름 사용)
 		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", 
-		                   SelectedActor->GetName().c_str());
+		                   CachedActorName.c_str());
 		ImGui::Spacing();
 		
 		// Location 편집

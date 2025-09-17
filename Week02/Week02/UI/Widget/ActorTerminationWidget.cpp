@@ -35,6 +35,23 @@ void UActorTerminationWidget::Update()
 		if (SelectedActor != CurrentSelectedActor)
 		{
 			SelectedActor = CurrentSelectedActor;
+			// 새로 선택된 액터의 이름을 안전하게 캐시
+			if (SelectedActor)
+			{
+				try 
+				{
+					CachedActorName = SelectedActor->GetName();
+				}
+				catch (...)
+				{
+					CachedActorName = "[Invalid Actor]";
+					SelectedActor = nullptr;
+				}
+			}
+			else
+			{
+				CachedActorName = "";
+			}
 		}
 	}
 }
@@ -45,8 +62,9 @@ void UActorTerminationWidget::RenderWidget()
 
 	if (SelectedActor)
 	{
+		// 캐시된 이름 사용하여 안전하게 출력
 		ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.6f, 1.0f), "Selected: %s (%p)",
-		                   SelectedActor->GetName().c_str(), SelectedActor);
+		                   CachedActorName.c_str(), SelectedActor);
 
 		if (ImGui::Button("Delete Selected") || InputManager.IsKeyPressed(VK_DELETE))
 		{
@@ -86,16 +104,22 @@ void UActorTerminationWidget::DeleteSelectedActor()
 		return;
 	}
 
+	// 안전한 로깅을 위해 캐시된 이름 사용
 	UE_LOG("ActorTerminationWidget: Deleting Selected Actor: %s (%p)",
-	       SelectedActor->GetName().empty() ? "UnNamed" : SelectedActor->GetName().c_str(),
+	       CachedActorName.empty() ? "UnNamed" : CachedActorName.c_str(),
 	       SelectedActor);
 
+	// 삭제 전에 로컬 변수에 저장
+	AActor* ActorToDelete = SelectedActor;
+	
+	// 즉시 UI 상태 정리
+	SelectedActor = nullptr;
+	CachedActorName = "";
+	UIManager->ResetPickedActor();
+
 	// World를 통해 액터 삭제
-	if (World->DestroyActor(SelectedActor))
+	if (World->DestroyActor(ActorToDelete))
 	{
-		// UIManager의 선택 상태도 초기화
-		UIManager->ResetPickedActor();
-		SelectedActor = nullptr;
 		UE_LOG("ActorTerminationWidget: Actor successfully deleted");
 	}
 	else

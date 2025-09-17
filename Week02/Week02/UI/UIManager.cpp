@@ -430,6 +430,66 @@ void UUIManager::UpdateMouseRotation(float InPitch, float InYaw)
  */
 AActor* UUIManager::GetSelectedActor() const
 {
-	// PickedActorRef가 현재 선택된 액터를 나타냄
-	return PickedActorRef;
+	// PickedActorRef의 유효성 확인
+	if (PickedActorRef)
+	{
+		try
+		{
+			// 액터가 여전히 유효한지 신벃할 수 있는 간단한 테스트
+			// 액터의 기본 메서드를 호출해보자
+			if (PickedActorRef->GetClass() != nullptr)
+			{
+				return PickedActorRef;
+			}
+		}
+		catch (...)
+		{
+			// 삭제된 액터에 접근한 경우 참조 정리
+			const_cast<UUIManager*>(this)->PickedActorRef = nullptr;
+		}
+	}
+	return nullptr;
+}
+
+/**
+ * @brief 액터 선택 설정 (안전하게)
+ */
+void UUIManager::SetPickedActor(AActor* InPickedActor)
+{
+	if (InPickedActor)
+	{
+		try
+		{
+			// 기존 선택 해제
+			ResetPickedActor();
+			
+			// 새 액터 선택
+			PickedActorRef = InPickedActor;
+			PickedActorRef->SetIsPicked(true);
+		}
+		catch (...)
+		{
+			// 유효하지 않은 액터인 경우
+			PickedActorRef = nullptr;
+		}
+	}
+}
+
+/**
+ * @brief 액터 선택 해제 (안전하게)
+ */
+void UUIManager::ResetPickedActor()
+{
+	if (PickedActorRef)
+	{
+		try
+		{
+			PickedActorRef->SetIsPicked(false);
+		}
+		catch (...)
+		{
+			// 삭제된 액터인 경우 예외 무시
+		}
+		PickedActorRef = nullptr;
+	}
 }

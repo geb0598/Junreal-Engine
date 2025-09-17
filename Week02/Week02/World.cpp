@@ -311,19 +311,28 @@ bool UWorld::DestroyActor(AActor* Actor)
         return false; // nullptr 들어옴 → 실패
     }
 
+    // SelectionManager에서 선택 해제 (메모리 해제 전에 하자)
+    USelectionManager::GetInstance().DeselectActor(Actor);
+    
+    // UIManager에서 픽된 액터 정리
+    if (UIManager.GetPickedActor() == Actor)
+    {
+        UIManager.ResetPickedActor();
+    }
+
     // 배열에서 제거 시도
     auto it = std::find(Actors.begin(), Actors.end(), Actor);
     if (it != Actors.end())
     {
-        if (*it == USelectionManager::GetInstance().GetSelectedActor())
-        {
-            USelectionManager::GetInstance().DeselectActor(*it);
-        }
         Actors.erase(it);
 
         // 메모리 해제
         ObjectFactory::DeleteObject(Actor);
-        return true; // 성공적으로 삭제
+        
+		// 삭제된 액터 정리
+		USelectionManager::GetInstance().CleanupInvalidActors();
+		
+		return true; // 성공적으로 삭제
     }
 
     return false; // 월드에 없는 액터

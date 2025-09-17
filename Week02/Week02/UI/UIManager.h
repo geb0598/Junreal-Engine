@@ -67,9 +67,9 @@ public:
 	AGizmoActor* GetGizmoActor() const { return GizmoActorRef; }
 	void SetCamera(ACameraActor* InCameraActor) { CameraActorRef = InCameraActor; }
 	ACameraActor* GetCamera() const { return CameraActorRef; }
-	void SetPickedActor(AActor* InPickedActor) { if (InPickedActor) { PickedActorRef = InPickedActor; PickedActorRef->SetIsPicked(true); } }
+	void SetPickedActor(AActor* InPickedActor);
 	AActor* GetPickedActor() const { return PickedActorRef; }
-	void ResetPickedActor() { if (PickedActorRef) { PickedActorRef->SetIsPicked(false); PickedActorRef = nullptr; } }
+	void ResetPickedActor();
 	
 	// Selection management helper
 	AActor* GetSelectedActor() const;

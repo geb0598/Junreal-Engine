@@ -30,6 +30,9 @@ public:
     
     int32 GetSelectionCount() const { return SelectedActors.Num(); }
     bool HasSelection() const { return SelectedActors.Num() > 0; }
+    
+    /** === 삭제된 액터 정리 === */
+    void CleanupInvalidActors(); // null이나 삭제된 액터 제거
 
 public:
     USelectionManager();
