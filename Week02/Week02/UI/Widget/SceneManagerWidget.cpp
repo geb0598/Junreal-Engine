@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "WorldOutlinerWidget.h"
+#include "SceneManagerWidget.h"
 #include "../UIManager.h"
 #include "../../ImGui/imgui.h"
 #include "../../World.h"
@@ -12,25 +12,25 @@
 // UE_LOG 대체 매크로
 #define UE_LOG(fmt, ...)
 
-UWorldOutlinerWidget::UWorldOutlinerWidget()
-    : UWidget("World Outliner")
+USceneManagerWidget::USceneManagerWidget()
+    : UWidget("Scene Manager")
     , UIManager(&UUIManager::GetInstance())
     , SelectionManager(&USelectionManager::GetInstance())
 {
 }
 
-UWorldOutlinerWidget::~UWorldOutlinerWidget()
+USceneManagerWidget::~USceneManagerWidget()
 {
     ClearActorTree();
 }
 
-void UWorldOutlinerWidget::Initialize()
+void USceneManagerWidget::Initialize()
 {
     UIManager = &UUIManager::GetInstance();
     SelectionManager = &USelectionManager::GetInstance();
 }
 
-void UWorldOutlinerWidget::Update()
+void USceneManagerWidget::Update()
 {
     // Check if we need to refresh (world changed or actors added/removed)
     static size_t LastActorCount = 0;
@@ -55,9 +55,9 @@ void UWorldOutlinerWidget::Update()
     SyncSelectionFromViewport();
 }
 
-void UWorldOutlinerWidget::RenderWidget()
+void USceneManagerWidget::RenderWidget()
 {
-    ImGui::Text("World Outliner");
+    ImGui::Text("Scene Manager");
     ImGui::Spacing();
     
     // Toolbar
@@ -111,14 +111,14 @@ void UWorldOutlinerWidget::RenderWidget()
     }
 }
 
-UWorld* UWorldOutlinerWidget::GetCurrentWorld() const
+UWorld* USceneManagerWidget::GetCurrentWorld() const
 {
     if (!UIManager)
         return nullptr;
     return UIManager->GetWorld();
 }
 
-void UWorldOutlinerWidget::RefreshActorTree()
+void USceneManagerWidget::RefreshActorTree()
 {
     UWorld* World = GetCurrentWorld();
     if (!World)
@@ -134,7 +134,7 @@ void UWorldOutlinerWidget::RefreshActorTree()
     BuildActorHierarchy();
 }
 
-void UWorldOutlinerWidget::BuildActorHierarchy()
+void USceneManagerWidget::BuildActorHierarchy()
 {
     UWorld* World = GetCurrentWorld();
     if (!World)
@@ -144,7 +144,7 @@ void UWorldOutlinerWidget::BuildActorHierarchy()
     BuildCategorizedHierarchy();
 }
 
-void UWorldOutlinerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
+void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
 {
     if (!Node)
         return;
@@ -256,7 +256,7 @@ void UWorldOutlinerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     ImGui::PopID();
 }
 
-bool UWorldOutlinerWidget::ShouldShowActor(AActor* Actor) const
+bool USceneManagerWidget::ShouldShowActor(AActor* Actor) const
 {
     if (!Actor)
         return false;
@@ -268,7 +268,7 @@ bool UWorldOutlinerWidget::ShouldShowActor(AActor* Actor) const
     return true;
 }
 
-void UWorldOutlinerWidget::HandleActorSelection(AActor* Actor)
+void USceneManagerWidget::HandleActorSelection(AActor* Actor)
 {
     if (!Actor || !SelectionManager)
         return;
@@ -289,10 +289,10 @@ void UWorldOutlinerWidget::HandleActorSelection(AActor* Actor)
         }
     }
     
-    UE_LOG("WorldOutliner: Selected actor %s", Actor->GetName().c_str());
+    UE_LOG("SceneManager: Selected actor %s", Actor->GetName().c_str());
 }
 
-void UWorldOutlinerWidget::HandleActorVisibilityToggle(AActor* Actor)
+void USceneManagerWidget::HandleActorVisibilityToggle(AActor* Actor)
 {
     if (!Actor)
         return;
@@ -306,18 +306,18 @@ void UWorldOutlinerWidget::HandleActorVisibilityToggle(AActor* Actor)
     if (Node)
     {
         Node->bIsVisible = Actor->IsActorVisible();
-        UE_LOG("WorldOutliner: Toggled visibility for %s: %s", 
+        UE_LOG("SceneManager: Toggled visibility for %s: %s", 
                Actor->GetName().c_str(), Node->bIsVisible ? "Visible" : "Hidden");
     }
 }
 
-void UWorldOutlinerWidget::HandleActorRename(AActor* Actor)
+void USceneManagerWidget::HandleActorRename(AActor* Actor)
 {
     // TODO: Implement inline renaming
-    UE_LOG("WorldOutliner: Rename not implemented yet");
+    UE_LOG("SceneManager: Rename not implemented yet");
 }
 
-void UWorldOutlinerWidget::HandleActorDelete(AActor* Actor)
+void USceneManagerWidget::HandleActorDelete(AActor* Actor)
 {
     if (!Actor)
         return;
@@ -326,17 +326,17 @@ void UWorldOutlinerWidget::HandleActorDelete(AActor* Actor)
     if (World)
     {
         World->DestroyActor(Actor);
-        UE_LOG("WorldOutliner: Deleted actor %s", Actor->GetName().c_str());
+        UE_LOG("SceneManager: Deleted actor %s", Actor->GetName().c_str());
     }
 }
 
-void UWorldOutlinerWidget::HandleActorDuplicate(AActor* Actor)
+void USceneManagerWidget::HandleActorDuplicate(AActor* Actor)
 {
     // TODO: Implement actor duplication
-    UE_LOG("WorldOutliner: Duplicate not implemented yet");
+    UE_LOG("SceneManager: Duplicate not implemented yet");
 }
 
-void UWorldOutlinerWidget::RenderContextMenu()
+void USceneManagerWidget::RenderContextMenu()
 {
     if (ImGui::BeginPopup("ActorContextMenu"))
     {
@@ -411,7 +411,7 @@ void UWorldOutlinerWidget::RenderContextMenu()
     }
 }
 
-void UWorldOutlinerWidget::RenderToolbar()
+void USceneManagerWidget::RenderToolbar()
 {
     // Filter toggles
     ImGui::Checkbox("Selected Only", &bShowOnlySelectedObjects);
@@ -493,7 +493,7 @@ void UWorldOutlinerWidget::RenderToolbar()
     }
 }
 
-void UWorldOutlinerWidget::ClearActorTree()
+void USceneManagerWidget::ClearActorTree()
 {
     for (auto* Node : RootNodes)
     {
@@ -502,7 +502,7 @@ void UWorldOutlinerWidget::ClearActorTree()
     RootNodes.clear();
 }
 
-UWorldOutlinerWidget::FActorTreeNode* UWorldOutlinerWidget::FindNodeByActor(AActor* Actor)
+USceneManagerWidget::FActorTreeNode* USceneManagerWidget::FindNodeByActor(AActor* Actor)
 {
     if (!Actor)
         return nullptr;
@@ -531,20 +531,20 @@ UWorldOutlinerWidget::FActorTreeNode* UWorldOutlinerWidget::FindNodeByActor(AAct
     return nullptr;
 }
 
-void UWorldOutlinerWidget::SyncSelectionFromViewport()
+void USceneManagerWidget::SyncSelectionFromViewport()
 {
     // This would be called to sync selection from 3D viewport to outliner
     // Currently the selection system is already centralized via SelectionManager
 }
 
-void UWorldOutlinerWidget::SyncSelectionToViewport(AActor* Actor)
+void USceneManagerWidget::SyncSelectionToViewport(AActor* Actor)
 {
     // Selection is already handled via SelectionManager
     // The 3D viewport will automatically respond to selection changes
 }
 
 // Category Management Implementation
-FString UWorldOutlinerWidget::GetActorCategory(AActor* Actor) const
+FString USceneManagerWidget::GetActorCategory(AActor* Actor) const
 {
     if (!Actor)
         return "Unknown";
@@ -562,7 +562,7 @@ FString UWorldOutlinerWidget::GetActorCategory(AActor* Actor) const
     return ActorName;
 }
 
-UWorldOutlinerWidget::FActorTreeNode* UWorldOutlinerWidget::FindOrCreateCategoryNode(const FString& CategoryName)
+USceneManagerWidget::FActorTreeNode* USceneManagerWidget::FindOrCreateCategoryNode(const FString& CategoryName)
 {
     // Look for existing category node in root nodes
     for (FActorTreeNode* Node : RootNodes)
@@ -579,7 +579,7 @@ UWorldOutlinerWidget::FActorTreeNode* UWorldOutlinerWidget::FindOrCreateCategory
     return CategoryNode;
 }
 
-void UWorldOutlinerWidget::BuildCategorizedHierarchy()
+void USceneManagerWidget::BuildCategorizedHierarchy()
 {
     UWorld* World = GetCurrentWorld();
     if (!World)
@@ -624,7 +624,7 @@ void UWorldOutlinerWidget::BuildCategorizedHierarchy()
     }
 }
 
-void UWorldOutlinerWidget::HandleCategorySelection(FActorTreeNode* CategoryNode)
+void USceneManagerWidget::HandleCategorySelection(FActorTreeNode* CategoryNode)
 {
     if (!CategoryNode || !CategoryNode->IsCategory())
         return;
@@ -632,12 +632,12 @@ void UWorldOutlinerWidget::HandleCategorySelection(FActorTreeNode* CategoryNode)
     // Toggle category expansion
     CategoryNode->bIsExpanded = !CategoryNode->bIsExpanded;
     
-    UE_LOG("WorldOutliner: Toggled category %s: %s", 
+    UE_LOG("SceneManager: Toggled category %s: %s", 
            CategoryNode->CategoryName.c_str(), 
            CategoryNode->bIsExpanded ? "Expanded" : "Collapsed");
 }
 
-void UWorldOutlinerWidget::HandleCategoryVisibilityToggle(FActorTreeNode* CategoryNode)
+void USceneManagerWidget::HandleCategoryVisibilityToggle(FActorTreeNode* CategoryNode)
 {
     if (!CategoryNode || !CategoryNode->IsCategory())
         return;
@@ -655,12 +655,12 @@ void UWorldOutlinerWidget::HandleCategoryVisibilityToggle(FActorTreeNode* Catego
         }
     }
     
-    UE_LOG("WorldOutliner: Toggled category visibility %s: %s", 
+    UE_LOG("SceneManager: Toggled category visibility %s: %s", 
            CategoryNode->CategoryName.c_str(), 
            CategoryNode->bIsVisible ? "Visible" : "Hidden");
 }
 
-void UWorldOutlinerWidget::RenderCategoryNode(FActorTreeNode* CategoryNode, int32 Depth)
+void USceneManagerWidget::RenderCategoryNode(FActorTreeNode* CategoryNode, int32 Depth)
 {
     if (!CategoryNode || !CategoryNode->IsCategory())
         return;
@@ -721,7 +721,7 @@ void UWorldOutlinerWidget::RenderCategoryNode(FActorTreeNode* CategoryNode, int3
     ImGui::PopID();
 }
 
-void UWorldOutlinerWidget::ExpandAllCategories()
+void USceneManagerWidget::ExpandAllCategories()
 {
     for (FActorTreeNode* RootNode : RootNodes)
     {
@@ -730,10 +730,10 @@ void UWorldOutlinerWidget::ExpandAllCategories()
             RootNode->bIsExpanded = true;
         }
     }
-    UE_LOG("WorldOutliner: Expanded all categories");
+    UE_LOG("SceneManager: Expanded all categories");
 }
 
-void UWorldOutlinerWidget::CollapseAllCategories()
+void USceneManagerWidget::CollapseAllCategories()
 {
     for (FActorTreeNode* RootNode : RootNodes)
     {
@@ -742,6 +742,6 @@ void UWorldOutlinerWidget::CollapseAllCategories()
             RootNode->bIsExpanded = false;
         }
     }
-    UE_LOG("WorldOutliner: Collapsed all categories");
+    UE_LOG("SceneManager: Collapsed all categories");
 }
 

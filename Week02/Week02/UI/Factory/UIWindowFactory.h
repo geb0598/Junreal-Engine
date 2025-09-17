@@ -5,9 +5,9 @@
 class UConsoleWindow;
 class UControlPanelWindow;
 class UExperimentalFeatureWindow;
-class UOutlinerWindow;
+class USceneWindow;
 class UCameraPanelWindow;
-class UWorldOutlinerWidget;
+class USceneManagerWidget;
 class UDetailsPanelWidget;
 
 /**
@@ -34,12 +34,12 @@ public:
 	static void CreateDefaultUILayout();
 	static UConsoleWindow* CreateConsoleWindow(EUIDockDirection InDockDirection = EUIDockDirection::Bottom);
 	static UControlPanelWindow* CreateControlPanelWindow(EUIDockDirection InDockDirection = EUIDockDirection::Left);
-	static UOutlinerWindow* CreateOutlinerWindow(EUIDockDirection InDockDirection = EUIDockDirection::Center);
+	static USceneWindow* CreateSceneWindow(EUIDockDirection InDockDirection = EUIDockDirection::Center);
 	static UExperimentalFeatureWindow*
 		CreateExperimentalFeatureWindow(EUIDockDirection InDockDirection = EUIDockDirection::Right);
 	
 	// Object Management Widgets (Unreal Engine style)
-	static UWorldOutlinerWidget* CreateWorldOutlinerWidget(EUIDockDirection InDockDirection = EUIDockDirection::Left);
+	static USceneManagerWidget* CreateSceneManagerWidget(EUIDockDirection InDockDirection = EUIDockDirection::Left);
 	static UDetailsPanelWidget* CreateDetailsPanelWidget(EUIDockDirection InDockDirection = EUIDockDirection::Right);
 	static void CreateObjectManagementLayout(); // Creates both outliner and details panel
 };

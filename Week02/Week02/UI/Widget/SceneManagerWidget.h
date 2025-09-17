@@ -9,24 +9,24 @@ class AActor;
 class USelectionManager;
 
 /**
- * WorldOutlinerWidget
+ * SceneManagerWidget
  * - Unreal Engine style hierarchical object browser
  * - Shows all actors in the world in a tree view
  * - Supports selection, visibility toggle, hierarchy management
  * - Syncs with 3D viewport selection
  */
-class UWorldOutlinerWidget : public UWidget
+class USceneManagerWidget : public UWidget
 {
 public:
-    DECLARE_CLASS(UWorldOutlinerWidget, UWidget)
+    DECLARE_CLASS(USceneManagerWidget, UWidget)
     
     void Initialize() override;
     void Update() override;
     void RenderWidget() override;
     
     // Special Member Functions
-    UWorldOutlinerWidget();
-    ~UWorldOutlinerWidget() override;
+    USceneManagerWidget();
+    ~USceneManagerWidget() override;
 
 private:
     UUIManager* UIManager = nullptr;

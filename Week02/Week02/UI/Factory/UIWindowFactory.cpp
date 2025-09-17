@@ -4,7 +4,7 @@
 #include "../Window/ConsoleWindow.h"  // 새로운 ConsoleWindow 사용
 #include "../Window/ControlPanelWindow.h"
 #include "../Window/ExperimentalFeatureWindow.h"
-#include "../Window/OutlinerWindow.h"
+#include "../Window/SceneWindow.h"
 #include "../GlobalConsole.h"
 
 UConsoleWindow* UUIWindowFactory::CreateConsoleWindow(EUIDockDirection InDockDirection)
@@ -21,9 +21,9 @@ UControlPanelWindow* UUIWindowFactory::CreateControlPanelWindow(EUIDockDirection
 	return Window;
 }
 
-UOutlinerWindow* UUIWindowFactory::CreateOutlinerWindow(EUIDockDirection InDockDirection)
+USceneWindow* UUIWindowFactory::CreateSceneWindow(EUIDockDirection InDockDirection)
 {
-	auto* Window = new UOutlinerWindow();
+	auto* Window = new USceneWindow();
 	Window->GetMutableConfig().DockDirection = InDockDirection;
 	return Window;
 }
@@ -51,7 +51,7 @@ void UUIWindowFactory::CreateDefaultUILayout()
 	UE_LOG("Console 시스템이 정상적으로 동작하고 있습니다");
 	
 	UIManager.RegisterUIWindow(CreateControlPanelWindow(EUIDockDirection::Left));
-	UIManager.RegisterUIWindow(CreateOutlinerWindow(EUIDockDirection::Center));
+	UIManager.RegisterUIWindow(CreateSceneWindow(EUIDockDirection::Center));
 	UIManager.RegisterUIWindow(CreateExperimentalFeatureWindow(EUIDockDirection::Right));
 	
 	// 모든 UI 생성 완료 메시지

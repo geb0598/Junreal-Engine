@@ -23,12 +23,12 @@
 #include "UI/Widget/PrimitiveSpawnWidget.h"
 #include "UI/Widget/SceneIOWidget.h"
 #include "UI/Widget/TargetActorTransformWidget.h"
-#include "UI/Widget/WorldOutlinerWidget.h"
+#include "UI/Widget/SceneManagerWidget.h"
 #include "UI/Widget/Widget.h"
 #include "UI/Window/ConsoleWindow.h"
 #include "UI/Window/ControlPanelWindow.h"
 #include "UI/Window/ExperimentalFeatureWindow.h"
-#include "UI/Window/OutlinerWindow.h"
+#include "UI/Window/SceneWindow.h"
 #include "UI/Window/UIWindow.h"
 #include "TextRenderComponent.h"
 #include "AABoundingBoxComponent.h"
@@ -84,13 +84,13 @@ IMPLEMENT_CLASS(UInputInformationWidget)
 IMPLEMENT_CLASS(UPrimitiveSpawnWidget)
 IMPLEMENT_CLASS(USceneIOWidget)
 IMPLEMENT_CLASS(UTargetActorTransformWidget)
-IMPLEMENT_CLASS(UWorldOutlinerWidget)
+IMPLEMENT_CLASS(USceneManagerWidget)
 
 IMPLEMENT_CLASS(UUIWindow)
 IMPLEMENT_CLASS(UConsoleWindow)
 IMPLEMENT_CLASS(UControlPanelWindow)
 IMPLEMENT_CLASS(UExperimentalFeatureWindow)
-IMPLEMENT_CLASS(UOutlinerWindow)
+IMPLEMENT_CLASS(USceneWindow)
 
 IMPLEMENT_CLASS(UGlobalConsole)
 

@@ -250,13 +250,13 @@
     <ClCompile Include="UI\Widget\InputInformationWidget.cpp" />
     <ClCompile Include="UI\Widget\PrimitiveSpawnWidget.cpp" />
     <ClCompile Include="UI\Widget\SceneIOWidget.cpp" />
+    <ClCompile Include="UI\Widget\SceneManagerWidget.cpp" />
     <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp" />
-    <ClCompile Include="UI\Widget\WorldOutlinerWidget.cpp" />
     <ClCompile Include="UI\Widget\Widget.cpp" />
     <ClCompile Include="UI\Window\ConsoleWindow.cpp" />
     <ClCompile Include="UI\Window\ControlPanelWindow.cpp" />
     <ClCompile Include="UI\Window\ExperimentalFeatureWindow.cpp" />
-    <ClCompile Include="UI\Window\OutlinerWindow.cpp" />
+    <ClCompile Include="UI\Window\SceneWindow.cpp" />
     <ClCompile Include="UI\Window\UIWindow.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
@@ -341,12 +341,13 @@
     <ClInclude Include="UI\Widget\InputInformationWidget.h" />
     <ClInclude Include="UI\Widget\PrimitiveSpawnWidget.h" />
     <ClInclude Include="UI\Widget\SceneIOWidget.h" />
+    <ClInclude Include="UI\Widget\SceneManagerWidget.h" />
     <ClInclude Include="UI\Widget\TargetActorTransformWidget.h" />
     <ClInclude Include="UI\Widget\Widget.h" />
     <ClInclude Include="UI\Window\ConsoleWindow.h" />
     <ClInclude Include="UI\Window\ControlPanelWindow.h" />
     <ClInclude Include="UI\Window\ExperimentalFeatureWindow.h" />
-    <ClInclude Include="UI\Window\OutlinerWindow.h" />
+    <ClInclude Include="UI\Window\SceneWindow.h" />
     <ClInclude Include="UI\Window\UIWindow.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="VertexData.h" />

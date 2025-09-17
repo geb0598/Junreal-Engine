@@ -82,6 +82,12 @@
     <Filter Include="헤더 파일\Bounding">
       <UniqueIdentifier>{9d7a6e99-f7e7-42c5-907a-f6c0e5fbff81}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\UI\SceneManager">
+      <UniqueIdentifier>{3d28b57c-62e7-4c0b-a504-d4eb54611134}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\UI\SceneManager">
+      <UniqueIdentifier>{5ef8f6f5-bfcd-4cb7-9966-97150b8441ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -213,9 +219,6 @@
     <ClCompile Include="UI\Window\ExperimentalFeatureWindow.cpp">
       <Filter>소스 파일\UI\Window</Filter>
     </ClCompile>
-    <ClCompile Include="UI\Window\OutlinerWindow.cpp">
-      <Filter>소스 파일\UI\Window</Filter>
-    </ClCompile>
     <ClCompile Include="UI\Widget\ActorTerminationWidget.cpp">
       <Filter>소스 파일\UI\Widget</Filter>
     </ClCompile>
@@ -291,11 +294,14 @@
     <ClCompile Include="LineComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="UI\Widget\WorldOutlinerWidget.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="OBoundingBoxComponent.cpp">
       <Filter>소스 파일\Bounding</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\SceneManagerWidget.cpp">
+      <Filter>소스 파일\UI\SceneManager</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\SceneWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -470,9 +476,6 @@
     <ClInclude Include="UI\Window\ExperimentalFeatureWindow.h">
       <Filter>헤더 파일\UI\Window</Filter>
     </ClInclude>
-    <ClInclude Include="UI\Window\OutlinerWindow.h">
-      <Filter>헤더 파일\UI\Window</Filter>
-    </ClInclude>
     <ClInclude Include="UI\Widget\InputInformationWidget.h">
       <Filter>헤더 파일\UI\Widget</Filter>
     </ClInclude>
@@ -532,6 +535,12 @@
     </ClInclude>
     <ClInclude Include="OBoundingBoxComponent.h">
       <Filter>헤더 파일\Bounding</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\SceneManagerWidget.h">
+      <Filter>헤더 파일\UI\SceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\SceneWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "OutlinerWindow.h"
-#include "../Widget/WorldOutlinerWidget.h"
+#include "SceneWindow.h"
+#include "../Widget/SceneManagerWidget.h"
 
 // UE_LOG 대체 매크로
 #define UE_LOG(fmt, ...)
 
-UOutlinerWindow::UOutlinerWindow()
+USceneWindow::USceneWindow()
 {
 	FUIWindowConfig Config;
 	Config.WindowTitle = "Scene Manager";
@@ -20,22 +20,22 @@ UOutlinerWindow::UOutlinerWindow()
 	Config.UpdateWindowFlags();
 	SetConfig(Config);
 
-	// Add World Outliner Widget (main scene hierarchy)
-	UWorldOutlinerWidget* OutlinerWidget = NewObject<UWorldOutlinerWidget>();
-	if (OutlinerWidget)
+	// Add Scene Manager Widget (main scene hierarchy)
+	USceneManagerWidget* SceneManagerWidget = NewObject<USceneManagerWidget>();
+	if (SceneManagerWidget)
 	{
-		AddWidget(OutlinerWidget);
-		UE_LOG("OutlinerWindow: WorldOutlinerWidget created successfully");
+		AddWidget(SceneManagerWidget);
+		UE_LOG("SceneWindow: SceneManagerWidget created successfully");
 	}
 	else
 	{
-		UE_LOG("OutlinerWindow: Failed to create WorldOutlinerWidget");
+		UE_LOG("SceneWindow: Failed to create SceneManagerWidget");
 	}
 	
 	// Transform and termination widgets moved to Control Panel for better UX
 }
 
-void UOutlinerWindow::Initialize()
+void USceneWindow::Initialize()
 {
-	UE_LOG("OutlinerWindow: Successfully Initialized");
+	UE_LOG("SceneWindow: Successfully Initialized");
 }
