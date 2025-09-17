@@ -29,6 +29,12 @@ struct HighLightBufferType
     uint32 Gizmo;
 };
 
+struct ColorBufferType
+{
+    FVector4 Color;
+};
+
+
 struct BillboardBufferType
 {
     FVector pos;
@@ -213,7 +219,22 @@ void D3D11RHI::UpdateHighLightConstantBuffers(const uint32 InPicked, const FVect
         dataPtr->Gizmo = Gizmo;
         DeviceContext->Unmap(HighLightCB, 0);
         DeviceContext->VSSetConstantBuffers(2, 1, &HighLightCB); // b2 슬롯
-       }
+    }
+}
+
+void D3D11RHI::UpdateColorConstantBuffers(const FVector4& InColor)
+{
+    // b3 : 색 설정
+    {
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        DeviceContext->Map(ColorCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+        auto* dataPtr = reinterpret_cast<ColorBufferType*>(mapped.pData);
+        {
+            dataPtr->Color = InColor;
+        }
+        DeviceContext->Unmap(ColorCB, 0);
+        DeviceContext->PSSetConstantBuffers(3, 1, &ColorCB); // b3 슬롯
+    }
 }
 
 void D3D11RHI::IASetPrimitiveTopology()
@@ -381,6 +402,13 @@ void D3D11RHI::CreateConstantBuffer()
     billboardDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     billboardDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&billboardDesc, nullptr, &BillboardCB);
+
+    D3D11_BUFFER_DESC ColorDesc = {};
+    ColorDesc.Usage = D3D11_USAGE_DYNAMIC;
+    ColorDesc.ByteWidth = sizeof(ColorBufferType);
+    ColorDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    ColorDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    Device->CreateBuffer(&ColorDesc, nullptr, &ColorCB);
 }
 
 

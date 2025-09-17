@@ -179,7 +179,7 @@ void UWorld::Render()
     Renderer->BeginLineBatch();
 
     // === Draw Actors ===
-    Renderer->RSSetState(ViewModeIndex);
+    Renderer->SetViewModeType(ViewModeIndex);
 
     TArray<AActor*> AllActors;
     AllActors.reserve(Actors.size() + EngineActors.size());
@@ -204,7 +204,7 @@ void UWorld::Render()
             }
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
-                Renderer->RSSetState(ViewModeIndex);
+                Renderer->SetViewModeType(ViewModeIndex);
                 Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
                 Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
             }
@@ -454,7 +454,7 @@ void UWorld::RenderGizmoActor()
 
         if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
         {
-            Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
+            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
             Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
             Renderer->OMSetBlendState(true); // 필요 시
 
@@ -462,7 +462,7 @@ void UWorld::RenderGizmoActor()
             // 상태 복구
             Renderer->OMSetBlendState(false);
             Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-            Renderer->RSSetState(ViewModeIndex);
+            Renderer->SetViewModeType(ViewModeIndex);
         }
     }
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);

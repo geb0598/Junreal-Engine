@@ -21,6 +21,11 @@ cbuffer HighLightBuffer : register(b2)
     int GIzmo;
 }
 
+cbuffer ColorBuffer : register(b3)
+{
+    float4 LerpColor;
+}
+
 struct VS_INPUT
 {
     float3 position : POSITION; // Input position from vertex buffer
@@ -50,7 +55,7 @@ PS_INPUT mainVS(VS_INPUT input)
     float4 c = input.color;
 
     
-
+    
     // Picked가 1이면 전달된 하이라이트 색으로 완전 덮어쓰기
     if (Picked == 1)
     {
@@ -91,7 +96,9 @@ PS_INPUT mainVS(VS_INPUT input)
 
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
-    // Output the color directly
-    return input.color;
+    // Lerp the incoming color with the global LerpColor
+    float4 finalColor = input.color;
+    finalColor.rgb = lerp(finalColor.rgb, LerpColor.rgb, LerpColor.a);
+    return finalColor;
 }
 

@@ -19,8 +19,6 @@ public:
 public:
 	void BeginFrame();
 
-    //void PrepareShader();
-
     void PrepareShader(FShader& InShader);
 
     void PrepareShader(UShader* InShader);
@@ -35,10 +33,13 @@ public:
 
     void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp);
 
+    void UpdateColorBuffer(const FVector4& Color);
+
     void DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
     void DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
+    void SetViewModeType(EViewModeIndex ViewModeIndex);
     // Batch Line Rendering System
     void BeginLineBatch();
     void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f));

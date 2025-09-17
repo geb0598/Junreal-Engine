@@ -78,6 +78,11 @@ void URenderer::UpdateBillboardConstantBuffers(const FVector& pos,const FMatrix&
     RHIDevice->UpdateBillboardConstantBuffers(pos,ViewMatrix, ProjMatrix, CameraRight, CameraUp);
 }
 
+void URenderer::UpdateColorBuffer(const FVector4& Color)
+{
+    RHIDevice->UpdateColorConstantBuffers(Color);
+}
+
 void URenderer::DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
     if (!InMesh || !InMesh->GetVertexBuffer() || !InMesh->GetIndexBuffer()) return;
@@ -125,6 +130,15 @@ void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMIT
     RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &TextureSRV);
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
     RHIDevice->GetDeviceContext()->DrawIndexed(Comp->GetMeshResource()->GetIndexCount(), 0, 0);
+}
+
+void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
+{
+    RHIDevice->RSSetState(ViewModeIndex);
+    if(ViewModeIndex == EViewModeIndex::VMI_Wireframe)
+        RHIDevice->UpdateColorConstantBuffers(FVector4{ 1.f, 0.f, 0.f, 1.f });
+    else
+        RHIDevice->UpdateColorConstantBuffers(FVector4{ 1.f, 1.f, 1.f, 0.f });
 }
 
 void URenderer::EndFrame()
