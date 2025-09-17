@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SceneWindow.h"
 #include "../Widget/SceneManagerWidget.h"
+#include "../Widget/ShowFlagWidget.h"
 
 // UE_LOG 대체 매크로
 #define UE_LOG(fmt, ...)
@@ -30,6 +31,18 @@ USceneWindow::USceneWindow()
 	else
 	{
 		UE_LOG("SceneWindow: Failed to create SceneManagerWidget");
+	}
+	
+	// Add Show Flag Widget for rendering control
+	UShowFlagWidget* ShowFlagWidget = NewObject<UShowFlagWidget>();
+	if (ShowFlagWidget)
+	{
+		AddWidget(ShowFlagWidget);
+		UE_LOG("SceneWindow: ShowFlagWidget created successfully");
+	}
+	else
+	{
+		UE_LOG("SceneWindow: Failed to create ShowFlagWidget");
 	}
 	
 	// Transform and termination widgets moved to Control Panel for better UX

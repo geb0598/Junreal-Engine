@@ -178,23 +178,67 @@ void UWorld::Render()
     // === Begin Line Batch for all actors ===
     Renderer->BeginLineBatch();
 
-    // === Draw Actors ===
+    // === Draw Actors with Show Flag checks ===
     Renderer->SetViewModeType(ViewModeIndex);
 
-    TArray<AActor*> AllActors;
-    AllActors.reserve(Actors.size() + EngineActors.size());
-    AllActors.insert(AllActors.end(), Actors.begin(), Actors.end());
-    AllActors.insert(AllActors.end(), EngineActors.begin(), EngineActors.end());
-    for (AActor* Actor : AllActors)
+    // 일반 액터들 렌더링 (Primitives Show Flag 체크)
+    if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
     {
-        if (!Actor) continue;
-        if (Actor->GetActorHiddenInGame()) continue;
-        bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-        if (bIsSelected) {
-            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+        for (AActor* Actor : Actors)
+        {
+            if (!Actor) continue;
+            if (Actor->GetActorHiddenInGame()) continue;
+            
+            // StaticMesh Show Flag 체크
+            if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+                continue;
+                
+            bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+            if (bIsSelected) {
+                Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+            }
+            Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+            
+            for (USceneComponent* Component : Actor->GetComponents())
+            {
+                if (!Component) continue;
+
+                if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+                {
+                    if (!ActorComp->IsActive()) continue;
+                }
+                
+                // Text Render Component Show Flag 체크
+                if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+                    continue;
+                
+                // Bounding Box Show Flag 체크  
+                if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                    continue;
+                
+                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+                {
+                    Renderer->SetViewModeType(ViewModeIndex);
+                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+                }
+            }
+            // 블랜드 스테이드 종료
+            Renderer->OMSetBlendState(false);
         }
-        Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-        for (USceneComponent* Component : Actor->GetComponents())
+    }
+    
+    // Engine Actors (그리드 등) 렌더링
+    for (AActor* EngineActor : EngineActors)
+    {
+        if (!EngineActor) continue;
+        if (EngineActor->GetActorHiddenInGame()) continue;
+        
+        // Grid Show Flag 체크
+        if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+            continue;
+            
+        for (USceneComponent* Component : EngineActor->GetComponents())
         {
             if (!Component) continue;
 
@@ -267,19 +311,28 @@ bool UWorld::DestroyActor(AActor* Actor)
         return false; // nullptr 들어옴 → 실패
     }
 
+    // SelectionManager에서 선택 해제 (메모리 해제 전에 하자)
+    USelectionManager::GetInstance().DeselectActor(Actor);
+    
+    // UIManager에서 픽된 액터 정리
+    if (UIManager.GetPickedActor() == Actor)
+    {
+        UIManager.ResetPickedActor();
+    }
+
     // 배열에서 제거 시도
     auto it = std::find(Actors.begin(), Actors.end(), Actor);
     if (it != Actors.end())
     {
-        if (*it == USelectionManager::GetInstance().GetSelectedActor())
-        {
-            USelectionManager::GetInstance().DeselectActor(*it);
-        }
         Actors.erase(it);
 
         // 메모리 해제
         ObjectFactory::DeleteObject(Actor);
-        return true; // 성공적으로 삭제
+        
+		// 삭제된 액터 정리
+		USelectionManager::GetInstance().CleanupInvalidActors();
+		
+		return true; // 성공적으로 삭제
     }
 
     return false; // 월드에 없는 액터

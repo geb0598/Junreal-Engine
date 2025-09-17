@@ -83,11 +83,9 @@ private:
     ID3D11DeviceContext* DeviceContext{};//
     IDXGISwapChain* SwapChain{};//
 
-    ID3D11RenderTargetView* RenderTargetView{};//
-    ID3D11DepthStencilView* DepthStencilView{};//
-
     ID3D11RasterizerState* DefaultRasterizerState{};//
     ID3D11RasterizerState* WireFrameRasterizerState{};//
+
     ID3D11DepthStencilState* DepthStencilState{};
 
     ID3D11DepthStencilState* DepthStencilStateLessEqualWrite = nullptr;      // 기본
@@ -99,7 +97,8 @@ private:
     ID3D11BlendState* BlendState{};
 
     ID3D11Texture2D* FrameBuffer{};//
-    ID3D11Buffer* ConstantBuffer{};
+    ID3D11RenderTargetView* RenderTargetView{};//
+    ID3D11DepthStencilView* DepthStencilView{};//
 
     // 버퍼 핸들
     ID3D11Buffer* ModelCB{};
@@ -107,5 +106,7 @@ private:
     ID3D11Buffer* HighLightCB{};
     ID3D11Buffer* BillboardCB{};
     ID3D11Buffer* ColorCB{};
+
+    ID3D11Buffer* ConstantBuffer{};
 };
 

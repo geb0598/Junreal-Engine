@@ -21,4 +21,5 @@ public:
 private:
 	AActor* SelectedActor;
 	UUIManager* UIManager; // UIManager 참조
+	FString CachedActorName; // 액터 이름 캐시 (안전한 출력을 위해)
 };

@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "GridActor.h"
 #include "GizmoActor.h"
+#include "Enums.h"
 
 // Forward Declarations
 class UResourceManager;
@@ -65,6 +66,14 @@ public:
     EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }
     void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
+    /** === Show Flag 시스템 === */
+    EEngineShowFlags GetShowFlags() const { return ShowFlags; }
+    void SetShowFlags(EEngineShowFlags InShowFlags) { ShowFlags = InShowFlags; }
+    void EnableShowFlag(EEngineShowFlags Flag) { ShowFlags |= Flag; }
+    void DisableShowFlag(EEngineShowFlags Flag) { ShowFlags &= ~Flag; }
+    void ToggleShowFlag(EEngineShowFlags Flag) { ShowFlags = HasShowFlag(ShowFlags, Flag) ? (ShowFlags & ~Flag) : (ShowFlags | Flag); }
+    bool IsShowFlagEnabled(EEngineShowFlags Flag) const { return HasShowFlag(ShowFlags, Flag); }
+
     AGridActor* GetGridActor() { return GridActor; }
 
     const TArray<AActor*>& GetActors() { return Actors; }
@@ -116,6 +125,8 @@ private:
     /** == 기즈모 == */
     AGizmoActor* GizmoActor;
 
+    /** === Show Flag 시스템 === */
+    EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled;
     
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 };

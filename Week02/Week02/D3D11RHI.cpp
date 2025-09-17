@@ -74,12 +74,19 @@ void D3D11RHI::Release()
     // 상수버퍼
     if (HighLightCB) { HighLightCB->Release(); HighLightCB = nullptr; }
     if (ModelCB) { ModelCB->Release(); ModelCB = nullptr; }
+    if (ColorCB) { ColorCB->Release(); ColorCB = nullptr; }
     if (ViewProjCB) { ViewProjCB->Release(); ViewProjCB = nullptr; }
     if (BillboardCB) { BillboardCB->Release(); BillboardCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체
     if (DepthStencilState) { DepthStencilState->Release(); DepthStencilState = nullptr; }
+    if (DepthStencilStateLessEqualWrite) { DepthStencilStateLessEqualWrite->Release(); DepthStencilStateLessEqualWrite = nullptr; }
+    if (DepthStencilStateLessEqualReadOnly) { DepthStencilStateLessEqualReadOnly->Release(); DepthStencilStateLessEqualReadOnly = nullptr; }
+    if (DepthStencilStateAlwaysNoWrite) { DepthStencilStateAlwaysNoWrite->Release(); DepthStencilStateAlwaysNoWrite = nullptr; }
+    if (DepthStencilStateDisable) { DepthStencilStateDisable->Release(); DepthStencilStateDisable = nullptr; }
+    if (DepthStencilStateGreaterEqualWrite) { DepthStencilStateGreaterEqualWrite->Release(); DepthStencilStateGreaterEqualWrite = nullptr; }
+
     if (DefaultRasterizerState) { DefaultRasterizerState->Release();   DefaultRasterizerState = nullptr; }
     if (WireFrameRasterizerState) { WireFrameRasterizerState->Release();   WireFrameRasterizerState = nullptr; }
     if (BlendState) { BlendState->Release();        BlendState = nullptr; }

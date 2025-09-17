@@ -126,4 +126,8 @@ private:
     // Selection synchronization
     void SyncSelectionFromViewport();
     void SyncSelectionToViewport(AActor* Actor);
+    
+    // Delayed refresh (to avoid iterator invalidation during rendering)
+    bool bNeedRefreshNextFrame = false;
+    void RequestDelayedRefresh() { bNeedRefreshNextFrame = true; }
 };

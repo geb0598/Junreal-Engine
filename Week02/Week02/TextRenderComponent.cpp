@@ -23,12 +23,8 @@ UTextRenderComponent::UTextRenderComponent()
     //if(UResourceManager::GetInstance().Get<UMaterial>())
     MeshResource = UResourceManager::GetInstance().Get<UMesh>("TextBillboard");
     Material = NewObject<UMaterial>();
+    UResourceManager::GetInstance().Add<UMaterial>("TextBillboard", Material);
 
-    
-    
-    //UResourceManager::GetInstance().Load<UMaterial>(AttachParent->GetWorldLocation(),);
-    //ResourceData =UResourceManager::GetInstance().CreateOrGetResourceData(FString("TextBillboard"),sizeof(FBillboardCharInfo)*100,Indices);
-    //TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(FWideString(L"Font2.dds"));
     InitCharInfoMap();
 }
 

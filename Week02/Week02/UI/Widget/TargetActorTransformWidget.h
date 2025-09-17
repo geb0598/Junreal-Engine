@@ -29,6 +29,7 @@ public:
 private:
 	UUIManager* UIManager = nullptr;
 	AActor* SelectedActor = nullptr;
+	FString CachedActorName; // 액터 이름 캐시 (안전한 출력을 위해)
 
 	// Transform UI 상태
 	FVector EditLocation = {0.0f, 0.0f, 0.0f};
