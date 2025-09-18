@@ -1,19 +1,19 @@
-#📘 KRAFTON TechLab Week03 – Unreal Engine Style 3D Editor & Rendering System
+# 📘 KRAFTON TechLab Week03 – Unreal Engine Style 3D Editor & Rendering System
 📌 프로젝트 개요
 
-###프로젝트명: Unreal Engine Style 3D Editor & Rendering System
+### 프로젝트명: Unreal Engine Style 3D Editor & Rendering System
 
-####개발 기간: 1 week
+#### 개발 기간: 1 week
 
-####개발 환경: Visual Studio, DirectX 11, Windows 10/11
+#### 개발 환경: Visual Studio, DirectX 11, Windows 10/11
 
-##아키텍처: C++ 기반 Actor-Component 시스템
+## 아키텍처: C++ 기반 Actor-Component 시스템
 <img width="1911" height="1104" alt="image" src="https://github.com/user-attachments/assets/2aa029db-2fca-451d-aeaf-607d3256ccee" />
 
 
-##🚀 구현 완료 사항
-###🎨 1. Editor & Rendering System (눈에 보이는 세상)
-####1.1 실시간 텍스트 렌더링 시스템
+## 🚀 구현 완료 사항
+### 🎨 1. Editor & Rendering System (눈에 보이는 세상)
+#### 1.1 실시간 텍스트 렌더링 시스템
 
 파일: TextBillboard.hlsl, Week02/UI/
 
@@ -33,7 +33,7 @@ ViewInverse 행렬을 이용한 카메라 정렬
 
 Alpha Testing 기반 텍스트 윤곽 처리
 
-####1.2 Batch Line 렌더링 시스템
+#### 1.2 Batch Line 렌더링 시스템
 
 파일: ShaderLine.hlsl
 
@@ -51,7 +51,7 @@ World Grid, Bounding Box 시각화
 
 동적 버퍼 업데이트 지원
 
-###1.3 좌표계 변환 시스템
+#### 1.3 좌표계 변환 시스템
 
 DirectX 좌표계 (Y-Up, Z-Depth) → UE 좌표계 (Z-Up, X-Depth) 변환
 
@@ -61,11 +61,11 @@ DirectX 좌표계 (Y-Up, Z-Depth) → UE 좌표계 (Z-Up, X-Depth) 변환
 
 RTV/DSV 해제 → SwapChain Resize → ImGui DisplaySize 갱신 → RTV/DSV 재생성
 
-###1.5 View Mode 시스템
+#### 1.5 View Mode 시스템
 
 Lit / Unlit / Wireframe 모드 지원
 
-###1.6 Show Flag 시스템
+#### 1.6 Show Flag 시스템
 
 비트 플래그 기반 토글 기능
 
@@ -98,7 +98,7 @@ UUID, FName 기반 이름 관리
 
 ObjectFactory와 연동된 메모리 관리
 
-###2.3 메모리 관리 시스템
+#### 2.3 메모리 관리 시스템
 
 UObject 전용 Allocator / Deallocator
 
