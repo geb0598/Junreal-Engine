@@ -57,7 +57,7 @@ DirectX 좌표계 (Y-Up, Z-Depth) → UE 좌표계 (Z-Up, X-Depth) 변환
 
 카메라, 트랜스폼, 렌더링 파이프라인 전반에 적용
 
-###1.4 동적 윈도우 리사이징
+#### 1.4 동적 윈도우 리사이징
 
 RTV/DSV 해제 → SwapChain Resize → ImGui DisplaySize 갱신 → RTV/DSV 재생성
 
@@ -74,7 +74,7 @@ Lit / Unlit / Wireframe 모드 지원
 ImGui 연동으로 실시간 제어
 
 ⚙️ 2. Engine Core System (눈에 안 보이는 세상)
-2.1 FName 시스템
+#### 2.1 FName 시스템
 
 문자열 → Pool 관리, 인덱스로 비교
 
@@ -84,7 +84,7 @@ strcmp() 대신 정수 비교 (O(n) → O(1))
 
 메모리 절약 + 성능 최적화
 
-###2.2 UObject 시스템 & RTTI
+#### 2.2 UObject 시스템 & RTTI
 
 구현: Object.h
 
@@ -106,13 +106,13 @@ UObject 전용 Allocator / Deallocator
 
 자동 정리로 메모리 누수 방지
 
-###2.4 Selection Manager
+#### 2.4 Selection Manager
 
 선택된 Actor 관리
 
 안전성 강화 (CleanupInvalidActors)
 
-🏗 아키텍처 및 설계 패턴
+## 🏗 아키텍처 및 설계 패턴
 
 싱글톤 패턴: UUIManager, USelectionManager, UInputManager
 
@@ -122,7 +122,7 @@ UObject 전용 Allocator / Deallocator
 
 Observer 패턴: Show Flag 시스템과 UI/렌더링 간 느슨한 결합
 
-🖥 렌더링 파이프라인
+## 🖥 렌더링 파이프라인
 
 World Grid (Show Flag)
 
@@ -142,7 +142,7 @@ ShaderLine.hlsl: 라인/그리드
 
 TextBillboard.hlsl: 빌보드 텍스트
 
-⚡ 안전성 및 성능 최적화
+## ⚡ 안전성 및 성능 최적화
 
 배치 렌더링: Draw Call 최소화
 
@@ -152,7 +152,7 @@ Show Flag: 불필요한 렌더링 제거
 
 FName 시스템: 문자열 비교 최적화
 
-🏆 기술적 성취
+## 🏆 기술적 성취
 
 언리얼 스타일 아키텍처 구현
 
