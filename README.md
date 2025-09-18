@@ -8,6 +8,8 @@
 개발 환경: Visual Studio, DirectX 11, Windows 10/11
 
 아키텍처: C++ 기반 Actor-Component 시스템
+<img width="1911" height="1104" alt="image" src="https://github.com/user-attachments/assets/2aa029db-2fca-451d-aeaf-607d3256ccee" />
+
 
 🚀 구현 완료 사항
 🎨 1. Editor & Rendering System (눈에 보이는 세상)
