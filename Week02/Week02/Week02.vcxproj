@@ -333,6 +333,7 @@
     <ClInclude Include="StaticMeshComponent.h" />
     <ClInclude Include="TextRenderComponent.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="ObjectIterator.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="UEContainer.h" />
     <ClInclude Include="UI\Factory\UIWindowFactory.h" />
