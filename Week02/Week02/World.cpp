@@ -119,9 +119,8 @@ void UWorld::Initialize()
 
 void UWorld::InitializeMainCamera()
 {
-    MainCameraActor = NewObject<ACameraActor>();
-    MainCameraActor->SetWorld(this);
-    MainCameraActor->SetActorLocation({ 0, 0, -10 });
+    
+    MainCameraActor = SpawnActor<ACameraActor>(FTransform());
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);
@@ -131,11 +130,9 @@ void UWorld::InitializeMainCamera()
 
 void UWorld::InitializeGrid()
 {
-    GridActor = NewObject<AGridActor>();
-    GridActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, 0, 0 }),
-        FVector{ 1, 1, 1 }));
+    GridActor = SpawnActor<AGridActor>(FTransform());
     GridActor->Initialize();
-    GridActor->SetWorld(this);
+  
 
     // Add GridActor to Actors array so it gets rendered in the main loop
     EngineActors.push_back(GridActor);
@@ -145,11 +142,9 @@ void UWorld::InitializeGrid()
 void UWorld::InitializeGizmo()
 {
     // === 기즈모 엑터 초기화 ===
-    GizmoActor = NewObject<AGizmoActor>();
+    GizmoActor = SpawnActor<AGizmoActor>();
     GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
         FVector{ 1, 1, 1 }));
-    GizmoActor->SetWorld(this);
-    
     // 기즈모에 카메라 참조 설정
     if (MainCameraActor)
     {
