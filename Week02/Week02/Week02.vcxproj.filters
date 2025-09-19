@@ -323,7 +323,9 @@
     <FxCompile Include="TextBillboard.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ShaderLine.hlsl" />
+    <FxCompile Include="ShaderLine.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -381,9 +383,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Enums.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="World.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="CameraActor.h">
@@ -556,6 +555,9 @@
     </ClInclude>
     <ClInclude Include="SelectionManager.h">
       <Filter>헤더 파일\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
