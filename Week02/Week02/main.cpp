@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include <fstream>
 
 // TODO: Delete it, just Test

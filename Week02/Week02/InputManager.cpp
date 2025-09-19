@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include <windowsx.h> // GET_X_LPARAM / GET_Y_LPARAM
 
 #ifndef GET_X_LPARAM

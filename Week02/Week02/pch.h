@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // Linker
 #pragma comment(lib, "user32")

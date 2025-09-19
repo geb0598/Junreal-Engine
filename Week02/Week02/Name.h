@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // Name.h
 #pragma once
 #include <string>

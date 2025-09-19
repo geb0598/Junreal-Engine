@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "TextRenderComponent.h"
 #include "Shader.h"
 #include "Mesh.h"

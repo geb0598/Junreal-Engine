@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "Enums.h"
 #include "d3dtk/DDSTextureLoader.h"
 #include "TextRenderComponent.h"

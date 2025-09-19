@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneComponent.h"
 
 enum class ECameraProjectionMode

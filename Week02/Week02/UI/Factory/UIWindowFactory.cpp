@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "UIWindowFactory.h"
 #include "../UIManager.h"
 #include "../Window/ConsoleWindow.h"  // 새로운 ConsoleWindow 사용

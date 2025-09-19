@@ -1,4 +1,4 @@
-#ifndef UE_ENUMS_H
+﻿#ifndef UE_ENUMS_H
 #define UE_ENUMS_H
 #include "UEContainer.h"
 #include "Enums.h"
