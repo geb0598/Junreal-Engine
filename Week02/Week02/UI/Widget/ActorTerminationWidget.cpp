@@ -40,7 +40,7 @@ void UActorTerminationWidget::Update()
 			{
 				try 
 				{
-					CachedActorName = SelectedActor->GetName();
+					CachedActorName = SelectedActor->GetName().ToString();
 				}
 				catch (...)
 				{

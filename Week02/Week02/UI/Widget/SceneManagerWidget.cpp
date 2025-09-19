@@ -206,7 +206,7 @@ void USceneManagerWidget::RenderWidget()
         // 액터 이름을 가져오기 전에 안전성 확인
         try 
         {
-            ImGui::Text("Selected: %s", SelectedActor->GetName().c_str());
+            ImGui::Text("Selected: %s", SelectedActor->GetName().ToString().c_str());
         }
         catch (...)
         {
@@ -325,7 +325,7 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
         return;
     }
 
-    bool bNodeOpen = ImGui::TreeNodeEx(Actor->GetName().c_str(), NodeFlags);
+    bool bNodeOpen = ImGui::TreeNodeEx(Actor->GetName().ToString().c_str(), NodeFlags);
     
     // Handle selection
     if (ImGui::IsItemClicked())
@@ -345,7 +345,7 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     if (ImGui::BeginDragDropSource())
     {
         ImGui::SetDragDropPayload("ACTOR_DRAG", &Actor, sizeof(AActor*));
-        ImGui::Text("Move %s", Actor->GetName().c_str());
+        ImGui::Text("Move %s", Actor->GetName().ToString().c_str());
         DragSource = Actor;
         ImGui::EndDragDropSource();
     }
@@ -468,7 +468,7 @@ void USceneManagerWidget::RenderContextMenu()
     {
         if (ContextMenuTarget)
         {
-            ImGui::Text("Actor: %s", ContextMenuTarget->GetName().c_str());
+            ImGui::Text("Actor: %s", ContextMenuTarget->GetName().ToString().c_str());
             const char* ClassName = "Unknown";
             if (ContextMenuTarget->GetClass())
             {
@@ -689,7 +689,7 @@ FString USceneManagerWidget::GetActorCategory(AActor* Actor) const
     if (!Actor)
         return "Unknown";
     
-    FString ActorName = Actor->GetName();
+    FString ActorName = Actor->GetName().ToString();
     
     // Extract category from actor name (assumes format: "Type_Number")
     size_t UnderscorePos = ActorName.find('_');

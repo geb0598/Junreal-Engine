@@ -49,6 +49,9 @@ public:
     URenderer*& const GetRenderer()  { return Renderer; }
 
     template<class T>
+    T* SpawnActor();
+
+    template<class T>
     T* SpawnActor(const FTransform& Transform);
 
     void AddActor(AActor* Actor)
@@ -130,6 +133,11 @@ private:
     
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 };
+template<class T>
+inline T* UWorld::SpawnActor()
+{
+    return SpawnActor<T>(FTransform());
+}
 
 template<class T>
 inline T* UWorld::SpawnActor(const FTransform& Transform)

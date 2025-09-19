@@ -75,7 +75,7 @@ private:
         FString GetDisplayName() const 
         {
             if (IsCategory()) return CategoryName;
-            if (IsActor() && Actor) return Actor->GetName();
+            if (IsActor() && Actor) return Actor->GetName().ToString();
             return "Unknown";
         }
     };
