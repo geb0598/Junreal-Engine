@@ -49,11 +49,7 @@ UStaticMesh* FObjManager::LoadObjStaticMesh(const FString& PathFileName)
     }
 
 	// 2) 없으면 새로 로드
-    FStaticMesh* Asset = FObjManager::LoadObjStaticMeshAsset(PathFileName);
     UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>(PathFileName);
-    
-	// 3) Asset 연결
-    StaticMesh->SetStaticMeshAsset(Asset);
 
 	return StaticMesh;
 }

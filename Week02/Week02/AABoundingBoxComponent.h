@@ -20,6 +20,7 @@ public:
 
     // 주어진 로컬 버텍스들로부터 Min/Max 계산
     void SetFromVertices(const TArray<FVector>& Verts);
+	void SetFromVertices(const TArray<FNormalVertex>& Verts);
 
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
 
