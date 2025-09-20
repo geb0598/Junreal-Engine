@@ -12,7 +12,7 @@ protected:
 
 public:
     virtual void SetMeshResource(const FString& FilePath);
-    virtual UMesh* GetMeshResource() const { return MeshResource; }
+    virtual UStaticMesh* GetMeshResource() const { return MeshResource; }
 
 
 protected:
@@ -21,5 +21,5 @@ protected:
     //FVertexSimple* Vertices;  // 정점 배열 주소
     //int VertexCount;          // 정점 개수
 
-    UMesh* MeshResource = nullptr;
+    UStaticMesh* MeshResource = nullptr;
 };

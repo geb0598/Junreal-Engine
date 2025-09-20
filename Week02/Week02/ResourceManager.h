@@ -2,7 +2,7 @@
 #include "ObjectFactory.h"
 #include "Object.h"
 #include "Shader.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "Material.h"
 #include "Texture.h"
 #include "DynamicMesh.h"
@@ -10,7 +10,7 @@
 class UStaticMesh;
 
 class UResourceBase;
-class UMesh;
+class UStaticMesh;
 class UMaterial;
 
 struct FShaderDesc
@@ -76,7 +76,7 @@ protected:
 
     //Deprecated
     TMap<FWideString, FTextureData*> TextureMap;
-    TMap<FString, UStaticMesh*> StaticMeshMap;
+    // TMap<FString, UStaticMesh*> StaticMeshMap;
 
     //Resource Type의 개수만큼 Array 생성 및 저장
     TArray<TMap<FString, UResourceBase*>> Resources;
@@ -137,7 +137,7 @@ inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)//�
 template<typename T>
 ResourceType UResourceManager::GetResourceType()
 {
-    if (T::StaticClass() == UMesh::StaticClass())
+    if (T::StaticClass() == UStaticMesh::StaticClass())
         return ResourceType::Mesh;
     if (T::StaticClass() == UDynamicMesh::StaticClass())
         return ResourceType::DynamicMesh;

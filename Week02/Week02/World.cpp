@@ -8,7 +8,7 @@
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
 #include "AABoundingBoxComponent.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 , UIManager(UUIManager::GetInstance())

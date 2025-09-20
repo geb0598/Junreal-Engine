@@ -4,7 +4,7 @@
 #include "Actor.h"
 #include "StaticMeshActor.h"
 #include "StaticMeshComponent.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "CameraActor.h"
 #include "MeshLoader.h"
 #include"Vector.h"

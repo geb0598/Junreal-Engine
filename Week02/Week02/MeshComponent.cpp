@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 #include "MeshComponent.h"
-#include"Mesh.h"
+#include "StaticMesh.h"
 
 UMeshComponent::UMeshComponent()
     
@@ -14,12 +14,12 @@ UMeshComponent::~UMeshComponent()
 
 void UMeshComponent::SetMeshResource(const FString& FilePath)
 {
-    if (UResourceManager::GetInstance().Get<UMesh>(FilePath))
+    if (UResourceManager::GetInstance().Get<UStaticMesh>(FilePath))
     {
-        MeshResource = UResourceManager::GetInstance().Get<UMesh>(FilePath);
+        MeshResource = UResourceManager::GetInstance().Get<UStaticMesh>(FilePath);
     }
     else
     {
-        MeshResource = UResourceManager::GetInstance().Load<UMesh>(FilePath);
+        MeshResource = UResourceManager::GetInstance().Load<UStaticMesh>(FilePath);
     }
 }

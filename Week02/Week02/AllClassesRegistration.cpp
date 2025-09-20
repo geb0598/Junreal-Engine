@@ -33,7 +33,7 @@
 #include "UI/Window/UIWindow.h"
 #include "TextRenderComponent.h"
 #include "AABoundingBoxComponent.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Material.h"
@@ -55,8 +55,6 @@ IMPLEMENT_CLASS(ACameraActor)
 IMPLEMENT_CLASS(AStaticMeshActor)
 IMPLEMENT_CLASS(AGizmoActor)
 IMPLEMENT_CLASS(AGridActor)
-
-IMPLEMENT_CLASS(UStaticMesh)
 
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)
@@ -98,7 +96,7 @@ IMPLEMENT_CLASS(UGlobalConsole)
 
 IMPLEMENT_CLASS(UMaterial)
 IMPLEMENT_CLASS(UResourceBase)
-IMPLEMENT_CLASS(UMesh)
+IMPLEMENT_CLASS(UStaticMesh)
 IMPLEMENT_CLASS(UShader)
 IMPLEMENT_CLASS(UTexture)
 IMPLEMENT_CLASS(UDynamicMesh)

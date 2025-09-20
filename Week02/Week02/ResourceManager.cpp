@@ -199,9 +199,9 @@ void UResourceManager::CreateAxisMesh(float Length, const FString& FilePath)
     MeshData->Color = axisColors;
     MeshData->Indices = axisIndices;
 
-    UMesh* Mesh = NewObject<UMesh>();
+    UStaticMesh* Mesh = NewObject<UStaticMesh>();
     Mesh->Load(MeshData, Device);
-    Add<UMesh>("Axis", Mesh);
+    Add<UStaticMesh>("Axis", Mesh);
 
     UMeshLoader::GetInstance().AddMeshData("Axis", MeshData);
 }
@@ -222,14 +222,14 @@ void UResourceManager::CreateTextBillboardMesh()
 
 
     //if(UResourceManager::GetInstance().Get<UMaterial>())
-    UMesh* Mesh = NewObject<UMesh>();
+    UStaticMesh* Mesh = NewObject<UStaticMesh>();
     FMeshData* BillboardData = new FMeshData;
     BillboardData->Indices = Indices;
     BillboardData->Vertices.resize(100);
     BillboardData->Color.resize(100);
     BillboardData->UV.resize(100);
     Mesh->Load(BillboardData, Device, EVertexLayoutType::PositionBillBoard);
-    Add<UMesh>("TextBillboard", Mesh);
+    Add<UStaticMesh>("TextBillboard", Mesh);
     UMeshLoader::GetInstance().AddMeshData("TextBillboard", BillboardData);
 }
 
@@ -312,9 +312,9 @@ void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
     MeshData->Color = gridColors;
     MeshData->Indices = gridIndices;
 
-    UMesh* Mesh = NewObject<UMesh>();
+    UStaticMesh* Mesh = NewObject<UStaticMesh>();
     Mesh->Load(MeshData, Device);
-    Add<UMesh>("Grid", Mesh);
+    Add<UStaticMesh>("Grid", Mesh);
 
     UMeshLoader::GetInstance().AddMeshData("Grid", MeshData);
 }
@@ -371,11 +371,11 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
     MeshData->Color = colors;
     MeshData->Indices = indices;
 
-    UMesh* Mesh = NewObject<UMesh>();
+    UStaticMesh* Mesh = NewObject<UStaticMesh>();
     Mesh->Load(MeshData, Device);
     //Mesh->SetTopology(EPrimitiveTopology::LineList); // ✅ 꼭 LineList로 설정
 
-    Add<UMesh>(FilePath, Mesh);
+    Add<UStaticMesh>(FilePath, Mesh);
 
     UMeshLoader::GetInstance().AddMeshData(FilePath, MeshData);
 }
@@ -397,7 +397,7 @@ void UResourceManager::CreateTextBillboardTexture()
 
 void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBillboardVertexInfo_GPU>& vertices)
 {
-    UMesh* Mesh = Get<UMesh>(Name);
+    UStaticMesh* Mesh = Get<UStaticMesh>(Name);
     Mesh->SetIndexCount(vertices.size()*2);
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑

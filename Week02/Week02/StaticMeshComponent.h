@@ -4,7 +4,7 @@
 #include "StaticMesh.h"
 
 class StaticMesh;
-class UMesh;
+class UStaticMesh;
 class UShader;
 class UTexture;
 
