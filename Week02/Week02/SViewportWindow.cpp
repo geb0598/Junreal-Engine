@@ -33,8 +33,11 @@ bool SViewportWindow::Initialize(uint32 StartX, uint32 StartY, uint32 Width, uin
     {
     case EViewportType::Perspective:       ViewportName = "Perspective"; break;
     case EViewportType::Orthographic_Front: ViewportName = "Front"; break;
-    case EViewportType::Orthographic_Side:  ViewportName = "Side"; break;
+    case EViewportType::Orthographic_Left:  ViewportName = "Left"; break;
     case EViewportType::Orthographic_Top:   ViewportName = "Top"; break;
+    case EViewportType::Orthographic_Back: ViewportName = "Back"; break;
+    case EViewportType::Orthographic_Right:  ViewportName = "Right"; break;
+    case EViewportType::Orthographic_Bottom:   ViewportName = "Bottom"; break;
     }
 
     // FViewport 생성

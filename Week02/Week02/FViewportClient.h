@@ -12,8 +12,11 @@ enum class EViewportType : uint8
 {
     Perspective,    // 원근 뷰
     Orthographic_Top,     // 상단 직교 뷰
+    Orthographic_Bottom,    // 하단 직교 뷰
     Orthographic_Front,   // 정면 직교 뷰
-    Orthographic_Side     // 측면 직교 뷰
+    Orthographic_Left,     // 왼쪽면 직교 뷰 
+    Orthographic_Right,   // 오른쪽면 직교 뷰
+    Orthographic_Back     // 측면 직교 뷰
 };
 
 /**
@@ -52,7 +55,7 @@ public:
 
     // 뷰포트별 카메라 설정
     void SetupOrthographicCamera();
-    void SetupPerspectiveCamera();
+
 
 protected:
     EViewportType ViewportType = EViewportType::Perspective;
@@ -60,7 +63,7 @@ protected:
     UCameraComponent* Camera = nullptr;
 
     // 직교 뷰용 카메라 설정
-    FVector OrthographicLocation;
-    FQuat OrthographicRotation;
-    float OrthographicZoom = 1000.0f;
+    uint32 OrthographicAddXPosition;
+    uint32  OrthographicAddYPosition;
+    float OrthographicZoom = 30.0f;
 };

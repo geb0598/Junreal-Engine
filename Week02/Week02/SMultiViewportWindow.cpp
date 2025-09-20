@@ -45,7 +45,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* Device, UWorld* World,const 
 
     Viewports[2]->Initialize(0, Rect.GetHeight() / 2,
         Rect.GetWidth() / 2, Rect.GetHeight() ,
-        World, Device, EViewportType::Orthographic_Side);
+        World, Device, EViewportType::Orthographic_Left);
 
     Viewports[3]->Initialize(Rect.GetWidth() / 2, Rect.GetHeight() / 2,
         Rect.GetWidth(), Rect.GetHeight(),
