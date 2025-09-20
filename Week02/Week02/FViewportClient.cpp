@@ -41,6 +41,7 @@ void FViewportClient::Draw(FViewport* Viewport)
         Camera->SetWorldLocation({0, 0, 1000}); 
         Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
         Camera->SetFOV(100);
+        SetupOrthographicCamera();
         ViewMatrix = Camera->GetViewMatrix();
         ProjectionMatrix = Camera->GetProjectionMatrix();
         break;
@@ -64,27 +65,18 @@ void FViewportClient::SetupOrthographicCamera()
     switch (ViewportType)
     {
         case EViewportType::Orthographic_Top:
-            // 상단 뷰 (Y축을 위로)
-            OrthographicLocation = FVector(0, 0, 1000);
-            OrthographicRotation = FQuat::MakeFromEuler(FVector(-90, 0, 0)); // X축으로 -90도 회전
+            Camera->SetWorldLocation({ 0, 0, 1000 });
+            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
             break;
 
         case EViewportType::Orthographic_Front:
-            // 정면 뷰 (Z축을 위로)
-            OrthographicLocation = FVector(-1000, 0, 0);
-            OrthographicRotation = FQuat::MakeFromEuler(FVector(0, -90, 0)); // Y축으로 -90도 회전
+            Camera->SetWorldLocation({ -1000, 0, 0});
+            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
             break;
 
         case EViewportType::Orthographic_Side:
-            // 측면 뷰 (Z축을 위로)
-            OrthographicLocation = FVector(0, -1000, 0);
-            OrthographicRotation = FQuat::MakeFromEuler(FVector(0, 0, 0)); // 기본 방향
-            break;
-
-        case EViewportType::Perspective:
-            // 원근 뷰는 기본 카메라 위치
-            OrthographicLocation = FVector(-500, -500, 500);
-            OrthographicRotation = FQuat::MakeFromEuler(FVector(-30, 45, 0));
+            Camera->SetWorldLocation({ 0, 1000, 0 });
+            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
             break;
     }
 }
