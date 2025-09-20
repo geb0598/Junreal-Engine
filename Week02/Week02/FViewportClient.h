@@ -48,7 +48,7 @@ public:
 
     // 카메라 매트릭스 계산
     FMatrix GetViewMatrix() const;
-    FMatrix GetProjectionMatrix(float ViewportWidth, float ViewportHeight) const;
+
 
     // 뷰포트별 카메라 설정
     void SetupOrthographicCamera();

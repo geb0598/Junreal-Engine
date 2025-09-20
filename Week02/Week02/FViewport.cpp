@@ -86,11 +86,12 @@ void FViewport::Present()
     // 현재는 오프스크린 렌더링이므로 생략
 }
 
-void FViewport::Resize(uint32 NewSizeX, uint32 NewSizeY)
+void FViewport::Resize(uint32 NewStartX, uint32 NewStartY,uint32 NewSizeX, uint32 NewSizeY)
 {
     if (SizeX == NewSizeX && SizeY == NewSizeY)
         return;
-
+    StartX = NewStartX;
+    StartY = NewStartY;
     SizeX = NewSizeX;
     SizeY = NewSizeY;
 

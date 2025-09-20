@@ -24,7 +24,7 @@ public:
     void Present();
 
     // 크기 조정
-    void Resize(uint32 NewSizeX, uint32 NewSizeY);
+    void Resize(uint32 NewStartX, uint32 NewStartY,uint32 NewSizeX, uint32 NewSizeY);
 
     // ViewportClient 설정
     void SetViewportClient(FViewportClient* InClient) { ViewportClient = InClient; }

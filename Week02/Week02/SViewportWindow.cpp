@@ -70,12 +70,12 @@ void SViewportWindow::OnRender()
     Viewport->EndRenderFrame();
 
     // ImGui를 통한 이름 표시
-    ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
+ /*   ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
     DrawList->AddText(
         ImVec2(Rect.Min.X + 5, Rect.Min.Y + 5),
         IM_COL32(255, 255, 255, 255),
         ViewportName.c_str()
-    );
+    );*/
 }
 
 void SViewportWindow::OnUpdate()
@@ -83,10 +83,14 @@ void SViewportWindow::OnUpdate()
     if (!Viewport)
         return;
 
-    // 뷰포트 크기 갱신
-    uint32 NewWidth = static_cast<uint32>(GetWidth());
-    uint32 NewHeight = static_cast<uint32>(GetHeight());
-    Viewport->Resize(NewWidth, NewHeight);
+    if (!Viewport) return;
+
+    uint32 NewStartX = static_cast<uint32>(Rect.Left);
+    uint32 NewStartY = static_cast<uint32>(Rect.Top);
+    uint32 NewWidth = static_cast<uint32>(Rect.Right - Rect.Left);
+    uint32 NewHeight = static_cast<uint32>(Rect.Bottom - Rect.Top);
+
+    Viewport->Resize(NewStartX, NewStartY, NewWidth, NewHeight);
 }
 
 void SViewportWindow::OnMouseMove(FVector2D MousePos)

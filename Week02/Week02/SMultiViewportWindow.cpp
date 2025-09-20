@@ -2,7 +2,8 @@
 #include "SMultiViewportWindow.h"
 #include "SWindow.h"
 #include "SSplitterV.h"
-
+extern float CLIENTWIDTH;
+extern float CLIENTHEIGHT;
 SMultiViewportWindow::SMultiViewportWindow()
 {
     for (int i = 0; i < 4; i++)
@@ -65,8 +66,11 @@ void SMultiViewportWindow::OnRender()
 
 void SMultiViewportWindow::OnUpdate()
 {
-    if (RootSplitter)
+    if (RootSplitter) {
+        RootSplitter->Rect = FRect(0, 0, CLIENTWIDTH, CLIENTHEIGHT);
         RootSplitter->OnUpdate();
+    }
+        
 }
 
 void SMultiViewportWindow::OnMouseMove(FVector2D MousePos)

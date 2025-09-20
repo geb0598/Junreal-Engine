@@ -1,5 +1,7 @@
 ﻿#include "pch.h"
 #include "SSplitter.h"
+extern float CLIENTWIDTH;
+extern float CLIENTHEIGHT;
 SSplitter::SSplitter()
 {
     SplitRatio = 0.5f;
@@ -82,6 +84,7 @@ void SSplitter::OnRender()
 
 void SSplitter::OnUpdate()
 {
+    
     UpdateChildRects();
 
     if (SideLT) SideLT->OnUpdate();

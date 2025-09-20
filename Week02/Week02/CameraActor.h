@@ -21,7 +21,7 @@ protected:
 public:
     UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 
-   // ECameraProjectionMode ProjectionMode = ECameraProjectionMode::Perspective;
+    
 
     // Matrices
     FMatrix GetViewMatrix() const;
@@ -57,6 +57,8 @@ private:
     float CameraYawDeg = 0.0f;   // World Up(Y) based Yaw (unlimited accumulation)
     float CameraPitchDeg = 0.0f; // Local Right based Pitch (limited)
     
+   // ECameraProjectionMode ProjectionMode = ECameraProjectionMode::Perspective;
+
     // Camera input processing methods
     void ProcessEditorCameraInput(float DeltaSeconds);
     void ProcessCameraRotation(float DeltaSeconds);

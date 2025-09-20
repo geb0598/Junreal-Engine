@@ -31,7 +31,7 @@ private:
     FViewportClient* ViewportClient = nullptr;
 
     EViewportType ViewportType;
-    FString ViewportName;
+    FName ViewportName;
 
     bool bIsActive;
     bool bIsMouseDown;
