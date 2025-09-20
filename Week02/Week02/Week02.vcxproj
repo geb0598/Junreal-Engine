@@ -236,6 +236,7 @@
     <ClCompile Include="RHIDevice.cpp" />
     <ClCompile Include="ShapeComponent.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="SMultiViewportWindow.cpp" />
     <ClCompile Include="SSplitter.cpp" />
     <ClCompile Include="SSplitterH.cpp" />
     <ClCompile Include="SSplitterV.cpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="SelectionManager.cpp" />
     <ClCompile Include="StaticMeshActor.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
+    <ClCompile Include="SViewportWindow.cpp" />
     <ClCompile Include="SWindow.cpp" />
     <ClCompile Include="TextRenderComponent.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -268,7 +270,6 @@
     <ClCompile Include="UI\Window\SceneWindow.cpp" />
     <ClCompile Include="UI\Window\UIWindow.cpp" />
     <ClCompile Include="FViewport.cpp" />
-    <ClCompile Include="MultiViewportWindow.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -291,7 +292,6 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
     <ClInclude Include="FViewportClient.h" />
-    <ClInclude Include="MultiViewportWindow.h" />
     <ClInclude Include="OBoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />
     <ClInclude Include="GizmoActor.h" />
@@ -335,6 +335,7 @@
     <ClInclude Include="RHIDevice.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShapeComponent.h" />
+    <ClInclude Include="SMultiViewportWindow.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="SSplitter.h" />
     <ClInclude Include="SSplitterH.h" />
@@ -343,6 +344,7 @@
     <ClInclude Include="SelectionManager.h" />
     <ClInclude Include="StaticMeshActor.h" />
     <ClInclude Include="StaticMeshComponent.h" />
+    <ClInclude Include="SViewportWindow.h" />
     <ClInclude Include="SWindow.h" />
     <ClInclude Include="TextRenderComponent.h" />
     <ClInclude Include="Texture.h" />

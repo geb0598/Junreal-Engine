@@ -2,12 +2,14 @@
 #include <fstream>
 #include "FViewport.h"
 #include "FViewportClient.h"
-#include "MultiViewportWindow.h"
-
+#include "SSplitterH.h"
+#include "SSplitterV.h"
+#include "SMultiViewportWindow.h"
 // TODO: Delete it, just Test
 
 float CLIENTWIDTH = 1024.0f;
 float CLIENTHEIGHT = 1024.0f;
+
 
 void LoadIniFile()
 {
@@ -209,22 +211,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         World->SetRenderer(&renderer);
         World->Initialize(); //월드 생성
 
-        // MultiViewportWindow 생성 및 초기화 (4분할)
-        MultiViewportWindow* MultiViewport = new MultiViewportWindow();
-        MultiViewport->Initialize(static_cast<uint32>(CLIENTWIDTH), static_cast<uint32>(CLIENTHEIGHT), d3d11RHI.GetDevice());
+        // 멀티 뷰포트 생성
+        SMultiViewportWindow* MultiViewportWindow = nullptr;
+        MultiViewportWindow = new SMultiViewportWindow();
+        FRect ScreenRect(0, 0, windowWidth, windowHeight);
+        MultiViewportWindow->Initialize(renderer.GetRHIDevice()->GetDevice(),World, ScreenRect);
 
-        // 메인 스왑체인 설정
-        MultiViewport->SetMainSwapChain(d3d11RHI.GetSwapChain());
+        World->SetMultiViewportWindow(MultiViewportWindow);
 
-        // World에 멀티 뷰포트 윈도우 설정
-        World->SetMultiViewportWindow(MultiViewport);
-
-        // 기존 단일 뷰포트도 유지 (호환성을 위해)
-        FViewport* MainViewport = new FViewport();
-        MainViewport->Initialize(static_cast<uint32>(CLIENTWIDTH), static_cast<uint32>(CLIENTHEIGHT), d3d11RHI.GetDevice());
-        FViewportClient* ViewportClient = new FViewportClient();
-        MainViewport->SetViewportClient(ViewportClient);
-        World->SetMainViewport(MainViewport);
 
         //스폰을 위한 월드셋
         UUIManager::GetInstance().SetWorld(World);
@@ -288,28 +282,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             }
         }
 
-        // MultiViewportWindow 정리
-        if (MultiViewport)
-        {
-            MultiViewport->Cleanup();
-            delete MultiViewport;
-            MultiViewport = nullptr;
-        }
-
-        // FViewport 정리
-        if (MainViewport)
-        {
-            MainViewport->Cleanup();
-            delete MainViewport;
-            MainViewport = nullptr;
-        }
-
-        if (ViewportClient)
-        {
-            delete ViewportClient;
-            ViewportClient = nullptr;
-        }
-
+        delete MultiViewportWindow;
         UUIManager::GetInstance().Release();
         ObjectFactory::DeleteAll(true);
     }

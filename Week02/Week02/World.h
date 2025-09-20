@@ -4,7 +4,6 @@
 #include "GridActor.h"
 #include "GizmoActor.h"
 #include "Enums.h"
-#include "MultiViewportWindow.h"
 
 // Forward Declarations
 class UResourceManager;
@@ -16,10 +15,10 @@ class URenderer;
 class ACameraActor;
 class AGizmoActor;
 class FViewport;
-class MultiViewportWindow;
+class SMultiViewportWindow;
 struct FTransform;
 struct FPrimitiveData;
-
+class SViewportWindow;
 
 /**
  * UWorld
@@ -51,11 +50,11 @@ public:
     void SetRenderer(URenderer* InRenderer);
     URenderer*& const GetRenderer()  { return Renderer; }
 
-    void SetMainViewport(FViewport* InViewport) { MainViewport = InViewport; }
-    FViewport* GetMainViewport() const { return MainViewport; }
+    void SetMainViewport(SViewportWindow* InViewport) { MainViewport = InViewport; }
+    SViewportWindow* GetMainViewport() const { return MainViewport; }
 
-    void SetMultiViewportWindow(MultiViewportWindow* InMultiViewport) { MultiViewport = InMultiViewport; }
-    MultiViewportWindow* GetMultiViewportWindow() const { return MultiViewport; }
+    void SetMultiViewportWindow(SMultiViewportWindow* InMultiViewport) { MultiViewport = InMultiViewport; }
+    SMultiViewportWindow* GetMultiViewportWindow() const { return MultiViewport; }
 
     template<class T>
     T* SpawnActor();
@@ -100,9 +99,8 @@ public:
     /** === 렌더 === */
     void Render();
     void RenderSingleViewport();
-    void RenderToViewport(FViewport* Viewport, EMultiViewportType ViewportType);
+    void RenderViewports(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
     void RenderActorsToCurrentViewport(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
-    void GetViewMatrixForViewport(EMultiViewportType ViewportType, FMatrix& OutViewMatrix, FMatrix& OutProjectionMatrix);
     void RenderGizmoActor();
 
     
@@ -129,10 +127,10 @@ private:
     URenderer* Renderer;
 
     // 메인 뷰포트
-    FViewport* MainViewport = nullptr;
-
+    SViewportWindow* MainViewport = nullptr;
+    SViewportWindow* Main2Viewport = nullptr;
     // 멀티 뷰포트 윈도우
-    MultiViewportWindow* MultiViewport = nullptr;
+    SMultiViewportWindow* MultiViewport = nullptr;
 
     TArray<FPrimitiveData> Primitives;
 

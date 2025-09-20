@@ -38,9 +38,10 @@ public:
     virtual void SaveToConfig(const FString& SectionName) const;
     virtual void LoadFromConfig(const FString& SectionName);
 
-protected:
     SWindow* SideLT = nullptr;  // Left or Top
     SWindow* SideRB = nullptr;  // Right or Bottom
+protected:
+
 
     float SplitRatio = 0.5f;    // 분할 비율
     int SplitterThickness = 4;  // 스플리터 두께

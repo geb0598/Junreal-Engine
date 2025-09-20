@@ -9,6 +9,10 @@
 #include "TextRenderComponent.h"
 #include "AABoundingBoxComponent.h"
 #include "Mesh.h"
+#include "FViewport.h"
+#include"SViewportWindow.h"
+#include"SMultiViewportWindow.h"
+
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 , UIManager(UUIManager::GetInstance())
@@ -115,6 +119,13 @@ void UWorld::Initialize()
 	
 	// 액터 간 참조 설정
 	SetupActorReferences();
+
+    //MainViewport = new SViewportWindow();
+  //  MainViewport->Initialize(500,500,this,Renderer->GetRHIDevice()->GetDevice(),EViewportType::Perspective);
+
+  //  Main2Viewport = new SViewportWindow();
+  //  Main2Viewport->Initialize(1000, 1000, this, Renderer->GetRHIDevice()->GetDevice(), EViewportType::Perspective);
+
 }
 
 void UWorld::InitializeMainCamera()
@@ -161,6 +172,16 @@ void UWorld::SetRenderer(URenderer* InRenderer)
 
 void UWorld::Render()
 {
+    Renderer->BeginFrame();
+    MultiViewport->OnRender();
+    UIManager.Render();
+    Renderer->EndFrame();
+
+    //RenderSingleViewport();
+}
+
+void UWorld::RenderSingleViewport()
+{
     FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
     FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
     FMatrix ModelMatrix;
@@ -183,17 +204,17 @@ void UWorld::Render()
         {
             if (!Actor) continue;
             if (Actor->GetActorHiddenInGame()) continue;
-            
+
             // StaticMesh Show Flag 체크
             if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
                 continue;
-                
+
             bool bIsSelected = SelectionManager.IsActorSelected(Actor);
             if (bIsSelected) {
                 Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
             }
             Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-            
+
             for (USceneComponent* Component : Actor->GetComponents())
             {
                 if (!Component) continue;
@@ -202,15 +223,15 @@ void UWorld::Render()
                 {
                     if (!ActorComp->IsActive()) continue;
                 }
-                
+
                 // Text Render Component Show Flag 체크
                 if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
                     continue;
-                
+
                 // Bounding Box Show Flag 체크  
                 if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                     continue;
-                
+
                 if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
                 {
                     Renderer->SetViewModeType(ViewModeIndex);
@@ -222,17 +243,17 @@ void UWorld::Render()
             Renderer->OMSetBlendState(false);
         }
     }
-    
+
     // Engine Actors (그리드 등) 렌더링
     for (AActor* EngineActor : EngineActors)
     {
         if (!EngineActor) continue;
         if (EngineActor->GetActorHiddenInGame()) continue;
-        
+
         // Grid Show Flag 체크
         if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
             continue;
-            
+
         for (USceneComponent* Component : EngineActor->GetComponents())
         {
             if (!Component) continue;
@@ -261,6 +282,89 @@ void UWorld::Render()
     Renderer->EndFrame();
 }
 
+void UWorld::RenderViewports(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+{
+    if (!Renderer) return;
+    FVector rgb(1.0f, 1.0f, 1.0f);
+
+    // === Begin Line Batch for all actors ===
+    Renderer->BeginLineBatch();
+
+    // === Draw Actors with Show Flag checks ===
+    Renderer->SetViewModeType(ViewModeIndex);
+
+    // 일반 액터들 렌더링
+    if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+    {
+        for (AActor* Actor : Actors)
+        {
+            if (!Actor) continue;
+            if (Actor->GetActorHiddenInGame()) continue;
+
+            if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+                continue;
+
+            bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+            if (bIsSelected)
+                Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+
+            Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+
+            for (USceneComponent* Component : Actor->GetComponents())
+            {
+                if (!Component) continue;
+                if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+                    if (!ActorComp->IsActive()) continue;
+
+                if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+                    continue;
+
+                if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                    continue;
+
+                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+                {
+                    Renderer->SetViewModeType(ViewModeIndex);
+                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+                }
+            }
+            Renderer->OMSetBlendState(false);
+        }
+    }
+
+    // 엔진 액터들 (그리드 등)
+    for (AActor* EngineActor : EngineActors)
+    {
+        if (!EngineActor) continue;
+        if (EngineActor->GetActorHiddenInGame()) continue;
+
+        if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+            continue;
+
+        for (USceneComponent* Component : EngineActor->GetComponents())
+        {
+            if (!Component) continue;
+            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+                if (!ActorComp->IsActive()) continue;
+
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Renderer->SetViewModeType(ViewModeIndex);
+                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+            }
+        }
+        Renderer->OMSetBlendState(false);
+    }
+
+    Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+
+    RenderGizmoActor();
+    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+    
+}
+
 
 
 void UWorld::Tick(float DeltaSeconds)
@@ -280,6 +384,7 @@ void UWorld::Tick(float DeltaSeconds)
     //Input Manager가 카메라 후에 업데이트 되어야함
     InputManager.Update();
     UIManager.Update(DeltaSeconds);
+    MultiViewport->OnUpdate();
 }
 
 float UWorld::GetTimeSeconds() const

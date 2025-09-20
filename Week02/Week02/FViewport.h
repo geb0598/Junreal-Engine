@@ -15,7 +15,7 @@ public:
     virtual ~FViewport();
 
     // 초기화 및 정리
-    bool Initialize(uint32 InSizeX, uint32 InSizeY, ID3D11Device* Device);
+    bool Initialize(uint32 StartX, uint32 StartY, uint32 InSizeX, uint32 InSizeY, ID3D11Device* Device);
     void Cleanup();
 
     // 렌더링
@@ -56,7 +56,8 @@ private:
     // 뷰포트 속성
     uint32 SizeX = 0;
     uint32 SizeY = 0;
-
+    uint32 StartX = 0;
+    uint32 StartY = 0;
     // D3D 리소스들
     ID3D11Device* D3DDevice = nullptr;
     ID3D11DeviceContext* D3DDeviceContext = nullptr;

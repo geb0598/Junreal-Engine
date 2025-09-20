@@ -34,7 +34,7 @@ void FViewportClient::Draw(FViewport* Viewport)
     // 월드의 모든 액터들을 렌더링
     if (World)
     {
-        // World->RenderActors(ViewMatrix, ProjectionMatrix);
+        World->RenderViewports(ViewMatrix, ProjectionMatrix);
     }
 }
 
