@@ -38,6 +38,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "DynamicMesh.h"
+#include"MultiViewportWindow.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -93,6 +94,7 @@ IMPLEMENT_CLASS(UConsoleWindow)
 IMPLEMENT_CLASS(UControlPanelWindow)
 IMPLEMENT_CLASS(UExperimentalFeatureWindow)
 IMPLEMENT_CLASS(USceneWindow)
+//IMPLEMENT_CLASS(UMultiViewportWindow)
 
 IMPLEMENT_CLASS(UGlobalConsole)
 

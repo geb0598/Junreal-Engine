@@ -11,17 +11,6 @@
 // UE_LOG 대체 매크로
 #define UE_LOG(fmt, ...)
 
-// FMath 네임스페이스 대체
-namespace FMath {
-    template<typename T>
-    static T Max(T A, T B) { return std::max(A, B); }
-    
-    template<typename T>
-    static T Clamp(T Value, T Min, T Max) { 
-        return Value < Min ? Min : (Value > Max ? Max : Value); 
-    }
-}
-
 // Camera Mode
 static const char* CameraMode[] = {
 	"Perspective",

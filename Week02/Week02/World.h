@@ -4,6 +4,7 @@
 #include "GridActor.h"
 #include "GizmoActor.h"
 #include "Enums.h"
+#include "MultiViewportWindow.h"
 
 // Forward Declarations
 class UResourceManager;
@@ -14,6 +15,8 @@ class AActor;
 class URenderer;
 class ACameraActor;
 class AGizmoActor;
+class FViewport;
+class MultiViewportWindow;
 struct FTransform;
 struct FPrimitiveData;
 
@@ -47,6 +50,12 @@ public:
 
     void SetRenderer(URenderer* InRenderer);
     URenderer*& const GetRenderer()  { return Renderer; }
+
+    void SetMainViewport(FViewport* InViewport) { MainViewport = InViewport; }
+    FViewport* GetMainViewport() const { return MainViewport; }
+
+    void SetMultiViewportWindow(MultiViewportWindow* InMultiViewport) { MultiViewport = InMultiViewport; }
+    MultiViewportWindow* GetMultiViewportWindow() const { return MultiViewport; }
 
     template<class T>
     T* SpawnActor();
@@ -90,6 +99,10 @@ public:
 
     /** === 렌더 === */
     void Render();
+    void RenderSingleViewport();
+    void RenderToViewport(FViewport* Viewport, EMultiViewportType ViewportType);
+    void RenderActorsToCurrentViewport(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
+    void GetViewMatrixForViewport(EMultiViewportType ViewportType, FMatrix& OutViewMatrix, FMatrix& OutProjectionMatrix);
     void RenderGizmoActor();
 
     
@@ -114,6 +127,12 @@ private:
     AGridActor* GridActor = nullptr;
     // 렌더러 (월드가 소유)
     URenderer* Renderer;
+
+    // 메인 뷰포트
+    FViewport* MainViewport = nullptr;
+
+    // 멀티 뷰포트 윈도우
+    MultiViewportWindow* MultiViewport = nullptr;
 
     TArray<FPrimitiveData> Primitives;
 

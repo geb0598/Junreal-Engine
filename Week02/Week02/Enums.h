@@ -4,6 +4,7 @@
 #include "Enums.h"
 #include <d3d11.h>   
 
+
 struct FMeshData
 {
 	// 중복 없는 정점
@@ -153,11 +154,11 @@ enum class EPrimitiveType : uint32
 
     End,
 };
-
 /**
  * Show Flag system for toggling rendering features globally
  * Uses bit flags for efficient storage and checking
  */
+
 enum class EEngineShowFlags : uint64
 {
     None = 0,

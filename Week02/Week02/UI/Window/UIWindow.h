@@ -5,6 +5,8 @@
 #include "../../ImGui/imgui.h"
 #include "../Factory/UIWindowFactory.h"
 
+
+
 class UWidget;
 /**
  * @brief UI 윈도우 표시 상태 열거형
@@ -82,6 +84,9 @@ public:
 	~UUIWindow() override;
 
 	virtual void Initialize();
+
+	
+
 
 	virtual void Cleanup()
 	{

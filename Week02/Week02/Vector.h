@@ -6,6 +6,8 @@
 
 #include "UEContainer.h"
 
+
+
 // 혹시 다른 헤더에서 새어 들어온 매크로 방지
 #ifdef min
 #undef min
@@ -24,7 +26,16 @@ constexpr float HALF_PI = 1.5707963267948966192f;
 
 inline float DegreeToRadian(float Degree) { return Degree * (PI / 180.0f); }
 inline float RadianToDegree(float Radian) { return Radian * (180.0f / PI); }
+// FMath 네임스페이스 대체
+namespace FMath {
+    template<typename T>
+    static T Max(T A, T B) { return std::max(A, B); }
 
+    template<typename T>
+    static T Clamp(T Value, T Min, T Max) {
+        return Value < Min ? Min : (Value > Max ? Max : Value);
+    }
+}
 // 각도를 -180 ~ 180 범위로 정규화 (모듈러 연산)
 inline float NormalizeAngleDeg(float angleDeg)
 {
