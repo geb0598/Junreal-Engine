@@ -35,6 +35,9 @@ public:
     uint32 GetSizeY() const { return SizeY; }
     FVector2D GetSize() const { return FVector2D(SizeX, SizeY); }
 
+    uint32 GetStartX() const { return StartX; }
+    uint32 GetStartY() const { return StartY; }
+
     ID3D11RenderTargetView* GetRenderTargetView() const { return RenderTargetView; }
     ID3D11DepthStencilView* GetDepthStencilView() const { return DepthStencilView; }
     ID3D11ShaderResourceView* GetShaderResourceView() const { return ShaderResourceView; }

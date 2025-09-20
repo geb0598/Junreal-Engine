@@ -4,6 +4,8 @@
 #include "CameraComponent.h"
 #include"CameraActor.h"
 #include "World.h"
+#include "Picking.h"
+#include "SelectionManager.h"
 
 FViewportClient::FViewportClient()
 {
@@ -92,7 +94,105 @@ void FViewportClient::SetupOrthographicCamera()
             Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
             break;
 
-     
+
+    }
+}
+
+void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button)
+{
+    if (!Viewport || !World || Button != 0) // Only handle left mouse button
+        return;
+
+    // Get viewport size
+    FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
+    FVector2D ViewportOffset(static_cast<float>(Viewport->GetStartX()), static_cast<float>(Viewport->GetStartY()));
+    FVector2D ViewportMousePos(static_cast<float>(X), static_cast<float>(Y));
+
+    // Get the appropriate camera for this viewport
+    ACameraActor* PickingCamera = nullptr;
+
+    if (ViewportType == EViewportType::Perspective)
+    {
+        // Use main camera for perspective view
+        PickingCamera = World->GetCameraActor();
+    }
+    else
+    {
+        // For orthographic views, we need to use our local camera settings
+        // Since we can't easily create a temporary ACameraActor, we'll create a temporary one
+        // or use the existing camera but modify the picking to use our Camera component's matrices
+        PickingCamera = World->GetCameraActor();
+    }
+
+    if (PickingCamera)
+    {
+        // For orthographic viewports, we need to use our local camera component's matrices instead
+        AActor* PickedActor = nullptr;
+        TArray<AActor*> AllActors = World->GetActors();
+
+        if (ViewportType == EViewportType::Perspective)
+        {
+            // Use normal picking for perspective view
+            PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset);
+        }
+        else
+        {
+            // For orthographic views, create a ray using our local camera settings
+            const FMatrix View = Camera->GetViewMatrix();
+            const FMatrix Proj = Camera->GetProjectionMatrix();
+            const FVector CameraWorldPos = Camera->GetWorldLocation();
+            const FVector CameraRight = Camera->GetRight();
+            const FVector CameraUp = Camera->GetUp();
+            const FVector CameraForward = Camera->GetForward();
+
+            FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                           ViewportMousePos, ViewportSize, ViewportOffset);
+
+            int pickedIndex = -1;
+            float pickedT = 1e9f;
+
+            // Perform picking with our custom ray
+            for (int i = 0; i < AllActors.Num(); ++i)
+            {
+                AActor* Actor = AllActors[i];
+                if (!Actor || Actor->GetActorHiddenInGame()) continue;
+
+                float hitDistance;
+                if (CPickingSystem::CheckActorPicking(Actor, ray, hitDistance))
+                {
+                    if (hitDistance < pickedT)
+                    {
+                        pickedT = hitDistance;
+                        pickedIndex = i;
+                    }
+                }
+            }
+
+            if (pickedIndex >= 0)
+            {
+                PickedActor = AllActors[pickedIndex];
+                char buf[160];
+                sprintf_s(buf, "[Ortho Pick] Hit primitive %d at t=%.3f\n", pickedIndex, pickedT);
+                UE_LOG(buf);
+            }
+        }
+
+        if (PickedActor)
+        {
+            USelectionManager::GetInstance().SelectActor(PickedActor);
+            UUIManager::GetInstance().SetPickedActor(PickedActor);
+            if (World->GetGizmoActor())
+            {
+                World->GetGizmoActor()->SetTargetActor(PickedActor);
+                World->GetGizmoActor()->SetActorLocation(PickedActor->GetActorLocation());
+            }
+        }
+        else
+        {
+            UUIManager::GetInstance().ResetPickedActor(); 
+            // Clear selection if nothing was picked
+            USelectionManager::GetInstance().ClearSelection();
+        }
     }
 }
 

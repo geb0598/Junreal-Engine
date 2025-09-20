@@ -89,6 +89,45 @@ FRay MakeRayFromMouseWithCamera(const FMatrix& InView,
     return Ray;
 }
 
+FRay MakeRayFromViewport(const FMatrix& InView,
+                         const FMatrix& InProj,
+                         const FVector& CameraWorldPos,
+                         const FVector& CameraRight,
+                         const FVector& CameraUp,
+                         const FVector& CameraForward,
+                         const FVector2D& ViewportMousePos,
+                         const FVector2D& ViewportSize,
+                         const FVector2D& ViewportOffset)
+{
+    // 1) Convert global mouse position to viewport-relative position
+    float localMouseX = ViewportMousePos.X - ViewportOffset.X;
+    float localMouseY = ViewportMousePos.Y - ViewportOffset.Y;
+
+    // 2) Use viewport-specific size for NDC conversion
+    float viewportW = (ViewportSize.X > 1.0f) ? ViewportSize.X : 1.0f;
+    float viewportH = (ViewportSize.Y > 1.0f) ? ViewportSize.Y : 1.0f;
+
+    const float NdcX = (2.0f * localMouseX / viewportW) - 1.0f;
+    const float NdcY = 1.0f - (2.0f * localMouseY / viewportH);
+
+    // 2) View-space direction using projection scalars
+    const float XScale = InProj.M[0][0];
+    const float YScale = InProj.M[1][1];
+    const float ViewDirX = NdcX / (XScale == 0.0f ? 1.0f : XScale);
+    const float ViewDirY = NdcY / (YScale == 0.0f ? 1.0f : YScale);
+    const float ViewDirZ = 1.0f; // Forward in view space
+
+    // 3) Use camera's actual world-space orientation vectors
+    // Transform view direction to world space using camera's real orientation
+    const FVector WorldDirection = (CameraRight * ViewDirX + CameraUp * ViewDirY + CameraForward * ViewDirZ).
+        GetSafeNormal();
+
+    FRay Ray;
+    Ray.Origin = CameraWorldPos;
+    Ray.Direction = WorldDirection;
+    return Ray;
+}
+
 bool IntersectRaySphere(const FRay& InRay, const FVector& InCenter, float InRadius, float& OutT)
 {
     // Solve ||(RayOrigin + T*RayDir) - Center||^2 = Radius^2
@@ -205,6 +244,62 @@ AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraAct
     else
     {
         UE_LOG("[Pick] No hit (Speed=FAST)\n");
+        return nullptr;
+    }
+}
+
+AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
+                                               ACameraActor* Camera,
+                                               const FVector2D& ViewportMousePos,
+                                               const FVector2D& ViewportSize,
+                                               const FVector2D& ViewportOffset)
+{
+    if (!Camera) return nullptr;
+
+    // 뷰포트별 레이 생성 - 각 뷰포트의 로컬 마우스 좌표와 크기, 오프셋 사용
+    const FMatrix View = Camera->GetViewMatrix();
+    const FMatrix Proj = Camera->GetProjectionMatrix();
+    const FVector CameraWorldPos = Camera->GetActorLocation();
+    const FVector CameraRight = Camera->GetRight();
+    const FVector CameraUp = Camera->GetUp();
+    const FVector CameraForward = Camera->GetForward();
+
+    FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                   ViewportMousePos, ViewportSize, ViewportOffset);
+
+    int pickedIndex = -1;
+    float pickedT = 1e9f;
+
+    // 모든 액터에 대해 피킹 테스트
+    for (int i = 0; i < Actors.Num(); ++i)
+    {
+        AActor* Actor = Actors[i];
+        if (!Actor) continue;
+
+        // Skip hidden actors for picking
+        if (Actor->GetActorHiddenInGame()) continue;
+
+        float hitDistance;
+        if (CheckActorPicking(Actor, ray, hitDistance))
+        {
+            if (hitDistance < pickedT)
+            {
+                pickedT = hitDistance;
+                pickedIndex = i;
+            }
+        }
+    }
+
+    if (pickedIndex >= 0)
+    {
+        char buf[160];
+        sprintf_s(buf, "[Viewport Pick] Hit primitive %d at t=%.3f\n", pickedIndex, pickedT);
+        UE_LOG(buf);
+        return Actors[pickedIndex];
+    }
+    else
+    {
+        UE_LOG("[Viewport Pick] No hit\n");
         return nullptr;
     }
 }

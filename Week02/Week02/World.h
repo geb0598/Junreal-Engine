@@ -103,6 +103,8 @@ public:
     void RenderActorsToCurrentViewport(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
     void RenderGizmoActor();
 
+    AGizmoActor* GetGizmoActor();
+
     
     /** === 레벨 / 월드 구성 === */
     // TArray<ULevel*> Levels;

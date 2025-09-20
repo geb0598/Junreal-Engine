@@ -511,25 +511,28 @@ void UWorld::ProcessActorSelection()
     
     if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
     {
-        if (AActor* PickedActor = CPickingSystem::PerformPicking(Actors, MainCameraActor))
-        {
-            SelectionManager.SelectActor(PickedActor);
-            UIManager.SetPickedActor(PickedActor);
-            if (GizmoActor)
-            {
-                GizmoActor->SetTargetActor(PickedActor);
-                GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
-            }
-        }
-        else
-        {
-            UIManager.ResetPickedActor();
-            SelectionManager.ClearSelection();
-            if (GizmoActor)
-            {
-                GizmoActor->SetTargetActor(nullptr);
-            }
-        }
+        const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+        MultiViewport->OnMouseDown(MousePosition);
+        //if (AActor* PickedActor = CPickingSystem::PerformPicking(Actors, MainCameraActor))
+        //{
+        //    SelectionManager.SelectActor(PickedActor);
+        //    UIManager.SetPickedActor(PickedActor);
+
+        //    if (GizmoActor)
+        //    {
+        //        GizmoActor->SetTargetActor(PickedActor);
+        //        GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
+        //    }
+        //}
+        //else
+        //{
+        //    UIManager.ResetPickedActor();
+        //    //SelectionManager.ClearSelection();
+        //    if (GizmoActor)
+        //    {
+        //        GizmoActor->SetTargetActor(nullptr);
+        //    }
+        //}
     }
 }
 
@@ -622,4 +625,9 @@ void UWorld::RenderGizmoActor()
     
     // 알파 블랜딩을 위한 blendstate
     Renderer->OMSetBlendState(true);
+}
+
+AGizmoActor* UWorld::GetGizmoActor()
+{
+    return GizmoActor;
 }

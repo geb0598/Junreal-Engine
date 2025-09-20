@@ -34,7 +34,7 @@ public:
 
     // 입력 처리
     virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y) {}
-    virtual void MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button) {}
+    virtual void MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button);
     virtual void MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button) {}
     virtual void KeyDown(FViewport* Viewport, int32 KeyCode) {}
     virtual void KeyUp(FViewport* Viewport, int32 KeyCode) {}

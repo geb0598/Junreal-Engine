@@ -110,6 +110,8 @@ void SViewportWindow::OnMouseDown(FVector2D MousePos)
 
     bIsMouseDown = true;
     FVector2D LocalPos = MousePos - Rect.Min;
+
+    // FViewport의 ProcessMouseButtonDown을 통해 ViewportClient로 이벤트 전달
     Viewport->ProcessMouseButtonDown((int32)LocalPos.X, (int32)LocalPos.Y, 0);
 }
 

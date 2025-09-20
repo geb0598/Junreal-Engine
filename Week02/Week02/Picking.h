@@ -31,6 +31,17 @@ FRay MakeRayFromMouseWithCamera(const FMatrix& InView,
                                 const FVector& CameraUp,
                                 const FVector& CameraForward);
 
+// Viewport-specific ray generation for multi-viewport picking
+FRay MakeRayFromViewport(const FMatrix& InView,
+                         const FMatrix& InProj,
+                         const FVector& CameraWorldPos,
+                         const FVector& CameraRight,
+                         const FVector& CameraUp,
+                         const FVector& CameraForward,
+                         const FVector2D& ViewportMousePos,
+                         const FVector2D& ViewportSize,
+                         const FVector2D& ViewportOffset = FVector2D(0.0f, 0.0f));
+
 // Ray-sphere intersection.
 // Returns true and the closest positive T if the ray hits the sphere.
 bool IntersectRaySphere(const FRay& InRay, const FVector& InCenter, float InRadius, float& OutT);
@@ -53,13 +64,23 @@ public:
     /** === 피킹 실행 === */
     static AActor* PerformPicking(const TArray<AActor*>& Actors, ACameraActor* Camera);
 
+    // Viewport-specific picking for multi-viewport scenarios
+    static AActor* PerformViewportPicking(const TArray<AActor*>& Actors,
+                                          ACameraActor* Camera,
+                                          const FVector2D& ViewportMousePos,
+                                          const FVector2D& ViewportSize,
+                                          const FVector2D& ViewportOffset = FVector2D(0.0f, 0.0f));
+
     // 현재 기즈모의 어떤 축에 호버링 중인지 반환 (X=1, Y=2, Z=3)
     static uint32 IsHoveringGizmo(AGizmoActor* GizmoActor, const ACameraActor* Camera);
     
     // 기즈모 드래그로 액터를 이동시키는 함수
     static void DragActorWithGizmo(AActor* Actor, AGizmoActor* GizmoActor, uint32 GizmoAxis, const FVector2D& MouseDelta, const ACameraActor* Camera, EGizmoMode InGizmoMode);
+
+    /** === 헬퍼 함수들 === */
+    static bool CheckActorPicking(const AActor* Actor, const FRay& Ray, float& OutDistance);
+
 private:
     /** === 내부 헬퍼 함수들 === */
-    static bool CheckActorPicking(const AActor* Actor, const FRay& Ray, float& OutDistance);
     static bool CheckGizmoComponentPicking(const UStaticMeshComponent* Component, const FRay& Ray, float& OutDistance);
 };
