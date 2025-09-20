@@ -1,13 +1,17 @@
 ﻿#include "pch.h"
 #include "ObjManager.h"
+
 #include "ObjectIterator.h"
 #include "StaticMesh.h"
 #include "Enums.h"
+#include "ObjectFactory.h"
 
 TMap<FString, FStaticMesh*> FObjManager::ObjStaticMeshMap;
 
 FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
 {
+    
+
     // 2) 캐시 히트 시 즉시 반환 (Find는 FStaticMesh** 반환)
     if (FStaticMesh** It = ObjStaticMeshMap.Find(PathFileName))
     {
@@ -18,6 +22,13 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
     FStaticMesh* NewFStaticMesh = new FStaticMesh();
 
     // TODO: 여기서 OBJ 파싱 및 NewFStaticMesh 초기화
+    FWideString WPathFileName(PathFileName.begin(), PathFileName.end()); // 단순 ascii라고 가정
+
+    FObjInfo RawObjInfo;
+    //FObjImporter::LoadObjModel(WPathFileName, &RawObjInfo, false, true); // test로 오른손 좌표계 false
+    FObjImporter::LoadObjModel(WPathFileName, &RawObjInfo, true, true);
+
+    FObjImporter::ConvertToStaticMesh(RawObjInfo, NewFStaticMesh);
 
     // 4) 맵에 추가 (Set이 아니라 Add)
     ObjStaticMeshMap.Add(PathFileName, NewFStaticMesh);
@@ -34,11 +45,10 @@ UStaticMesh* FObjManager::LoadObjStaticMesh(FString& PathFileName)
         if (StaticMesh->GetFilePath() == PathFileName)
         {
             return StaticMesh;
-
         }
     }
 
-    FStaticMesh* Asset = FObjManager::LoadObjStaticMeshAsset(PathFileName);
-    /*UStaticMesh* StaticMesh = ConstructObject<UStaticMesh>();
-    StaticMesh->SetStaticMeshAsset(StaticMeshAsset);*/
+    FStaticMesh* StaticMeshAsset = FObjManager::LoadObjStaticMeshAsset(PathFileName);
+    UStaticMesh* StaticMesh = ObjectFactory::NewObject<UStaticMesh>();
+    StaticMesh->SetStaticMeshAsset(StaticMeshAsset);
 }

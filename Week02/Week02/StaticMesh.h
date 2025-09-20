@@ -16,8 +16,14 @@ public:
     void SetFilePath(const FString& InFilePath);
     void SetResourceData(FResourceData* InData) { ResourceData = InData; }
     FResourceData* GetResourceData() { return ResourceData; }
+
+    void SetStaticMeshAsset(FStaticMesh* const InStaticMeshAsset)
+    {
+        StaticMeshAsset = InStaticMeshAsset;
+    }
 protected:
     FString FilePath;
     FResourceData* ResourceData = nullptr;
+    FStaticMesh* StaticMeshAsset;
 };
 
