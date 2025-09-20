@@ -28,6 +28,7 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
 
 UStaticMesh* FObjManager::LoadObjStaticMesh(FString& PathFileName)
 {
+	// 1) 이미 로드된 UStaticMesh가 있는지 전체 검색
     for (TObjectIterator<UStaticMesh> It; It; ++It)
     {
         UStaticMesh* StaticMesh = *It;
@@ -38,7 +39,12 @@ UStaticMesh* FObjManager::LoadObjStaticMesh(FString& PathFileName)
         }
     }
 
+	// 2) 없으면 새로 로드
     FStaticMesh* Asset = FObjManager::LoadObjStaticMeshAsset(PathFileName);
-    /*UStaticMesh* StaticMesh = ConstructObject<UStaticMesh>();
-    StaticMesh->SetStaticMeshAsset(StaticMeshAsset);*/
+    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>(PathFileName);
+    
+	// 3) Asset 연결
+    StaticMesh->SetStaticMeshAsset(Asset);
+
+	return StaticMesh;
 }

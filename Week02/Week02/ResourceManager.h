@@ -138,7 +138,7 @@ template<typename T>
 ResourceType UResourceManager::GetResourceType()
 {
     if (T::StaticClass() == UStaticMesh::StaticClass())
-        return ResourceType::Mesh;
+        return ResourceType::StaticMesh;
     if (T::StaticClass() == UDynamicMesh::StaticClass())
         return ResourceType::DynamicMesh;
     if (T::StaticClass() == UShader::StaticClass())
