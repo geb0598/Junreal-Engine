@@ -28,6 +28,8 @@ struct FObjInfo
     // Texture List
     // other...
     TArray<FWideString> MaterialNames;
+
+    FString ObjFileName;
 };
 
 struct FObjMaterialInfo
@@ -84,6 +86,8 @@ public:
         }
 
         // obj 파싱 시작
+        OutObjInfo->ObjFileName = FString(InFileName.begin(), InFileName.end()); // 아스키 코드라고 가정
+
         FWideString line;
         while (std::getline(FileIn, line))
         {
@@ -168,9 +172,9 @@ public:
                 //3) FaceVertices에 그대로 파싱된 걸로, 다시 트라이앵글에 맞춰 인덱스 배열들에 넣기
                 for (uint32 i = 0; i < 3; ++i)
                 {
-                    OutObjInfo->PositionIndices.push_back(LineFaceVertices[0].PositionIndex);
-                    OutObjInfo->TexCoordIndices.push_back(LineFaceVertices[0].TexCoordIndex);
-                    OutObjInfo->NormalIndices.push_back(LineFaceVertices[0].NormalIndex);
+                    OutObjInfo->PositionIndices.push_back(LineFaceVertices[i].PositionIndex);
+                    OutObjInfo->TexCoordIndices.push_back(LineFaceVertices[i].TexCoordIndex);
+                    OutObjInfo->NormalIndices.push_back(LineFaceVertices[i].NormalIndex);
                     ++VIndex;
                 }
                 ++MeshTriangles;
@@ -240,6 +244,7 @@ public:
         FileIn.close();
 
         // TODO: Material 관련 코드
+        // TODO: Normal 다시 계산
     }
 
     // TODO: Material 파싱도 필요
@@ -247,6 +252,45 @@ public:
     {
         // TODO: indices도 강의자료에 f 파싱에서 하던 부분 여기서 해야됨. 2중 for문
         // TODO: ~Indices들도 지금 중복제거가 안되어있으니, 중복 제거 후 넣어야 함.
+        OutStaticMesh->PathFileName = InObjInfo.ObjFileName;
+
+        uint32 NumDuplicatedVertex = InObjInfo.PositionIndices.size();
+        for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
+        {
+            bool bIsDuplicate = false;
+            /*for (int PreIndex = 0; PreIndex < CurIndex; ++PreIndex)
+            {
+                if (InObjInfo.PositionIndices[CurIndex] == InObjInfo.PositionIndices[PreIndex] && InObjInfo.TexCoordIndices[CurIndex] == InObjInfo.TexCoordIndices[PreIndex])
+                {
+                    OutStaticMesh->Indices.push_back(PreIndex);
+                    bIsDuplicate = true;
+                    break;
+                }
+            }*/
+
+            const uint64 VertexLen = OutStaticMesh->Vertices.size();
+            for (uint32 VertexIndex = 0; VertexIndex < VertexLen; ++VertexIndex)
+            {
+                if (OutStaticMesh->Vertices[VertexIndex].pos == InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]] && OutStaticMesh->Vertices[VertexIndex].tex == InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]])
+                {
+                    OutStaticMesh->Indices.push_back(VertexIndex);
+                    bIsDuplicate = true;
+                    break;
+                }
+            }
+
+            if (!bIsDuplicate)
+            {
+                FVector Pos = InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]];
+                FVector Normal = InObjInfo.Normals[InObjInfo.NormalIndices[CurIndex]];
+                FVector2D TexCoord = InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]];
+                FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f); // default color
+                FNormalVertex NormalVertex = FNormalVertex(Pos, Normal, Color, TexCoord);
+                OutStaticMesh->Vertices.push_back(NormalVertex);
+
+                OutStaticMesh->Indices.push_back(OutStaticMesh->Vertices.size() - 1);
+            }
+        }
     }
 
 private:
