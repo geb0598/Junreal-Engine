@@ -55,8 +55,9 @@ public:
 
     // 뷰포트별 카메라 설정
     void SetupOrthographicCamera();
+    void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
-
+    EViewModeIndex GetViewModeIndex() { return ViewModeIndex;}
 protected:
     EViewportType ViewportType = EViewportType::Perspective;
     UWorld* World = nullptr;
@@ -66,4 +67,6 @@ protected:
     uint32 OrthographicAddXPosition;
     uint32  OrthographicAddYPosition;
     float OrthographicZoom = 30.0f;
+    //뷰모드
+    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Lit;
 };

@@ -68,11 +68,11 @@ void SViewportWindow::OnRender()
 		return;
 
 	Viewport->BeginRenderFrame();
-
+	RenderToolbar();
 	if (ViewportClient)
 		ViewportClient->Draw(Viewport);
 	// 툴바 렌더링
-	RenderToolbar();
+	
 	Viewport->EndRenderFrame();
 
 
@@ -151,14 +151,60 @@ void SViewportWindow::RenderToolbar()
 
 	// 뷰포트별 고유한 윈도우 ID
 	char windowId[64];
-	sprintf_s(windowId, "ViewportToolbar_%s", ViewportName.ToString().c_str());
+	sprintf_s(windowId, "ViewportToolbar_%p", this);
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
 		ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 	if (ImGui::Begin(windowId, nullptr, flags))
 	{
-		// 뷰포트 이름
+		// 뷰포트 모드 선택 콤보박스
+		const char* viewportModes[] = {
+			"Perspective",
+			"Top",
+			"Bottom",
+			"Front",
+			"Left",
+			"Right",
+			"Back"
+		};
+
+		int currentMode = static_cast<int>(ViewportType);
+		ImGui::SetNextItemWidth(100);
+		if (ImGui::Combo("##ViewportMode", &currentMode, viewportModes, IM_ARRAYSIZE(viewportModes)))
+		{
+			EViewportType newType = static_cast<EViewportType>(currentMode);
+			if (newType != ViewportType)
+			{
+				ViewportType = newType;
+
+				// ViewportClient 업데이트
+				if (ViewportClient)
+				{
+					ViewportClient->SetViewportType(ViewportType);
+					// 직교 뷰의 경우 카메라 설정 업데이트
+					if (ViewportType != EViewportType::Perspective)
+					{
+						ViewportClient->SetupOrthographicCamera();
+					}
+				}
+
+				// 뷰포트 이름 업데이트
+				switch (ViewportType)
+				{
+				case EViewportType::Perspective:       ViewportName = "Perspective"; break;
+				case EViewportType::Orthographic_Front: ViewportName = "Front"; break;
+				case EViewportType::Orthographic_Left:  ViewportName = "Left"; break;
+				case EViewportType::Orthographic_Top:   ViewportName = "Top"; break;
+				case EViewportType::Orthographic_Back: ViewportName = "Back"; break;
+				case EViewportType::Orthographic_Right:  ViewportName = "Right"; break;
+				case EViewportType::Orthographic_Bottom:   ViewportName = "Bottom"; break;
+				}
+			}
+		}
+		ImGui::SameLine();
+
+		// 뷰포트 이름 표시
 		ImGui::Text("%s", ViewportName.ToString().c_str());
 		ImGui::SameLine();
 
@@ -173,6 +219,23 @@ void SViewportWindow::RenderToolbar()
 		ImGui::SameLine();
 
 		if (ImGui::Button("Reset")) { /* TODO: 카메라 Reset */ }
+
+		const char* viewModes[] = { "Lit", "Unlit", "Wireframe" };
+		int currentViewMode = static_cast<int>(ViewportClient-> GetViewModeIndex())-1; // 0=Lit, 1=Unlit, 2=Wireframe -1이유 1부터 시작이여서 
+
+		ImGui::SameLine();
+		if (ImGui::Combo("##ViewMode", &currentViewMode, viewModes, IM_ARRAYSIZE(viewModes)))
+		{
+			if (ViewportClient)
+			{
+				switch (currentViewMode)
+				{
+				case 0: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Lit); break;
+				case 1: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Unlit); break;
+				case 2: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Wireframe); break;
+				}
+			}
+		}
 	}
 	ImGui::End();
 }

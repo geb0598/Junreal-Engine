@@ -33,16 +33,25 @@ void FViewportClient::Draw(FViewport* Viewport)
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
     if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
 
-    ACameraActor* MainCamera = World->GetCameraActor();
+ 
     FMatrix ViewMatrix{};
     FMatrix ProjectionMatrix{};
     switch (ViewportType)
     {
     case EViewportType::Perspective:
     {
+        ACameraActor* MainCamera = World->GetCameraActor();
+        MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
+       
         ViewMatrix = MainCamera->GetViewMatrix();
         ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
-        Camera = MainCamera;
+
+        if (World)
+        {
+            World->SetViewModeIndex(ViewModeIndex);
+            World->RenderViewports(MainCamera, Viewport);
+            World->GetGizmoActor()->Render(MainCamera, Viewport);
+        }
         break;
     }
     case EViewportType::Orthographic_Top:
@@ -53,20 +62,22 @@ void FViewportClient::Draw(FViewport* Viewport)
     case EViewportType::Orthographic_Right:
     {
         Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
-        Camera->GetCameraComponent()->SetFOV(100);
+       
         SetupOrthographicCamera();
         ViewMatrix = Camera->GetViewMatrix();
         ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+        if (World)
+        {
+            World->SetViewModeIndex(ViewModeIndex);
+            World->RenderViewports(Camera, Viewport);
+            World->GetGizmoActor()->Render(Camera, Viewport);
+        }
         break;
     }
     }
     // 월드의 모든 액터들을 렌더링
 
-    if (World)
-    {
-        World->RenderViewports(Camera,Viewport);
-        World->GetGizmoActor()->Render(Camera,Viewport);
-    }
+  
 }
 
 
@@ -79,28 +90,34 @@ void FViewportClient::SetupOrthographicCamera()
             
             Camera->SetActorLocation({ 0, 0, 1000  } );
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
+            Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Bottom:
 
             Camera->SetActorLocation({ 0, 0, -1000 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
+            Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Left:
             Camera->SetActorLocation({ 0, 1000 , 0 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
+            Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Right:
             Camera->SetActorLocation({ 0, 1000 , 0 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
+            Camera->GetCameraComponent()->SetFOV(100);
             break;
 
         case EViewportType::Orthographic_Front:
             Camera->SetActorLocation({ -1000, 0, 0 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+            Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Back:
             Camera->SetActorLocation({ 1000, 0, 0 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
+            Camera->GetCameraComponent()->SetFOV(100);
             break;
 
 
