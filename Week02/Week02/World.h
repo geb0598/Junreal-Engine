@@ -100,7 +100,7 @@ public:
     void Render();
     void RenderSingleViewport();
     void RenderViewports(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
-    void RenderGizmoActor();
+    void RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
 
     /** === 필요한 엑터 게터 === */
     const TArray<AActor*>& GetActors() { return Actors; }

@@ -290,7 +290,7 @@ void UWorld::RenderSingleViewport()
     }
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
-    RenderGizmoActor();
+    RenderGizmoActor(ViewMatrix, ProjectionMatrix);
 
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
     UIManager.Render();
@@ -376,9 +376,9 @@ void UWorld::RenderViewports(const FMatrix& ViewMatrix, const FMatrix& Projectio
 
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
-    RenderGizmoActor();
+  
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-    
+    RenderGizmoActor(ViewMatrix, ProjectionMatrix);
 }
 
 
@@ -617,14 +617,12 @@ void UWorld::SaveScene(const FString& SceneName)
 }
 
 
-void UWorld::RenderGizmoActor()
+void UWorld::RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
     if (!GizmoActor || !Renderer || !MainCameraActor) return;
     
     if (!SelectionManager.HasSelection()) return;
-    
-    FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
-    FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
+  
     FMatrix ModelMatrix;
     FVector rgb(1.0f, 1.0f, 1.0f);
     
