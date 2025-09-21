@@ -9,9 +9,11 @@
 #include "TextRenderComponent.h"
 #include "AABoundingBoxComponent.h"
 #include "FViewport.h"
-#include"SViewportWindow.h"
-#include"SMultiViewportWindow.h"
+#include "SViewportWindow.h"
+#include "SMultiViewportWindow.h"
 #include "StaticMesh.h"
+#include "ObjManager.h"
+
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 
@@ -84,12 +86,10 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
     OutputDebugStringA("================================\r\n");
 }
 
-
-
-
-
 void UWorld::Initialize()
 {
+	InitializeObjManager();
+
     // === Scene 로딩 (임시) 및 Actor초기화  ===
     auto Primitives = FSceneLoader::Load("WorldData.Scene");
     for (auto Primitive : Primitives)
@@ -164,6 +164,17 @@ void UWorld::InitializeGizmo()
     }
     
     UIManager.SetGizmoActor(GizmoActor);
+}
+
+void UWorld::InitializeObjManager()
+{
+	FObjManager::LoadObjStaticMesh("Data/Cube.obj");
+	FObjManager::LoadObjStaticMesh("Data/Sphere.obj");
+	FObjManager::LoadObjStaticMesh("Data/Triangle.obj");
+	FObjManager::LoadObjStaticMesh("Data/Arrow.obj");
+	FObjManager::LoadObjStaticMesh("Data/RotationHandle.obj");
+    FObjManager::LoadObjStaticMesh("Data/ScaleHandle.obj");
+	FObjManager::LoadObjStaticMesh("Data/car.obj");
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)

@@ -55,7 +55,7 @@ const char* UPrimitiveSpawnWidget::GetPrimitiveTypeName(int32 TypeIndex) const
 	case 0: return "Cube";
 	case 1: return "Sphere"; 
 	case 2: return "Triangle";
-	case 3: return "Arrow";
+	case 3: return "Car";
 	default: return "Unknown";
 	}
 }
@@ -100,7 +100,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
 		"Cube",
 		"Sphere", 
 		"Triangle",
-		"Arrow"
+		"Car"
 	};
 
 	ImGui::Text("Primitive Type:");
@@ -235,6 +235,7 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			case 0: MeshPath = "Data/Cube.obj"; break;
 			case 1: MeshPath = "Data/Sphere.obj"; break; 
 			case 2: MeshPath = "Data/Triangle.obj"; break;
+			case 3: MeshPath = "Data/car.obj"; break;
 			default: MeshPath = "Data/Cube.obj"; break;
 			}
 			

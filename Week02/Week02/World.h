@@ -39,6 +39,7 @@ public:
     void InitializeMainCamera();
     void InitializeGrid();
     void InitializeGizmo();
+    void InitializeObjManager();
     
     // 액터 인터페이스 관리
     void SetupActorReferences();
