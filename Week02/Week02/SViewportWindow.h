@@ -25,6 +25,9 @@ public:
     FViewportClient* GetViewportClient() const { return ViewportClient; }
 
 private:
+    void RenderToolbar();
+
+private:
 
 
     FViewport* Viewport = nullptr;

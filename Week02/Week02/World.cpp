@@ -175,6 +175,7 @@ void UWorld::Render()
 {
     Renderer->BeginFrame();
     UIManager.Render();
+ 
     // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경 SWidget으로 변경해줄거임
     if (UIManager.IsUsingMainViewport())
     {

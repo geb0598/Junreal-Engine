@@ -69,8 +69,6 @@ void SSplitter::OnRender()
         SplitterColor = ImGui::GetColorU32(ImGuiCol_Separator);
     }
 
-
-
     DrawList->AddRectFilled(
         ImVec2(SplitterRect.Min.X, SplitterRect.Min.Y),
         ImVec2(SplitterRect.Max.X, SplitterRect.Max.Y),
