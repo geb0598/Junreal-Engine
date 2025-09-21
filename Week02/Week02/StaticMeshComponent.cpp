@@ -4,6 +4,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "ResourceManager.h"
+#include "ObjManager.h"
 
 UStaticMeshComponent::UStaticMeshComponent()
 {
@@ -19,6 +20,11 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
 {
     Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
     Renderer->PrepareShader(GetMaterial()->GetShader());
-    Renderer->DrawIndexedPrimitiveComponent(GetMeshResource(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Renderer->DrawIndexedPrimitiveComponent(GetStaticMesh(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void UStaticMeshComponent::SetStaticMesh(const FString& PathFileName)
+{
+	StaticMesh = FObjManager::LoadObjStaticMesh(PathFileName);
 }
 

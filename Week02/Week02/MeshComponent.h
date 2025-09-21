@@ -11,15 +11,8 @@ protected:
     ~UMeshComponent() override;
 
 public:
-    virtual void SetMeshResource(const FString& FilePath);
-    virtual UStaticMesh* GetMeshResource() const { return MeshResource; }
 
 
 protected:
 
-    // 정점 데이터
-    //FVertexSimple* Vertices;  // 정점 배열 주소
-    //int VertexCount;          // 정점 개수
-
-    UStaticMesh* MeshResource = nullptr;
 };
