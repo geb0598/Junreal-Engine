@@ -34,6 +34,10 @@ private:
 	bool bRandomScale = true;
 	float MinScale = 0.5f;
 	float MaxScale = 2.0f;
+
+	// 메시 선택
+	mutable int32 SelectedMeshIndex = -1;
+	mutable TArray<FString> CachedMeshFilePaths;
 	
 	// 헬퍼 메서드
 	UWorld* GetCurrentWorld() const;

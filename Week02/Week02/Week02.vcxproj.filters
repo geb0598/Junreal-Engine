@@ -243,9 +243,6 @@
     <ClCompile Include="Texture.cpp">
       <Filter>소스 파일\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>소스 파일\Resources</Filter>
-    </ClCompile>
     <ClCompile Include="FName.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -341,6 +338,15 @@
     </ClCompile>
     <ClCompile Include="ObjManager.cpp">
       <Filter>소스 파일\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="SMultiViewportWindow.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SViewportWindow.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\PropertyWindow.cpp">
+      <Filter>소스 파일\UI\Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -502,9 +508,6 @@
     <ClInclude Include="Texture.h">
       <Filter>헤더 파일\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>헤더 파일\Resources</Filter>
-    </ClInclude>
     <ClInclude Include="Name.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -601,9 +604,6 @@
     <ClInclude Include="FViewport.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MultiViewportWindow.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="FViewportClient.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -612,6 +612,15 @@
     </ClInclude>
     <ClInclude Include="ObjManager.h">
       <Filter>헤더 파일\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="SMultiViewportWindow.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SViewportWindow.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\PropertyWindow.h">
+      <Filter>헤더 파일\UI\Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

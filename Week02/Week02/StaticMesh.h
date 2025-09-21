@@ -20,10 +20,6 @@ public:
     uint32 GetIndexCount() { return IndexCount; }
     void SetIndexCount(uint32 Cnt) { IndexCount = Cnt; }
 
-	// CPU-side mesh data 접근 (legacy)
-    // const FMeshData* GetMeshData() const { return MeshDataCPU; }
-	const FStaticMesh* GetMeshData() const { return StaticMeshAsset; }
-
 	const FString& GetAssetPathFileName() const { return StaticMeshAsset ? StaticMeshAsset->PathFileName : FilePath; }
     void SetStaticMeshAsset(FStaticMesh* InStaticMesh) { StaticMeshAsset = InStaticMesh; }
 	FStaticMesh* GetStaticMeshAsset() const { return StaticMeshAsset; }
@@ -38,12 +34,13 @@ private:
 	void CreateIndexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice);
     void ReleaseResources();
 
+    // GPU 리소스
     ID3D11Buffer* VertexBuffer = nullptr;
     ID3D11Buffer* IndexBuffer = nullptr;
     uint32 VertexCount = 0;     // 정점 개수
     uint32 IndexCount = 0;     // 버텍스 점의 개수 
     EVertexLayoutType VertexType = EVertexLayoutType::PositionColor;  // 버텍스 타입
 
-    // FMeshData* MeshDataCPU = nullptr;  // CPU-side mesh data 보관 (leagacy)
+	// CPU 리소스
     FStaticMesh* StaticMeshAsset = nullptr;
 };

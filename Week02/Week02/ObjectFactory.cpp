@@ -23,7 +23,7 @@ namespace ObjectFactory
         if (it == reg.end()) return nullptr;
         return it->second();
     }
-
+    
     UObject* NewObject(UClass* Class)
     {
         UObject* Obj = ConstructObject(Class);

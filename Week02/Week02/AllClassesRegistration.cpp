@@ -28,6 +28,7 @@
 #include "UI/Widget/Widget.h"
 #include "UI/Window/ConsoleWindow.h"
 #include "UI/Window/ControlPanelWindow.h"
+#include "UI/Window/PropertyWindow.h"
 #include "UI/Window/ExperimentalFeatureWindow.h"
 #include "UI/Window/SceneWindow.h"
 #include "UI/Window/UIWindow.h"
@@ -89,6 +90,7 @@ IMPLEMENT_CLASS(UShowFlagWidget)
 IMPLEMENT_CLASS(UUIWindow)
 IMPLEMENT_CLASS(UConsoleWindow)
 IMPLEMENT_CLASS(UControlPanelWindow)
+IMPLEMENT_CLASS(UPropertyWindow)
 IMPLEMENT_CLASS(UExperimentalFeatureWindow)
 IMPLEMENT_CLASS(USceneWindow)
 //IMPLEMENT_CLASS(UMultiViewportWindow)
