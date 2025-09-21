@@ -120,7 +120,7 @@ private:
 	float StoredRoll = 0.0f;
 
 	// Viewport switching state
-	bool bUseMainViewport = false;
+	bool bUseMainViewport = true;
 
 	void SortUIWindowsByPriority();
 	void UpdateFocusState();
