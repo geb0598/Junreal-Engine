@@ -2,7 +2,44 @@
 #define UE_ENUMS_H
 #include "UEContainer.h"
 #include "Enums.h"
-#include <d3d11.h>   
+#include <d3d11.h>
+
+struct FObjMaterialInfo
+{
+    // Diffuse Scalar
+    // Diffuse Texture
+    // other...
+
+    // Unspecified properties designated by negative values
+    int32 IlluminationModel = 2;  // illum. Default illumination model to Phong for non-Pbr materials
+
+    FVector DiffuseColor = -FVector::One(); // Kd
+    FVector AmbientColor = -FVector::One(); // Ka
+    FVector SpecularColor = -FVector::One(); // Ks
+    FVector EmissiveColor = -FVector::One(); // Ke
+
+    FString DiffuseTextureFileName;
+    FString AmbientTextureFileName;
+    FString SpecularTextureFileName;
+    FString EmissiveTextureFileName;
+    FString TransparencyTextureFileName;
+    FString SpecularExponentTextureFileName;
+
+    FVector TransmissionFilter = -FVector::One(); // Tf
+
+    float OpticalDensity = -1.f; // Ni
+    float Transparency = -1.f; // Tr Or d
+    float SpecularExponent = -1.f; // Ns
+
+    FString MaterialName;
+};
+
+struct FGroupInfo
+{
+    uint32 StartIndex;
+    uint32 IndexCount;
+    FObjMaterialInfo MaterialInfo;
+};
 
 struct FNormalVertex
 {
@@ -20,6 +57,9 @@ struct FStaticMesh
     TArray<FNormalVertex> Vertices;
     TArray<uint32> Indices;
     // to do: 여러가지 추가(ex: material 관련)
+    TArray<FGroupInfo> GroupInfos; // 각 group을 render 하기 위한 정보
+
+    bool bHasMaterial;
 };
 
 struct FMeshData

@@ -174,7 +174,7 @@ void UWorld::InitializeObjManager()
 	FObjManager::LoadObjStaticMesh("Data/Arrow.obj");
 	FObjManager::LoadObjStaticMesh("Data/RotationHandle.obj");
     FObjManager::LoadObjStaticMesh("Data/ScaleHandle.obj");
-	FObjManager::LoadObjStaticMesh("Data/car.obj");
+	// FObjManager::LoadObjStaticMesh("Data/car.obj");
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
