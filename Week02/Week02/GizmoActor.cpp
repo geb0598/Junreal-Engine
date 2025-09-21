@@ -599,9 +599,14 @@ void AGizmoActor::ProcessGizmoHovering()
     // 드래그 시작 감지
     if (!InputManager->GetIsGizmoDragging() && HoveringResult > 0 && InputManager->IsMouseButtonPressed(LeftButton))
     {
+        bIsHovering = true;
         InputManager->SetIsGizmoDragging(true);
         InputManager->SetDraggingAxis(HoveringResult);
         UE_LOG("기즈모 드래그 시작: 축 %d", HoveringResult);
+    }
+    else 
+    {
+        bIsHovering = false;
     }
 }
 
