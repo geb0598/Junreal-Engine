@@ -19,13 +19,13 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
     FStaticMesh* NewFStaticMesh = new FStaticMesh();
 
     // TODO: 여기서 OBJ 파싱 및 NewFStaticMesh 초기화
-    FWideString WPathFileName(PathFileName.begin(), PathFileName.end()); // 단순 ascii라고 가정
+    //FWideString WPathFileName(PathFileName.begin(), PathFileName.end()); // 단순 ascii라고 가정
 
     FObjInfo RawObjInfo;
     //FObjImporter::LoadObjModel(WPathFileName, &RawObjInfo, false, true); // test로 오른손 좌표계 false
-    FObjImporter::LoadObjModel(WPathFileName, &RawObjInfo, true, true);
-
-    FObjImporter::ConvertToStaticMesh(RawObjInfo, NewFStaticMesh);
+    TArray<FObjMaterialInfo> MaterialInfos;
+    FObjImporter::LoadObjModel(PathFileName, &RawObjInfo, MaterialInfos, true, true);
+    FObjImporter::ConvertToStaticMesh(RawObjInfo, MaterialInfos, NewFStaticMesh);
 
     // 4) 맵에 추가 (Set이 아니라 Add)
     ObjStaticMeshMap.Add(PathFileName, NewFStaticMesh);

@@ -30,6 +30,8 @@ struct FObjMaterialInfo
     float OpticalDensity = -1.f; // Ni
     float Transparency = -1.f; // Tr Or d
     float SpecularExponent = -1.f; // Ns
+
+    FString MaterialName;
 };
 
 struct FGroupInfo
