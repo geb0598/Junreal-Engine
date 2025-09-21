@@ -134,7 +134,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
 	}
 	// 버튼
 	if (ImGui::Button("Spawn Dice Test")) {
-		FObjManager::LoadObjStaticMesh("Cube-tex.obj");
+		FObjManager::LoadObjStaticMesh("spaceCompound.obj");
 	}
 
 	ImGui::Spacing();

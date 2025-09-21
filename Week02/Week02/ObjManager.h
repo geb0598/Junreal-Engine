@@ -91,6 +91,8 @@ public:
         {
             if (line.empty()) continue;
 
+            line.erase(0, line.find_first_not_of(" \t\n\r"));
+
             // 주석(#) 처리
             if (line[0] == '#')   // wide literal
                 continue;
@@ -212,7 +214,7 @@ public:
             }
             else
             {
-                UE_LOG("While parsing the filename %s, the following unknown symbol was encountered: %s", InFileName.c_str(), line.c_str());
+                UE_LOG("While parsing the filename %s, the following unknown symbol was encountered: \'%s\'", InFileName.c_str(), line.c_str());
             }
         }
 
@@ -270,6 +272,7 @@ public:
         {
             if (line.empty()) continue;
 
+            line.erase(0, line.find_first_not_of(" \t\n\r"));
             // 주석(#) 처리
             if (line[0] == '#')   // wide literal
                 continue;
