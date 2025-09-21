@@ -3,7 +3,7 @@
 
 UGizmoScaleComponent::UGizmoScaleComponent()
 {
-    SetStaticMesh("ScaleHandle.obj");
+    SetStaticMesh("Data/ScaleHandle.obj");
     SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 }
 

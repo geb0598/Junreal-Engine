@@ -94,12 +94,12 @@ void UWorld::Initialize()
     auto Primitives = FSceneLoader::Load("WorldData.Scene");
     for (auto Primitive : Primitives)
     {
-        FString PrimitiveType = Primitive.Type + ".obj";
+        FString PrimitiveType = "Data/" + Primitive.Type + ".obj";
 
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-		if(PrimitiveType == "Sphere.obj")
+		if(PrimitiveType == "Data/Sphere.obj")
             Cast<AStaticMeshActor>(Actor)->SetCollisionComponent(EPrimitiveType::Sphere);
         else
             Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();
@@ -476,17 +476,30 @@ bool UWorld::DestroyActor(AActor* Actor)
 
 inline FString ToObjFileName(const FString& TypeName)
 {
-    return TypeName + ".obj";
+    return "Data/" + TypeName + ".obj";
 }
 
 inline FString RemoveObjExtension(const FString& FileName)
 {
-    const FString Ext = ".obj";
-    if (FileName.size() >= Ext.size() &&
-        FileName.compare(FileName.size() - Ext.size(), Ext.size(), Ext) == 0)
+    const FString Extension = ".obj";
+
+    // 마지막 경로 구분자 위치 탐색 (POSIX/Windows 모두 지원)
+    const uint64 Sep = FileName.find_last_of("/\\");
+    const uint64 Start = (Sep == FString::npos) ? 0 : Sep + 1;
+
+    // 확장자 제거 위치 결정
+    uint64 End = FileName.size();
+    if (End >= Extension.size() &&
+        FileName.compare(End - Extension.size(), Extension.size(), Extension) == 0)
     {
-        return FileName.substr(0, FileName.size() - Ext.size());
+        End -= Extension.size();
     }
+
+    // 베이스 이름(확장자 없는 파일명) 반환
+    if (Start <= End)
+        return FileName.substr(Start, End - Start);
+
+    // 비정상 입력 시 원본 반환 (안전장치)
     return FileName;
 }
 
@@ -584,10 +597,10 @@ void UWorld::LoadScene(const FString& SceneName)
                 FQuat::MakeFromEuler(Primitive.Rotation),
                 Primitive.Scale)
         );
-        FString MeshType = ToObjFileName(Primitive.Type);
-        StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ToObjFileName(Primitive.Type));
+        FString ObjFileName = ToObjFileName(Primitive.Type);
+        StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ObjFileName);
         StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-        if (MeshType == "Sphere.obj")
+        if (ObjFileName == "Data/Sphere.obj")
         {
             Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent(EPrimitiveType::Sphere);
             //컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 

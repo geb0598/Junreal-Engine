@@ -123,19 +123,19 @@ void UPrimitiveSpawnWidget::RenderWidget()
 	}
 
 	//Obj Parser 테스트용
-	static std::string fileName;  // 입력값 저장용
-	// 입력창
-	char buffer[256];
-	strncpy_s(buffer, fileName.c_str(), sizeof(buffer));
-	buffer[sizeof(buffer) - 1] = '\0';
+	//static std::string fileName;  // 입력값 저장용
+	//// 입력창
+	//char buffer[256];
+	//strncpy_s(buffer, fileName.c_str(), sizeof(buffer));
+	//buffer[sizeof(buffer) - 1] = '\0';
 
-	if (ImGui::InputText("file name", buffer, sizeof(buffer))) {
-		fileName = buffer;  // std::string으로 갱신
-	}
-	// 버튼
-	if (ImGui::Button("Spawn Cube Test")) {
-		FObjManager::LoadObjStaticMesh("Cube.obj");
-	}
+	//if (ImGui::InputText("file name", buffer, sizeof(buffer))) {
+	//	fileName = buffer;  // std::string으로 갱신
+	//}
+	//// 버튼
+	//if (ImGui::Button("Spawn Cube Test")) {
+	//	FObjManager::LoadObjStaticMesh("Data/Cube.obj");
+	//}
 
 	ImGui::Spacing();
 	ImGui::Separator();
@@ -232,10 +232,10 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			FString MeshPath;
 			switch (SelectedPrimitiveType)
 			{
-			case 0: MeshPath = "Cube.obj"; break;
-			case 1: MeshPath = "Sphere.obj"; break; 
-			case 2: MeshPath = "Triangle.obj"; break;
-			default: MeshPath = "Cube.obj"; break;
+			case 0: MeshPath = "Data/Cube.obj"; break;
+			case 1: MeshPath = "Data/Sphere.obj"; break; 
+			case 2: MeshPath = "Data/Triangle.obj"; break;
+			default: MeshPath = "Data/Cube.obj"; break;
 			}
 			
 			// StaticMeshComponent에 메시 설정 (API가 있다면)
@@ -243,7 +243,7 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			{
 				StaticMeshComp->SetStaticMesh(MeshPath);
 				StaticMeshComp->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-				if (MeshPath == "Sphere.obj")
+				if (MeshPath == "Data/Sphere.obj")
 				{
 					Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent(EPrimitiveType::Sphere);
 					//컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
