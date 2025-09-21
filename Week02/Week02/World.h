@@ -39,10 +39,10 @@ public:
     void InitializeMainCamera();
     void InitializeGrid();
     void InitializeGizmo();
+    void InitializeObjManager();
     
     // 액터 인터페이스 관리
     void SetupActorReferences();
-    void UpdateActorInteractions(float DeltaSeconds);
     
     // 선택 및 피킹 처리
     void ProcessActorSelection();

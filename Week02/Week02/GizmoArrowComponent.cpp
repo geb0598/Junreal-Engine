@@ -3,7 +3,7 @@
 
 UGizmoArrowComponent::UGizmoArrowComponent()
 {
-    SetMeshResource("Arrow.obj");
+    SetStaticMesh("Data/Arrow.obj");
     SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 }
 

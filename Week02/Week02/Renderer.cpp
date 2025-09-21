@@ -104,14 +104,35 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     );
 
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
-    RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
+
+    
+    if (InMesh->HasMaterial())
+    {
+        const TArray<FGroupInfo> MeshGroupInfos = InMesh->GetMeshGroupInfo();
+        const uint32 Len = MeshGroupInfos.size();
+        for (const FGroupInfo& GroupInfo : MeshGroupInfos)
+        {
+            FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
+            FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
+            RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
+            RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &(TextureData->SamplerState));
+
+            RHIDevice->GetDeviceContext()->DrawIndexed(GroupInfo.IndexCount, GroupInfo.StartIndex, 0);
+        }
+    }
+    else
+    {
+        RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
+    }
+    
+    
 }
 
-void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology)
+void URenderer::DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
     UINT Stride = sizeof(FBillboardVertexInfo_GPU);
-    ID3D11Buffer* VertexBuff = Comp->GetMeshResource()->GetVertexBuffer();
-    ID3D11Buffer* IndexBuff = Comp->GetMeshResource()->GetIndexBuffer();
+    ID3D11Buffer* VertexBuff = Comp->GetStaticMesh()->GetVertexBuffer();
+    ID3D11Buffer* IndexBuff = Comp->GetStaticMesh()->GetIndexBuffer();
 
     RHIDevice->GetDeviceContext()->IASetInputLayout(Comp->GetMaterial()->GetShader()->GetInputLayout());
 
@@ -129,7 +150,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMIT
     RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &SamplerState);
     RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &TextureSRV);
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
-    RHIDevice->GetDeviceContext()->DrawIndexed(Comp->GetMeshResource()->GetIndexCount(), 0, 0);
+    RHIDevice->GetDeviceContext()->DrawIndexed(Comp->GetStaticMesh()->GetIndexCount(), 0, 0);
 }
 
 void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)

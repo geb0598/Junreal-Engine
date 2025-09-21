@@ -1,7 +1,9 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "MeshLoader.h"
 #include "ObjectFactory.h"
 #include "d3dtk/DDSTextureLoader.h"
+#include "ObjManager.h"
+#include "d3dtk/WICTextureLoader.h"
 
 #define GRIDNUM 100
 #define AXISLENGTH 100
@@ -414,7 +416,18 @@ FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePa
     }
 
     FTextureData* Data = new FTextureData();
-    HRESULT hr = DirectX::CreateDDSTextureFromFile(Device, FilePath.c_str(), &Data->Texture, &Data->TextureSRV, 0, nullptr);
+
+    const FWideString& FileExtension = FilePath.substr(FilePath.size() - 3);
+    HRESULT hr;
+    if (FileExtension == L"dds")
+    {
+        hr = DirectX::CreateDDSTextureFromFile(Device, FilePath.c_str(), &Data->Texture, &Data->TextureSRV, 0, nullptr);
+    }
+    else
+    {
+        hr = DirectX::CreateWICTextureFromFile(Device, Context, FilePath.c_str(), &Data->Texture, &Data->TextureSRV);
+    }
+
     if (FAILED(hr))
     {
         int a = 0;

@@ -7,11 +7,30 @@
 #include "Vector.h"
 #include "GizmoActor.h"
 #include <string>
+#include "StaticMeshActor.h"    
+#include "StaticMeshComponent.h"
+#include "ResourceManager.h"    
 
 using namespace std;
 
 // UE_LOG 대체 매크로
 #define UE_LOG(fmt, ...)
+
+// 파일명 스템(Cube 등) 추출 + .obj 확장자 제거
+static inline FString GetBaseNameNoExt(const FString& Path)
+{
+	const size_t sep = Path.find_last_of("/\\");
+	const size_t start = (sep == FString::npos) ? 0 : sep + 1;
+
+	const FString ext = ".obj";
+	size_t end = Path.size();
+	if (end >= ext.size() && Path.compare(end - ext.size(), ext.size(), ext) == 0)
+	{
+		end -= ext.size();
+	}
+	if (start <= end) return Path.substr(start, end - start);
+	return Path;
+}
 
 UTargetActorTransformWidget::UTargetActorTransformWidget()
 	: UWidget("Target Actor Transform Widget")
@@ -209,6 +228,116 @@ void UTargetActorTransformWidget::RenderWidget()
 		
 		ImGui::Spacing();
 		ImGui::Separator();
+
+		// Actor가 AStaticMeshActor인 경우 StaticMesh 변경 UI
+		{
+			if (AStaticMeshActor* SMActor = Cast<AStaticMeshActor>(SelectedActor))
+			{
+				UStaticMeshComponent* SMC = SMActor->GetStaticMeshComponent();
+
+				ImGui::Text("Static Mesh Override");
+				if (!SMC)
+				{
+					ImGui::TextColored(ImVec4(1, 0.6f, 0.6f, 1), "StaticMeshComponent not found.");
+				}
+				else
+				{
+					// 현재 메시 경로 표시
+					FString CurrentPath;
+					if (UStaticMesh* CurMesh = SMC->GetStaticMesh())
+					{
+						CurrentPath = CurMesh->GetAssetPathFileName();
+						ImGui::Text("Current: %s", CurrentPath.c_str());
+					}
+					else
+					{
+						ImGui::Text("Current: <None>");
+					}
+
+					// 리소스 매니저에서 로드된 모든 StaticMesh 경로 수집
+					auto& RM = UResourceManager::GetInstance();
+					TArray<FString> Paths = RM.GetAllStaticMeshFilePaths();
+
+					if (Paths.empty())
+					{
+						ImGui::TextColored(ImVec4(1, 0.6f, 0.6f, 1), "No StaticMesh resources loaded.");
+					}
+					else
+					{
+						// 표시용 이름(파일명 스템)
+						TArray<FString> DisplayNames;
+						DisplayNames.reserve(Paths.size());
+						for (const FString& p : Paths)
+							DisplayNames.push_back(GetBaseNameNoExt(p));
+
+						// ImGui 콤보 아이템 배열
+						TArray<const char*> Items;
+						Items.reserve(DisplayNames.size());
+						for (const FString& n : DisplayNames)
+							Items.push_back(n.c_str());
+
+						// 선택 인덱스 유지
+						static int SelectedMeshIdx = -1;
+
+						// 기본 선택: Cube가 있으면 자동 선택
+						if (SelectedMeshIdx == -1)
+						{
+							for (int i = 0; i < static_cast<int>(Paths.size()); ++i)
+							{
+								if (DisplayNames[i] == "Cube" || Paths[i] == "Data/Cube.obj")
+								{
+									SelectedMeshIdx = i;
+									break;
+								}
+							}
+						}
+
+						ImGui::SetNextItemWidth(240);
+						ImGui::Combo("StaticMesh", &SelectedMeshIdx, Items.data(), static_cast<int>(Items.size()));
+						ImGui::SameLine();
+						if (ImGui::Button("Apply Mesh"))
+						{
+							if (SelectedMeshIdx >= 0 && SelectedMeshIdx < static_cast<int>(Paths.size()))
+							{
+								const FString& NewPath = Paths[SelectedMeshIdx];
+								SMC->SetStaticMesh(NewPath);
+
+								// Sphere 충돌 특례
+								if (GetBaseNameNoExt(NewPath) == "Sphere")
+									SMActor->SetCollisionComponent(EPrimitiveType::Sphere);
+								else
+									SMActor->SetCollisionComponent();
+
+								UE_LOG("Applied StaticMesh: %s", NewPath.c_str());
+							}
+						}
+
+						// 현재 메시로 선택 동기화 버튼 (옵션)
+						ImGui::SameLine();
+						if (ImGui::Button("Select Current"))
+						{
+							SelectedMeshIdx = -1;
+							if (!CurrentPath.empty())
+							{
+								for (int i = 0; i < static_cast<int>(Paths.size()); ++i)
+								{
+									if (Paths[i] == CurrentPath ||
+										DisplayNames[i] == GetBaseNameNoExt(CurrentPath))
+									{
+										SelectedMeshIdx = i;
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				ImGui::Text("Selected actor is not a StaticMeshActor.");
+			}
+		}
 	}
 	else
 	{

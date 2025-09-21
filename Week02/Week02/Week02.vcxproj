@@ -267,6 +267,7 @@
     <ClCompile Include="UI\Window\ConsoleWindow.cpp" />
     <ClCompile Include="UI\Window\ControlPanelWindow.cpp" />
     <ClCompile Include="UI\Window\ExperimentalFeatureWindow.cpp" />
+    <ClCompile Include="UI\Window\PropertyWindow.cpp" />
     <ClCompile Include="UI\Window\SceneWindow.cpp" />
     <ClCompile Include="UI\Window\UIWindow.cpp" />
     <ClCompile Include="FViewport.cpp" />
@@ -369,6 +370,7 @@
     <ClInclude Include="UI\Window\ConsoleWindow.h" />
     <ClInclude Include="UI\Window\ControlPanelWindow.h" />
     <ClInclude Include="UI\Window\ExperimentalFeatureWindow.h" />
+    <ClInclude Include="UI\Window\PropertyWindow.h" />
     <ClInclude Include="UI\Window\SceneWindow.h" />
     <ClInclude Include="UI\Window\UIWindow.h" />
     <ClInclude Include="Vector.h" />
