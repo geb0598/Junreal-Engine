@@ -38,6 +38,7 @@ void FViewportClient::Draw(FViewport* Viewport)
     {
         ViewMatrix = MainCamera->GetViewMatrix();
         ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
+        Camera = MainCamera;
         break;
     }
     case EViewportType::Orthographic_Top:
@@ -59,7 +60,8 @@ void FViewportClient::Draw(FViewport* Viewport)
 
     if (World)
     {
-        World->RenderViewports(ViewMatrix, ProjectionMatrix);
+        World->RenderViewports(Camera);
+        World->GetGizmoActor()->Render(Camera);
     }
 }
 

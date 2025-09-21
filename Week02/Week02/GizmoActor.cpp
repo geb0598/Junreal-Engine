@@ -149,6 +149,73 @@ void AGizmoActor::Tick(float DeltaSeconds)
     }
     UpdateComponentVisibility();
 }
+void AGizmoActor::Render( ACameraActor* Camera) {
+
+    EViewModeIndex ViewModeIndex = World->GetViewModeIndex();
+    URenderer* Renderer = GetWorld()->GetRenderer();
+    if (!USelectionManager::GetInstance().HasSelection()) return;
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix();
+    FMatrix ModelMatrix;
+    FVector rgb(1.0f, 1.0f, 1.0f);
+
+    TArray<USceneComponent*>* Components = GetGizmoComponents();
+    if (!Components) return;
+
+    for (uint32 i = 0; i < Components->Num(); ++i)
+    {
+        USceneComponent* Component = (*Components)[i];
+        if (!Component) continue;
+
+        // 컴포넌트 활성 상태 확인
+        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+        {
+            if (!ActorComp->IsActive()) continue;
+        }
+
+        ModelMatrix = Component->GetWorldMatrix();
+        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+
+        // 드래그 중이면 드래그하는 축만 하이라이트
+        if (UInputManager::GetInstance().GetIsGizmoDragging())
+        {
+            if (UInputManager::GetInstance().GetDraggingAxis() == i + 1)
+            {
+                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+            }
+            else
+            {
+                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+            }
+        }
+        // 드래그 중이 아니면 호버링 한 축만 하이라이트
+        else if (CPickingSystem::IsHoveringGizmo(this, Camera) == i + 1)
+        {
+            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+        }
+        else
+        {
+            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+        }
+
+        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+        {
+            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
+            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+            Renderer->OMSetBlendState(true); // 필요 시
+
+            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+            // 상태 복구
+            Renderer->OMSetBlendState(false);
+            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+            Renderer->SetViewModeType(ViewModeIndex);
+        }
+    }
+    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+
+    // 알파 블랜딩을 위한 blendstate
+    Renderer->OMSetBlendState(true);
+}
 
 AGizmoActor::~AGizmoActor()
 {

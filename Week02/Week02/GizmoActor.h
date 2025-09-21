@@ -9,6 +9,7 @@ class ACameraActor;
 class USelectionManager;
 class UInputManager;
 class UUIManager;
+class URenderer;
 class CPickingSystem;
 
 class AGizmoActor : public AActor
@@ -18,6 +19,7 @@ public:
     AGizmoActor();
 
     virtual void Tick(float DeltaSeconds) override;
+    void Render( ACameraActor* Camera);
 protected:
     ~AGizmoActor() override;
 

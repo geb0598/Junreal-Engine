@@ -99,8 +99,8 @@ public:
     /** === 렌더 === */
     void Render();
     void RenderSingleViewport();
-    void RenderViewports(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
-    void RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
+    void RenderViewports(ACameraActor* Camera);
+
 
     /** === 필요한 엑터 게터 === */
     const TArray<AActor*>& GetActors() { return Actors; }

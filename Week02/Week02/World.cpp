@@ -151,7 +151,8 @@ void UWorld::InitializeGrid()
 void UWorld::InitializeGizmo()
 {
     // === 기즈모 엑터 초기화 ===
-    GizmoActor = SpawnActor<AGizmoActor>();
+    GizmoActor = NewObject<AGizmoActor>();
+    GizmoActor->SetWorld(this);
     GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
         FVector{ 1, 1, 1 }));
     // 기즈모에 카메라 참조 설정
@@ -172,7 +173,7 @@ void UWorld::Render()
 {
     Renderer->BeginFrame();
     UIManager.Render();
-    // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경
+    // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경 SWidget으로 변경해줄거임
     if (UIManager.IsUsingMainViewport())
     {
         if (MainViewport)
@@ -188,10 +189,8 @@ void UWorld::Render()
         }
     }
 
-    
 
-        
-      // 밝은 초록색 (호버)
+    //프레임 종료 
     UIManager.EndFrame();
     Renderer->EndFrame();
 }
@@ -290,7 +289,7 @@ void UWorld::RenderSingleViewport()
     }
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
-    RenderGizmoActor(ViewMatrix, ProjectionMatrix);
+    
 
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
     UIManager.Render();
@@ -298,8 +297,10 @@ void UWorld::RenderSingleViewport()
     Renderer->EndFrame();
 }
 
-void UWorld::RenderViewports(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+void UWorld::RenderViewports(ACameraActor* Camera)
 {
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix();
     if (!Renderer) return;
     FVector rgb(1.0f, 1.0f, 1.0f);
 
@@ -378,7 +379,7 @@ void UWorld::RenderViewports(const FMatrix& ViewMatrix, const FMatrix& Projectio
 
   
     Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-    RenderGizmoActor(ViewMatrix, ProjectionMatrix);
+   
 }
 
 
@@ -616,73 +617,73 @@ void UWorld::SaveScene(const FString& SceneName)
     FSceneLoader::Save(Primitives, SceneName);
 }
 
-
-void UWorld::RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
-{
-    if (!GizmoActor || !Renderer || !MainCameraActor) return;
-    
-    if (!SelectionManager.HasSelection()) return;
-  
-    FMatrix ModelMatrix;
-    FVector rgb(1.0f, 1.0f, 1.0f);
-    
-    TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
-    if (!Components) return;
-    
-    for (uint32 i = 0; i < Components->Num(); ++i)
-    {
-        USceneComponent* Component = (*Components)[i];
-        if (!Component) continue;
-        
-        // 컴포넌트 활성 상태 확인
-        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-        {
-            if (!ActorComp->IsActive()) continue;
-        }
-        
-        ModelMatrix = Component->GetWorldMatrix();
-        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-
-        // 드래그 중이면 드래그하는 축만 하이라이트
-        if (InputManager.GetIsGizmoDragging())
-        {
-            if (InputManager.GetDraggingAxis() == i + 1)
-            {
-                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-            }
-            else
-            {
-                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-            }
-        }
-        // 드래그 중이 아니면 호버링 한 축만 하이라이트
-        else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
-        {
-            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-        }
-        else
-        {
-            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-        }
-
-        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-        {
-            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
-            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-            Renderer->OMSetBlendState(true); // 필요 시
-
-            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-            // 상태 복구
-            Renderer->OMSetBlendState(false);
-            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-            Renderer->SetViewModeType(ViewModeIndex);
-        }
-    }
-    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-    
-    // 알파 블랜딩을 위한 blendstate
-    Renderer->OMSetBlendState(true);
-}
+//
+//void UWorld::RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+//{
+//    if (!GizmoActor || !Renderer || !MainCameraActor) return;
+//    
+//    if (!SelectionManager.HasSelection()) return;
+//  
+//    FMatrix ModelMatrix;
+//    FVector rgb(1.0f, 1.0f, 1.0f);
+//    
+//    TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
+//    if (!Components) return;
+//    
+//    for (uint32 i = 0; i < Components->Num(); ++i)
+//    {
+//        USceneComponent* Component = (*Components)[i];
+//        if (!Component) continue;
+//        
+//        // 컴포넌트 활성 상태 확인
+//        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+//        {
+//            if (!ActorComp->IsActive()) continue;
+//        }
+//        
+//        ModelMatrix = Component->GetWorldMatrix();
+//        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+//
+//        // 드래그 중이면 드래그하는 축만 하이라이트
+//        if (InputManager.GetIsGizmoDragging())
+//        {
+//            if (InputManager.GetDraggingAxis() == i + 1)
+//            {
+//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+//            }
+//            else
+//            {
+//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+//            }
+//        }
+//        // 드래그 중이 아니면 호버링 한 축만 하이라이트
+//        else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
+//        {
+//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+//        }
+//        else
+//        {
+//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+//        }
+//
+//        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+//        {
+//            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
+//            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+//            Renderer->OMSetBlendState(true); // 필요 시
+//
+//            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+//            // 상태 복구
+//            Renderer->OMSetBlendState(false);
+//            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+//            Renderer->SetViewModeType(ViewModeIndex);
+//        }
+//    }
+//    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+//    
+//    // 알파 블랜딩을 위한 blendstate
+//    Renderer->OMSetBlendState(true);
+//}
 
 AGizmoActor* UWorld::GetGizmoActor()
 {
