@@ -299,10 +299,14 @@ void UWorld::RenderSingleViewport()
     Renderer->EndFrame();
 }
 
-void UWorld::RenderViewports(ACameraActor* Camera)
+void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 {
+    // 뷰포트의 실제 크기로 aspect ratio 계산
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+
     FMatrix ViewMatrix = Camera->GetViewMatrix();
-    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
     if (!Renderer) return;
     FVector rgb(1.0f, 1.0f, 1.0f);
 

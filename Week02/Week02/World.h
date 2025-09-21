@@ -99,7 +99,7 @@ public:
     /** === 렌더 === */
     void Render();
     void RenderSingleViewport();
-    void RenderViewports(ACameraActor* Camera);
+    void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
 
 
     /** === 필요한 엑터 게터 === */

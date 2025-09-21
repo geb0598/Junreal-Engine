@@ -152,11 +152,14 @@ void AGizmoActor::Tick(float DeltaSeconds)
 }
 void AGizmoActor::Render( ACameraActor* Camera, FViewport* Viewport) {
 
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+
     EViewModeIndex ViewModeIndex = World->GetViewModeIndex();
     URenderer* Renderer = GetWorld()->GetRenderer();
     if (!USelectionManager::GetInstance().HasSelection()) return;
     FMatrix ViewMatrix = Camera->GetViewMatrix();
-    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
     FMatrix ModelMatrix;
     FVector rgb(1.0f, 1.0f, 1.0f);
 

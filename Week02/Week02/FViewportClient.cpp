@@ -64,7 +64,7 @@ void FViewportClient::Draw(FViewport* Viewport)
 
     if (World)
     {
-        World->RenderViewports(Camera);
+        World->RenderViewports(Camera,Viewport);
         World->GetGizmoActor()->Render(Camera,Viewport);
     }
 }
