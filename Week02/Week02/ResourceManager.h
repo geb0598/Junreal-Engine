@@ -61,6 +61,15 @@ public:
     template<typename T>
     ResourceType GetResourceType();
 
+    // Enumeration helpers
+    template<typename T>
+    TArray<T*> GetAll();
+    template<typename T>
+    TArray<FString> GetAllFilePaths();
+    // Convenience for UStaticMesh
+    TArray<UStaticMesh*> GetAllStaticMeshes() { return GetAll<UStaticMesh>(); }
+    TArray<FString> GetAllStaticMeshFilePaths() { return GetAllFilePaths<UStaticMesh>(); }
+
 public:
     UResourceManager() = default;
 protected:
@@ -149,4 +158,50 @@ ResourceType UResourceManager::GetResourceType()
         return ResourceType::Material;
 
     return ResourceType::None;
+}
+
+// Enumerate all resources of a type T
+template<typename T>
+TArray<T*> UResourceManager::GetAll()
+{
+    TArray<T*> Result;
+    uint8 TypeIndex = static_cast<uint8>(GetResourceType<T>());
+    if (TypeIndex >= Resources.size())
+    {
+        return Result;
+    }
+
+    for (auto& Pair : Resources[TypeIndex])
+    {
+        if (Pair.second)
+        {
+            Result.push_back(static_cast<T*>(Pair.second));
+        }
+    }
+    return Result;
+}
+
+// Collect non-empty FilePath of all resources of type T
+template<typename T>
+TArray<FString> UResourceManager::GetAllFilePaths()
+{
+    TArray<FString> Paths;
+    uint8 TypeIndex = static_cast<uint8>(GetResourceType<T>());
+    if (TypeIndex >= Resources.size())
+    {
+        return Paths;
+    }
+
+    for (auto& Pair : Resources[TypeIndex])
+    {
+        if (Pair.second)
+        {
+            const FString& Path = Pair.second->GetFilePath();
+            if (!Path.empty())
+            {
+                Paths.push_back(Path);
+            }
+        }
+    }
+    return Paths;
 }
