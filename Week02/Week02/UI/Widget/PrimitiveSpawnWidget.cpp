@@ -232,7 +232,7 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			FString MeshPath;
 			switch (SelectedPrimitiveType)
 			{
-			case 0: MeshPath = "cube-tex.obj"; break;
+			case 0: MeshPath = "Cube.obj"; break;
 			case 1: MeshPath = "Sphere.obj"; break; 
 			case 2: MeshPath = "Triangle.obj"; break;
 			default: MeshPath = "Cube.obj"; break;
