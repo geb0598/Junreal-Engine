@@ -1,7 +1,8 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "MeshLoader.h"
 #include "ObjectFactory.h"
 #include "d3dtk/DDSTextureLoader.h"
+#include "ObjManager.h"
 #include "d3dtk/WICTextureLoader.h"
 
 #define GRIDNUM 100

@@ -97,7 +97,7 @@ void UWorld::Initialize()
         FString PrimitiveType = Primitive.Type + ".obj";
 
         AActor* Actor = NewObject<AStaticMeshActor>();
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMeshResource(PrimitiveType);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 		if(PrimitiveType == "Sphere.obj")
             Cast<AStaticMeshActor>(Actor)->SetCollisionComponent(EPrimitiveType::Sphere);
@@ -585,7 +585,7 @@ void UWorld::LoadScene(const FString& SceneName)
                 Primitive.Scale)
         );
         FString MeshType = ToObjFileName(Primitive.Type);
-        StaticMeshActor->GetStaticMeshComponent()->SetMeshResource(ToObjFileName(Primitive.Type));
+        StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ToObjFileName(Primitive.Type));
         StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
         if (MeshType == "Sphere.obj")
         {
@@ -611,7 +611,7 @@ void UWorld::SaveScene(const FString& SceneName)
         Data.Scale = Actor->GetActorScale();
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
-            FString FilePath = MeshActor->GetStaticMeshComponent()->GetMeshResource()->GetFilePath();
+            FString FilePath = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetFilePath();
             Data.Type = RemoveObjExtension(FilePath);
         }
         Primitives.push_back(Data);

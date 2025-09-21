@@ -239,10 +239,10 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			}
 			
 			// StaticMeshComponent에 메시 설정 (API가 있다면)
-			if (auto* MeshComp = Cast<UMeshComponent>(NewActor->GetStaticMeshComponent()))
+			if (auto* StaticMeshComp = NewActor->GetStaticMeshComponent())
 			{
-				MeshComp->SetMeshResource(MeshPath);
-				MeshComp->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+				StaticMeshComp->SetStaticMesh(MeshPath);
+				StaticMeshComp->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 				if (MeshPath == "Sphere.obj")
 				{
 					Cast<AStaticMeshActor>(NewActor)->SetCollisionComponent(EPrimitiveType::Sphere);

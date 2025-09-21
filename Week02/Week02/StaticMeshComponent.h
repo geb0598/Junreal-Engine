@@ -3,7 +3,6 @@
 #include "Enums.h"
 #include "StaticMesh.h"
 
-class StaticMesh;
 class UStaticMesh;
 class UShader;
 class UTexture;
@@ -19,7 +18,11 @@ protected:
 
 public:
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
+
+    void SetStaticMesh(const FString& PathFileName);
+    UStaticMesh* GetStaticMesh() const { return StaticMesh; }
     
 protected:
+    UStaticMesh* StaticMesh = nullptr;
 };
 

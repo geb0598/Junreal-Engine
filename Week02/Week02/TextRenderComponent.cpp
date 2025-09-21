@@ -21,7 +21,7 @@ UTextRenderComponent::UTextRenderComponent()
 	
 
     //if(UResourceManager::GetInstance().Get<UMaterial>())
-    MeshResource = UResourceManager::GetInstance().Get<UStaticMesh>("TextBillboard");
+    StaticMesh = UResourceManager::GetInstance().Get<UStaticMesh>("TextBillboard");
     Material = NewObject<UMaterial>();
     UResourceManager::GetInstance().Add<UMaterial>("TextBillboard", Material);
 

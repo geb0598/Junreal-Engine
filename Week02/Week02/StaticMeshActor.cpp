@@ -17,11 +17,13 @@ AStaticMeshActor::AStaticMeshActor()
 
 void AStaticMeshActor::Tick(float DeltaTime)
 {
-    if (UMeshComponent* MeshComp = Cast<UMeshComponent>(StaticMeshComponent)) 
+    /*if (UMeshComponent* MeshComp = Cast<UMeshComponent>(StaticMeshComponent)) 
     {
         MeshComp->GetMeshResource()->GetMeshData();
         CollisionComponent->SetFromVertices(MeshComp->GetMeshResource()->GetMeshData()->Vertices);
-    }
+    }*/
+
+    CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetMeshData()->Vertices);
 }
 
 AStaticMeshActor::~AStaticMeshActor()
@@ -40,9 +42,12 @@ void AStaticMeshActor::SetStaticMeshComponent(UStaticMeshComponent* InStaticMesh
 
 void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
 {
-    if (UMeshComponent* MeshComp = Cast<UMeshComponent>(StaticMeshComponent)) {
+    /*if (UMeshComponent* MeshComp = Cast<UMeshComponent>(StaticMeshComponent)) {
         MeshComp->GetMeshResource()->GetMeshData();
         CollisionComponent->SetFromVertices(MeshComp->GetMeshResource()->GetMeshData()->Vertices);
         CollisionComponent->SetPrimitiveType(InType);
-    }
+    }*/
+
+    CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetMeshData()->Vertices);
+    CollisionComponent->SetPrimitiveType(InType);
 }

@@ -163,6 +163,9 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         }
         else
         {
+            if (World->GetGizmoActor()->GetbIsHovering()) {
+                return;
+            }
             UUIManager::GetInstance().ResetPickedActor(); 
             // Clear selection if nothing was picked
             USelectionManager::GetInstance().ClearSelection();
