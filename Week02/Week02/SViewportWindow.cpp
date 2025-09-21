@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "SViewportWindow.h"
 #include "World.h"
+#include "ImGui/imgui.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 SViewportWindow::SViewportWindow()
@@ -74,12 +75,12 @@ void SViewportWindow::OnRender()
     Viewport->EndRenderFrame();
 
     // ImGui를 통한 이름 표시
- /*   ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
+    ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
     DrawList->AddText(
         ImVec2(Rect.Min.X + 5, Rect.Min.Y + 5),
         IM_COL32(255, 255, 255, 255),
-        ViewportName.c_str()
-    );*/
+        ViewportName.ToString().c_str()
+    );
 }
 
 void SViewportWindow::OnUpdate()
@@ -91,8 +92,8 @@ void SViewportWindow::OnUpdate()
 
     uint32 NewStartX = static_cast<uint32>(Rect.Left);
     uint32 NewStartY = static_cast<uint32>(Rect.Top);
-    uint32 NewWidth = static_cast<uint32>(CLIENTWIDTH);
-    uint32 NewHeight = static_cast<uint32>(CLIENTHEIGHT);
+    uint32 NewWidth = static_cast<uint32>(Rect.Right - Rect.Left);
+    uint32 NewHeight = static_cast<uint32>(Rect.Bottom - Rect.Top);
 
     Viewport->Resize(NewStartX, NewStartY, NewWidth, NewHeight);
 }

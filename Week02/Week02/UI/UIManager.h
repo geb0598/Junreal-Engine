@@ -79,6 +79,15 @@ public:
 	float GetStoredRoll() const { return StoredRoll; }
 	void UpdateMouseRotation(float InPitch, float InYaw);
 
+	// Viewport switching methods
+	bool IsUsingMainViewport() const { return bUseMainViewport; }
+	void SetViewportMode(bool bUseMain);
+	void ToggleViewportMode();
+	void RenderViewportSwitcher();
+
+	// Keyboard shortcut handling for viewport switching
+	void HandleViewportShortcuts();
+
 public:
 	UUIManager();
 protected:
@@ -108,6 +117,9 @@ private:
 	// Camera rotation state
 	FVector TempCameraRotation = {0.0f, 0.0f, 0.0f};
 	float StoredRoll = 0.0f;
+
+	// Viewport switching state
+	bool bUseMainViewport = false;
 
 	void SortUIWindowsByPriority();
 	void UpdateFocusState();

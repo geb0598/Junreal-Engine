@@ -12,7 +12,8 @@
 #include "FViewport.h"
 #include"SViewportWindow.h"
 #include"SMultiViewportWindow.h"
-
+extern float CLIENTWIDTH;
+extern float CLIENTHEIGHT;
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 {
     if (!Obj)
@@ -170,13 +171,25 @@ void UWorld::SetRenderer(URenderer* InRenderer)
 void UWorld::Render()
 {
     Renderer->BeginFrame();
-   
-    MainViewport->OnRender();
-    // MultiViewport->OnRender();
+
+    // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경
+    if (UIManager.IsUsingMainViewport())
+    {
+        if (MainViewport)
+        {
+            MainViewport->OnRender();
+        }
+    }
+    else
+    {
+        if (MultiViewport)
+        {
+            MultiViewport->OnRender();
+        }
+    }
+
     UIManager.Render();
     Renderer->EndFrame();
-
-    //RenderSingleViewport();
 }
 
 void UWorld::RenderSingleViewport()
@@ -384,9 +397,22 @@ void UWorld::Tick(float DeltaSeconds)
     InputManager.Update();
     UIManager.Update(DeltaSeconds);
 
-    //뷰포트 업데이트 
-    //MultiViewport->OnUpdate();
-    MainViewport->OnUpdate();
+    // 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
+    if (UIManager.IsUsingMainViewport())
+    {
+        if (MainViewport)
+        {
+            MainViewport->SetRect(0, 0, CLIENTWIDTH, CLIENTHEIGHT);
+            MainViewport->OnUpdate();
+        }
+    }
+    else
+    {
+        if (MultiViewport)
+        {
+            MultiViewport->OnUpdate();
+        }
+    }
 }
 
 float UWorld::GetTimeSeconds() const
@@ -469,6 +495,44 @@ void UWorld::CreateNewScene()
     Actors.Empty();
 }
 
+
+
+// 액터 인터페이스 관리 메소드들
+void UWorld::SetupActorReferences()
+{
+    if (GizmoActor && MainCameraActor)
+    {
+        GizmoActor->SetCameraActor(MainCameraActor);
+    }
+
+}
+//마우스 피킹관련 메소드
+void UWorld::ProcessActorSelection()
+{
+    if (!MainCameraActor) return;
+
+    if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
+    {
+        const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+
+        // UIManager의 뷰포트 전환 상태에 따라 마우스 처리
+        if (UIManager.IsUsingMainViewport())
+        {
+            if (MainViewport)
+            {
+                MainViewport->OnMouseDown(MousePosition);
+            }
+        }
+        else
+        {
+            if (MultiViewport)
+            {
+                MultiViewport->OnMouseDown(MousePosition);
+            }
+        }
+    }
+}
+
 void UWorld::LoadScene(const FString& SceneName)
 {
     // Start from a clean slate
@@ -496,29 +560,6 @@ void UWorld::LoadScene(const FString& SceneName)
         }
     }
 }
-
-// 액터 인터페이스 관리 메소드들
-void UWorld::SetupActorReferences()
-{
-    if (GizmoActor && MainCameraActor)
-    {
-        GizmoActor->SetCameraActor(MainCameraActor);
-    }
-
-}
-//마우스 피킹관련 메소드
-void UWorld::ProcessActorSelection()
-{
-    if (!MainCameraActor) return;
-    
-    if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
-    {
-        const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
-        MultiViewport->OnMouseDown(MousePosition);
-        MainViewport->OnMouseDown(MousePosition);
-    }
-}
-
 
 void UWorld::SaveScene(const FString& SceneName)
 {
