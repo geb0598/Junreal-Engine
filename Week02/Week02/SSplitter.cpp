@@ -5,7 +5,7 @@ extern float CLIENTHEIGHT;
 SSplitter::SSplitter()
 {
     SplitRatio = 0.5f;
-    SplitterThickness = 4;
+    SplitterThickness = 10;
     bIsDragging = false;
 }
 
@@ -51,34 +51,48 @@ void SSplitter::OnRender()
     if (SideRB) SideRB->OnRender();
 
     // 스플리터 라인 그리기
+
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
     FRect SplitterRect = GetSplitterRect();
-    ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
+    ImDrawList* DrawList = ImGui::GetForegroundDrawList();
 
     // 드래그 중이거나 마우스 호버 시 색상 변경
     ImU32 SplitterColor;
     if (bIsDragging)
     {
         SplitterColor = ImGui::GetColorU32(ImGuiCol_ButtonActive);
+     //   SplitterColor = IM_COL32(255, 0, 0, 255); // 빨강
     }
     else if (IsMouseOnSplitter(FVector2D(ImGui::GetMousePos().x, ImGui::GetMousePos().y)))
     {
         SplitterColor = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+     //   SplitterColor = IM_COL32(0, 255, 0, 255); // 초록
     }
     else
     {
         SplitterColor = ImGui::GetColorU32(ImGuiCol_Separator);
+    //    SplitterColor = IM_COL32(0, 0, 255, 255); // 파랑
     }
+
+
 
     DrawList->AddRectFilled(
         ImVec2(SplitterRect.Min.X, SplitterRect.Min.Y),
         ImVec2(SplitterRect.Max.X, SplitterRect.Max.Y),
         SplitterColor
     );
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+  /*  ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());*/
+ 
 
     // 드래그 중일 때 툴팁 표시
     if (bIsDragging)
     {
-        ImGui::SetTooltip("Split Ratio: %.1f%%", SplitRatio * 100.0f);
+        //ImGui::SetTooltip("Split Ratio: %.1f%%", SplitRatio * 100.0f);
     }
 }
 

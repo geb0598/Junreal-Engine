@@ -44,7 +44,7 @@ protected:
 
 
     float SplitRatio = 0.5f;    // 분할 비율
-    int SplitterThickness = 4;  // 스플리터 두께
+    int SplitterThickness = 8;  // 스플리터 두께
 
     bool bIsDragging = false;
     FVector2D DragStartPos;

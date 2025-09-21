@@ -66,23 +66,8 @@ void SMultiViewportWindow::OnRender()
         RootSplitter->OnRender();
 
         // 뷰포트 간 경계선을 더 명확하게 표시
-        ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
+       // ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
 
-        // 수직선 (중앙)
-        float centerX = Rect.Min.X + (Rect.Max.X - Rect.Min.X) * 0.5f;
-        DrawList->AddLine(
-            ImVec2(centerX, Rect.Min.Y),
-            ImVec2(centerX, Rect.Max.Y),
-            IM_COL32(100, 100, 100, 255), 2.0f
-        );
-
-        // 수평선 (중앙)
-        float centerY = Rect.Min.Y + (Rect.Max.Y - Rect.Min.Y) * 0.5f;
-        DrawList->AddLine(
-            ImVec2(Rect.Min.X, centerY),
-            ImVec2(Rect.Max.X, centerY),
-            IM_COL32(100, 100, 100, 255), 2.0f
-        );
     }
 }
 

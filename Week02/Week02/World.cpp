@@ -189,6 +189,10 @@ void UWorld::Render()
     }
 
     UIManager.Render();
+
+        
+      // 밝은 초록색 (호버)
+
     Renderer->EndFrame();
 }
 
@@ -393,6 +397,7 @@ void UWorld::Tick(float DeltaSeconds)
     GizmoActor->Tick(DeltaSeconds);
 
     ProcessActorSelection();
+    ProcessViewportInput();
     //Input Manager가 카메라 후에 업데이트 되어야함
     InputManager.Update();
     UIManager.Update(DeltaSeconds);
@@ -532,6 +537,36 @@ void UWorld::ProcessActorSelection()
         }
     }
 }
+void UWorld::ProcessViewportInput()
+{
+    const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+
+    if (UIManager.IsUsingMainViewport())
+    {
+        if (MainViewport)
+        {
+            if (InputManager.IsMouseButtonPressed(LeftButton))
+                MainViewport->OnMouseDown(MousePosition);
+            if (InputManager.IsMouseButtonReleased(LeftButton))
+                MainViewport->OnMouseUp(MousePosition);
+
+            MainViewport->OnMouseMove(MousePosition);
+        }
+    }
+    else
+    {
+        if (MultiViewport)
+        {
+            if (InputManager.IsMouseButtonPressed(LeftButton))
+                MultiViewport->OnMouseDown(MousePosition);
+            if (InputManager.IsMouseButtonReleased(LeftButton))
+                MultiViewport->OnMouseUp(MousePosition);
+
+            MultiViewport->OnMouseMove(MousePosition);
+        }
+    }
+}
+
 
 void UWorld::LoadScene(const FString& SceneName)
 {

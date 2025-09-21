@@ -75,12 +75,8 @@ void SViewportWindow::OnRender()
     Viewport->EndRenderFrame();
 
     // ImGui를 통한 이름 표시
-    ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
-    DrawList->AddText(
-        ImVec2(Rect.Min.X + 5, Rect.Min.Y + 5),
-        IM_COL32(255, 255, 255, 255),
-        ViewportName.ToString().c_str()
-    );
+
+ 
 }
 
 void SViewportWindow::OnUpdate()

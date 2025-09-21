@@ -47,6 +47,8 @@ public:
     // 선택 및 피킹 처리
     void ProcessActorSelection();
 
+    void ProcessViewportInput();
+
     void SetRenderer(URenderer* InRenderer);
     URenderer*& const GetRenderer()  { return Renderer; }
 
