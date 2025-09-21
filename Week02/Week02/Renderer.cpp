@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "TextRenderComponent.h"
 #include "Shader.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -83,7 +83,7 @@ void URenderer::UpdateColorBuffer(const FVector4& Color)
     RHIDevice->UpdateColorConstantBuffers(Color);
 }
 
-void URenderer::DrawIndexedPrimitiveComponent(UMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
+void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
     if (!InMesh || !InMesh->GetVertexBuffer() || !InMesh->GetIndexBuffer()) return;
 

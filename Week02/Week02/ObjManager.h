@@ -81,7 +81,7 @@ public:
 
         if (!FileIn)
         {
-            UE_LOG("파일명 %s가 존재하지 않습니다!");
+            UE_LOG("파일명 %s가 존재하지 않습니다!", InFileName.c_str());
             return false;
         }
 
@@ -376,5 +376,5 @@ private:
 public:
     static FStaticMesh* LoadObjStaticMeshAsset(const FString& PathFileName);
 
-    static UStaticMesh* LoadObjStaticMesh(FString& PathFileName);
+    static UStaticMesh* LoadObjStaticMesh(const FString& PathFileName);
 };

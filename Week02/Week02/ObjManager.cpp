@@ -4,7 +4,6 @@
 #include "ObjectIterator.h"
 #include "StaticMesh.h"
 #include "Enums.h"
-#include "ObjectFactory.h"
 
 TMap<FString, FStaticMesh*> FObjManager::ObjStaticMeshMap;
 
@@ -37,8 +36,9 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
     return NewFStaticMesh;
 }
 
-UStaticMesh* FObjManager::LoadObjStaticMesh(FString& PathFileName)
+UStaticMesh* FObjManager::LoadObjStaticMesh(const FString& PathFileName)
 {
+	// 1) 이미 로드된 UStaticMesh가 있는지 전체 검색
     for (TObjectIterator<UStaticMesh> It; It; ++It)
     {
         UStaticMesh* StaticMesh = *It;
@@ -48,7 +48,8 @@ UStaticMesh* FObjManager::LoadObjStaticMesh(FString& PathFileName)
         }
     }
 
-    FStaticMesh* StaticMeshAsset = FObjManager::LoadObjStaticMeshAsset(PathFileName);
-    UStaticMesh* StaticMesh = ObjectFactory::NewObject<UStaticMesh>();
-    StaticMesh->SetStaticMeshAsset(StaticMeshAsset);
+	// 2) 없으면 새로 로드
+    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>(PathFileName);
+
+	return StaticMesh;
 }

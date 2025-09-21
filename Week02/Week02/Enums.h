@@ -15,7 +15,7 @@ struct FNormalVertex
 //// Cooked Data
 struct FStaticMesh
 {
-    std::string PathFileName;
+    FString PathFileName;
 
     TArray<FNormalVertex> Vertices;
     TArray<uint32> Indices;
@@ -129,7 +129,7 @@ enum class ResourceType : uint8
 {
     None = -1,
 
-    Mesh,
+    StaticMesh,
     DynamicMesh,
     Shader,
     Texture,
