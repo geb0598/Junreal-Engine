@@ -133,8 +133,8 @@ void UPrimitiveSpawnWidget::RenderWidget()
 		fileName = buffer;  // std::string으로 갱신
 	}
 	// 버튼
-	if (ImGui::Button("Spawn Cube Test")) {
-		FObjManager::LoadObjStaticMesh("Cube.obj");
+	if (ImGui::Button("Spawn Dice Test")) {
+		FObjManager::LoadObjStaticMesh("Cube-tex.obj");
 	}
 
 	ImGui::Spacing();
@@ -232,7 +232,7 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 			FString MeshPath;
 			switch (SelectedPrimitiveType)
 			{
-			case 0: MeshPath = "Cube.obj"; break;
+			case 0: MeshPath = "cube-tex.obj"; break;
 			case 1: MeshPath = "Sphere.obj"; break; 
 			case 2: MeshPath = "Triangle.obj"; break;
 			default: MeshPath = "Cube.obj"; break;

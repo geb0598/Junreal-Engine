@@ -58,6 +58,8 @@ struct FStaticMesh
     TArray<uint32> Indices;
     // to do: 여러가지 추가(ex: material 관련)
     TArray<FGroupInfo> GroupInfos; // 각 group을 render 하기 위한 정보
+
+    bool bHasMaterial;
 };
 
 struct FMeshData

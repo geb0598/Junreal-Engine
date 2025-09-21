@@ -31,6 +31,8 @@ struct FObjInfo
     TArray<uint32> GroupMaterialArray; // i번쩨 Group이 사용하는 MaterialInfos 인덱스 넘버
 
     FString ObjFileName;
+
+    bool bHasMtl = true;
 };
 
 
@@ -248,9 +250,15 @@ public:
         // Material 파싱 시작
         FileIn.open(MtlFileName.c_str());
 
+        if (MtlFileName.empty())
+        {
+            OutObjInfo->bHasMtl = false;
+            return true;
+        }
+
         if (!FileIn)
         {
-            UE_LOG("The filename %s does not exist!", InFileName.c_str());
+            UE_LOG("The filename %s does not exist!(obj filename: %s)", MtlFileName.c_str(), InFileName.c_str());
             return false;
         }
 
@@ -451,7 +459,16 @@ public:
         }
 
         // Material 정보 정리
-        for (int i = 0; i < InObjInfo.MaterialNames.size(); ++i)
+        if (!InObjInfo.bHasMtl)
+        {
+            OutStaticMesh->bHasMaterial = false;
+            return;
+        }
+
+        OutStaticMesh->bHasMaterial = true;
+        uint32 NumGroup = InObjInfo.MaterialNames.size();
+        OutStaticMesh->GroupInfos.resize(NumGroup);
+        for (int i = 0; i < NumGroup; ++i)
         {
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];
