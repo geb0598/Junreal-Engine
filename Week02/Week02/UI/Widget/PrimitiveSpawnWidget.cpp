@@ -133,8 +133,8 @@ void UPrimitiveSpawnWidget::RenderWidget()
 		fileName = buffer;  // std::string으로 갱신
 	}
 	// 버튼
-	if (ImGui::Button("Spawn Cube Test")) {
-		FObjManager::LoadObjStaticMesh("Cube.obj");
+	if (ImGui::Button("Spawn Dice Test")) {
+		FObjManager::LoadObjStaticMesh("spaceCompound.obj");
 	}
 
 	ImGui::Spacing();

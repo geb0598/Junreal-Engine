@@ -244,6 +244,11 @@ struct FVector
         float Value = std::max(minLen, std::min(maxLen, Length));
         return V * (Value / Length);
     }
+
+    static FVector One()
+    {
+        return FVector(1.f, 1.f, 1.f);
+    }
 };
 
 // ─────────────────────────────
