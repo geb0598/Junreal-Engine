@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 #include "StaticMeshComponent.h"
-#include "Mesh.h"
+#include "StaticMesh.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "ResourceManager.h"

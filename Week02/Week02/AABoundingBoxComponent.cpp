@@ -28,6 +28,23 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FVector>& Verts)
     BefRot = CurRot;
 }
 
+void UAABoundingBoxComponent::SetFromVertices(const TArray<FNormalVertex>& Verts)
+{
+    if (Verts.empty()) return;
+
+    FQuat CurRot = GetWorldRotation();
+    if (CurRot.ToEuler() == BefRot.ToEuler())
+        return;
+
+    LocalMin = LocalMax = Verts[0].pos;
+    for (auto& v : Verts)
+    {
+        LocalMin = LocalMin.ComponentMin(v.pos);
+        LocalMax = LocalMax.ComponentMax(v.pos);
+    }
+	BefRot = CurRot;
+}
+
 void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
     if (USelectionManager::GetInstance().GetSelectedActor() == GetOwner())

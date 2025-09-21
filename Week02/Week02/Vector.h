@@ -12,6 +12,7 @@
 #ifdef min
 #undef min
 #endif
+
 #ifdef max
 #undef max
 #endif
@@ -60,6 +61,32 @@ struct FTransform;
 // ─────────────────────────────
 // FVector (2D Vector)
 // ─────────────────────────────
+
+//// Add this global operator== for FVector2D and FVector4 to fix E0349 errors
+//inline bool operator==(const FVector2D& A, const FVector2D& B)
+//{
+//    return std::fabs(A.X - B.X) < KINDA_SMALL_NUMBER &&
+//        std::fabs(A.Y - B.Y) < KINDA_SMALL_NUMBER;
+//}
+//
+//inline bool operator!=(const FVector2D& A, const FVector2D& B)
+//{
+//    return !(A == B);
+//}
+//
+//inline bool operator==(const FVector4& A, const FVector4& B)
+//{
+//    return std::fabs(A.X - B.X) < KINDA_SMALL_NUMBER &&
+//        std::fabs(A.Y - B.Y) < KINDA_SMALL_NUMBER &&
+//        std::fabs(A.Z - B.Z) < KINDA_SMALL_NUMBER &&
+//        std::fabs(A.W - B.W) < KINDA_SMALL_NUMBER;
+//}
+//
+//inline bool operator!=(const FVector4& A, const FVector4& B)
+//{
+//    return !(A == B);
+//}
+
 struct FVector2D
 {
     float X, Y;
@@ -67,6 +94,13 @@ struct FVector2D
     FVector2D(float InX = 0.0f, float InY = 0.0f) : X(InX), Y(InY)
     {
     }
+
+    bool operator==(const FVector2D& V) const
+    {
+        return std::fabs(X - V.X) < KINDA_SMALL_NUMBER &&
+            std::fabs(Y - V.Y) < KINDA_SMALL_NUMBER;
+    }
+    bool operator!=(const FVector2D& V) const { return !(*this == V); }
 
     FVector2D operator-(const FVector2D& Other) const
     {

@@ -157,6 +157,7 @@
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="AABoundingBoxComponent.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
+    <ClCompile Include="ObjManager.cpp" />
     <ClCompile Include="OBoundingBoxComponent.cpp" />
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
@@ -165,7 +166,7 @@
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="LineComponent.cpp" />
     <ClCompile Include="Material.cpp" />
-    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="GizmoActor.cpp" />
     <ClCompile Include="GizmoArrowComponent.cpp" />
@@ -292,6 +293,7 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
     <ClInclude Include="FViewportClient.h" />
+    <ClInclude Include="ObjManager.h" />
     <ClInclude Include="OBoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />
     <ClInclude Include="GizmoActor.h" />
@@ -300,7 +302,7 @@
     <ClInclude Include="Line.h" />
     <ClInclude Include="LineComponent.h" />
     <ClInclude Include="Name.h" />
-    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="ObjectFactory.h" />
     <ClInclude Include="GizmoScaleComponent.h" />
     <ClInclude Include="GizmoRotateComponent.h" />
@@ -348,6 +350,7 @@
     <ClInclude Include="SWindow.h" />
     <ClInclude Include="TextRenderComponent.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="ObjectIterator.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="UEContainer.h" />
     <ClInclude Include="UI\Factory\UIWindowFactory.h" />
@@ -374,6 +377,9 @@
     <ClInclude Include="VertexData.h" />
     <ClInclude Include="FViewport.h" />
     <ClInclude Include="World.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

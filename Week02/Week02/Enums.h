@@ -4,6 +4,23 @@
 #include "Enums.h"
 #include <d3d11.h>   
 
+struct FNormalVertex
+{
+    FVector pos;
+    FVector normal;
+    FVector4 color;
+    FVector2D tex;
+};
+
+//// Cooked Data
+struct FStaticMesh
+{
+    FString PathFileName;
+
+    TArray<FNormalVertex> Vertices;
+    TArray<uint32> Indices;
+    // to do: 여러가지 추가(ex: material 관련)
+};
 
 struct FMeshData
 {
@@ -112,7 +129,7 @@ enum class ResourceType : uint8
 {
     None = -1,
 
-    Mesh,
+    StaticMesh,
     DynamicMesh,
     Shader,
     Texture,

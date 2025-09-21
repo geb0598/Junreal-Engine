@@ -12,8 +12,35 @@
 #include "FViewport.h"
 #include"SViewportWindow.h"
 #include"SMultiViewportWindow.h"
+#include "StaticMesh.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
+
+UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
+, UIManager(UUIManager::GetInstance())
+, InputManager(UInputManager::GetInstance())
+, SelectionManager(USelectionManager::GetInstance())
+{
+}
+
+
+UWorld::~UWorld()
+{
+    for (AActor* Actor : Actors)
+    {
+        ObjectFactory::DeleteObject(Actor);
+    }
+    Actors.clear();
+
+    // 카메라 정리
+    ObjectFactory::DeleteObject(MainCameraActor);
+    MainCameraActor = nullptr;
+
+    // Grid 정리 
+    ObjectFactory::DeleteObject(GridActor);
+    GridActor = nullptr;
+}
+
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 {
     if (!Obj)

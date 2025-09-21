@@ -12,6 +12,7 @@ typedef unsigned short uint16;
 typedef float float32;
 typedef double float64;
 typedef bool UBOOL;
+typedef wchar_t WIDECHAR;
 
 /** UE5 스타일 문자열 정의 */
 typedef std::string FString;
