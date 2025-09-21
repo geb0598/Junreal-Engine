@@ -46,6 +46,7 @@ public:
     float GetCameraSpeed() { return CameraMoveSpeed; }
     void SetCameraSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; EditorINI["CameraSpeed"] = std::to_string(CameraMoveSpeed); }
 
+
 private:
     UCameraComponent* CameraComponent = nullptr;
     

@@ -110,21 +110,43 @@ FRay MakeRayFromViewport(const FMatrix& InView,
     const float NdcX = (2.0f * localMouseX / viewportW) - 1.0f;
     const float NdcY = 1.0f - (2.0f * localMouseY / viewportH);
 
-    // 2) View-space direction using projection scalars
-    const float XScale = InProj.M[0][0];
-    const float YScale = InProj.M[1][1];
-    const float ViewDirX = NdcX / (XScale == 0.0f ? 1.0f : XScale);
-    const float ViewDirY = NdcY / (YScale == 0.0f ? 1.0f : YScale);
-    const float ViewDirZ = 1.0f; // Forward in view space
-
-    // 3) Use camera's actual world-space orientation vectors
-    // Transform view direction to world space using camera's real orientation
-    const FVector WorldDirection = (CameraRight * ViewDirX + CameraUp * ViewDirY + CameraForward * ViewDirZ).
-        GetSafeNormal();
+    // Check if this is orthographic projection
+    bool bIsOrthographic = std::fabs(InProj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
 
     FRay Ray;
-    Ray.Origin = CameraWorldPos;
-    Ray.Direction = WorldDirection;
+
+    if (bIsOrthographic)
+    {
+        // Orthographic projection
+        // Get orthographic bounds from projection matrix
+        float OrthoWidth = 2.0f / InProj.M[0][0];
+        float OrthoHeight = 2.0f / InProj.M[1][1];
+
+        // Calculate world space offset from camera center
+        float WorldOffsetX = NdcX * OrthoWidth * 0.5f;
+        float WorldOffsetY = NdcY * OrthoHeight * 0.5f;
+
+        // Ray origin is offset from camera position on the viewing plane
+        Ray.Origin = CameraWorldPos + (CameraRight * WorldOffsetX) + (CameraUp * WorldOffsetY);
+
+        // Ray direction is always forward for orthographic
+        Ray.Direction = CameraForward;
+    }
+    else
+    {
+        // Perspective projection (existing code)
+        const float XScale = InProj.M[0][0];
+        const float YScale = InProj.M[1][1];
+        const float ViewDirX = NdcX / (XScale == 0.0f ? 1.0f : XScale);
+        const float ViewDirY = NdcY / (YScale == 0.0f ? 1.0f : YScale);
+        const float ViewDirZ = 1.0f;
+
+        const FVector WorldDirection = (CameraRight * ViewDirX + CameraUp * ViewDirY + CameraForward * ViewDirZ).GetSafeNormal();
+
+        Ray.Origin = CameraWorldPos;
+        Ray.Direction = WorldDirection;
+    }
+
     return Ray;
 }
 

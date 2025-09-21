@@ -14,7 +14,7 @@ FViewportClient::FViewportClient()
 
     // 직교 뷰별 기본 카메라 설정
     SetupOrthographicCamera();
-    Camera = NewObject<UCameraComponent>();
+    Camera = NewObject<ACameraActor>();
 }
 
 FViewportClient::~FViewportClient()
@@ -42,10 +42,8 @@ void FViewportClient::Draw(FViewport* Viewport)
     case EViewportType::Orthographic_Bottom:
     case EViewportType::Orthographic_Right:
     {
-        Camera->SetProjectionMode(ECameraProjectionMode::Orthographic);
-        Camera->SetWorldLocation({0, 0, 1000}); 
-        Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
-        Camera->SetFOV(100);
+        Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
+        Camera->GetCameraComponent()->SetFOV(100);
         SetupOrthographicCamera();
         ViewMatrix = Camera->GetViewMatrix();
         ProjectionMatrix = Camera->GetProjectionMatrix();
@@ -68,30 +66,30 @@ void FViewportClient::SetupOrthographicCamera()
     {
         case EViewportType::Orthographic_Top:
             
-            Camera->SetWorldLocation({ 0, 0, 1000  } );
-            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
+            Camera->SetActorLocation({ 0, 0, 1000  } );
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
             break;
         case EViewportType::Orthographic_Bottom:
 
-            Camera->SetWorldLocation({ 0, 0, -1000 });
-            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
+            Camera->SetActorLocation({ 0, 0, -1000 });
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
             break;
         case EViewportType::Orthographic_Left:
-            Camera->SetWorldLocation({ 0, 1000 , 0 });
-            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
+            Camera->SetActorLocation({ 0, 1000 , 0 });
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
             break;
         case EViewportType::Orthographic_Right:
-            Camera->SetWorldLocation({ 0, 1000 , 0 });
-            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
+            Camera->SetActorLocation({ 0, 1000 , 0 });
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
             break;
 
         case EViewportType::Orthographic_Front:
-            Camera->SetWorldLocation({ -1000, 0, 0});
-            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+            Camera->SetActorLocation({ -1000, 0, 0 });
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
             break;
         case EViewportType::Orthographic_Back:
-            Camera->SetWorldLocation({ 1000, 0, 0 });
-            Camera->SetWorldRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
+            Camera->SetActorLocation({ 1000, 0, 0 });
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
             break;
 
 
@@ -106,7 +104,16 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     // Get viewport size
     FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
     FVector2D ViewportOffset(static_cast<float>(Viewport->GetStartX()), static_cast<float>(Viewport->GetStartY()));
-    FVector2D ViewportMousePos(static_cast<float>(X), static_cast<float>(Y));
+
+    // X, Y are already local coordinates within the viewport, convert to global coordinates for picking
+    FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
+
+    // Debug log for viewport picking
+    char debugBuf[256];
+    sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
+        static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
+        ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
+    UE_LOG(debugBuf);
 
     // Get the appropriate camera for this viewport
     ACameraActor* PickingCamera = nullptr;
@@ -121,61 +128,17 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         // For orthographic views, we need to use our local camera settings
         // Since we can't easily create a temporary ACameraActor, we'll create a temporary one
         // or use the existing camera but modify the picking to use our Camera component's matrices
-        PickingCamera = World->GetCameraActor();
+        PickingCamera = Camera;
     }
 
     if (PickingCamera)
     {
-        // For orthographic viewports, we need to use our local camera component's matrices instead
+        // Use the appropriate camera for this viewport type
         AActor* PickedActor = nullptr;
         TArray<AActor*> AllActors = World->GetActors();
 
-        if (ViewportType == EViewportType::Perspective)
-        {
-            // Use normal picking for perspective view
-            PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset);
-        }
-        else
-        {
-            // For orthographic views, create a ray using our local camera settings
-            const FMatrix View = Camera->GetViewMatrix();
-            const FMatrix Proj = Camera->GetProjectionMatrix();
-            const FVector CameraWorldPos = Camera->GetWorldLocation();
-            const FVector CameraRight = Camera->GetRight();
-            const FVector CameraUp = Camera->GetUp();
-            const FVector CameraForward = Camera->GetForward();
-
-            FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
-                                           ViewportMousePos, ViewportSize, ViewportOffset);
-
-            int pickedIndex = -1;
-            float pickedT = 1e9f;
-
-            // Perform picking with our custom ray
-            for (int i = 0; i < AllActors.Num(); ++i)
-            {
-                AActor* Actor = AllActors[i];
-                if (!Actor || Actor->GetActorHiddenInGame()) continue;
-
-                float hitDistance;
-                if (CPickingSystem::CheckActorPicking(Actor, ray, hitDistance))
-                {
-                    if (hitDistance < pickedT)
-                    {
-                        pickedT = hitDistance;
-                        pickedIndex = i;
-                    }
-                }
-            }
-
-            if (pickedIndex >= 0)
-            {
-                PickedActor = AllActors[pickedIndex];
-                char buf[160];
-                sprintf_s(buf, "[Ortho Pick] Hit primitive %d at t=%.3f\n", pickedIndex, pickedT);
-                UE_LOG(buf);
-            }
-        }
+        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset);
+     
 
         if (PickedActor)
         {

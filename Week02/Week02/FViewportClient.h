@@ -46,8 +46,8 @@ public:
     void SetWorld(UWorld* InWorld) { World = InWorld; }
     UWorld* GetWorld() const { return World; }
 
-    void SetCamera(UCameraComponent* InCamera) { Camera = InCamera; }
-    UCameraComponent* GetCamera() const { return Camera; }
+    void SetCamera(ACameraActor* InCamera) { Camera = InCamera; }
+    ACameraActor* GetCamera() const { return Camera; }
 
     // 카메라 매트릭스 계산
     FMatrix GetViewMatrix() const;
@@ -60,7 +60,7 @@ public:
 protected:
     EViewportType ViewportType = EViewportType::Perspective;
     UWorld* World = nullptr;
-    UCameraComponent* Camera = nullptr;
+    ACameraActor* Camera = nullptr;
 
     // 직교 뷰용 카메라 설정
     uint32 OrthographicAddXPosition;
