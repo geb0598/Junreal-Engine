@@ -7,6 +7,7 @@
 #include "SelectionManager.h"
 #include "InputManager.h"
 #include "UI/UIManager.h"
+#include"FViewport.h"
 #include "Picking.h"
 
 AGizmoActor::AGizmoActor()
@@ -141,7 +142,7 @@ void AGizmoActor::Tick(float DeltaSeconds)
             SetActorLocation(TargetActor->GetActorLocation());
         }
         
-        ProcessGizmoInteraction(DeltaSeconds);
+        ProcessGizmoInteraction(DeltaSeconds);//!!!!!!!!!!!!!!!!!!!!!!!기즈모 문제 해결
     }
     else
     {
@@ -149,7 +150,7 @@ void AGizmoActor::Tick(float DeltaSeconds)
     }
     UpdateComponentVisibility();
 }
-void AGizmoActor::Render( ACameraActor* Camera) {
+void AGizmoActor::Render( ACameraActor* Camera, FViewport* Viewport) {
 
     EViewModeIndex ViewModeIndex = World->GetViewModeIndex();
     URenderer* Renderer = GetWorld()->GetRenderer();
@@ -161,6 +162,13 @@ void AGizmoActor::Render( ACameraActor* Camera) {
 
     TArray<USceneComponent*>* Components = GetGizmoComponents();
     if (!Components) return;
+
+    FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
+    FVector2D ViewportOffset(static_cast<float>(Viewport->GetStartX()), static_cast<float>(Viewport->GetStartY()));
+    FVector2D ViewportMousePos(static_cast<float>(UInputManager::GetInstance().GetMousePosition().X) + ViewportOffset.X,
+        static_cast<float>(UInputManager::GetInstance().GetMousePosition().Y) + ViewportOffset.Y);
+
+
 
     for (uint32 i = 0; i < Components->Num(); ++i)
     {
@@ -188,8 +196,9 @@ void AGizmoActor::Render( ACameraActor* Camera) {
                 Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
             }
         }
-        // 드래그 중이 아니면 호버링 한 축만 하이라이트
-        else if (CPickingSystem::IsHoveringGizmo(this, Camera) == i + 1)
+     
+       
+        else if (CPickingSystem::IsHoveringGizmoForViewport(this, Camera, ViewportMousePos,ViewportSize,ViewportOffset) == i + 1)
         {
             Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
         }

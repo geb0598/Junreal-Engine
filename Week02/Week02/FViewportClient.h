@@ -30,7 +30,7 @@ public:
 
     // 렌더링
     virtual void Draw(FViewport* Viewport);
-    virtual void Tick(float DeltaTime) {}
+    virtual void Tick(float DeltaTime);
 
     // 입력 처리
     virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y) {}

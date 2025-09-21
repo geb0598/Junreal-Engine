@@ -6,6 +6,7 @@
 #include "World.h"
 #include "Picking.h"
 #include "SelectionManager.h"
+#include"GizmoActor.h"
 
 FViewportClient::FViewportClient()
 {
@@ -20,7 +21,10 @@ FViewportClient::FViewportClient()
 FViewportClient::~FViewportClient()
 {
 }
+void FViewportClient::Tick(float DeltaTime) {
+  
 
+}
 void FViewportClient::Draw(FViewport* Viewport)
 {
     if (!Viewport || !World) return;
@@ -61,7 +65,7 @@ void FViewportClient::Draw(FViewport* Viewport)
     if (World)
     {
         World->RenderViewports(Camera);
-        World->GetGizmoActor()->Render(Camera);
+        World->GetGizmoActor()->Render(Camera,Viewport);
     }
 }
 

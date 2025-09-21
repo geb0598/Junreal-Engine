@@ -17,6 +17,7 @@
 #include "GizmoArrowComponent.h"
 #include "UI/GlobalConsole.h"
 #include "ObjManager.h"
+#include"stdio.h"
 
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
@@ -388,23 +389,32 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
 {
     if (!GizmoTransActor || !Camera)
         return 0;
-    
-    // 카메라에서 마우스 포지션으로의 레이 생성
+
+    // 현재 활성 뷰포트 정보 가져오기 (UI 시스템에서)
+    FVector2D ViewportMousePos = UInputManager::GetInstance().GetMousePosition();
+    FVector2D ViewportSize = UInputManager::GetInstance().GetScreenSize();
+    FVector2D ViewportOffset = FVector2D(0, 0);
+
+    // 멀티 뷰포트인 경우 현재 뷰포트의 정보를 사용
+    // 4분할 화면 등에서는 각 뷰포트의 offset과 size를 올바르게 계산해야 함
+
+    // 뷰포트별 레이 생성
     const FMatrix View = Camera->GetViewMatrix();
     const FMatrix Proj = Camera->GetProjectionMatrix();
     const FVector CameraWorldPos = Camera->GetActorLocation();
     const FVector CameraRight = Camera->GetRight();
     const FVector CameraUp = Camera->GetUp();
     const FVector CameraForward = Camera->GetForward();
-    FRay Ray = MakeRayFromMouseWithCamera(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward);
-    
+    FRay Ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                   ViewportMousePos, ViewportSize, ViewportOffset);
+
     uint32 ClosestAxis = 0;
     float ClosestDistance = 1e9f;
     float HitDistance;
-    
+
     // X축 화살표 검사
     //Cast<UStaticMeshComponent>(GizmoTransActor->GetArrowX());
-    
+
     switch (GizmoTransActor->GetMode())
     {
         case EGizmoMode::Translate:
@@ -420,7 +430,7 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
                 }
             }
 
-            // Y축 화살표 검사  
+            // Y축 화살표 검사
             if (UStaticMeshComponent* ArrowY = Cast<UStaticMeshComponent>(GizmoTransActor->GetArrowY()))
             {
                 if (CheckGizmoComponentPicking(ArrowY, Ray, HitDistance))
@@ -446,7 +456,7 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
                 }
             }
             break;
-        case EGizmoMode::Scale: 
+        case EGizmoMode::Scale:
             if (UStaticMeshComponent* ScaleX = Cast<UStaticMeshComponent>(GizmoTransActor->GetScaleX()))
             {
                 if (CheckGizmoComponentPicking(ScaleX, Ray, HitDistance))
@@ -459,7 +469,7 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
                 }
             }
 
-            // Y축 화살표 검사  
+            // Y축 화살표 검사
             if (UStaticMeshComponent* ScaleY = Cast<UStaticMeshComponent>(GizmoTransActor->GetScaleY()))
             {
                 if (CheckGizmoComponentPicking(ScaleY, Ray, HitDistance))
@@ -498,7 +508,7 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
                 }
             }
 
-            // Y축 화살표 검사  
+            // Y축 화살표 검사
             if (UStaticMeshComponent* RotateY = Cast<UStaticMeshComponent>(GizmoTransActor->GetRotateY()))
             {
                 if (CheckGizmoComponentPicking(RotateY, Ray, HitDistance))
@@ -527,11 +537,178 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
     default:
         break;
     }
-   
-   
-  
+
+
+
     return ClosestAxis;
 }
+
+uint32 CPickingSystem::IsHoveringGizmoForViewport(AGizmoActor* GizmoTransActor, const ACameraActor* Camera,
+                                                  const FVector2D& ViewportMousePos,
+                                                  const FVector2D& ViewportSize,
+                                                  const FVector2D& ViewportOffset)
+{
+    if (!GizmoTransActor || !Camera)
+        return 0;
+    float ViewportAspectRatio = ViewportSize.X / ViewportSize.Y;
+    if (ViewportSize.Y == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+    // 뷰포트별 레이 생성 - 전달받은 뷰포트 정보 사용
+    const FMatrix View = Camera->GetViewMatrix();
+    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio);
+    const FVector CameraWorldPos = Camera->GetActorLocation();
+    const FVector CameraRight = Camera->GetRight();
+    const FVector CameraUp = Camera->GetUp();
+    const FVector CameraForward = Camera->GetForward();
+    FRay Ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                   ViewportMousePos, ViewportSize, ViewportOffset);
+    char debugBuf[512];
+    sprintf_s(
+        debugBuf,
+        "Mouse Local: (%.1f, %.1f) | Global: (%.1f, %.1f)\n"
+        "Viewport Size: (%.1f, %.1f) | Offset: (%.1f, %.1f)\n"
+        "Ray Origin: (%.2f, %.2f, %.2f) | Ray Dir: (%.2f, %.2f, %.2f)\n",
+        static_cast<float>(ViewportMousePos.X), static_cast<float>(ViewportMousePos.Y),        // 로컬 마우스 좌표
+        ViewportMousePos.X, ViewportMousePos.Y,              // 글로벌 마우스 좌표
+        ViewportSize.X, ViewportSize.Y,                      // 뷰포트 크기
+        ViewportOffset.X, ViewportOffset.Y,                  // 뷰포트 오프셋
+        Ray.Origin.X, Ray.Origin.Y, Ray.Origin.Z,            // 레이 시작점
+        Ray.Direction.X, Ray.Direction.Y, Ray.Direction.Z    // 레이 방향
+    );
+    UE_LOG(debugBuf);
+    uint32 ClosestAxis = 0;
+    float ClosestDistance = 1e9f;
+    float HitDistance;
+
+    // X축 화살표 검사
+    //Cast<UStaticMeshComponent>(GizmoTransActor->GetArrowX());
+
+    switch (GizmoTransActor->GetMode())
+    {
+        case EGizmoMode::Translate:
+            if (UStaticMeshComponent* ArrowX = Cast<UStaticMeshComponent>(GizmoTransActor->GetArrowX()))
+            {
+                if (CheckGizmoComponentPicking(ArrowX, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 1;
+                    }
+                }
+            }
+
+            // Y축 화살표 검사
+            if (UStaticMeshComponent* ArrowY = Cast<UStaticMeshComponent>(GizmoTransActor->GetArrowY()))
+            {
+                if (CheckGizmoComponentPicking(ArrowY, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 2;
+                    }
+                }
+            }
+
+            // Z축 화살표 검사
+            if (UStaticMeshComponent* ArrowZ = Cast<UStaticMeshComponent>(GizmoTransActor->GetArrowZ()))
+            {
+                if (CheckGizmoComponentPicking(ArrowZ, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 3;
+                    }
+                }
+            }
+            break;
+        case EGizmoMode::Scale:
+            if (UStaticMeshComponent* ScaleX = Cast<UStaticMeshComponent>(GizmoTransActor->GetScaleX()))
+            {
+                if (CheckGizmoComponentPicking(ScaleX, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 1;
+                    }
+                }
+            }
+
+            // Y축 화살표 검사
+            if (UStaticMeshComponent* ScaleY = Cast<UStaticMeshComponent>(GizmoTransActor->GetScaleY()))
+            {
+                if (CheckGizmoComponentPicking(ScaleY, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 2;
+                    }
+                }
+            }
+
+            // Z축 화살표 검사
+            if (UStaticMeshComponent* ScaleZ = Cast<UStaticMeshComponent>(GizmoTransActor->GetScaleZ()))
+            {
+                if (CheckGizmoComponentPicking(ScaleZ, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 3;
+                    }
+                }
+            }
+            break;
+        case EGizmoMode::Rotate:
+            if (UStaticMeshComponent* RotateX = Cast<UStaticMeshComponent>(GizmoTransActor->GetRotateX()))
+            {
+                if (CheckGizmoComponentPicking(RotateX, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 1;
+                    }
+                }
+            }
+
+            // Y축 화살표 검사
+            if (UStaticMeshComponent* RotateY = Cast<UStaticMeshComponent>(GizmoTransActor->GetRotateY()))
+            {
+                if (CheckGizmoComponentPicking(RotateY, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 2;
+                    }
+                }
+            }
+
+            // Z축 화살표 검사
+            if (UStaticMeshComponent* RotateZ = Cast<UStaticMeshComponent>(GizmoTransActor->GetRotateZ()))
+            {
+                if (CheckGizmoComponentPicking(RotateZ, Ray, HitDistance))
+                {
+                    if (HitDistance < ClosestDistance)
+                    {
+                        ClosestDistance = HitDistance;
+                        ClosestAxis = 3;
+                    }
+                }
+            }
+            break;
+    default:
+        break;
+    }
+
+    return ClosestAxis;
+}
+
+
 
 void CPickingSystem::DragActorWithGizmo(AActor* Actor, AGizmoActor*  GizmoActor,uint32 GizmoAxis, const FVector2D& MouseDelta, const ACameraActor* Camera, EGizmoMode InGizmoMode)
 {

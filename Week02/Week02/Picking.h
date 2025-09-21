@@ -81,6 +81,14 @@ public:
 
     // 현재 기즈모의 어떤 축에 호버링 중인지 반환 (X=1, Y=2, Z=3)
     static uint32 IsHoveringGizmo(AGizmoActor* GizmoActor, const ACameraActor* Camera);
+
+
+
+    // 뷰포트 정보를 명시적으로 받는 기즈모 호버링 검사
+    static uint32 IsHoveringGizmoForViewport(AGizmoActor* GizmoActor, const ACameraActor* Camera,
+                                             const FVector2D& ViewportMousePos,
+                                             const FVector2D& ViewportSize,
+                                             const FVector2D& ViewportOffset = FVector2D(0.0f, 0.0f));
     
     // 기즈모 드래그로 액터를 이동시키는 함수
     static void DragActorWithGizmo(AActor* Actor, AGizmoActor* GizmoActor, uint32 GizmoAxis, const FVector2D& MouseDelta, const ACameraActor* Camera, EGizmoMode InGizmoMode);

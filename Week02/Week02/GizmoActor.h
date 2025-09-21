@@ -11,7 +11,7 @@ class UInputManager;
 class UUIManager;
 class URenderer;
 class CPickingSystem;
-
+class FViewport;
 class AGizmoActor : public AActor
 {
 public:
@@ -19,7 +19,7 @@ public:
     AGizmoActor();
 
     virtual void Tick(float DeltaSeconds) override;
-    void Render( ACameraActor* Camera);
+    void Render( ACameraActor* Camera, FViewport* Viewport);
 protected:
     ~AGizmoActor() override;
 
@@ -63,7 +63,9 @@ public:
     AActor* GetTargetActor() const { return TargetActor; }
     void SetCameraActor(ACameraActor* InCameraActor) { CameraActor = InCameraActor; }
     ACameraActor* GetCameraActor() const { return CameraActor; }
+    
 
+    void ProcessGizmoInteraction(float DeltaSeconds);
 protected:
 
     UGizmoArrowComponent* ArrowX;
@@ -95,7 +97,7 @@ protected:
     UUIManager* UIManager = nullptr;
     
     // Gizmo interaction methods
-    void ProcessGizmoInteraction(float DeltaSeconds);
+   
     void ProcessGizmoHovering();
     void ProcessGizmoDragging(float DeltaSeconds);
     void ProcessGizmoModeSwitch();
