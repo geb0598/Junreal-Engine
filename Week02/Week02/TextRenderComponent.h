@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "MeshComponent.h"
-class UTextRenderComponent : public UMeshComponent
+class UTextRenderComponent : public UPrimitiveComponent
 {
 public:
 	DECLARE_CLASS(UTextRenderComponent, UMeshComponent)
@@ -15,9 +15,15 @@ public:
 	//FResourceData* GetResourceData() { return ResourceData; }
 	//FTextureData* GetTextureData() { return TextureData; }
 	virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
-	void SetText(FString Txt);
+	// void SetText(FString Txt);
+
+	UStaticMesh* GetStaticMesh() const { return StaticMesh; }
+
 private:
 	FString Text;
 	TMap<char, FBillboardVertexInfo> CharInfoMap;
 	FString TextureFilePath;
+
+	// TODO: UStaticMesh는 UStaticMeshComponent만 사용하도록 바꿔야 한다
+	UStaticMesh* StaticMesh = nullptr;
 };

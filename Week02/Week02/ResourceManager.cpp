@@ -2,6 +2,7 @@
 #include "MeshLoader.h"
 #include "ObjectFactory.h"
 #include "d3dtk/DDSTextureLoader.h"
+#include "ObjManager.h"
 
 #define GRIDNUM 100
 #define AXISLENGTH 100

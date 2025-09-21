@@ -548,7 +548,7 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
 
     // Gizmo 메시는 FStaticMesh(쿠킹된 데이터)를 사용
     FStaticMesh* StaticMesh = FObjManager::LoadObjStaticMeshAsset(
-        Component->GetMeshResource()->GetFilePath()
+        Component->GetStaticMesh()->GetFilePath()
     );
     if (!StaticMesh) return false;
 
@@ -642,7 +642,7 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
         {
             // Cooked FStaticMesh 사용 (MeshData 대체)
             FStaticMesh* StaticMesh = FObjManager::LoadObjStaticMeshAsset(
-                StaticMeshComponent->GetMeshResource()->GetFilePath()
+                StaticMeshComponent->GetStaticMesh()->GetFilePath()
             );
 
             if (!StaticMesh) return false;

@@ -107,11 +107,11 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
 }
 
-void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology)
+void URenderer::DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
     UINT Stride = sizeof(FBillboardVertexInfo_GPU);
-    ID3D11Buffer* VertexBuff = Comp->GetMeshResource()->GetVertexBuffer();
-    ID3D11Buffer* IndexBuff = Comp->GetMeshResource()->GetIndexBuffer();
+    ID3D11Buffer* VertexBuff = Comp->GetStaticMesh()->GetVertexBuffer();
+    ID3D11Buffer* IndexBuff = Comp->GetStaticMesh()->GetIndexBuffer();
 
     RHIDevice->GetDeviceContext()->IASetInputLayout(Comp->GetMaterial()->GetShader()->GetInputLayout());
 
@@ -129,7 +129,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMIT
     RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &SamplerState);
     RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &TextureSRV);
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
-    RHIDevice->GetDeviceContext()->DrawIndexed(Comp->GetMeshResource()->GetIndexCount(), 0, 0);
+    RHIDevice->GetDeviceContext()->DrawIndexed(Comp->GetStaticMesh()->GetIndexCount(), 0, 0);
 }
 
 void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
