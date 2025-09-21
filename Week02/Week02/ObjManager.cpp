@@ -9,8 +9,6 @@ TMap<FString, FStaticMesh*> FObjManager::ObjStaticMeshMap;
 
 FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
 {
-    
-
     // 2) 캐시 히트 시 즉시 반환 (Find는 FStaticMesh** 반환)
     if (FStaticMesh** It = ObjStaticMeshMap.Find(PathFileName))
     {

@@ -1,8 +1,7 @@
 ﻿#pragma once
 #include "UEContainer.h"
 #include "Vector.h"
-
-
+#include "Enums.h"
 
 // Raw Data
 struct FObjInfo
@@ -27,17 +26,14 @@ struct FObjInfo
     // Material List
     // Texture List
     // other...
-    TArray<FWideString> MaterialNames;
+    TArray<FWideString> MaterialNames; // == 강의 글의 meshMaterials
+    TArray<uint32> GroupIndexStartArray; // i번째 Group이 사용하는 indices 범위: GroupIndexStartArray[i] ~ GroupIndexStartArray[i+1]
+    TArray<uint32> GroupMaterialArray; // i번쩨 Group이 사용하는 Materials 인덱스 넘버
 
     FString ObjFileName;
 };
 
-struct FObjMaterialInfo
-{
-    // Diffuse Scalar
-    // Diffuse Texture
-    // other...
-};
+
 
 struct FObjImporter
 {
@@ -49,13 +45,13 @@ struct FObjImporter
     // TODO: Material 파싱도 필요
     // TODO: 변수이름 가독성 있게 재설정
 public:
-    static bool LoadObjModel(const FWideString& InFileName, FObjInfo* const OutObjInfo, bool bIsRHCoordSys, bool bComputeNormals)
+    static bool LoadObjModel(const FWideString& InFileName, FObjInfo* const OutObjInfo, TArray<FObjMaterialInfo>& const OutMaterialInfos, bool bIsRHCoordSys, bool bComputeNormals)
     {
         // mtl 파싱할 때 필요한 정보들. 이거를 함수 밖으로 보내줘야 할수도? obj 파싱하면서 저장.(아래 링크 기반) 나중에 형식 바뀔수도 있음
         // https://www.braynzarsoft.net/viewtutorial/q16390-22-loading-static-3d-models-obj-format
-        TArray<uint32> GroupIndexStartArray; // i번째 Group이 사용하는 indices 범위: GroupIndexStartArray[i] ~ GroupIndexStartArray[i+1]
-        TArray<uint32> GroupMaterialArray; // i번쩨 Group이 사용하는 Materials 인덱스 넘버
-        TArray<FObjMaterialInfo> MaterialInfos; // Material 정보들
+        //TArray<uint32> GroupIndexStartArray; // i번째 Group이 사용하는 indices 범위: GroupIndexStartArray[i] ~ GroupIndexStartArray[i+1]
+        //TArray<uint32> GroupMaterialArray; // i번쩨 Group이 사용하는 Materials 인덱스 넘버
+        //TArray<FObjMaterialInfo> MaterialInfos; // Material 정보들
         // TArray<ID3D11ShaderResourceView*> meshSRV; // MaterialInfos의 각 원소에 저장된 index로 여기서 참조.
         uint32 subsetCount = 0;
 
@@ -134,11 +130,11 @@ public:
 
                 bHasNormal = true;
             }
-            else if (line.rfind(L"g ", 0) == 0) // 그룹 (g groupName)
-            {
-                GroupIndexStartArray.push_back(VIndex);
-                subsetCount++;
-            }
+            //else if (line.rfind(L"g ", 0) == 0) // 그룹 (g groupName)
+            //{
+            //    GroupIndexStartArray.push_back(VIndex);
+            //    subsetCount++;
+            //}
             else if (line.rfind(L"f ", 0) == 0) // 면 (f v1/vt1/vn1 v2/vt2/vn2 ...)
             {
                 Face = line.substr(2); // ex: "3/2/2 3/3/2 3/4/2 "
@@ -207,6 +203,10 @@ public:
             {
                 MaterialNameTemp = line.substr(7);
                 OutObjInfo->MaterialNames.push_back(MaterialNameTemp);
+
+                // material 하나 당 group 하나라고 가정. 현재 단계에서는 usemtl로 group을 분리하는 게 편함.
+                OutObjInfo->GroupIndexStartArray.push_back(VIndex);
+                subsetCount++;
             }
             else
             {
@@ -218,16 +218,16 @@ public:
         // GroupIndexStartArray 마무리 작업
         if (subsetCount == 0) //Check to make sure there is at least one subset
         {
-            GroupIndexStartArray.push_back(0);		//Start index for this subset
+            OutObjInfo->GroupIndexStartArray.push_back(0);		//Start index for this subset
             subsetCount++;
         }
-        GroupIndexStartArray.push_back(VIndex); //There won't be another index start after our last subset, so set it here
+        OutObjInfo->GroupIndexStartArray.push_back(VIndex); //There won't be another index start after our last subset, so set it here
 
         //sometimes "g" is defined at the very top of the file, then again before the first group of faces.
         //This makes sure the first subset does not conatain "0" indices.
-        if (GroupIndexStartArray[1] == 0)
+        if (OutObjInfo->GroupIndexStartArray[1] == 0)
         {
-            GroupIndexStartArray.erase(GroupIndexStartArray.begin() + 1);
+            OutObjInfo->GroupIndexStartArray.erase(OutObjInfo->GroupIndexStartArray.begin() + 1);
             subsetCount--;
         }
 
@@ -243,8 +243,138 @@ public:
 
         FileIn.close();
 
-        // TODO: Material 관련 코드
         // TODO: Normal 다시 계산
+
+        // TODO: Material 관련 코드
+        FileIn.open(MtlFileName.c_str());
+
+        if (!FileIn)
+        {
+            UE_LOG("파일명 %s가 존재하지 않습니다!", InFileName.c_str());
+            return false;
+        }
+
+        // obj 파싱 시작
+        //OutObjInfo->ObjFileName = FString(InFileName.begin(), InFileName.end()); // 아스키 코드라고 가정
+
+        OutMaterialInfos.reserve(OutObjInfo->MaterialNames.size());
+        /*OutMaterialInfos->resize(OutObjInfo->MaterialNames.size());*/
+        uint32 MatCount = OutMaterialInfos.size();
+        FWideString line;
+        while (std::getline(FileIn, line))
+        {
+            if (line.empty()) continue;
+
+            // 주석(#) 처리
+            if (line[0] == L'#')   // wide literal
+                continue;
+
+            if (line.rfind(L"Kd ", 0) == 0)
+            {
+                std::wstringstream wss(line.substr(3));
+                float vx, vy, vz;
+                wss >> vx >> vy >> vz;
+
+                OutMaterialInfos[MatCount - 1].DiffuseColor = FVector(vx, vy, vz);
+            }
+            else if (line.rfind(L"Ka ", 0) == 0)
+            {
+                std::wstringstream wss(line.substr(3));
+                float vx, vy, vz;
+                wss >> vx >> vy >> vz;
+
+                OutMaterialInfos[MatCount - 1].AmbientColor = FVector(vx, vy, vz);
+            }
+            else if (line.rfind(L"Tr ", 0) == 0)
+            {
+                std::wstringstream wss(line.substr(3));
+                float value;
+                wss >> value;
+
+                OutMaterialInfos[MatCount - 1].Transparency = value;
+            }
+            else if (line.rfind(L"d ", 0) == 0)
+            {
+                std::wstringstream wss(line.substr(3));
+                float value;
+                wss >> value;
+
+                OutMaterialInfos[MatCount - 1].Transparency = 1.0f - value;
+            }
+            else if (line.rfind(L"map_kd ", 0) == 0) // 면 (f v1/vt1/vn1 v2/vt2/vn2 ...)
+            {
+                 = line.substr(7); // ex: "3/2/2 3/3/2 3/4/2 "
+
+                if (Face.length() <= 0)
+                {
+                    continue;
+                }
+
+                // 1) TriangleCount 구하기
+                std::wstringstream wss(Face);
+                FWideString VertexDef; // ex: 3/2/2
+                //uint32 VertexCount = 0;
+                //while (wss >> VertexDef)
+                //{
+                //    VertexCount++;
+                //}
+                //TriangleCount = (VertexCount >= 3) ? VertexCount - 2 : 0;
+
+                //wss.clear();              // 스트림 상태 플래그 초기화 (EOF, fail 등)
+                //wss.seekg(0, std::ios::beg); // 읽기 위치를 맨 앞으로 이동
+
+                // 2) 실제 Face 파싱
+                TArray<FFaceVertex> LineFaceVertices;
+                while (wss >> VertexDef)
+                {
+                    FFaceVertex FaceVertex = ParseVertexDef(VertexDef);
+                    LineFaceVertices.push_back(FaceVertex);
+                }
+
+                //3) FaceVertices에 그대로 파싱된 걸로, 다시 트라이앵글에 맞춰 인덱스 배열들에 넣기
+                for (uint32 i = 0; i < 3; ++i)
+                {
+                    OutObjInfo->PositionIndices.push_back(LineFaceVertices[i].PositionIndex);
+                    OutObjInfo->TexCoordIndices.push_back(LineFaceVertices[i].TexCoordIndex);
+                    OutObjInfo->NormalIndices.push_back(LineFaceVertices[i].NormalIndex);
+                    ++VIndex;
+                }
+                ++MeshTriangles;
+
+                for (uint32 i = 3; i < LineFaceVertices.size(); ++i)
+                {
+                    OutObjInfo->PositionIndices.push_back(LineFaceVertices[0].PositionIndex);
+                    OutObjInfo->TexCoordIndices.push_back(LineFaceVertices[0].TexCoordIndex);
+                    OutObjInfo->NormalIndices.push_back(LineFaceVertices[0].NormalIndex);
+                    ++VIndex;
+
+                    OutObjInfo->PositionIndices.push_back(LineFaceVertices[i - 1].PositionIndex);
+                    OutObjInfo->TexCoordIndices.push_back(LineFaceVertices[i - 1].TexCoordIndex);
+                    OutObjInfo->NormalIndices.push_back(LineFaceVertices[i - 1].NormalIndex);
+                    ++VIndex;
+
+                    OutObjInfo->PositionIndices.push_back(LineFaceVertices[i].PositionIndex);
+                    OutObjInfo->TexCoordIndices.push_back(LineFaceVertices[i].TexCoordIndex);
+                    OutObjInfo->NormalIndices.push_back(LineFaceVertices[i].NormalIndex);
+                    ++VIndex;
+
+                    ++MeshTriangles;
+                }
+            }
+            else if (line.rfind(L"mtllib ", 0) == 0)
+            {
+                MtlFileName = line.substr(7);
+            }
+            else if (line.rfind(L"usemtl ", 0) == 0)
+            {
+                MaterialNameTemp = line.substr(7);
+                OutObjInfo->MaterialNames.push_back(MaterialNameTemp);
+            }
+            else
+            {
+                UE_LOG("파일명 %s를 파싱하는 중 다음과 같은 unknown symbol을 발견했습니다: %s", InFileName, line);
+            }
+        }
     }
 
     // TODO: Material 파싱도 필요
