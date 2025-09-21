@@ -85,9 +85,7 @@ public:
     void ToggleShowFlag(EEngineShowFlags Flag) { ShowFlags = HasShowFlag(ShowFlags, Flag) ? (ShowFlags & ~Flag) : (ShowFlags | Flag); }
     bool IsShowFlagEnabled(EEngineShowFlags Flag) const { return HasShowFlag(ShowFlags, Flag); }
 
-    AGridActor* GetGridActor() { return GridActor; }
-
-    const TArray<AActor*>& GetActors() { return Actors; }
+  
     
     /** Generate unique name for actor based on type */
     FString GenerateUniqueActorName(const FString& ActorType);
@@ -100,10 +98,14 @@ public:
     void Render();
     void RenderSingleViewport();
     void RenderViewports(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
-    void RenderActorsToCurrentViewport(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
     void RenderGizmoActor();
 
+    /** === 필요한 엑터 게터 === */
+    const TArray<AActor*>& GetActors() { return Actors; }
     AGizmoActor* GetGizmoActor();
+    AGridActor* GetGridActor() { return GridActor; }
+
+    
 
     
     /** === 레벨 / 월드 구성 === */
@@ -130,7 +132,6 @@ private:
 
     // 메인 뷰포트
     SViewportWindow* MainViewport = nullptr;
-    SViewportWindow* Main2Viewport = nullptr;
     // 멀티 뷰포트 윈도우
     SMultiViewportWindow* MultiViewport = nullptr;
 

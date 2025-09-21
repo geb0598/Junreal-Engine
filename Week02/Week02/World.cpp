@@ -13,32 +13,6 @@
 #include"SViewportWindow.h"
 #include"SMultiViewportWindow.h"
 
-
-UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
-, UIManager(UUIManager::GetInstance())
-, InputManager(UInputManager::GetInstance())
-, SelectionManager(USelectionManager::GetInstance())
-{
-}
-
-
-UWorld::~UWorld()
-{
-    for (AActor* Actor : Actors)
-    {
-        ObjectFactory::DeleteObject(Actor);
-    }
-    Actors.clear();
-
-    // 카메라 정리
-    ObjectFactory::DeleteObject(MainCameraActor);
-    MainCameraActor = nullptr;
-
-    // Grid 정리 
-    ObjectFactory::DeleteObject(GridActor);
-    GridActor = nullptr;
-}
-
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 {
     if (!Obj)
@@ -65,10 +39,10 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
     std::snprintf(buf, sizeof(buf), "[RTTI] IsA<ACameraActor> = %d\r\n", (int)Obj->IsA<ACameraActor>());
     UE_LOG(buf);
 
-    // 3) 정확한 타입 비교 (파생 제외)
-    std::snprintf(buf, sizeof(buf), "[RTTI] EXACT ACameraActor = %d\r\n",
-        (int)(Obj->GetClass() == ACameraActor::StaticClass()));
-    UE_LOG(buf);
+    //// 3) 정확한 타입 비교 (파생 제외)
+    //std::snprintf(buf, sizeof(buf), "[RTTI] EXACT ACameraActor = %d\r\n",
+    //    (int)(Obj->GetClass() == ACameraActor::StaticClass()));
+    //UE_LOG(buf);
 
     // 4) 상속 체인 출력
     UE_LOG("[RTTI] Inheritance chain: ");
@@ -82,6 +56,33 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
     OutputDebugStringA(buf);
     OutputDebugStringA("================================\r\n");
 }
+
+
+UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
+, UIManager(UUIManager::GetInstance())
+, InputManager(UInputManager::GetInstance())
+, SelectionManager(USelectionManager::GetInstance())
+{
+}
+
+
+UWorld::~UWorld()
+{
+    for (AActor* Actor : Actors)
+    {
+        ObjectFactory::DeleteObject(Actor);
+    }
+    Actors.clear();
+
+    // 카메라 정리
+    ObjectFactory::DeleteObject(MainCameraActor);
+    MainCameraActor = nullptr;
+
+    // Grid 정리 
+    ObjectFactory::DeleteObject(GridActor);
+    GridActor = nullptr;
+}
+
 
 
 void UWorld::Initialize()
@@ -120,11 +121,7 @@ void UWorld::Initialize()
 	// 액터 간 참조 설정
 	SetupActorReferences();
 
-    //MainViewport = new SViewportWindow();
-  //  MainViewport->Initialize(500,500,this,Renderer->GetRHIDevice()->GetDevice(),EViewportType::Perspective);
 
-  //  Main2Viewport = new SViewportWindow();
-  //  Main2Viewport->Initialize(1000, 1000, this, Renderer->GetRHIDevice()->GetDevice(), EViewportType::Perspective);
 
 }
 
@@ -173,7 +170,9 @@ void UWorld::SetRenderer(URenderer* InRenderer)
 void UWorld::Render()
 {
     Renderer->BeginFrame();
-    MultiViewport->OnRender();
+   
+    MainViewport->OnRender();
+    // MultiViewport->OnRender();
     UIManager.Render();
     Renderer->EndFrame();
 
@@ -384,7 +383,10 @@ void UWorld::Tick(float DeltaSeconds)
     //Input Manager가 카메라 후에 업데이트 되어야함
     InputManager.Update();
     UIManager.Update(DeltaSeconds);
-    MultiViewport->OnUpdate();
+
+    //뷰포트 업데이트 
+    //MultiViewport->OnUpdate();
+    MainViewport->OnUpdate();
 }
 
 float UWorld::GetTimeSeconds() const
@@ -504,7 +506,7 @@ void UWorld::SetupActorReferences()
     }
 
 }
-
+//마우스 피킹관련 메소드
 void UWorld::ProcessActorSelection()
 {
     if (!MainCameraActor) return;
@@ -513,26 +515,7 @@ void UWorld::ProcessActorSelection()
     {
         const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
         MultiViewport->OnMouseDown(MousePosition);
-        //if (AActor* PickedActor = CPickingSystem::PerformPicking(Actors, MainCameraActor))
-        //{
-        //    SelectionManager.SelectActor(PickedActor);
-        //    UIManager.SetPickedActor(PickedActor);
-
-        //    if (GizmoActor)
-        //    {
-        //        GizmoActor->SetTargetActor(PickedActor);
-        //        GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
-        //    }
-        //}
-        //else
-        //{
-        //    UIManager.ResetPickedActor();
-        //    //SelectionManager.ClearSelection();
-        //    if (GizmoActor)
-        //    {
-        //        GizmoActor->SetTargetActor(nullptr);
-        //    }
-        //}
+        MainViewport->OnMouseDown(MousePosition);
     }
 }
 

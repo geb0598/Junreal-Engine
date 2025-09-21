@@ -1,7 +1,8 @@
 ﻿#include "pch.h"
 #include "SViewportWindow.h"
 #include "World.h"
-
+extern float CLIENTWIDTH;
+extern float CLIENTHEIGHT;
 SViewportWindow::SViewportWindow()
 {
     ViewportType = EViewportType::Perspective;
@@ -90,8 +91,8 @@ void SViewportWindow::OnUpdate()
 
     uint32 NewStartX = static_cast<uint32>(Rect.Left);
     uint32 NewStartY = static_cast<uint32>(Rect.Top);
-    uint32 NewWidth = static_cast<uint32>(Rect.Right - Rect.Left);
-    uint32 NewHeight = static_cast<uint32>(Rect.Bottom - Rect.Top);
+    uint32 NewWidth = static_cast<uint32>(CLIENTWIDTH);
+    uint32 NewHeight = static_cast<uint32>(CLIENTHEIGHT);
 
     Viewport->Resize(NewStartX, NewStartY, NewWidth, NewHeight);
 }
