@@ -77,7 +77,7 @@ public:
 
         if (!FileIn)
         {
-            UE_LOG("파일명 %s가 존재하지 않습니다!", InFileName.c_str());
+            UE_LOG("The filename %s does not exist!", InFileName.c_str());
             return false;
         }
 
@@ -130,11 +130,11 @@ public:
 
                 bHasNormal = true;
             }
-            //else if (line.rfind(L"g ", 0) == 0) // 그룹 (g groupName)
-            //{
-            //    GroupIndexStartArray.push_back(VIndex);
-            //    subsetCount++;
-            //}
+            else if (line.rfind("g ", 0) == 0) // 그룹 (g groupName)
+            {
+                /*GroupIndexStartArray.push_back(VIndex);
+                subsetCount++;*/
+            }
             else if (line.rfind("f ", 0) == 0) // 면 (f v1/vt1/vn1 v2/vt2/vn2 ...)
             {
                 Face = line.substr(2); // ex: "3/2/2 3/3/2 3/4/2 "
@@ -210,7 +210,7 @@ public:
             }
             else
             {
-                UE_LOG("파일명 %s를 파싱하는 중 다음과 같은 unknown symbol을 발견했습니다: %s", InFileName, line);
+                UE_LOG("While parsing the filename %s, the following unknown symbol was encountered: %s", InFileName.c_str(), line.c_str());
             }
         }
 
@@ -250,7 +250,7 @@ public:
 
         if (!FileIn)
         {
-            UE_LOG("파일명 %s가 존재하지 않습니다!", InFileName.c_str());
+            UE_LOG("The filename %s does not exist!", InFileName.c_str());
             return false;
         }
 
@@ -380,7 +380,7 @@ public:
             }
             else
             {
-                UE_LOG("파일명 %s를 파싱하는 중 다음과 같은 unknown symbol을 발견했습니다: %s", InFileName, line);
+                UE_LOG("While parsing the filename %s, the following unknown symbol was encountered: %s", InFileName.c_str(), line.c_str());
             }
         }
 

@@ -104,7 +104,19 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     );
 
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
-    RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
+
+    const TArray<FGroupInfo> MeshGroupInfos = InMesh->GetMeshGroupInfo();
+    const uint32 Len = MeshGroupInfos.size();
+    for (const FGroupInfo& GroupInfo : MeshGroupInfos)
+    {
+        FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
+        FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
+        RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
+        RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &(TextureData->SamplerState));
+
+        RHIDevice->GetDeviceContext()->DrawIndexed(GroupInfo.IndexCount, GroupInfo.StartIndex, 0);
+    }
+    
 }
 
 void URenderer::DrawIndexedPrimitiveComponent(UMeshComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology)
