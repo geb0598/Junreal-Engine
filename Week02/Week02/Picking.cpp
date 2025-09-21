@@ -326,6 +326,63 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     }
 }
 
+AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
+                                               ACameraActor* Camera,
+                                               const FVector2D& ViewportMousePos,
+                                               const FVector2D& ViewportSize,
+                                               const FVector2D& ViewportOffset,
+                                               float ViewportAspectRatio)
+{
+    if (!Camera) return nullptr;
+
+    // 뷰포트별 레이 생성 - 커스텀 aspect ratio 사용
+    const FMatrix View = Camera->GetViewMatrix();
+    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio);
+    const FVector CameraWorldPos = Camera->GetActorLocation();
+    const FVector CameraRight = Camera->GetRight();
+    const FVector CameraUp = Camera->GetUp();
+    const FVector CameraForward = Camera->GetForward();
+
+    FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                   ViewportMousePos, ViewportSize, ViewportOffset);
+
+    int pickedIndex = -1;
+    float pickedT = 1e9f;
+
+    // 모든 액터에 대해 피킹 테스트
+    for (int i = 0; i < Actors.Num(); ++i)
+    {
+        AActor* Actor = Actors[i];
+        if (!Actor) continue;
+
+        // Skip hidden actors for picking
+        if (Actor->GetActorHiddenInGame()) continue;
+
+        float hitDistance;
+        if (CheckActorPicking(Actor, ray, hitDistance))
+        {
+            if (hitDistance < pickedT)
+            {
+                pickedT = hitDistance;
+                pickedIndex = i;
+            }
+        }
+    }
+
+    if (pickedIndex >= 0)
+    {
+        char buf[160];
+        sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f\n", pickedIndex, pickedT);
+        UE_LOG(buf);
+        return Actors[pickedIndex];
+    }
+    else
+    {
+        UE_LOG("[Viewport Pick with AspectRatio] No hit\n");
+        return nullptr;
+    }
+}
+
 uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACameraActor* Camera)
 {
     if (!GizmoTransActor || !Camera)

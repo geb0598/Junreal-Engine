@@ -168,12 +168,18 @@ void UUIManager::Render()
 		}
 	}
 
+
+	
+}
+void UUIManager::EndFrame() {
+
 	// 뷰포트 전환 UI 렌더링
 	RenderViewportSwitcher();
 
 	// ImGui 프레임 종료
 	ImGuiHelper->EndFrame();
 }
+
 
 /**
  * @brief UI 윈도우 등록

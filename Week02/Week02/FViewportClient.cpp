@@ -24,6 +24,11 @@ FViewportClient::~FViewportClient()
 void FViewportClient::Draw(FViewport* Viewport)
 {
     if (!Viewport || !World) return;
+
+    // 뷰포트의 실제 크기로 aspect ratio 계산
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+
     ACameraActor* MainCamera = World->GetCameraActor();
     FMatrix ViewMatrix{};
     FMatrix ProjectionMatrix{};
@@ -32,7 +37,7 @@ void FViewportClient::Draw(FViewport* Viewport)
     case EViewportType::Perspective:
     {
         ViewMatrix = MainCamera->GetViewMatrix();
-        ProjectionMatrix = MainCamera->GetProjectionMatrix();
+        ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
         break;
     }
     case EViewportType::Orthographic_Top:
@@ -46,7 +51,7 @@ void FViewportClient::Draw(FViewport* Viewport)
         Camera->GetCameraComponent()->SetFOV(100);
         SetupOrthographicCamera();
         ViewMatrix = Camera->GetViewMatrix();
-        ProjectionMatrix = Camera->GetProjectionMatrix();
+        ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
         break;
     }
     }
@@ -137,7 +142,11 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         AActor* PickedActor = nullptr;
         TArray<AActor*> AllActors = World->GetActors();
 
-        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset);
+        // 뷰포트의 실제 aspect ratio 계산
+        float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
+        if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
+
+        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
      
 
         if (PickedActor)

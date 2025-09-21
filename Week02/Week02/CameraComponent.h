@@ -34,6 +34,7 @@ public:
     // Matrices
     FMatrix GetViewMatrix() const;
     FMatrix GetProjectionMatrix() const;
+    FMatrix GetProjectionMatrix(float ViewportAspectRatio) const;
 
     // Directions in world space
     FVector GetForward() const;

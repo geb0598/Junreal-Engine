@@ -26,20 +26,24 @@ FMatrix UCameraComponent::GetViewMatrix() const
 
 FMatrix UCameraComponent::GetProjectionMatrix() const
 {
-    // 최신 종횡비 계산
+    // 기본 구현은 전체 클라이언트 aspect ratio 사용
     float aspect = CLIENTWIDTH / CLIENTHEIGHT;
+    return GetProjectionMatrix(aspect);
+}
 
+FMatrix UCameraComponent::GetProjectionMatrix(float ViewportAspectRatio) const
+{
     if (ProjectionMode == ECameraProjectionMode::Perspective)
     {
         return FMatrix::PerspectiveFovLH(FieldOfView * (PI / 180.0f),
-            aspect,
+            ViewportAspectRatio,
             NearClip, FarClip);
     }
     else
     {
         float orthoHeight = 2.0f * tanf((FieldOfView * PI / 180.0f) * 0.5f) * 10.0f;
-        float orthoWidth = orthoHeight * aspect;
-        
+        float orthoWidth = orthoHeight * ViewportAspectRatio;
+
         return FMatrix::OrthoLH(orthoWidth, orthoHeight,
             NearClip, FarClip);
     }

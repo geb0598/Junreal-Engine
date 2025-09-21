@@ -71,6 +71,14 @@ public:
                                           const FVector2D& ViewportSize,
                                           const FVector2D& ViewportOffset = FVector2D(0.0f, 0.0f));
 
+    // Viewport-specific picking with custom aspect ratio
+    static AActor* PerformViewportPicking(const TArray<AActor*>& Actors,
+                                          ACameraActor* Camera,
+                                          const FVector2D& ViewportMousePos,
+                                          const FVector2D& ViewportSize,
+                                          const FVector2D& ViewportOffset,
+                                          float ViewportAspectRatio);
+
     // 현재 기즈모의 어떤 축에 호버링 중인지 반환 (X=1, Y=2, Z=3)
     static uint32 IsHoveringGizmo(AGizmoActor* GizmoActor, const ACameraActor* Camera);
     

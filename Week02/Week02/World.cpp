@@ -171,7 +171,7 @@ void UWorld::SetRenderer(URenderer* InRenderer)
 void UWorld::Render()
 {
     Renderer->BeginFrame();
-
+    UIManager.Render();
     // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경
     if (UIManager.IsUsingMainViewport())
     {
@@ -188,11 +188,11 @@ void UWorld::Render()
         }
     }
 
-    UIManager.Render();
+    
 
         
       // 밝은 초록색 (호버)
-
+    UIManager.EndFrame();
     Renderer->EndFrame();
 }
 

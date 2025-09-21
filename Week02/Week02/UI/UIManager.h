@@ -36,6 +36,7 @@ public:
 	void SetDeltaTime(float InDeltaTime) { CurrentDeltaTime = InDeltaTime; }
 	float GetDeltaTime() const { return CurrentDeltaTime; }
 	void Render();
+	void EndFrame();
 	bool RegisterUIWindow(UUIWindow* InWindow);
 	bool UnregisterUIWindow(UUIWindow* InWindow);
 	void PrintDebugInfo() const;

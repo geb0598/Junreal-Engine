@@ -143,6 +143,7 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 
 void URenderer::EndFrame()
 {
+    
     RHIDevice->Present();
 }
 

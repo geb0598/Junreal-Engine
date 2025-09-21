@@ -26,6 +26,7 @@ public:
     // Matrices
     FMatrix GetViewMatrix() const;
     FMatrix GetProjectionMatrix() const;
+    FMatrix GetProjectionMatrix(float ViewportAspectRatio) const;
     FMatrix GetViewProjectionMatrix() const;
 
     // Directions (world)
