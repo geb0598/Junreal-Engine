@@ -166,7 +166,6 @@
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="LineComponent.cpp" />
     <ClCompile Include="Material.cpp" />
-    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="GizmoActor.cpp" />
     <ClCompile Include="GizmoArrowComponent.cpp" />
@@ -302,7 +301,6 @@
     <ClInclude Include="Line.h" />
     <ClInclude Include="LineComponent.h" />
     <ClInclude Include="Name.h" />
-    <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="ObjectFactory.h" />
     <ClInclude Include="GizmoScaleComponent.h" />
     <ClInclude Include="GizmoRotateComponent.h" />

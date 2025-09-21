@@ -8,7 +8,6 @@
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
 #include "AABoundingBoxComponent.h"
-#include "Mesh.h"
 #include "FViewport.h"
 #include"SViewportWindow.h"
 #include"SMultiViewportWindow.h"
@@ -86,30 +85,6 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 }
 
 
-UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
-, UIManager(UUIManager::GetInstance())
-, InputManager(UInputManager::GetInstance())
-, SelectionManager(USelectionManager::GetInstance())
-{
-}
-
-
-UWorld::~UWorld()
-{
-    for (AActor* Actor : Actors)
-    {
-        ObjectFactory::DeleteObject(Actor);
-    }
-    Actors.clear();
-
-    // 카메라 정리
-    ObjectFactory::DeleteObject(MainCameraActor);
-    MainCameraActor = nullptr;
-
-    // Grid 정리 
-    ObjectFactory::DeleteObject(GridActor);
-    GridActor = nullptr;
-}
 
 
 
