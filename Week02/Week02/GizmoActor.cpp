@@ -34,9 +34,9 @@ AGizmoActor::AGizmoActor()
     ArrowY->SetRelativeScale({1, 1, 3});
     ArrowZ->SetRelativeScale({1, 1, 3});
 
-    if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -180))); // X축//빨
-    if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90)));//초
-    if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축//파
+    if (ArrowX) ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
+    if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90)));//초
+    if (ArrowZ) ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
 
 
     AddComponent(ArrowX);
@@ -176,9 +176,9 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace,AActor* PickedActor)
        
         // 월드 고정 → 기즈모 축은 항상 X/Y/Z
            // 월드 고정 → 기즈모 축은 항상 X/Y/Z
-        if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -180))); // X축//빨
-        if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90)));//초
-        if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축//파
+        if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
+        if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90)));//초
+        if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
 
 
         if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
@@ -204,9 +204,9 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace,AActor* PickedActor)
     // ───────── Translate Gizmo ─────────
    // ArrowX->AddRelativeRotation(AC);
        // 월드 고정 → 기즈모 축은 항상 X/Y/Z
-    if (ArrowX)  ArrowX->SetRelativeRotation(TargetRot*FQuat::MakeFromEuler(FVector(0, 0, -180))); // X축//빨
-    if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, -90)));//초
-    if (ArrowZ)  ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축//파
+    if (ArrowX)  ArrowX->SetRelativeRotation(TargetRot*FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
+    if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 90)));//초
+    if (ArrowZ)  ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
 
 
     if (ScaleX) ScaleX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
