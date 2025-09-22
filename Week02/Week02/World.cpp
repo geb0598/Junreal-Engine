@@ -594,39 +594,37 @@ void UWorld::ProcessViewportInput()
 
 void UWorld::LoadScene(const FString& SceneName)
 {
-    // Start from a clean slate
+    // 깨끗한 상태에서 시작
     CreateNewScene();
     const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(SceneName + ".scene");
 
     for (const FPrimitiveData& Primitive : Primitives)
     {
+        // 트랜스폼은 여전히 상위에서 설정
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
             FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale)
         );
 
-        // 신규 포맷 우선: ObjStaticMeshAsset 사용
-        FString ObjFileName;
-        if (!Primitive.ObjStaticMeshAsset.empty())
+        if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
         {
-            ObjFileName = Primitive.ObjStaticMeshAsset;
-        }
-        else
-        {
-            // 구버전 포맷 호환: Type을 기반으로 경로 생성
-            ObjFileName = ToObjFileName(Primitive.Type);
-        }
+            // 컴포넌트가 스스로 메시(에셋 경로) 역직렬화 수행
+            FPrimitiveData Temp = Primitive;
+            SMC->Serialize(true, Temp);
 
-        StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ObjFileName);
-        StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+            // 기존 머티리얼/레이아웃 유지
+            SMC->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
-        if (ObjFileName == "Data/Sphere.obj")
-        {
-            // 구의 경우 콜리전 컴포넌트 강제 설정
-            Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent(EPrimitiveType::Sphere);
-        }
-        else
-        {
-            Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent();
+            // 메시 종류에 따른 콜리전 지정
+            FString LoadedAssetPath;
+            if (UStaticMesh* Mesh = SMC->GetStaticMesh())
+            {
+                LoadedAssetPath = Mesh->GetAssetPathFileName();
+            }
+
+            if (LoadedAssetPath == "Data/Sphere.obj")
+                StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
+            else
+                StaticMeshActor->SetCollisionComponent();
         }
     }
 }
@@ -644,27 +642,24 @@ void UWorld::SaveScene(const FString& SceneName)
 
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
-            // 신규 포맷: 실제 OBJ 경로를 저장
             if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
             {
-                if (UStaticMesh* Mesh = SMC->GetStaticMesh())
-                {
-                    // 예: "Data/Cube.obj"
-                    Data.ObjStaticMeshAsset = Mesh->GetAssetPathFileName();
-                }
+                // 컴포넌트가 스스로 메시(에셋 경로) 직렬화 수행
+                SMC->Serialize(false, Data);
             }
-            // 타입 표기
+
+            // 타입 표기는 유지(레거시/디버깅용)
             Data.Type = "StaticMeshComp";
         }
         else
         {
-            // 다른 타입은 필요 시 타입 문자열만 기록하거나 스킵
             Data.Type = "Actor";
             Data.ObjStaticMeshAsset.clear();
         }
 
         Primitives.push_back(Data);
     }
+
     FSceneLoader::Save(Primitives, SceneName);
 }
 
