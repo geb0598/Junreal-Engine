@@ -582,7 +582,7 @@ void AGizmoActor::ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewp
 	ProcessGizmoModeSwitch();
 
 	// 기즈모 드래그
-	ProcessGizmoDragging();
+	ProcessGizmoDragging(Camera, Viewport, MousePositionX, MousePositionY);
 
 	ProcessGizmoHovering(Camera,  Viewport,  MousePositionX, MousePositionY);
 
@@ -596,23 +596,23 @@ void AGizmoActor::ProcessGizmoHovering(ACameraActor* Camera,FViewport* Viewport 
 	FVector2D ViewportOffset(static_cast<float>(Viewport->GetStartX()), static_cast<float>(Viewport->GetStartY()));
 	FVector2D ViewportMousePos(static_cast<float>(MousePositionX) + ViewportOffset.X,
 		static_cast<float>(MousePositionY) + ViewportOffset.Y);
-
+	if(!bIsDragging)
 	GizmoAxis = CPickingSystem::IsHoveringGizmoForViewport(this, CameraActor, ViewportMousePos, ViewportSize, ViewportOffset);
 
 	if (GizmoAxis > 0)//기즈모 축이 0이상이라면 선택 된것 
 	{
 		bIsHovering = true;
 	}
-	else if(!bIsDragging)
+	else 
 	{
 		bIsHovering = false;
 	}
 
 }
 
-void AGizmoActor::ProcessGizmoDragging()
+void AGizmoActor::ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY)
 {
-	if (!TargetActor || !CameraActor||!bIsHovering) return;
+	if (!TargetActor || !Camera ) return;
 
 	if (InputManager->IsMouseButtonDown(LeftButton))
 	{

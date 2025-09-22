@@ -102,7 +102,7 @@ protected:
     // Gizmo interaction methods
    
     void ProcessGizmoHovering(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
-    void ProcessGizmoDragging();
+    void ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
     void ProcessGizmoModeSwitch();
     void UpdateGizmoPosition();
     void UpdateComponentVisibility();

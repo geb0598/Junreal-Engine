@@ -147,29 +147,16 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
 
     // Debug log for viewport picking
-    char debugBuf[256];
-    sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
-        static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
-        ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
-    UE_LOG(debugBuf);
+    //char debugBuf[256];
+    //sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
+    //    static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
+    //    ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
+    //UE_LOG(debugBuf);
 
     // Get the appropriate camera for this viewport
-    ACameraActor* PickingCamera = nullptr;
+  
 
-    if (ViewportType == EViewportType::Perspective)
-    {
-        // Use main camera for perspective view
-        PickingCamera = World->GetCameraActor();
-    }
-    else
-    {
-        // For orthographic views, we need to use our local camera settings
-        // Since we can't easily create a temporary ACameraActor, we'll create a temporary one
-        // or use the existing camera but modify the picking to use our Camera component's matrices
-        PickingCamera = Camera;
-    }
-
-    if (PickingCamera)
+    if (Camera)
     {
         // Use the appropriate camera for this viewport type
         AActor* PickedActor = nullptr;
@@ -179,7 +166,7 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
 
-        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
+        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
         
 
         if (PickedActor)
