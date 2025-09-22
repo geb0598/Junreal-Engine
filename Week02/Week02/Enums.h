@@ -73,7 +73,7 @@ struct FMeshData
     // UV 좌표
     TArray<FVector2D> UV;//also can be Billboard size
     // 노말 좌표
-    TArray<FVector4> Normal;
+    TArray<FVector> Normal;
     //
     
 };

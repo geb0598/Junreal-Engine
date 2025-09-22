@@ -98,7 +98,7 @@ void UWorld::Initialize()
 
         AActor* Actor = NewObject<AStaticMeshActor>();
         Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
 		if(PrimitiveType == "Data/Sphere.obj")
             Cast<AStaticMeshActor>(Actor)->SetCollisionComponent(EPrimitiveType::Sphere);
         else
@@ -174,8 +174,17 @@ void UWorld::InitializeObjManager()
 	FObjManager::LoadObjStaticMesh("Data/Arrow.obj");
 	FObjManager::LoadObjStaticMesh("Data/RotationHandle.obj");
     FObjManager::LoadObjStaticMesh("Data/ScaleHandle.obj");
-	//FObjManager::LoadObjStaticMesh("Data/car.obj");
+	FObjManager::LoadObjStaticMesh("Data/car.obj");
 	FObjManager::LoadObjStaticMesh("Data/cube-tex.obj");
+
+    //FObjManager::LoadObjStaticMesh("Cube.obj");
+    //FObjManager::LoadObjStaticMesh("Sphere.obj");
+    //FObjManager::LoadObjStaticMesh("Triangle.obj");
+    //FObjManager::LoadObjStaticMesh("Arrow.obj");
+    //FObjManager::LoadObjStaticMesh("RotationHandle.obj");
+    //FObjManager::LoadObjStaticMesh("ScaleHandle.obj");
+    ////FObjManager::LoadObjStaticMesh("Data/car.obj");
+    //FObjManager::LoadObjStaticMesh("cube-tex.obj");
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)

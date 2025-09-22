@@ -359,7 +359,7 @@
     <FxCompile Include="ShaderLine.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="StaticMeshVS.hlsl">
+    <FxCompile Include="StaticMeshShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="StaticMeshPS.hlsl">

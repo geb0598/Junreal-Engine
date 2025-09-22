@@ -10,9 +10,9 @@ struct FVertexSimple
 struct FVertexDynamic
 {
     FVector Position;
+    FVector Normal;
     FVector4 Color;
     FVector2D UV;
-    FVector4 Normal;
 };
 
 struct FBillboardVertexInfo {

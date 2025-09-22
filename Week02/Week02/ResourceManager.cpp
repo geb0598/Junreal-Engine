@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "MeshLoader.h"
 #include "ObjectFactory.h"
 #include "d3dtk/DDSTextureLoader.h"
@@ -384,7 +384,9 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
 
 void UResourceManager::CreateDefaultShader()
 {
+    // 템플릿 Load 멤버함수 호출해서 Resources[UShader의 typeIndex][shader 파일 이름]에 UShader 포인터 할당
     Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    Load<UShader>("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 

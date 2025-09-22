@@ -14,6 +14,8 @@ void UMaterial::Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexL
         shaderName = "TextBillboard.hlsl";
     else if (InLayoutType == EVertexLayoutType::PositionCollisionDebug)
         shaderName = "CollisionDebug.hlsl";
+    else if (InLayoutType == EVertexLayoutType::PositionColorTexturNormal)
+        shaderName = "StaticMeshShader.hlsl";
     
     if (!shaderName.empty())
     {

@@ -94,7 +94,7 @@ void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevi
             vertex.Position = InMeshData->Vertices[i];
             vertex.Color = (i < InMeshData->Color.size()) ? InMeshData->Color[i] : FVector4(1,1,1,1);
             vertex.UV = (i < InMeshData->UV.size()) ? InMeshData->UV[i] : FVector2D(0,0);
-            vertex.Normal = (i < InMeshData->Normal.size()) ? InMeshData->Normal[i] : FVector4(0,0,1,0);
+            vertex.Normal = (i < InMeshData->Normal.size()) ? InMeshData->Normal[i] : FVector(0,0,1);
             vertexArray.push_back(vertex);
         }
         
@@ -191,7 +191,7 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
             vtx.Position = src.pos;
             vtx.Color = src.color;
             vtx.UV = src.tex;
-            vtx.Normal = FVector4(src.normal.X, src.normal.Y, src.normal.Z, 0.0f);
+            vtx.Normal = FVector(src.normal.X, src.normal.Y, src.normal.Z);
 
             vertexArray.push_back(vtx);
         }

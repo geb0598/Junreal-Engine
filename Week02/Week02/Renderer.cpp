@@ -90,9 +90,23 @@ void URenderer::UpdateColorBuffer(const FVector4& Color)
 
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
-    if (!InMesh || !InMesh->GetVertexBuffer() || !InMesh->GetIndexBuffer()) return;
-
-    UINT stride = sizeof(FVertexSimple);
+    UINT stride = 0;
+    switch (InMesh->GetVertexType())
+    {
+    case EVertexLayoutType::PositionColor:
+        stride = sizeof(FVertexSimple);
+        break;
+    case EVertexLayoutType::PositionColorTexturNormal:
+        stride = sizeof(FVertexDynamic);
+        break;
+    case EVertexLayoutType::PositionBillBoard:
+        stride = sizeof(FBillboardVertexInfo_GPU);
+        break;
+    default:
+        // Handle unknown or unsupported vertex types
+        assert(false && "Unknown vertex type!");
+        return; // or log an error
+    }
     UINT offset = 0;
 
     ID3D11Buffer* VertexBuffer = InMesh->GetVertexBuffer();

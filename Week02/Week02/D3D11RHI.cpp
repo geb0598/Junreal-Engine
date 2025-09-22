@@ -253,7 +253,7 @@ void D3D11RHI::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo
     dataPtr->Material.DiffuseColor = InMaterialInfo.DiffuseColor;
 
     DeviceContext->Unmap(PixelConstCB, 0);
-    DeviceContext->PSSetConstantBuffers(0, 1, &PixelConstCB); // b0 슬롯
+    DeviceContext->PSSetConstantBuffers(4, 1, &PixelConstCB); // b4 슬롯
 }
 
 void D3D11RHI::UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)

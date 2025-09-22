@@ -47,7 +47,7 @@ UStaticMesh* FObjManager::LoadObjStaticMesh(const FString& PathFileName)
     }
 
 	// 2) 없으면 새로 로드
-    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>(PathFileName);
+    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>(PathFileName, EVertexLayoutType::PositionColorTexturNormal);
 
 	return StaticMesh;
 }

@@ -14,13 +14,21 @@ void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice, EVertexL
     std::wstring WFilePath;
     WFilePath = std::wstring(InShaderPath.begin(), InShaderPath.end());
 
-    D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &VSBlob, nullptr);
+    HRESULT hr;
+    ID3DBlob* errorBlob = nullptr;
+    hr = D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &VSBlob, &errorBlob);
+    if (FAILED(hr))
+    {
+        char* msg = (char*)errorBlob->GetBufferPointer();
+        UE_LOG("shader \'%s\'compile error: %s", InShaderPath, msg);
+        return;
+    }
 
-    InDevice->CreateVertexShader(VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), nullptr, &VertexShader);
+    hr = InDevice->CreateVertexShader(VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), nullptr, &VertexShader);
 
-    D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &PSBlob, nullptr);
+    hr = D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &PSBlob, nullptr);
 
-    InDevice->CreatePixelShader(PSBlob->GetBufferPointer(), PSBlob->GetBufferSize(), nullptr, &PixelShader);
+    hr = InDevice->CreatePixelShader(PSBlob->GetBufferPointer(), PSBlob->GetBufferSize(), nullptr, &PixelShader);
 
     CreateInputLayout(InDevice, InLayoutType);
 }

@@ -201,7 +201,7 @@ public:
             }
             else if (line.rfind("mtllib ", 0) == 0)
             {
-                MtlFileName = line.substr(7);
+                MtlFileName = "Data/" + line.substr(7);
             }
             else if (line.rfind("usemtl ", 0) == 0)
             {
