@@ -33,7 +33,7 @@ public:
     virtual void Tick(float DeltaTime);
 
     // 입력 처리
-    virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y) {}
+    virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y);
     virtual void MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button);
     virtual void MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button) {}
     virtual void KeyDown(FViewport* Viewport, int32 KeyCode) {}
@@ -54,7 +54,7 @@ public:
 
 
     // 뷰포트별 카메라 설정
-    void SetupOrthographicCamera();
+    void SetupCameraMode();
     void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
     EViewModeIndex GetViewModeIndex() { return ViewModeIndex;}

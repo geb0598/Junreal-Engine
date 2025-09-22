@@ -14,8 +14,9 @@ FViewportClient::FViewportClient()
     
 
     // 직교 뷰별 기본 카메라 설정
-    SetupOrthographicCamera();
+
     Camera = NewObject<ACameraActor>();
+    SetupCameraMode();
 }
 
 FViewportClient::~FViewportClient()
@@ -45,13 +46,13 @@ void FViewportClient::Draw(FViewport* Viewport)
        
         ViewMatrix = MainCamera->GetViewMatrix();
         ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
-
-        if (World)
+        Camera = MainCamera;
+      /*  if (World)
         {
             World->SetViewModeIndex(ViewModeIndex);
             World->RenderViewports(MainCamera, Viewport);
             World->GetGizmoActor()->Render(MainCamera, Viewport);
-        }
+        }*/
         break;
     }
     case EViewportType::Orthographic_Top:
@@ -63,29 +64,34 @@ void FViewportClient::Draw(FViewport* Viewport)
     {
         Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
        
-        SetupOrthographicCamera();
+        SetupCameraMode();
         ViewMatrix = Camera->GetViewMatrix();
         ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
-        if (World)
-        {
-            World->SetViewModeIndex(ViewModeIndex);
-            World->RenderViewports(Camera, Viewport);
-            World->GetGizmoActor()->Render(Camera, Viewport);
-        }
+     
         break;
     }
     }
     // 월드의 모든 액터들을 렌더링
-
+    if (World)
+    {
+        World->SetViewModeIndex(ViewModeIndex);
+        World->RenderViewports(Camera, Viewport);
+        World->GetGizmoActor()->Render(Camera, Viewport);
+    }
   
 }
 
 
 
-void FViewportClient::SetupOrthographicCamera()
+void FViewportClient::SetupCameraMode()
 {
     switch (ViewportType)
     {
+        case EViewportType::Perspective:
+          
+            Camera->SetActorLocation({ 0, 0, 0 });
+            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+            break;
         case EViewportType::Orthographic_Top:
             
             Camera->SetActorLocation({ 0, 0, 1000  } );
@@ -123,7 +129,11 @@ void FViewportClient::SetupOrthographicCamera()
 
     }
 }
+void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
+    World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
+
+}
 void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button)
 {
     if (!Viewport || !World || Button != 0) // Only handle left mouse button
@@ -137,29 +147,16 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
 
     // Debug log for viewport picking
-    char debugBuf[256];
-    sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
-        static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
-        ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
-    UE_LOG(debugBuf);
+    //char debugBuf[256];
+    //sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
+    //    static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
+    //    ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
+    //UE_LOG(debugBuf);
 
     // Get the appropriate camera for this viewport
-    ACameraActor* PickingCamera = nullptr;
+  
 
-    if (ViewportType == EViewportType::Perspective)
-    {
-        // Use main camera for perspective view
-        PickingCamera = World->GetCameraActor();
-    }
-    else
-    {
-        // For orthographic views, we need to use our local camera settings
-        // Since we can't easily create a temporary ACameraActor, we'll create a temporary one
-        // or use the existing camera but modify the picking to use our Camera component's matrices
-        PickingCamera = Camera;
-    }
-
-    if (PickingCamera)
+    if (Camera)
     {
         // Use the appropriate camera for this viewport type
         AActor* PickedActor = nullptr;
@@ -169,8 +166,8 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
 
-        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, PickingCamera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
-     
+        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
+        
 
         if (PickedActor)
         {

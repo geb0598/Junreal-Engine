@@ -86,11 +86,11 @@ void SViewportWindow::OnUpdate()
 	if (!Viewport) return;
 
 	// 툴바 높이만큼 뷰포트 영역 조정
-	float toolbarHeight = 30.0f;
+	
 	uint32 NewStartX = static_cast<uint32>(Rect.Left);
-	uint32 NewStartY = static_cast<uint32>(Rect.Top + toolbarHeight);
+	uint32 NewStartY = static_cast<uint32>(Rect.Top );
 	uint32 NewWidth = static_cast<uint32>(Rect.Right - Rect.Left);
-	uint32 NewHeight = static_cast<uint32>(Rect.Bottom - Rect.Top - toolbarHeight);
+	uint32 NewHeight = static_cast<uint32>(Rect.Bottom - Rect.Top );
 
 	Viewport->Resize(NewStartX, NewStartY, NewWidth, NewHeight);
 }
@@ -100,10 +100,11 @@ void SViewportWindow::OnMouseMove(FVector2D MousePos)
 	if (!Viewport) return;
 
 	// 툴바 영역 아래에서만 마우스 이벤트 처리
-	float toolbarHeight = 30.0f;
-	FVector2D LocalPos = MousePos - FVector2D(Rect.Left, Rect.Top + toolbarHeight);
-	if (MousePos.Y > Rect.Top + toolbarHeight)
+	
+	
+	if (MousePos.Y > Rect.Top )
 	{
+		FVector2D LocalPos = MousePos - FVector2D(Rect.Left, Rect.Top );
 		Viewport->ProcessMouseMove((int32)LocalPos.X, (int32)LocalPos.Y);
 	}
 }
@@ -112,12 +113,11 @@ void SViewportWindow::OnMouseDown(FVector2D MousePos)
 {
 	if (!Viewport) return;
 
-	// 툴바 영역 아래에서만 마우스 이벤트 처리
-	float toolbarHeight = 30.0f;
-	if (MousePos.Y > Rect.Top + toolbarHeight)
+	// 툴바 영역 아래에서만 마우스 이벤트 처리s
+	if (MousePos.Y > Rect.Top )
 	{
 		bIsMouseDown = true;
-		FVector2D LocalPos = MousePos - FVector2D(Rect.Left, Rect.Top + toolbarHeight);
+		FVector2D LocalPos = MousePos - FVector2D(Rect.Left, Rect.Top );
 		Viewport->ProcessMouseButtonDown((int32)LocalPos.X, (int32)LocalPos.Y, 0);
 	}
 }
@@ -127,11 +127,11 @@ void SViewportWindow::OnMouseUp(FVector2D MousePos)
 	if (!Viewport) return;
 
 	// 툴바 영역 아래에서만 마우스 이벤트 처리
-	float toolbarHeight = 30.0f;
-	if (MousePos.Y > Rect.Top + toolbarHeight)
+
+	if (MousePos.Y > Rect.Top )
 	{
 		bIsMouseDown = false;
-		FVector2D LocalPos = MousePos - FVector2D(Rect.Left, Rect.Top + toolbarHeight);
+		FVector2D LocalPos = MousePos - FVector2D(Rect.Left, Rect.Top );
 		Viewport->ProcessMouseButtonUp((int32)LocalPos.X, (int32)LocalPos.Y, 0);
 	}
 }
@@ -182,11 +182,8 @@ void SViewportWindow::RenderToolbar()
 				if (ViewportClient)
 				{
 					ViewportClient->SetViewportType(ViewportType);
-					// 직교 뷰의 경우 카메라 설정 업데이트
-					if (ViewportType != EViewportType::Perspective)
-					{
-						ViewportClient->SetupOrthographicCamera();
-					}
+					ViewportClient->SetupCameraMode();
+					
 				}
 
 				// 뷰포트 이름 업데이트

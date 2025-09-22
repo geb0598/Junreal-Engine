@@ -101,8 +101,11 @@ void FViewport::Resize(uint32 NewStartX, uint32 NewStartY,uint32 NewSizeX, uint3
 
 void FViewport::ProcessMouseMove(int32 X, int32 Y)
 {
+
     if (ViewportClient)
     {
+        ViewportMousePosition.X = X;
+        ViewportMousePosition.Y = Y;
         ViewportClient->MouseMove(this, X, Y);
     }
 }
