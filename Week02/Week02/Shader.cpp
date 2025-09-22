@@ -7,7 +7,7 @@ UShader::~UShader()
 }
 
 // 두 개의 셰이더 파일을 받는 주요 Load 함수
-void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice, EVertexLayoutType InLayoutType)
+void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice)
 {
     assert(InDevice);
 
@@ -30,31 +30,14 @@ void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice, EVertexL
 
     hr = InDevice->CreatePixelShader(PSBlob->GetBufferPointer(), PSBlob->GetBufferSize(), nullptr, &PixelShader);
 
-    CreateInputLayout(InDevice, InLayoutType);
+    CreateInputLayout(InDevice, InShaderPath);
 }
 
-void UShader::CreateInputLayout(ID3D11Device* Device, EVertexLayoutType LayoutType)
+void UShader::CreateInputLayout(ID3D11Device* Device, const FString& InShaderPath)
 {
-    const D3D11_INPUT_ELEMENT_DESC* layout = nullptr;
-    uint32 layoutCount = 0;
-
-    switch (LayoutType)
-    {
-    case EVertexLayoutType::PositionColor:
-        layout = FVertexPositionColor::GetLayout();
-        layoutCount = FVertexPositionColor::GetLayoutCount();
-        break;
-
-    case EVertexLayoutType::PositionColorTexturNormal:
-        layout = FVertexPositionColorTexturNormal::GetLayout();
-        layoutCount = FVertexPositionColorTexturNormal::GetLayoutCount();
-        break;
-
-    case EVertexLayoutType::PositionBillBoard:
-        layout = FVertexPositionBillBoard::GetLayout();
-        layoutCount = FVertexPositionBillBoard::GetLayoutCount();
-        break;
-    }
+    TArray<D3D11_INPUT_ELEMENT_DESC> descArray = UResourceManager::GetInstance().GetProperInputLayout(InShaderPath);
+    const D3D11_INPUT_ELEMENT_DESC* layout = descArray.data();
+    uint32 layoutCount = descArray.size();
 
     HRESULT hr = Device->CreateInputLayout(
         layout,

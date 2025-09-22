@@ -191,20 +191,20 @@ void UPrimitiveSpawnWidget::RenderWidget()
         SpawnActors();
     }
 
-	//Obj Parser 테스트용
-	static std::string fileName;  // 입력값 저장용
-	// 입력창
-	char buffer[256];
-	strncpy_s(buffer, fileName.c_str(), sizeof(buffer));
-	buffer[sizeof(buffer) - 1] = '\0';
+	////Obj Parser 테스트용
+	//static std::string fileName;  // 입력값 저장용
+	//// 입력창
+	//char buffer[256];
+	//strncpy_s(buffer, fileName.c_str(), sizeof(buffer));
+	//buffer[sizeof(buffer) - 1] = '\0';
 
-	if (ImGui::InputText("file name", buffer, sizeof(buffer))) {
-		fileName = buffer;  // std::string으로 갱신
-	}
-	// 버튼
-	if (ImGui::Button("Spawn Dice Test")) {
-		FObjManager::LoadObjStaticMesh("spaceCompound.obj");
-	}
+	//if (ImGui::InputText("file name", buffer, sizeof(buffer))) {
+	//	fileName = buffer;  // std::string으로 갱신
+	//}
+	//// 버튼
+	//if (ImGui::Button("Spawn Dice Test")) {
+	//	FObjManager::LoadObjStaticMesh("spaceCompound.obj");
+	//}
 
 	ImGui::Spacing();
 	ImGui::Separator();

@@ -8,6 +8,8 @@ class UCameraComponent;
 /**
  * @brief 뷰포트 렌더링 타입
  */
+
+
 enum class EViewportType : uint8
 {
     Perspective,    // 원근 뷰
@@ -33,9 +35,10 @@ public:
     virtual void Tick(float DeltaTime);
 
     // 입력 처리
-    virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y) {}
+    virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y);
     virtual void MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button);
-    virtual void MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button) {}
+    virtual void MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button);
+    virtual void MouseWheel();
     virtual void KeyDown(FViewport* Viewport, int32 KeyCode) {}
     virtual void KeyUp(FViewport* Viewport, int32 KeyCode) {}
 
@@ -54,14 +57,22 @@ public:
 
 
     // 뷰포트별 카메라 설정
-    void SetupOrthographicCamera();
+    void SetupCameraMode();
     void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
     EViewModeIndex GetViewModeIndex() { return ViewModeIndex;}
+
+
 protected:
     EViewportType ViewportType = EViewportType::Perspective;
     UWorld* World = nullptr;
     ACameraActor* Camera = nullptr;
+
+    int32 MouseLastX{};
+    int32 MouseLastY{};
+    bool bIsMouseButtonDown = false;
+    static FVector CameraAddPosition;
+    static float CameraWheelDelta;
 
     // 직교 뷰용 카메라 설정
     uint32 OrthographicAddXPosition;

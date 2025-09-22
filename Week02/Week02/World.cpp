@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "SelectionManager.h"
 #include "Picking.h"
 #include "SceneLoader.h"
@@ -40,6 +40,9 @@ UWorld::~UWorld()
     // Grid 정리 
     ObjectFactory::DeleteObject(GridActor);
     GridActor = nullptr;
+
+	// ObjManager 정리
+	FObjManager::Clear();
 }
 
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
@@ -88,34 +91,10 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 
 void UWorld::Initialize()
 {
-	InitializeObjManager();
+	FObjManager::Preload();
 
-    // === Scene 로딩 (임시) 및 Actor초기화  ===
-    auto Primitives = FSceneLoader::Load("WorldData.Scene");
-    for (auto Primitive : Primitives)
-    {
-        FString PrimitiveType = "Data/" + Primitive.Type + ".obj";
-
-        AActor* Actor = NewObject<AStaticMeshActor>();
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
-		if(PrimitiveType == "Data/Sphere.obj")
-            Cast<AStaticMeshActor>(Actor)->SetCollisionComponent(EPrimitiveType::Sphere);
-        else
-            Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();
-        //추후 변경 필요 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
-            Primitive.Scale));
-        Actor->SetWorld(this);
-        UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
-        TextComp->SetOwner(Actor);
-        Actor->AddComponent(TextComp);
-        Actor->SetWorld(this);
-        TextComp->SetupAttachment( Actor->GetRootComponent());
-//        Actors.push_back(Actor);
-        Actors.push_back(Actor);
-    }
-    
+	// 새 씬 생성
+	CreateNewScene();
 
 	InitializeMainCamera();
     InitializeGrid();
@@ -123,15 +102,12 @@ void UWorld::Initialize()
 	
 	// 액터 간 참조 설정
 	SetupActorReferences();
-
-
-
 }
 
 void UWorld::InitializeMainCamera()
 {
     
-    MainCameraActor = SpawnActor<ACameraActor>(FTransform());
+    MainCameraActor = NewObject<ACameraActor>();
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);
@@ -141,7 +117,7 @@ void UWorld::InitializeMainCamera()
 
 void UWorld::InitializeGrid()
 {
-    GridActor = SpawnActor<AGridActor>(FTransform());
+    GridActor = NewObject<AGridActor>();
     GridActor->Initialize();
   
 
@@ -164,35 +140,6 @@ void UWorld::InitializeGizmo()
     }
     
     UIManager.SetGizmoActor(GizmoActor);
-}
-
-void UWorld::InitializeObjManager()
-{
-    FObjManager::LoadObjStaticMesh("Data/tree9/trees9.obj");
-	FObjManager::LoadObjStaticMesh("Data/Cube.obj");
-	FObjManager::LoadObjStaticMesh("Data/Sphere.obj");
-	FObjManager::LoadObjStaticMesh("Data/Triangle.obj");
-	FObjManager::LoadObjStaticMesh("Data/Arrow.obj");
-	FObjManager::LoadObjStaticMesh("Data/RotationHandle.obj");
-    FObjManager::LoadObjStaticMesh("Data/ScaleHandle.obj");
-	//FObjManager::LoadObjStaticMesh("Data/car.obj");
-	FObjManager::LoadObjStaticMesh("Data/cube-tex.obj");
-	FObjManager::LoadObjStaticMesh("Data/spaceCompound.obj");
-	FObjManager::LoadObjStaticMesh("Data/cube_tex_blender.obj");
-	FObjManager::LoadObjStaticMesh("Data/pony-cartoon/Pony_cartoon.obj");
-	FObjManager::LoadObjStaticMesh("Data/ship/ship.obj");
-	FObjManager::LoadObjStaticMesh("Data/OtherTeam/cube-tex2.obj");
-	
-	//FObjManager::LoadObjStaticMesh("Data/85-cottage_obj/cottage_obj.obj");
-
-    //FObjManager::LoadObjStaticMesh("Cube.obj");
-    //FObjManager::LoadObjStaticMesh("Sphere.obj");
-    //FObjManager::LoadObjStaticMesh("Triangle.obj");
-    //FObjManager::LoadObjStaticMesh("Arrow.obj");
-    //FObjManager::LoadObjStaticMesh("RotationHandle.obj");
-    //FObjManager::LoadObjStaticMesh("ScaleHandle.obj");
-    ////FObjManager::LoadObjStaticMesh("Data/car.obj");
-    //FObjManager::LoadObjStaticMesh("cube-tex.obj");
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
@@ -436,8 +383,7 @@ void UWorld::Tick(float DeltaSeconds)
     ProcessActorSelection();
     ProcessViewportInput();
     //Input Manager가 카메라 후에 업데이트 되어야함
-    InputManager.Update();
-    UIManager.Update(DeltaSeconds);
+   
 
     // 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
     if (UIManager.IsUsingMainViewport())
@@ -455,6 +401,8 @@ void UWorld::Tick(float DeltaSeconds)
             MultiViewport->OnUpdate();
         }
     }
+    InputManager.Update();
+    UIManager.Update(DeltaSeconds);
 }
 
 float UWorld::GetTimeSeconds() const
@@ -548,6 +496,9 @@ void UWorld::CreateNewScene()
         ObjectFactory::DeleteObject(Actor);
     }
     Actors.Empty();
+
+    // 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
+    ObjectTypeCounts.clear();
 }
 
 
@@ -620,30 +571,76 @@ void UWorld::ProcessViewportInput()
 
 void UWorld::LoadScene(const FString& SceneName)
 {
-    // Start from a clean slate
+    // 0) 파일 경로 구성
+    const FString FilePath = SceneName + ".Scene";
+
+    // 1) 파일 메타의 NextUUID를 먼저 동기화 (없으면 무시)
+    uint32 LoadedNextUUID = 0;
+    if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
+    {
+        // Save는 PeekNextUUID(=다음 발급값)를 기록하므로 그대로 설정
+        UObject::SetNextUUID(LoadedNextUUID);
+    }
+
+    // 2) 기존 씬 비우기 + 이름 카운터 초기화
     CreateNewScene();
-    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(SceneName + ".scene");
+
+    // 3) 프리미티브 로드
+    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
+
+    // 4) 로딩된 오브젝트들의 최대 UUID 추적(레거시 파일이면 0 유지)
+    uint32 MaxLoadedUUID = 0;
 
     for (const FPrimitiveData& Primitive : Primitives)
     {
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-            FTransform(Primitive.Location,
-                FQuat::MakeFromEuler(Primitive.Rotation),
-                Primitive.Scale)
+            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale)
         );
-        FString ObjFileName = ToObjFileName(Primitive.Type);
-        StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ObjFileName);
-        StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-        if (ObjFileName == "Data/Sphere.obj")
+
+        // 읽은 UUID가 있으면 대입 (0이면 레거시 → 자동 발급 유지)
+        if (Primitive.UUID != 0)
         {
-            Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent(EPrimitiveType::Sphere);
-            //컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
+            StaticMeshActor->UUID = Primitive.UUID;
+            if (Primitive.UUID > MaxLoadedUUID)
+            {
+                MaxLoadedUUID = Primitive.UUID;
+            }
         }
-        else
+
+        if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
         {
-            Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent();
+            FPrimitiveData Temp = Primitive;
+            SMC->Serialize(true, Temp);
+            SMC->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+
+            FString LoadedAssetPath;
+            if (UStaticMesh* Mesh = SMC->GetStaticMesh())
+            {
+                LoadedAssetPath = Mesh->GetAssetPathFileName();
+            }
+
+            if (LoadedAssetPath == "Data/Sphere.obj")
+            {
+                StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
+            }
+            else
+            {
+                StaticMeshActor->SetCollisionComponent();
+            }
+
+            FString BaseName = "StaticMesh";
+            if (!LoadedAssetPath.empty())
+            {
+                BaseName = RemoveObjExtension(LoadedAssetPath);
+            }
+            const FString UniqueName = GenerateUniqueActorName(BaseName);
+            StaticMeshActor->SetName(UniqueName);
         }
     }
+
+    // 5) 로드 완료 후 전역 카운터를 안전하게 재설정
+    const uint32 SafeNext = std::max(UObject::PeekNextUUID(), MaxLoadedUUID + 1);
+    UObject::SetNextUUID(SafeNext);
 }
 
 void UWorld::SaveScene(const FString& SceneName)
@@ -653,86 +650,33 @@ void UWorld::SaveScene(const FString& SceneName)
     for (AActor* Actor : Actors)
     {
         FPrimitiveData Data;
+        Data.UUID = Actor->UUID;
         Data.Location = Actor->GetActorLocation();
         Data.Rotation = Actor->GetActorRotation().ToEuler();
         Data.Scale = Actor->GetActorScale();
+
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
-            FString FilePath = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetFilePath();
-            Data.Type = RemoveObjExtension(FilePath);
+            if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
+            {
+                // 컴포넌트가 스스로 메시(에셋 경로) 직렬화 수행
+                SMC->Serialize(false, Data);
+            }
+
+            // 타입 표기는 유지(레거시/디버깅용)
+            Data.Type = "StaticMeshComp";
         }
+        else
+        {
+            Data.Type = "Actor";
+            Data.ObjStaticMeshAsset.clear();
+        }
+
         Primitives.push_back(Data);
     }
+
     FSceneLoader::Save(Primitives, SceneName);
 }
-
-//
-//void UWorld::RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
-//{
-//    if (!GizmoActor || !Renderer || !MainCameraActor) return;
-//    
-//    if (!SelectionManager.HasSelection()) return;
-//  
-//    FMatrix ModelMatrix;
-//    FVector rgb(1.0f, 1.0f, 1.0f);
-//    
-//    TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
-//    if (!Components) return;
-//    
-//    for (uint32 i = 0; i < Components->Num(); ++i)
-//    {
-//        USceneComponent* Component = (*Components)[i];
-//        if (!Component) continue;
-//        
-//        // 컴포넌트 활성 상태 확인
-//        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-//        {
-//            if (!ActorComp->IsActive()) continue;
-//        }
-//        
-//        ModelMatrix = Component->GetWorldMatrix();
-//        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-//
-//        // 드래그 중이면 드래그하는 축만 하이라이트
-//        if (InputManager.GetIsGizmoDragging())
-//        {
-//            if (InputManager.GetDraggingAxis() == i + 1)
-//            {
-//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-//            }
-//            else
-//            {
-//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-//            }
-//        }
-//        // 드래그 중이 아니면 호버링 한 축만 하이라이트
-//        else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
-//        {
-//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-//        }
-//        else
-//        {
-//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-//        }
-//
-//        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-//        {
-//            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
-//            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-//            Renderer->OMSetBlendState(true); // 필요 시
-//
-//            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-//            // 상태 복구
-//            Renderer->OMSetBlendState(false);
-//            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-//            Renderer->SetViewModeType(ViewModeIndex);
-//        }
-//    }
-//    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-//    
-//    // 알파 블랜딩을 위한 blendstate
-//    Renderer->OMSetBlendState(true);
-//}
 
 AGizmoActor* UWorld::GetGizmoActor()
 {

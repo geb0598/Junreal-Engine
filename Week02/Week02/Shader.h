@@ -6,7 +6,7 @@ class UShader : public UResourceBase
 public:
 	DECLARE_CLASS(UShader, UResourceBase)
 
-	void Load(const FString& ShaderPath, ID3D11Device* InDevice, EVertexLayoutType InLayoutType);
+	void Load(const FString& ShaderPath, ID3D11Device* InDevice);
 
 	ID3D11InputLayout* GetInputLayout() const { return InputLayout; }
 	ID3D11VertexShader* GetVertexShader() const { return VertexShader; }
@@ -22,7 +22,7 @@ private:
 	ID3D11VertexShader* VertexShader = nullptr;
 	ID3D11PixelShader* PixelShader = nullptr;
 
-	void CreateInputLayout(ID3D11Device* Device, EVertexLayoutType InLayoutType);
+	void CreateInputLayout(ID3D11Device* Device, const FString& InShaderPath);
 	void ReleaseResources();
 };
 

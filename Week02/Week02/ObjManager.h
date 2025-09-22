@@ -588,7 +588,7 @@ public:
         //}
 
         // Material 정보 정리
-        if (!InObjInfo.bHasMtl)
+        /*if (!InObjInfo.bHasMtl)
         {
             OutStaticMesh->bHasMaterial = false;
             return;
@@ -607,7 +607,7 @@ public:
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
-        }
+        }*/
     }
 
 private:
@@ -691,7 +691,9 @@ private:
     static TMap<FString, FStaticMesh*> ObjStaticMeshMap;
 
 public:
-    static FStaticMesh* LoadObjStaticMeshAsset(const FString& PathFileName);
+	static void Preload();
+	static void Clear();
 
+    static FStaticMesh* LoadObjStaticMeshAsset(const FString& PathFileName);
     static UStaticMesh* LoadObjStaticMesh(const FString& PathFileName);
 };

@@ -31,6 +31,11 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     Context = InContext;
     //CreateGridMesh(GRIDNUM,"Grid");
     //CreateAxisMesh(AXISLENGTH,"Axis");
+
+    InitShaderILMap();
+
+    InitTexToShaderMap();
+
     CreateTextBillboardMesh();//"TextBillboard"
 
     CreateTextBillboardTexture();
@@ -390,6 +395,58 @@ void UResourceManager::CreateDefaultShader()
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 
+void UResourceManager::InitShaderILMap()
+{
+    TArray<D3D11_INPUT_ELEMENT_DESC> layout;
+
+    layout.Add({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    ShaderToInputLayoutMap["ShaderLine.hlsl"] = layout;
+    ShaderToInputLayoutMap["Primitive.hlsl"] = layout;
+    layout.clear();
+
+    layout.Add({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    ShaderToInputLayoutMap["StaticMeshShader.hlsl"] = layout;
+    layout.clear();
+
+    layout.Add({ "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "UVRECT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    ShaderToInputLayoutMap["TextBillboard.hlsl"] = layout;
+}
+
+TArray<D3D11_INPUT_ELEMENT_DESC>& UResourceManager::GetProperInputLayout(const FString& InShaderName)
+{
+    auto it = ShaderToInputLayoutMap.find(InShaderName);
+
+    if (it == ShaderToInputLayoutMap.end())
+    {
+        throw std::runtime_error("Proper input layout not found for " + InShaderName);
+    }
+    
+    return ShaderToInputLayoutMap[InShaderName];
+}
+
+FString& UResourceManager::GetProperShader(const FString& InTextureName)
+{
+    auto it = TextureToShaderMap.find(InTextureName);
+
+    if (it == TextureToShaderMap.end())
+    {
+        throw std::runtime_error("Proper shader not found for " + InTextureName);
+    }
+
+    return TextureToShaderMap[InTextureName];
+}
+
+void UResourceManager::InitTexToShaderMap()
+{
+    TextureToShaderMap["TextBillboard.dds"] = "TextBillboard.hlsl";
+}
+
 
 void UResourceManager::CreateTextBillboardTexture()
 {
@@ -402,7 +459,7 @@ void UResourceManager::CreateTextBillboardTexture()
 void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBillboardVertexInfo_GPU>& vertices)
 {
     UStaticMesh* Mesh = Get<UStaticMesh>(Name);
-    Mesh->SetIndexCount(vertices.size()*2);
+    Mesh->SetIndexCount((vertices.size() / 4) * 6);
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑
     memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardVertexInfo_GPU) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라

@@ -41,6 +41,14 @@ UTargetActorTransformWidget::UTargetActorTransformWidget()
 
 UTargetActorTransformWidget::~UTargetActorTransformWidget() = default;
 
+void UTargetActorTransformWidget::OnSelectedActorCleared()
+{
+	// 즉시 내부 캐시/플래그 정리
+	SelectedActor = nullptr;
+	CachedActorName.clear();
+	ResetChangeFlags();
+}
+
 void UTargetActorTransformWidget::Initialize()
 {
 	// UIManager 참조 확보
@@ -53,6 +61,12 @@ void UTargetActorTransformWidget::Initialize()
 	if (GizmoActor)
 	{
 		CurrentGizmoSpace = GizmoActor->GetSpace();
+	}
+
+	// Transform 위젯을 UIManager에 등록하여 선택 해제 브로드캐스트를 받을 수 있게 함
+	if (UIManager)
+	{
+		UIManager->RegisterTargetTransformWidget(this);
 	}
 }
 
@@ -155,6 +169,8 @@ void UTargetActorTransformWidget::RenderWidget()
 		// 액터 이름 표시 (캐시된 이름 사용)
 		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", 
 		                   CachedActorName.c_str());
+		// 선택된 액터 UUID 표시(전역 고유 ID)
+		ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));
 		ImGui::Spacing();
 		
 		// Location 편집

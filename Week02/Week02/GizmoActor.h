@@ -49,6 +49,7 @@ public:
     bool GetbIsHovering() const { return bIsHovering; }
     void SetbIsHovering(bool bInIsHovering) { bIsHovering = bInIsHovering; }
 
+    bool GetbIsDragging() const { return bIsDragging; }
 
     void NextMode(EGizmoMode GizmoMode);
     TArray<USceneComponent*>* GetGizmoComponents();
@@ -65,7 +66,8 @@ public:
     ACameraActor* GetCameraActor() const { return CameraActor; }
     
 
-    void ProcessGizmoInteraction(float DeltaSeconds);
+    void ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
+  
 protected:
 
     UGizmoArrowComponent* ArrowX;
@@ -84,6 +86,7 @@ protected:
     TArray<USceneComponent*> GizmoRotateComponents;
     bool bRender = false;
     bool bIsHovering = false;
+    bool bIsDragging = false;
     EGizmoMode CurrentMode;
     EGizmoSpace CurrentSpace = EGizmoSpace::World;
     
@@ -96,13 +99,16 @@ protected:
     UInputManager* InputManager = nullptr;
     UUIManager* UIManager = nullptr;
     
+    uint32 GizmoAxis{};
     // Gizmo interaction methods
    
-    void ProcessGizmoHovering();
-    void ProcessGizmoDragging(float DeltaSeconds);
+    void ProcessGizmoHovering(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
+    void ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
     void ProcessGizmoModeSwitch();
     void UpdateGizmoPosition();
     void UpdateComponentVisibility();
+
+
 };
 
 

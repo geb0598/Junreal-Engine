@@ -25,6 +25,12 @@ public:
     void ClearDepthBuffer(float Depth, UINT Stencil) override;
     void CreateBlendState() override;
 
+    template<typename TVertex>
+    static HRESULT CreateVertexBufferImpl(ID3D11Device* device, const FMeshData& mesh, ID3D11Buffer** outBuffer, D3D11_USAGE usage, UINT cpuAccessFlags);
+
+    template<typename TVeretex>
+    static HRESULT CreateVertexBuffer(ID3D11Device* device, const FMeshData& mesh, ID3D11Buffer** outBuffer);
+
     void UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
     void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp) override;
     void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture) override;
@@ -116,3 +122,52 @@ private:
     ID3D11Buffer* ConstantBuffer{};
 };
 
+
+template<typename TVertex>
+inline HRESULT D3D11RHI::CreateVertexBufferImpl(ID3D11Device* device, const FMeshData& mesh, ID3D11Buffer** outBuffer, D3D11_USAGE usage, UINT cpuAccessFlags)
+{
+    std::vector<TVertex> vertexArray;
+    vertexArray.reserve(mesh.Vertices.size());
+
+    for (size_t i = 0; i < mesh.Vertices.size(); ++i) {
+        TVertex vtx{};
+        vtx.FillFrom(mesh, i);
+        vertexArray.push_back(vtx);
+    }
+
+    D3D11_BUFFER_DESC vbd = {};
+    vbd.Usage = usage;
+    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vbd.CPUAccessFlags = cpuAccessFlags;
+    vbd.ByteWidth = static_cast<UINT>(sizeof(TVertex) * vertexArray.size());
+
+    D3D11_SUBRESOURCE_DATA vinitData = {};
+    vinitData.pSysMem = vertexArray.data();
+
+    return device->CreateBuffer(&vbd, &vinitData, outBuffer);
+}
+
+// PositionColor → Static
+template<>
+inline HRESULT D3D11RHI::CreateVertexBuffer<FVertexSimple>(ID3D11Device* device, const FMeshData& mesh, ID3D11Buffer** outBuffer)
+{
+    return CreateVertexBufferImpl<FVertexSimple>(device, mesh, outBuffer,
+        D3D11_USAGE_DEFAULT, 0);
+}
+
+// PositionColorTextureNormal → Static
+template<>
+inline HRESULT D3D11RHI::CreateVertexBuffer<FVertexDynamic>(ID3D11Device* device, const FMeshData& mesh, ID3D11Buffer** outBuffer)
+{
+    return CreateVertexBufferImpl<FVertexDynamic>(device, mesh, outBuffer,
+        D3D11_USAGE_DEFAULT, 0);
+}
+
+// Billboard → Dynamic
+template<>
+inline HRESULT D3D11RHI::CreateVertexBuffer<FBillboardVertexInfo_GPU>(ID3D11Device* device, const FMeshData& mesh, ID3D11Buffer** outBuffer)
+{
+    return CreateVertexBufferImpl<FBillboardVertexInfo_GPU>(device, mesh, outBuffer,
+        D3D11_USAGE_DYNAMIC,
+        D3D11_CPU_ACCESS_WRITE);
+}
