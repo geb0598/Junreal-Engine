@@ -14,6 +14,7 @@ struct FPrimitiveData
     FVector Rotation;
     FVector Scale;
     FString Type;
+    FString ObjStaticMeshAsset;
 };
 
 class FSceneLoader

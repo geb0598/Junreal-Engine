@@ -601,17 +601,28 @@ void UWorld::LoadScene(const FString& SceneName)
     for (const FPrimitiveData& Primitive : Primitives)
     {
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-            FTransform(Primitive.Location,
-                FQuat::MakeFromEuler(Primitive.Rotation),
-                Primitive.Scale)
+            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale)
         );
-        FString ObjFileName = ToObjFileName(Primitive.Type);
+
+        // 신규 포맷 우선: ObjStaticMeshAsset 사용
+        FString ObjFileName;
+        if (!Primitive.ObjStaticMeshAsset.empty())
+        {
+            ObjFileName = Primitive.ObjStaticMeshAsset;
+        }
+        else
+        {
+            // 구버전 포맷 호환: Type을 기반으로 경로 생성
+            ObjFileName = ToObjFileName(Primitive.Type);
+        }
+
         StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(ObjFileName);
         StaticMeshActor->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
+
         if (ObjFileName == "Data/Sphere.obj")
         {
+            // 구의 경우 콜리전 컴포넌트 강제 설정
             Cast<AStaticMeshActor>(StaticMeshActor)->SetCollisionComponent(EPrimitiveType::Sphere);
-            //컬리젼 컴포넌트의 메쉬 정보를 강제로 세팅 
         }
         else
         {
@@ -630,83 +641,32 @@ void UWorld::SaveScene(const FString& SceneName)
         Data.Location = Actor->GetActorLocation();
         Data.Rotation = Actor->GetActorRotation().ToEuler();
         Data.Scale = Actor->GetActorScale();
+
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
-            FString FilePath = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetFilePath();
-            Data.Type = RemoveObjExtension(FilePath);
+            // 신규 포맷: 실제 OBJ 경로를 저장
+            if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
+            {
+                if (UStaticMesh* Mesh = SMC->GetStaticMesh())
+                {
+                    // 예: "Data/Cube.obj"
+                    Data.ObjStaticMeshAsset = Mesh->GetAssetPathFileName();
+                }
+            }
+            // 타입 표기
+            Data.Type = "StaticMeshComp";
         }
+        else
+        {
+            // 다른 타입은 필요 시 타입 문자열만 기록하거나 스킵
+            Data.Type = "Actor";
+            Data.ObjStaticMeshAsset.clear();
+        }
+
         Primitives.push_back(Data);
     }
     FSceneLoader::Save(Primitives, SceneName);
 }
-
-//
-//void UWorld::RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
-//{
-//    if (!GizmoActor || !Renderer || !MainCameraActor) return;
-//    
-//    if (!SelectionManager.HasSelection()) return;
-//  
-//    FMatrix ModelMatrix;
-//    FVector rgb(1.0f, 1.0f, 1.0f);
-//    
-//    TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
-//    if (!Components) return;
-//    
-//    for (uint32 i = 0; i < Components->Num(); ++i)
-//    {
-//        USceneComponent* Component = (*Components)[i];
-//        if (!Component) continue;
-//        
-//        // 컴포넌트 활성 상태 확인
-//        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-//        {
-//            if (!ActorComp->IsActive()) continue;
-//        }
-//        
-//        ModelMatrix = Component->GetWorldMatrix();
-//        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-//
-//        // 드래그 중이면 드래그하는 축만 하이라이트
-//        if (InputManager.GetIsGizmoDragging())
-//        {
-//            if (InputManager.GetDraggingAxis() == i + 1)
-//            {
-//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-//            }
-//            else
-//            {
-//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-//            }
-//        }
-//        // 드래그 중이 아니면 호버링 한 축만 하이라이트
-//        else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
-//        {
-//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-//        }
-//        else
-//        {
-//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-//        }
-//
-//        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-//        {
-//            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
-//            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-//            Renderer->OMSetBlendState(true); // 필요 시
-//
-//            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-//            // 상태 복구
-//            Renderer->OMSetBlendState(false);
-//            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-//            Renderer->SetViewModeType(ViewModeIndex);
-//        }
-//    }
-//    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-//    
-//    // 알파 블랜딩을 위한 blendstate
-//    Renderer->OMSetBlendState(true);
-//}
 
 AGizmoActor* UWorld::GetGizmoActor()
 {

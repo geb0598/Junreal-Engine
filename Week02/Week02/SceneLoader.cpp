@@ -2,7 +2,7 @@
 #include "SceneLoader.h"
 
 #include <algorithm>
-
+#include <iomanip>
 
 TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
 {
@@ -29,48 +29,60 @@ TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
 
 void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& SceneName)
 {
-    // using namespace json;
-
-    JSON Root = JSON::Make(JSON::Class::Object);
-    Root["Version"] = 1;
-
+    // 상단 메타 정보
     uint32 NextUUID = 0;
-    for (UObject* Object: GUObjectArray)
+    for (UObject* Object : GUObjectArray)
     {
         NextUUID = std::max(Object->UUID, NextUUID);
     }
-    Root["NextUUID"] = (long)NextUUID;
 
-    JSON Prims = JSON::Make(JSON::Class::Object);
-
-    for (size_t i = 0; i < InPrimitiveData.size(); ++i)
-    {
-        const FPrimitiveData& Data = InPrimitiveData[i];
-
-        JSON Obj = JSON::Make(JSON::Class::Object);
-        Obj["Location"] = Array(Data.Location.X, Data.Location.Y, Data.Location.Z);
-        Obj["Rotation"] = Array(Data.Rotation.X, Data.Rotation.Y, Data.Rotation.Z);
-        Obj["Scale"] = Array(Data.Scale.X, Data.Scale.Y, Data.Scale.Z);
-        Obj["Type"] = Data.Type;
-
-        Prims[std::to_string(i)] = Obj;
-    }
-
-    Root["Primitives"] = Prims;
-
-    // Build filename: ensure ".scene" extension
+    // 파일명 보정(.Scene 보장)
     std::string FileName = SceneName;
-    const std::string Ext = ".scene";
+    const std::string Ext = ".Scene";
     if (FileName.size() < Ext.size() || FileName.substr(FileName.size() - Ext.size()) != Ext)
     {
         FileName += Ext;
     }
 
-    // Create or truncate the file explicitly
+    // 수동 직렬화로 키 순서를 고정
+    std::ostringstream oss;
+    oss.setf(std::ios::fixed);
+    oss << std::setprecision(6);
+
+    auto writeVec3 = [&](const char* name, const FVector& v, int indent)
+        {
+            std::string tabs(indent, ' ');
+            oss << tabs << "\"" << name << "\": [ "
+                << v.X << ", " << v.Y << ", " << v.Z << " ]";
+        };
+
+    oss << "{\n";
+    oss << "  \"Version\": 1,\n";
+    oss << "  \"NextUUID\": " << NextUUID << ",\n";
+    oss << "  \"Primitives\": {\n";
+
+    for (size_t i = 0; i < InPrimitiveData.size(); ++i)
+    {
+        const FPrimitiveData& Data = InPrimitiveData[i];
+        oss << "    \"" << i << "\": {\n";
+
+        // 원하는 순서대로 출력
+        oss << "      \"ObjStaticMeshAsset\": " << "\"" << Data.ObjStaticMeshAsset << "\",\n";
+        writeVec3("Location", Data.Location, 6); oss << ",\n";
+        writeVec3("Rotation", Data.Rotation, 6); oss << ",\n";
+        writeVec3("Scale", Data.Scale, 6); oss << ",\n";
+        oss << "      \"Type\": " << "\"" << Data.Type << "\"\n";
+
+        oss << "    }" << (i + 1 < InPrimitiveData.size() ? "," : "") << "\n";
+    }
+
+    oss << "  }\n";
+    oss << "}\n";
+
     std::ofstream OutFile(FileName.c_str(), std::ios::out | std::ios::trunc);
     if (OutFile.is_open())
     {
-        OutFile << Root.dump(1, "  "); // 들여쓰기 2칸
+        OutFile << oss.str();
         OutFile.close();
     }
 }
@@ -112,6 +124,16 @@ TArray<FPrimitiveData> FSceneLoader::Parse(const JSON& Json)
             (float)scale[1].ToFloat(), 
             (float)scale[2].ToFloat()  
         );
+
+        // 구버전/신버전 호환
+        if (value.hasKey("ObjStaticMeshAsset"))
+        {
+            data.ObjStaticMeshAsset = value.at("ObjStaticMeshAsset").ToString();
+        }
+        else
+        {
+            data.ObjStaticMeshAsset = ""; // 없으면 빈 문자열
+        }
 
         data.Type = value.at("Type").ToString();
 
