@@ -174,8 +174,14 @@ void UWorld::InitializeObjManager()
 	FObjManager::LoadObjStaticMesh("Data/Arrow.obj");
 	FObjManager::LoadObjStaticMesh("Data/RotationHandle.obj");
     FObjManager::LoadObjStaticMesh("Data/ScaleHandle.obj");
-	FObjManager::LoadObjStaticMesh("Data/car.obj");
+	//FObjManager::LoadObjStaticMesh("Data/car.obj");
 	FObjManager::LoadObjStaticMesh("Data/cube-tex.obj");
+	FObjManager::LoadObjStaticMesh("Data/spaceCompound.obj");
+	FObjManager::LoadObjStaticMesh("Data/cube_tex_blender.obj");
+	FObjManager::LoadObjStaticMesh("Data/pony-cartoon/Pony_cartoon.obj");
+	FObjManager::LoadObjStaticMesh("Data/ship/ship.obj");
+	FObjManager::LoadObjStaticMesh("Data/OtherTeam/cube-tex2.obj");
+	FObjManager::LoadObjStaticMesh("Data/stone/Stone.obj");
 
     //FObjManager::LoadObjStaticMesh("Cube.obj");
     //FObjManager::LoadObjStaticMesh("Sphere.obj");

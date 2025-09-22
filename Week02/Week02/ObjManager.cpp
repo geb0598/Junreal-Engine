@@ -28,6 +28,10 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
     FObjImporter::ConvertToStaticMesh(RawObjInfo, MaterialInfos, NewFStaticMesh);
 
     // 4) 맵에 추가 (Set이 아니라 Add)
+    if (PathFileName == "Data/pony-cartoon/Pony_cartoon.obj")
+    {
+        UE_LOG("");
+    }
     ObjStaticMeshMap.Add(PathFileName, NewFStaticMesh);
 
     // 5) 반환 경로 보장

@@ -251,6 +251,7 @@ void D3D11RHI::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo
     dataPtr->bHasMaterial = bHasMaterial;
     dataPtr->bHasTexture = bHasTexture;
     dataPtr->Material.DiffuseColor = InMaterialInfo.DiffuseColor;
+    dataPtr->Material.AmbientColor = InMaterialInfo.AmbientColor;
 
     DeviceContext->Unmap(PixelConstCB, 0);
     DeviceContext->PSSetConstantBuffers(4, 1, &PixelConstCB); // b4 슬롯

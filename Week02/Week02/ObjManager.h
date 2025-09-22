@@ -75,6 +75,9 @@ public:
         uint32 TotalVerts = 0; // 현재까지 파싱된 vertex 개수(중복 제거 후)
         uint32 MeshTriangles = 0; // 현재까지 파싱된 Triangle 개수
 
+        size_t pos = InFileName.find_last_of("/\\");
+        std::string objDir = (pos == std::string::npos) ? "" : InFileName.substr(0, pos + 1);
+
         std::ifstream FileIn(InFileName.c_str());
 
         if (!FileIn)
@@ -201,7 +204,15 @@ public:
             }
             else if (line.rfind("mtllib ", 0) == 0)
             {
-                MtlFileName = "Data/" + line.substr(7);
+                MtlFileName = objDir + line.substr(7);
+                /*if (line.substr(7).rfind("Data/") != 0)
+                {
+                    MtlFileName = "Data/" + line.substr(7);
+                }
+                else
+                {
+                    MtlFileName = line.substr(7);
+                }*/
             }
             else if (line.rfind("usemtl ", 0) == 0)
             {
@@ -359,27 +370,81 @@ public:
             }
             else if (line.rfind("map_Kd ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].DiffuseTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].DiffuseTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_d ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].TransparencyTextureFileName = line.substr(6);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].TransparencyTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ka ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].AmbientTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].AmbientTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ks ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].SpecularTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].SpecularTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ns ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].SpecularExponentTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].SpecularExponentTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ke ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].EmissiveTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].EmissiveTextureFileName = TextureFileName;
             }
             else if (line.rfind("newmtl ", 0) == 0)
             {
@@ -471,6 +536,11 @@ public:
         OutStaticMesh->bHasMaterial = true;
         uint32 NumGroup = InObjInfo.MaterialNames.size();
         OutStaticMesh->GroupInfos.resize(NumGroup);
+        if (InMaterialInfos.size() == 0)
+        {
+            UE_LOG("\'%s\''s InMaterialInfos's size is 0!");
+            return;
+        }
         for (int i = 0; i < NumGroup; ++i)
         {
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];

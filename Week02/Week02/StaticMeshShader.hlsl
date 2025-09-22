@@ -134,11 +134,11 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     // Lerp the incoming color with the global LerpColor
     float4 finalColor = input.color;
     finalColor.rgb = lerp(finalColor.rgb, LerpColor.rgb, LerpColor.a) * (1.0f - HasMaterial);
-    finalColor.rgb += Material.DiffuseColor * HasMaterial;
+    //finalColor.rgb += Material.DiffuseColor * HasMaterial;
     
     if (HasMaterial && HasTexture)
     {
-        finalColor.rgb *= g_DiffuseTexColor.Sample(g_Sample, input.texCoord);
+        finalColor.rgb = g_DiffuseTexColor.Sample(g_Sample, input.texCoord);
     }
     
     return finalColor;

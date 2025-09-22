@@ -900,6 +900,7 @@ inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
     R.M[3][3] = 1.0f;
 
     return YUpToZUp * R; // 결과 = S * R(q) * T
+    //return R; // 결과 = S * R(q) * T
 }
 
 

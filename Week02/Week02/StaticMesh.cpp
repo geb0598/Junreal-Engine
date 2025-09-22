@@ -234,6 +234,10 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
         vinitData.pSysMem = vertexArray.data();
 
         hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+        if (FAILED(hr))
+        {
+            assert(SUCCEEDED(hr));
+        }
         break;
     }
     default:
