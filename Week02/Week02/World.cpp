@@ -168,7 +168,7 @@ void UWorld::InitializeGizmo()
 
 void UWorld::InitializeObjManager()
 {
-    //FObjManager::LoadObjStaticMesh("Data/tree9/trees9.obj");
+    FObjManager::LoadObjStaticMesh("Data/tree9/trees9.obj");
 	FObjManager::LoadObjStaticMesh("Data/Cube.obj");
 	FObjManager::LoadObjStaticMesh("Data/Sphere.obj");
 	FObjManager::LoadObjStaticMesh("Data/Triangle.obj");

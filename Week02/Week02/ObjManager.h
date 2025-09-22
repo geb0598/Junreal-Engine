@@ -487,48 +487,105 @@ public:
         }
     }
 
+    struct VertexKey
+    {
+        int PosIndex;
+        int TexIndex;
+        int NormalIndex;
+
+        bool operator==(const VertexKey& Other) const
+        {
+            return PosIndex == Other.PosIndex &&
+                TexIndex == Other.TexIndex &&
+                NormalIndex == Other.NormalIndex;
+        }
+    };
+
+    struct VertexKeyHash
+    {
+        size_t operator()(const VertexKey& Key) const
+        {
+            // 간단한 해시 조합
+            return ((size_t)Key.PosIndex * 73856093) ^
+                ((size_t)Key.TexIndex * 19349663) ^
+                ((size_t)Key.NormalIndex * 83492791);
+        }
+    };
+
     static void ConvertToStaticMesh(const FObjInfo& InObjInfo, const TArray<FObjMaterialInfo>& InMaterialInfos, FStaticMesh* const OutStaticMesh)
     {
         OutStaticMesh->PathFileName = InObjInfo.ObjFileName;
-
-        // 정점 및 인덱스 정보 정리
         uint32 NumDuplicatedVertex = InObjInfo.PositionIndices.size();
+
+        // 해시로 빠르게 중복찾기
+        std::unordered_map<VertexKey, uint32, VertexKeyHash> VertexMap;
         for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
         {
-            bool bIsDuplicate = false;
-            /*for (int PreIndex = 0; PreIndex < CurIndex; ++PreIndex)
-            {
-                if (InObjInfo.PositionIndices[CurIndex] == InObjInfo.PositionIndices[PreIndex] && InObjInfo.TexCoordIndices[CurIndex] == InObjInfo.TexCoordIndices[PreIndex])
-                {
-                    OutStaticMesh->Indices.push_back(PreIndex);
-                    bIsDuplicate = true;
-                    break;
-                }
-            }*/
+            VertexKey Key{ InObjInfo.PositionIndices[CurIndex],
+                           InObjInfo.TexCoordIndices[CurIndex],
+                           InObjInfo.NormalIndices[CurIndex] };
 
-            const uint64 VertexLen = OutStaticMesh->Vertices.size();
-            for (uint32 VertexIndex = 0; VertexIndex < VertexLen; ++VertexIndex)
+            auto It = VertexMap.find(Key);
+            if (It != VertexMap.end())
             {
-                if (OutStaticMesh->Vertices[VertexIndex].pos == InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]] && OutStaticMesh->Vertices[VertexIndex].tex == InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]])
-                {
-                    OutStaticMesh->Indices.push_back(VertexIndex);
-                    bIsDuplicate = true;
-                    break;
-                }
+                // 이미 존재하는 정점
+                OutStaticMesh->Indices.push_back(It->second);
             }
-
-            if (!bIsDuplicate)
+            else
             {
-                FVector Pos = InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]];
-                FVector Normal = InObjInfo.Normals[InObjInfo.NormalIndices[CurIndex]];
-                FVector2D TexCoord = InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]];
-                FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f); // default color
-                FNormalVertex NormalVertex = FNormalVertex(Pos, Normal, Color, TexCoord);
+                // 새 정점 추가
+                FVector Pos = InObjInfo.Positions[Key.PosIndex];
+                FVector Normal = InObjInfo.Normals[Key.NormalIndex];
+                FVector2D TexCoord = InObjInfo.TexCoords[Key.TexIndex];
+                FVector4 Color(1, 1, 1, 1);
+
+                FNormalVertex NormalVertex(Pos, Normal, Color, TexCoord);
                 OutStaticMesh->Vertices.push_back(NormalVertex);
 
-                OutStaticMesh->Indices.push_back(OutStaticMesh->Vertices.size() - 1);
+                uint32 NewIndex = OutStaticMesh->Vertices.size() - 1;
+                OutStaticMesh->Indices.push_back(NewIndex);
+
+                VertexMap[Key] = NewIndex;
             }
         }
+
+        // 정점 및 인덱스 정보 정리
+        //for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
+        //{
+        //    bool bIsDuplicate = false;
+        //    /*for (int PreIndex = 0; PreIndex < CurIndex; ++PreIndex)
+        //    {
+        //        if (InObjInfo.PositionIndices[CurIndex] == InObjInfo.PositionIndices[PreIndex] && InObjInfo.TexCoordIndices[CurIndex] == InObjInfo.TexCoordIndices[PreIndex])
+        //        {
+        //            OutStaticMesh->Indices.push_back(PreIndex);
+        //            bIsDuplicate = true;
+        //            break;
+        //        }
+        //    }*/
+
+        //    const uint64 VertexLen = OutStaticMesh->Vertices.size();
+        //    for (uint32 VertexIndex = 0; VertexIndex < VertexLen; ++VertexIndex)
+        //    {
+        //        if (OutStaticMesh->Vertices[VertexIndex].pos == InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]] && OutStaticMesh->Vertices[VertexIndex].tex == InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]])
+        //        {
+        //            OutStaticMesh->Indices.push_back(VertexIndex);
+        //            bIsDuplicate = true;
+        //            break;
+        //        }
+        //    }
+
+        //    if (!bIsDuplicate)
+        //    {
+        //        FVector Pos = InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]];
+        //        FVector Normal = InObjInfo.Normals[InObjInfo.NormalIndices[CurIndex]];
+        //        FVector2D TexCoord = InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]];
+        //        FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f); // default color
+        //        FNormalVertex NormalVertex = FNormalVertex(Pos, Normal, Color, TexCoord);
+        //        OutStaticMesh->Vertices.push_back(NormalVertex);
+
+        //        OutStaticMesh->Indices.push_back(OutStaticMesh->Vertices.size() - 1);
+        //    }
+        //}
 
         // Material 정보 정리
         if (!InObjInfo.bHasMtl)
