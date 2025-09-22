@@ -10,6 +10,7 @@ using namespace json;
 
 struct FPrimitiveData
 {
+    uint32 UUID = 0;
     FVector Location;
     FVector Rotation;
     FVector Scale;

@@ -572,27 +572,48 @@ void UWorld::ProcessViewportInput()
 
 void UWorld::LoadScene(const FString& SceneName)
 {
-    // 깨끗한 상태에서 시작
+    // 0) 파일 경로 구성
+    const FString FilePath = SceneName + ".Scene";
+
+    // 1) 파일 메타의 NextUUID를 먼저 동기화 (없으면 무시)
+    uint32 LoadedNextUUID = 0;
+    if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
+    {
+        // Save는 PeekNextUUID(=다음 발급값)를 기록하므로 그대로 설정
+        UObject::SetNextUUID(LoadedNextUUID);
+    }
+
+    // 2) 기존 씬 비우기 + 이름 카운터 초기화
     CreateNewScene();
-    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(SceneName + ".Scene");
+
+    // 3) 프리미티브 로드
+    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
+
+    // 4) 로딩된 오브젝트들의 최대 UUID 추적(레거시 파일이면 0 유지)
+    uint32 MaxLoadedUUID = 0;
 
     for (const FPrimitiveData& Primitive : Primitives)
     {
-        // 트랜스폼은 여전히 상위에서 설정
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
             FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale)
         );
 
+        // 읽은 UUID가 있으면 대입 (0이면 레거시 → 자동 발급 유지)
+        if (Primitive.UUID != 0)
+        {
+            StaticMeshActor->UUID = Primitive.UUID;
+            if (Primitive.UUID > MaxLoadedUUID)
+            {
+                MaxLoadedUUID = Primitive.UUID;
+            }
+        }
+
         if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
         {
-            // 컴포넌트가 스스로 메시(에셋 경로) 역직렬화 수행
             FPrimitiveData Temp = Primitive;
             SMC->Serialize(true, Temp);
-
-            // 기존 머티리얼/레이아웃 유지
             SMC->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
-            // 메시 종류에 따른 콜리전 지정
             FString LoadedAssetPath;
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
             {
@@ -600,25 +621,27 @@ void UWorld::LoadScene(const FString& SceneName)
             }
 
             if (LoadedAssetPath == "Data/Sphere.obj")
+            {
                 StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
+            }
             else
+            {
                 StaticMeshActor->SetCollisionComponent();
+            }
 
-            // ─────────────────────────────────────────────
-            // 위젯과 동일한 네이밍 규칙 적용
-            // - 메시 경로가 있으면 파일명(확장자 제외)을 베이스로
-            // - 없으면 "StaticMesh"를 베이스로 사용
-            // - 월드의 GenerateUniqueActorName으로 유니크 보장
-            // ─────────────────────────────────────────────
             FString BaseName = "StaticMesh";
             if (!LoadedAssetPath.empty())
             {
-                BaseName = RemoveObjExtension(LoadedAssetPath); // 예: "Data/Cube.obj" -> "Cube"
+                BaseName = RemoveObjExtension(LoadedAssetPath);
             }
             const FString UniqueName = GenerateUniqueActorName(BaseName);
             StaticMeshActor->SetName(UniqueName);
         }
     }
+
+    // 5) 로드 완료 후 전역 카운터를 안전하게 재설정
+    const uint32 SafeNext = std::max(UObject::PeekNextUUID(), MaxLoadedUUID + 1);
+    UObject::SetNextUUID(SafeNext);
 }
 
 void UWorld::SaveScene(const FString& SceneName)
@@ -628,6 +651,7 @@ void UWorld::SaveScene(const FString& SceneName)
     for (AActor* Actor : Actors)
     {
         FPrimitiveData Data;
+        Data.UUID = Actor->UUID;
         Data.Location = Actor->GetActorLocation();
         Data.Rotation = Actor->GetActorRotation().ToEuler();
         Data.Scale = Actor->GetActorScale();

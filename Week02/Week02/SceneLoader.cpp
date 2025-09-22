@@ -30,7 +30,7 @@ TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
 void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& SceneName)
 {
     // 상단 메타 정보
-	uint32 NextUUID = UObject::PeekNextUUID();
+    uint32 NextUUID = UObject::PeekNextUUID();
 
     // 파일명 보정(.Scene 보장)
     std::string FileName = SceneName;
@@ -60,7 +60,8 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
     for (size_t i = 0; i < InPrimitiveData.size(); ++i)
     {
         const FPrimitiveData& Data = InPrimitiveData[i];
-        oss << "    \"" << i << "\": {\n";
+        // 키를 i 대신 UUID로 출력
+        oss << "    \"" << Data.UUID << "\": {\n";
 
         // 원하는 순서대로 출력
         oss << "      \"ObjStaticMeshAsset\": " << "\"" << Data.ObjStaticMeshAsset << "\",\n";
@@ -119,56 +120,70 @@ bool FSceneLoader::TryReadNextUUID(const FString& FilePath, uint32& OutNextUUID)
 
 TArray<FPrimitiveData> FSceneLoader::Parse(const JSON& Json)
 {
-    TArray<FPrimitiveData> primitives;
+    TArray<FPrimitiveData> Primitives;
 
     if (!Json.hasKey("Primitives"))
     {
         std::cerr << "Primitives 섹션이 존재하지 않습니다." << std::endl;
-        return primitives;
+        return Primitives;
     }
 
-    auto primitivesJson = Json.at("Primitives");
-    for (auto& kv : primitivesJson.ObjectRange())
+    auto PrimitivesJson = Json.at("Primitives");
+    for (auto& kv : PrimitivesJson.ObjectRange())
     {
+        // kv.first: 키(문자열), kv.second: 값(JSON 객체)
+        const std::string& key = kv.first;
         const JSON& value = kv.second;
 
         FPrimitiveData data;
 
+        // 키를 UUID로 파싱 (숫자가 아니면 0 유지)
+        try
+        {
+            // 공백 제거 후 파싱
+            std::string trimmed = key;
+            trimmed.erase(std::remove_if(trimmed.begin(), trimmed.end(), ::isspace), trimmed.end());
+            data.UUID = static_cast<uint32>(std::stoul(trimmed));
+        }
+        catch (...)
+        {
+            data.UUID = 0; // 레거시 호환: 숫자 키가 아니면 0
+        }
+
         auto loc = value.at("Location");
         data.Location = FVector(
-            (float)loc[0].ToFloat(),   
-            (float)loc[1].ToFloat(),   
-            (float)loc[2].ToFloat()    
+            (float)loc[0].ToFloat(),
+            (float)loc[1].ToFloat(),
+            (float)loc[2].ToFloat()
         );
 
         auto rot = value.at("Rotation");
         data.Rotation = FVector(
-            (float)rot[0].ToFloat(),   
-            (float)rot[1].ToFloat(),   
-            (float)rot[2].ToFloat()    
+            (float)rot[0].ToFloat(),
+            (float)rot[1].ToFloat(),
+            (float)rot[2].ToFloat()
         );
 
         auto scale = value.at("Scale");
         data.Scale = FVector(
             (float)scale[0].ToFloat(),
-            (float)scale[1].ToFloat(), 
-            (float)scale[2].ToFloat()  
+            (float)scale[1].ToFloat(),
+            (float)scale[2].ToFloat()
         );
 
-        // 구버전/신버전 호환
         if (value.hasKey("ObjStaticMeshAsset"))
         {
             data.ObjStaticMeshAsset = value.at("ObjStaticMeshAsset").ToString();
         }
         else
         {
-            data.ObjStaticMeshAsset = ""; // 없으면 빈 문자열
+            data.ObjStaticMeshAsset = "";
         }
 
         data.Type = value.at("Type").ToString();
 
-        primitives.push_back(data);
+        Primitives.push_back(data);
     }
 
-    return primitives;
+    return Primitives;
 }
