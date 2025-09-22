@@ -39,6 +39,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "DynamicMesh.h"
+#include "TextQuad.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -103,3 +104,4 @@ IMPLEMENT_CLASS(UStaticMesh)
 IMPLEMENT_CLASS(UShader)
 IMPLEMENT_CLASS(UTexture)
 IMPLEMENT_CLASS(UDynamicMesh)
+IMPLEMENT_CLASS(UTextQuad)

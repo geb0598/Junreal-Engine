@@ -15,9 +15,6 @@ protected:
     ~UMaterial() override = default;
 
 public:
-    // ───────────────
-// Resource Accessors
-// ───────────────
     void SetShader(UShader* ShaderResource);
     UShader* GetShader();
 

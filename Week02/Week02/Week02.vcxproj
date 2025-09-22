@@ -246,6 +246,7 @@
     <ClCompile Include="StaticMeshComponent.cpp" />
     <ClCompile Include="SViewportWindow.cpp" />
     <ClCompile Include="SWindow.cpp" />
+    <ClCompile Include="TextQuad.cpp" />
     <ClCompile Include="TextRenderComponent.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UEContainer.cpp" />
@@ -347,6 +348,7 @@
     <ClInclude Include="StaticMeshComponent.h" />
     <ClInclude Include="SViewportWindow.h" />
     <ClInclude Include="SWindow.h" />
+    <ClInclude Include="TextQuad.h" />
     <ClInclude Include="TextRenderComponent.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="ObjectIterator.h" />

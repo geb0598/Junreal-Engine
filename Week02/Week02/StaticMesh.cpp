@@ -167,66 +167,87 @@ void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevi
 
 void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
 {
-    D3D11_BUFFER_DESC vbd = {};
-    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-    D3D11_SUBRESOURCE_DATA vinitData = {};
     HRESULT hr;
 
     switch (InVertexType)
     {
     case EVertexLayoutType::PositionColor:
-    {
-        vbd.Usage = D3D11_USAGE_DEFAULT;
-        vbd.CPUAccessFlags = 0;
-
-        std::vector<FVertexSimple> vertexArray;
-        vertexArray.reserve(InStaticMesh->Vertices.size());
-
-        for (size_t i = 0; i < InStaticMesh->Vertices.size(); ++i)
-        {
-            const FNormalVertex& src = InStaticMesh->Vertices[i];
-
-            FVertexSimple vtx;
-            vtx.Position = src.pos;
-            vtx.Color = src.color;
-
-            vertexArray.push_back(vtx);
-        }
-
-        vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexSimple) * vertexArray.size());
-        vinitData.pSysMem = vertexArray.data();
-
-        hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+        hr = D3D11RHI::CreateVertexBuffer<FVertexSimple>(InDevice, InStaticMesh->Vertices, &VertexBuffer);
+        assert(SUCCEEDED(hr));
         break;
-    }
     case EVertexLayoutType::PositionColorTexturNormal:
-    {
-        vbd.Usage = D3D11_USAGE_DEFAULT;
-        vbd.CPUAccessFlags = 0;
-
-        std::vector<FVertexDynamic> vertexArray;
-        vertexArray.reserve(InStaticMesh->Vertices.size());
-
-        for (size_t i = 0; i < InStaticMesh->Vertices.size(); ++i)
-        {
-            const FNormalVertex& src = InStaticMesh->Vertices[i];
-
-            FVertexDynamic vtx;
-            vtx.Position = src.pos;
-            vtx.Color = src.color;
-            vtx.UV = src.tex;
-            vtx.Normal = FVector4(src.normal.X, src.normal.Y, src.normal.Z, 0.0f);
-
-            vertexArray.push_back(vtx);
-        }
-
-        vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexDynamic) * vertexArray.size());
-        vinitData.pSysMem = vertexArray.data();
-
-        hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+        hr = D3D11RHI::CreateVertexBuffer<FVertexDynamic>(InDevice, InStaticMesh->Vertices, &VertexBuffer);
+        assert(SUCCEEDED(hr));
         break;
+    case EVertexLayoutType::PositionBillBoard:
+        hr = D3D11RHI::CreateVertexBuffer<FBillboardVertexInfo_GPU>(InDevice, InStaticMesh->Vertices, &VertexBuffer);
+        assert(SUCCEEDED(hr));
+        break;
+    default:
+        assert(false && "Unknown VertexType");
+        return;
     }
+
+    //D3D11_BUFFER_DESC vbd = {};
+    //vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    //
+    //D3D11_SUBRESOURCE_DATA vinitData = {};
+    //HRESULT hr;
+    //
+    //switch (InVertexType)
+    //{
+    //case EVertexLayoutType::PositionColor:
+    //{
+    //    vbd.Usage = D3D11_USAGE_DEFAULT;
+    //    vbd.CPUAccessFlags = 0;
+    //
+    //    std::vector<FVertexSimple> vertexArray;
+    //    vertexArray.reserve(InStaticMesh->Vertices.size());
+    //
+    //    for (size_t i = 0; i < InStaticMesh->Vertices.size(); ++i)
+    //    {
+    //        const FNormalVertex& src = InStaticMesh->Vertices[i];
+    //
+    //        FVertexSimple vtx;
+    //        vtx.Position = src.pos;
+    //        vtx.Color = src.color;
+    //
+    //        vertexArray.push_back(vtx);
+    //    }
+    //
+    //    vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexSimple) * vertexArray.size());
+    //    vinitData.pSysMem = vertexArray.data();
+    //
+    //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+    //    break;
+    //}
+    //case EVertexLayoutType::PositionColorTexturNormal:
+    //{
+    //    vbd.Usage = D3D11_USAGE_DEFAULT;
+    //    vbd.CPUAccessFlags = 0;
+    //
+    //    std::vector<FVertexDynamic> vertexArray;
+    //    vertexArray.reserve(InStaticMesh->Vertices.size());
+    //
+    //    for (size_t i = 0; i < InStaticMesh->Vertices.size(); ++i)
+    //    {
+    //        const FNormalVertex& src = InStaticMesh->Vertices[i];
+    //
+    //        FVertexDynamic vtx;
+    //        vtx.Position = src.pos;
+    //        vtx.Color = src.color;
+    //        vtx.UV = src.tex;
+    //        vtx.Normal = FVector4(src.normal.X, src.normal.Y, src.normal.Z, 0.0f);
+    //
+    //        vertexArray.push_back(vtx);
+    //    }
+    //
+    //    vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexDynamic) * vertexArray.size());
+    //    vinitData.pSysMem = vertexArray.data();
+    //
+    //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+    //    break;
+    //}
     //case EVertexLayoutType::PositionBillBoard:
     //{
     //    vbd.Usage = D3D11_USAGE_DYNAMIC;
@@ -261,42 +282,55 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
     //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
     //    break;
     //}
-    default:
-        assert(false && "Unknown VertexType");
-        return;
-    }
-
-    assert(SUCCEEDED(hr));
+    //default:
+    //    assert(false && "Unknown VertexType");
+    //    return;
+    //}
+    //
+    //assert(SUCCEEDED(hr));
 }
 
 void UStaticMesh::CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
 {
-    D3D11_BUFFER_DESC ibd = {};
-    ibd.Usage = D3D11_USAGE_DEFAULT;
-    ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * InMeshData->Indices.size());
-    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    ibd.CPUAccessFlags = 0;
+    //D3D11_BUFFER_DESC ibd = {};
+    //ibd.Usage = D3D11_USAGE_DEFAULT;
+    //ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * InMeshData->Indices.size());
+    //ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    //ibd.CPUAccessFlags = 0;
+    //
+    //D3D11_SUBRESOURCE_DATA iinitData = {};
+    //iinitData.pSysMem = InMeshData->Indices.data();
 
-    D3D11_SUBRESOURCE_DATA iinitData = {};
-    iinitData.pSysMem = InMeshData->Indices.data();
-
-    HRESULT hr = InDevice->CreateBuffer(&ibd, &iinitData, &IndexBuffer);
-
+    HRESULT hr = D3D11RHI::CreateIndexBuffer(InDevice, InMeshData, &IndexBuffer);
+    
     assert(SUCCEEDED(hr));
+
+    //D3D11_BUFFER_DESC ibd = {};
+    //ibd.Usage = D3D11_USAGE_DEFAULT;
+    //ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * InMeshData->Indices.size());
+    //ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    //ibd.CPUAccessFlags = 0;
+    //
+    //D3D11_SUBRESOURCE_DATA iinitData = {};
+    //iinitData.pSysMem = InMeshData->Indices.data();
+    //
+    //HRESULT hr = InDevice->CreateBuffer(&ibd, &iinitData, &IndexBuffer);
+    //
+    //assert(SUCCEEDED(hr));
 }
 
 void UStaticMesh::CreateIndexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice)
 {
-    D3D11_BUFFER_DESC ibd = {};
-    ibd.Usage = D3D11_USAGE_DEFAULT;
-    ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * InStaticMesh->Indices.size());
-    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    ibd.CPUAccessFlags = 0;
+    //D3D11_BUFFER_DESC ibd = {};
+    //ibd.Usage = D3D11_USAGE_DEFAULT;
+    //ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * InStaticMesh->Indices.size());
+    //ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    //ibd.CPUAccessFlags = 0;
+    //
+    //D3D11_SUBRESOURCE_DATA iinitData = {};
+    //iinitData.pSysMem = InStaticMesh->Indices.data();
 
-    D3D11_SUBRESOURCE_DATA iinitData = {};
-    iinitData.pSysMem = InStaticMesh->Indices.data();
-
-    HRESULT hr = InDevice->CreateBuffer(&ibd, &iinitData, &IndexBuffer);
+    HRESULT hr = D3D11RHI::CreateIndexBuffer(InDevice, InStaticMesh, & IndexBuffer);
 
     assert(SUCCEEDED(hr));
 }

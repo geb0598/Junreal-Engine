@@ -170,6 +170,7 @@ enum class ResourceType : uint8
     None = -1,
 
     StaticMesh,
+    TextQuad,
     DynamicMesh,
     Shader,
     Texture,

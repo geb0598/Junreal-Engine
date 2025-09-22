@@ -348,6 +348,9 @@
     <ClCompile Include="UI\Window\PropertyWindow.cpp">
       <Filter>소스 파일\UI\Window</Filter>
     </ClCompile>
+    <ClCompile Include="TextQuad.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Primitive.hlsl">
@@ -621,6 +624,9 @@
     </ClInclude>
     <ClInclude Include="UI\Window\PropertyWindow.h">
       <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="TextQuad.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Texture.h"
 #include "DynamicMesh.h"
+#include "TextQuad.h"
 
 class UStaticMesh;
 
@@ -155,6 +156,8 @@ ResourceType UResourceManager::GetResourceType()
 {
     if (T::StaticClass() == UStaticMesh::StaticClass())
         return ResourceType::StaticMesh;
+    if (T::StaticClass() == UTextQuad::StaticClass())
+        return ResourceType::TextQuad;
     if (T::StaticClass() == UDynamicMesh::StaticClass())
         return ResourceType::DynamicMesh;
     if (T::StaticClass() == UShader::StaticClass())
