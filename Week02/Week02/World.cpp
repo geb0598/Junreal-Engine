@@ -40,6 +40,9 @@ UWorld::~UWorld()
     // Grid 정리 
     ObjectFactory::DeleteObject(GridActor);
     GridActor = nullptr;
+
+	// ObjManager 정리
+	FObjManager::Clear();
 }
 
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
@@ -88,7 +91,7 @@ static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 
 void UWorld::Initialize()
 {
-	InitializeObjManager();
+	FObjManager::Preload();
 
     // === Scene 로딩 (임시) 및 Actor초기화  ===
     auto Primitives = FSceneLoader::Load("WorldData.Scene");
@@ -164,17 +167,6 @@ void UWorld::InitializeGizmo()
     }
     
     UIManager.SetGizmoActor(GizmoActor);
-}
-
-void UWorld::InitializeObjManager()
-{
-	FObjManager::LoadObjStaticMesh("Data/Cube.obj");
-	FObjManager::LoadObjStaticMesh("Data/Sphere.obj");
-	FObjManager::LoadObjStaticMesh("Data/Triangle.obj");
-	FObjManager::LoadObjStaticMesh("Data/Arrow.obj");
-	FObjManager::LoadObjStaticMesh("Data/RotationHandle.obj");
-    FObjManager::LoadObjStaticMesh("Data/ScaleHandle.obj");
-	// FObjManager::LoadObjStaticMesh("Data/car.obj");
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
