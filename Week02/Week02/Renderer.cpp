@@ -2,6 +2,7 @@
 #include "TextRenderComponent.h"
 #include "Shader.h"
 #include "StaticMesh.h"
+#include "TextQuad.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -78,6 +79,11 @@ void URenderer::UpdateBillboardConstantBuffers(const FVector& pos,const FMatrix&
     RHIDevice->UpdateBillboardConstantBuffers(pos,ViewMatrix, ProjMatrix, CameraRight, CameraUp);
 }
 
+void URenderer::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
+{
+    RHIDevice->UpdatePixelConstantBuffers(InMaterialInfo, bHasMaterial, bHasTexture);
+}
+
 void URenderer::UpdateColorBuffer(const FVector4& Color)
 {
     RHIDevice->UpdateColorConstantBuffers(Color);
@@ -85,9 +91,23 @@ void URenderer::UpdateColorBuffer(const FVector4& Color)
 
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
 {
-    if (!InMesh || !InMesh->GetVertexBuffer() || !InMesh->GetIndexBuffer()) return;
-
-    UINT stride = sizeof(FVertexSimple);
+    UINT stride = 0;
+    switch (InMesh->GetVertexType())
+    {
+    case EVertexLayoutType::PositionColor:
+        stride = sizeof(FVertexSimple);
+        break;
+    case EVertexLayoutType::PositionColorTexturNormal:
+        stride = sizeof(FVertexDynamic);
+        break;
+    case EVertexLayoutType::PositionBillBoard:
+        stride = sizeof(FBillboardVertexInfo_GPU);
+        break;
+    default:
+        // Handle unknown or unsupported vertex types
+        assert(false && "Unknown vertex type!");
+        return; // or log an error
+    }
     UINT offset = 0;
 
     ID3D11Buffer* VertexBuffer = InMesh->GetVertexBuffer();
@@ -112,16 +132,22 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
         const uint32 Len = MeshGroupInfos.size();
         for (const FGroupInfo& GroupInfo : MeshGroupInfos)
         {
-            FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
-            FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
-            RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
-            RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &(TextureData->SamplerState));
-
+            bool bHasTexture = !(GroupInfo.MaterialInfo.DiffuseTextureFileName.empty());
+            if (bHasTexture)
+            {
+                FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
+                FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
+                RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
+                RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &(TextureData->SamplerState));
+            }
+            RHIDevice->UpdatePixelConstantBuffers(GroupInfo.MaterialInfo, true, bHasTexture); // PSSet도 해줌
             RHIDevice->GetDeviceContext()->DrawIndexed(GroupInfo.IndexCount, GroupInfo.StartIndex, 0);
         }
     }
     else
     {
+        FObjMaterialInfo ObjMaterialInfo;
+        RHIDevice->UpdatePixelConstantBuffers(ObjMaterialInfo, false, false); // PSSet도 해줌
         RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
     }
     
@@ -176,12 +202,12 @@ void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
 void URenderer::InitializeLineBatch()
 {
     // Create UDynamicMesh for efficient line batching
-    DynamicLineMesh = UResourceManager::GetInstance().Load<UDynamicMesh>("Line");
+    DynamicLineMesh = UResourceManager::GetInstance().Load<ULineDynamicMesh>("Line");
     
     // Initialize with maximum capacity (MAX_LINES * 2 vertices, MAX_LINES * 2 indices)
     uint32 maxVertices = MAX_LINES * 2;
     uint32 maxIndices = MAX_LINES * 2;
-    DynamicLineMesh->Load(maxVertices, maxIndices, RHIDevice->GetDevice(), EVertexLayoutType::PositionColor);
+    DynamicLineMesh->Load(maxVertices, maxIndices, RHIDevice->GetDevice());
 
     // Create FMeshData for accumulating line data
     LineBatchData = new FMeshData();

@@ -13,10 +13,10 @@ struct FObjMaterialInfo
     // Unspecified properties designated by negative values
     int32 IlluminationModel = 2;  // illum. Default illumination model to Phong for non-Pbr materials
 
-    FVector DiffuseColor = -FVector::One(); // Kd
-    FVector AmbientColor = -FVector::One(); // Ka
-    FVector SpecularColor = -FVector::One(); // Ks
-    FVector EmissiveColor = -FVector::One(); // Ke
+    FVector DiffuseColor = FVector::One(); // Kd
+    FVector AmbientColor = FVector::One(); // Ka
+    FVector SpecularColor = FVector::One(); // Ks
+    FVector EmissiveColor = FVector::One(); // Ke
 
     FString DiffuseTextureFileName;
     FString AmbientTextureFileName;
@@ -25,7 +25,7 @@ struct FObjMaterialInfo
     FString TransparencyTextureFileName;
     FString SpecularExponentTextureFileName;
 
-    FVector TransmissionFilter = -FVector::One(); // Tf
+    FVector TransmissionFilter = FVector::One(); // Tf
 
     float OpticalDensity = -1.f; // Ni
     float Transparency = -1.f; // Tr Or d
@@ -73,7 +73,7 @@ struct FMeshData
     // UV 좌표
     TArray<FVector2D> UV;//also can be Billboard size
     // 노말 좌표
-    TArray<FVector4> Normal;
+    TArray<FVector> Normal;
     //
     
 };
@@ -170,6 +170,7 @@ enum class ResourceType : uint8
     None = -1,
 
     StaticMesh,
+    TextQuad,
     DynamicMesh,
     Shader,
     Texture,

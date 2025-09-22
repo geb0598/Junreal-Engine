@@ -294,6 +294,9 @@
     <ClCompile Include="LineComponent.cpp">
       <Filter>소스 파일\Component</Filter>
     </ClCompile>
+    <ClCompile Include="LineDynamicMesh.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
     <ClCompile Include="MeshComponent.cpp">
       <Filter>소스 파일\Component</Filter>
     </ClCompile>
@@ -348,6 +351,9 @@
     <ClCompile Include="UI\Window\PropertyWindow.cpp">
       <Filter>소스 파일\UI\Window</Filter>
     </ClCompile>
+    <ClCompile Include="TextQuad.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Primitive.hlsl">
@@ -357,6 +363,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="ShaderLine.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="StaticMeshShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="StaticMeshPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
@@ -535,6 +547,9 @@
     <ClInclude Include="DynamicMesh.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="LineDynamicMesh.h">
+      <Filter>헤더 파일\Resources</Filter>
+    </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -621,6 +636,9 @@
     </ClInclude>
     <ClInclude Include="UI\Window\PropertyWindow.h">
       <Filter>헤더 파일\UI\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="TextQuad.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -6,7 +6,7 @@ class UShader : public UResourceBase
 public:
 	DECLARE_CLASS(UShader, UResourceBase)
 
-	void Load(const FString& ShaderPath, ID3D11Device* InDevice, EVertexLayoutType InLayoutType);
+	void Load(const FString& ShaderPath, ID3D11Device* InDevice);
 
 	ID3D11InputLayout* GetInputLayout() const { return InputLayout; }
 	ID3D11VertexShader* GetVertexShader() const { return VertexShader; }
@@ -22,7 +22,7 @@ private:
 	ID3D11VertexShader* VertexShader = nullptr;
 	ID3D11PixelShader* PixelShader = nullptr;
 
-	void CreateInputLayout(ID3D11Device* Device, EVertexLayoutType InLayoutType);
+	void CreateInputLayout(ID3D11Device* Device, const FString& InShaderPath);
 	void ReleaseResources();
 };
 
@@ -45,14 +45,14 @@ struct FVertexPositionColorTexturNormal
 	{
 		static const D3D11_INPUT_ELEMENT_DESC layout[] = {
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 		};
 		return layout;
 	}
 
-	static uint32 GetLayoutCount() { return 2; }
+	static uint32 GetLayoutCount() { return 4; }
 };
 
 struct FVertexPositionBillBoard

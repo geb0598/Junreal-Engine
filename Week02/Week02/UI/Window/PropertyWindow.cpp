@@ -15,7 +15,9 @@ UPropertyWindow::UPropertyWindow()
 	Config.bMovable = true;
 	Config.bCollapsible = true;
 
-	AddWidget(NewObject<UTargetActorTransformWidget>());
+	auto TargetActorTransformWidget = NewObject<UTargetActorTransformWidget>();
+	TargetActorTransformWidget->Initialize();
+	AddWidget(TargetActorTransformWidget);
 
 	Config.UpdateWindowFlags();
 	SetConfig(Config);

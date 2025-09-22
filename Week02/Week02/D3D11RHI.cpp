@@ -5,11 +5,41 @@ struct FConstants
     FVector WorldPosition;
     float Scale;
 };
-// b0
+// b0 in VS
 struct ModelBufferType
 {
     FMatrix Model;
 };
+
+// b0 in PS
+struct FMaterialInPs
+{
+    FVector DiffuseColor; // Kd
+    float OpticalDensity; // Ni
+
+    FVector AmbientColor; // Ka
+    float Transparency; // Tr Or d
+
+    FVector SpecularColor; // Ks
+    float SpecularExponent; // Ns
+
+    FVector EmissiveColor; // Ke
+    uint32 IlluminationModel; // illum. Default illumination model to Phong for non-Pbr materials
+
+    FVector TransmissionFilter; // Tf
+    float dummy; // 4 bytes padding
+};
+
+struct FPixelConstBufferType
+{
+    FMaterialInPs Material;
+    bool bHasMaterial; // 1 bytes
+    bool Dummy[3]; // 3 bytes padding
+    bool bHasTexture; // 1 bytes
+    bool Dummy2[11]; // 11 bytes padding
+};
+
+static_assert(sizeof(FPixelConstBufferType) % 16 == 0, "PixelConstData size mismatch!");
 
 // b1
 struct ViewProjBufferType
@@ -77,6 +107,7 @@ void D3D11RHI::Release()
     if (ColorCB) { ColorCB->Release(); ColorCB = nullptr; }
     if (ViewProjCB) { ViewProjCB->Release(); ViewProjCB = nullptr; }
     if (BillboardCB) { BillboardCB->Release(); BillboardCB = nullptr; }
+    if (PixelConstCB) { PixelConstCB->Release(); PixelConstCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체
@@ -161,6 +192,40 @@ void D3D11RHI::CreateDepthStencilState()
     Device->CreateDepthStencilState(&desc, &DepthStencilStateGreaterEqualWrite);
 }
 
+HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FMeshData* meshData, ID3D11Buffer** outBuffer)
+{
+    if (!meshData || meshData->Indices.empty())
+        return E_FAIL;
+
+    D3D11_BUFFER_DESC ibd = {};
+    ibd.Usage = D3D11_USAGE_DEFAULT;
+    ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * meshData->Indices.size());
+    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    ibd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA iinitData = {};
+    iinitData.pSysMem = meshData->Indices.data();
+
+    return device->CreateBuffer(&ibd, &iinitData, outBuffer);
+}
+
+HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mesh, ID3D11Buffer** outBuffer)
+{
+    if (!mesh || mesh->Indices.empty())
+        return E_FAIL;
+
+    D3D11_BUFFER_DESC ibd = {};
+    ibd.Usage = D3D11_USAGE_DEFAULT;
+    ibd.ByteWidth = static_cast<UINT>(sizeof(uint32) * mesh->Indices.size());
+    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    ibd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA iinitData = {};
+    iinitData.pSysMem = mesh->Indices.data();
+
+    return device->CreateBuffer(&ibd, &iinitData, outBuffer);
+}
+
 //이거 두개를 나눔
 void D3D11RHI::UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
@@ -208,6 +273,22 @@ void D3D11RHI::UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix&
 
     DeviceContext->Unmap(BillboardCB, 0);
     DeviceContext->VSSetConstantBuffers(0, 1, &BillboardCB); // b0 슬롯
+}
+
+void D3D11RHI::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
+{
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    DeviceContext->Map(PixelConstCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    FPixelConstBufferType* dataPtr = reinterpret_cast<FPixelConstBufferType*>(mapped.pData);
+
+    // 이후 다양한 material들이 맵핑될 수도 있음.
+    dataPtr->bHasMaterial = bHasMaterial;
+    dataPtr->bHasTexture = bHasTexture;
+    dataPtr->Material.DiffuseColor = InMaterialInfo.DiffuseColor;
+    dataPtr->Material.AmbientColor = InMaterialInfo.AmbientColor;
+
+    DeviceContext->Unmap(PixelConstCB, 0);
+    DeviceContext->PSSetConstantBuffers(4, 1, &PixelConstCB); // b4 슬롯
 }
 
 void D3D11RHI::UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
@@ -386,6 +467,18 @@ void D3D11RHI::CreateConstantBuffer()
     modelDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     modelDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&modelDesc, nullptr, &ModelCB);
+
+    // b0 in StaticMeshPS
+    D3D11_BUFFER_DESC pixelConstDesc = {};
+    pixelConstDesc.Usage = D3D11_USAGE_DYNAMIC;
+    pixelConstDesc.ByteWidth = sizeof(FPixelConstBufferType);
+    pixelConstDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    pixelConstDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    HRESULT hr = Device->CreateBuffer(&pixelConstDesc, nullptr, &PixelConstCB);
+    if (FAILED(hr))
+    {
+        assert(FAILED(hr));
+    }
 
     // b1 : ViewProjBuffer
     D3D11_BUFFER_DESC vpDesc = {};
