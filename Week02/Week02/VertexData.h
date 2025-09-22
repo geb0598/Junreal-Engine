@@ -38,7 +38,7 @@ struct FVertexDynamic
         Position = src.pos;
         Color = src.color;
         UV = src.tex;
-        Normal = FVector4(src.normal.X, src.normal.Y, src.normal.Z, 0.0f);
+        Normal = FVector{ src.normal.X, src.normal.Y, src.normal.Z };
     }
 };
 
