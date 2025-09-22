@@ -41,6 +41,14 @@ UTargetActorTransformWidget::UTargetActorTransformWidget()
 
 UTargetActorTransformWidget::~UTargetActorTransformWidget() = default;
 
+void UTargetActorTransformWidget::OnSelectedActorCleared()
+{
+	// 즉시 내부 캐시/플래그 정리
+	SelectedActor = nullptr;
+	CachedActorName.clear();
+	ResetChangeFlags();
+}
+
 void UTargetActorTransformWidget::Initialize()
 {
 	// UIManager 참조 확보
@@ -53,6 +61,12 @@ void UTargetActorTransformWidget::Initialize()
 	if (GizmoActor)
 	{
 		CurrentGizmoSpace = GizmoActor->GetSpace();
+	}
+
+	// Transform 위젯을 UIManager에 등록하여 선택 해제 브로드캐스트를 받을 수 있게 함
+	if (UIManager)
+	{
+		UIManager->RegisterTargetTransformWidget(this);
 	}
 }
 

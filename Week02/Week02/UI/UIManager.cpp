@@ -6,7 +6,7 @@
 #include "../ImGui/imgui_internal.h"
 #include "../ImGui/imgui_impl_dx11.h"
 #include "../imGui/imgui_impl_win32.h"
-
+#include "UI/Widget/TargetActorTransformWidget.h"
 
 UUIManager::UUIManager()
 {
@@ -652,6 +652,19 @@ void UUIManager::HandleViewportShortcuts()
 	{
 		SetViewportMode(false);
 		UE_LOG("UIManager: Switched to Multi Viewport mode via F2");
+	}
+}
+
+void UUIManager::RegisterTargetTransformWidget(UTargetActorTransformWidget* InWidget)
+{
+	TargetTransformWidgetRef = InWidget;
+}
+
+void UUIManager::ClearTransformWidgetSelection()
+{
+	if (TargetTransformWidgetRef)
+	{
+		TargetTransformWidgetRef->OnSelectedActorCleared();
 	}
 }
 

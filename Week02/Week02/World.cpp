@@ -131,7 +131,7 @@ void UWorld::Initialize()
 void UWorld::InitializeMainCamera()
 {
     
-    MainCameraActor = SpawnActor<ACameraActor>(FTransform());
+    MainCameraActor = NewObject<ACameraActor>();
 
     DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
     UIManager.SetCamera(MainCameraActor);
