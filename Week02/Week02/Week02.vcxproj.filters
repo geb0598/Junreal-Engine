@@ -294,6 +294,9 @@
     <ClCompile Include="LineComponent.cpp">
       <Filter>소스 파일\Component</Filter>
     </ClCompile>
+    <ClCompile Include="LineDynamicMesh.cpp">
+      <Filter>소스 파일\Resources</Filter>
+    </ClCompile>
     <ClCompile Include="MeshComponent.cpp">
       <Filter>소스 파일\Component</Filter>
     </ClCompile>
@@ -543,6 +546,9 @@
     </ClInclude>
     <ClInclude Include="DynamicMesh.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="LineDynamicMesh.h">
+      <Filter>헤더 파일\Resources</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>헤더 파일</Filter>

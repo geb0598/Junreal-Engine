@@ -162,6 +162,7 @@
     <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="DynamicMesh.cpp" />
+    <ClCompile Include="LineDynamicMesh.cpp" />
     <ClCompile Include="FName.cpp" />
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="LineComponent.cpp" />
@@ -314,6 +315,7 @@
     <ClInclude Include="ObjManager.h" />
     <ClInclude Include="OBoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />
+    <ClInclude Include="LineDynamicMesh.h" />
     <ClInclude Include="GizmoActor.h" />
     <ClInclude Include="GizmoArrowComponent.h" />
     <ClInclude Include="GridActor.h" />

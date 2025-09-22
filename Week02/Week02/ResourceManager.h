@@ -7,6 +7,7 @@
 #include "Texture.h"
 #include "DynamicMesh.h"
 #include "TextQuad.h"
+#include "LineDynamicMesh.h"
 
 class UStaticMesh;
 
@@ -160,6 +161,8 @@ ResourceType UResourceManager::GetResourceType()
         return ResourceType::TextQuad;
     if (T::StaticClass() == UDynamicMesh::StaticClass())
         return ResourceType::DynamicMesh;
+    if (T::StaticClass() == ULineDynamicMesh::StaticClass())
+        return ResourceType::DynamicMesh; // share bucket with DynamicMesh
     if (T::StaticClass() == UShader::StaticClass())
         return ResourceType::Shader;
     if (T::StaticClass() == UTexture::StaticClass())

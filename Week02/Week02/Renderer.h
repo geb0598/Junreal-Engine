@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "RHIDevice.h"
-#include "DynamicMesh.h"
+#include "LineDynamicMesh.h"
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
@@ -58,7 +58,7 @@ private:
 	URHIDevice* RHIDevice;
 
     // Batch Line Rendering System using UDynamicMesh for efficiency
-    UDynamicMesh* DynamicLineMesh = nullptr;
+    ULineDynamicMesh* DynamicLineMesh = nullptr;
     FMeshData* LineBatchData = nullptr;
     UShader* LineShader = nullptr;
     bool bLineBatchActive = false;

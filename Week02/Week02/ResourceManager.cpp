@@ -230,13 +230,16 @@ void UResourceManager::CreateTextBillboardMesh()
 
 
     //if(UResourceManager::GetInstance().Get<UMaterial>())
-    UStaticMesh* Mesh = NewObject<UStaticMesh>();
+    const uint32 MaxQuads = 100; // capacity
     FMeshData* BillboardData = new FMeshData;
     BillboardData->Indices = Indices;
-    BillboardData->Vertices.resize(100);
-    BillboardData->Color.resize(100);
-    BillboardData->UV.resize(100);
-    Mesh->Load(BillboardData, Device, EVertexLayoutType::PositionBillBoard);
+    // Reserve capacity for MaxQuads (4 vertices per quad)
+    BillboardData->Vertices.resize(MaxQuads * 4);
+    BillboardData->Color.resize(MaxQuads * 4);
+    BillboardData->UV.resize(MaxQuads * 4);
+
+    UTextQuad* Mesh = NewObject<UTextQuad>();
+    Mesh->Load(BillboardData, Device);
     Add<UTextQuad>("TextBillboard", Mesh);
     UMeshLoader::GetInstance().AddMeshData("TextBillboard", BillboardData);
 }
@@ -465,9 +468,9 @@ void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBi
     Mesh->SetIndexCount(quadCount * 6);
 
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑
+    Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
     memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardVertexInfo_GPU) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라
-    Context->Unmap(Mesh->GetVertexBuffer(), 0);//언맵
+    Context->Unmap(Mesh->GetVertexBuffer(), 0);
 }
 
 FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePath)

@@ -2,6 +2,7 @@
 #include "TextRenderComponent.h"
 #include "Shader.h"
 #include "StaticMesh.h"
+#include "TextQuad.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -201,12 +202,12 @@ void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
 void URenderer::InitializeLineBatch()
 {
     // Create UDynamicMesh for efficient line batching
-    DynamicLineMesh = UResourceManager::GetInstance().Load<UDynamicMesh>("Line");
+    DynamicLineMesh = UResourceManager::GetInstance().Load<ULineDynamicMesh>("Line");
     
     // Initialize with maximum capacity (MAX_LINES * 2 vertices, MAX_LINES * 2 indices)
     uint32 maxVertices = MAX_LINES * 2;
     uint32 maxIndices = MAX_LINES * 2;
-    DynamicLineMesh->Load(maxVertices, maxIndices, RHIDevice->GetDevice(), EVertexLayoutType::PositionColor);
+    DynamicLineMesh->Load(maxVertices, maxIndices, RHIDevice->GetDevice());
 
     // Create FMeshData for accumulating line data
     LineBatchData = new FMeshData();
