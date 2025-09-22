@@ -574,7 +574,7 @@ void UWorld::LoadScene(const FString& SceneName)
 {
     // 깨끗한 상태에서 시작
     CreateNewScene();
-    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(SceneName + ".scene");
+    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(SceneName + ".Scene");
 
     for (const FPrimitiveData& Primitive : Primitives)
     {

@@ -83,6 +83,40 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
     }
 }
 
+// ─────────────────────────────────────────────
+// NextUUID 메타만 읽어오는 간단한 헬퍼
+// 저장 포맷상 "NextUUID"는 "마지막으로 사용된 UUID"이므로,
+// 호출 측에서 +1 해서 SetNextUUID 해야 함
+// ─────────────────────────────────────────────
+bool FSceneLoader::TryReadNextUUID(const FString& FilePath, uint32& OutNextUUID)
+{
+    std::ifstream file(FilePath);
+    if (!file.is_open())
+    {
+        return false;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string content = buffer.str();
+
+    try
+    {
+        JSON j = JSON::Load(content);
+        if (j.hasKey("NextUUID"))
+        {
+            // 정수 파서가 없으면 ToFloat로 받아서 캐스팅
+			OutNextUUID = static_cast<uint32>(j.at("NextUUID").ToInt());
+            return true;
+        }
+    }
+    catch (...)
+    {
+        // 무시하고 false 반환
+    }
+    return false;
+}
+
 TArray<FPrimitiveData> FSceneLoader::Parse(const JSON& Json)
 {
     TArray<FPrimitiveData> primitives;

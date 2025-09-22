@@ -8,6 +8,8 @@
 #include <filesystem>
 #include <exception>
 #include "../UIManager.h"
+#include "../../SceneLoader.h"
+#include "../../Object.h"
 
 USceneIOWidget::USceneIOWidget()
 	: UWidget("Scene IO Widget")
@@ -192,24 +194,20 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 {
 	try
 	{
-		// Extract scene name from file path
+		// 파일명에서 씬 이름 추출
 		FString SceneName = InFilePath;
-
-		// Find last slash to get filename
 		size_t LastSlash = SceneName.find_last_of("\\/");
 		if (LastSlash != std::string::npos)
 		{
 			SceneName = SceneName.substr(LastSlash + 1);
 		}
-
-		// Remove .scene extension
 		size_t LastDot = SceneName.find_last_of(".");
 		if (LastDot != std::string::npos)
 		{
 			SceneName = SceneName.substr(0, LastDot);
 		}
 
-		// Load scene through World (uses SceneLoader internally)
+		// World 가져오기
 		UWorld* CurrentWorld = UUIManager::GetInstance().GetWorld();
 		if (!CurrentWorld)
 		{
@@ -217,15 +215,26 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 			return;
 		}
 
-		// 로드 직전: Transform 위젯 선택 해제 + 선택 포인터 초기화
-		// - 위젯 내부 SelectedActor 즉시 nullptr
-		// - UIManager의 PickedActor도 해제하여 같은 프레임 내 덩글링 포인터 방지
+		// 로드 직전: Transform 위젯/선택 초기화
 		UUIManager::GetInstance().ClearTransformWidgetSelection();
 		UUIManager::GetInstance().ResetPickedActor();
 
-		// Call World's LoadScene
+		// 1) 선택된 파일 경로에서 NextUUID 읽기
+		// Save 포맷상 NextUUID는 "마지막으로 사용된 UUID" → 다음 값으로 쓰려면 +1 필요
+		uint32 LoadedNextUUID = 0;
+		if (FSceneLoader::TryReadNextUUID(InFilePath, LoadedNextUUID))
+		{
+			UObject::SetNextUUID(LoadedNextUUID + 1);
+		}
+		else
+		{
+			// 실패 시 선택적으로 리셋하거나 유지 (여기선 유지)
+			// UObject::SetNextUUID(1); // 필요하면 활성화
+		}
+
+		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".scene"으로 접근)
 		CurrentWorld->LoadScene(SceneName);
-		
+
 		UE_LOG("SceneIO: Scene loaded successfully: %s", SceneName.c_str());
 		SetStatusMessage("Scene loaded successfully: " + SceneName);
 	}
