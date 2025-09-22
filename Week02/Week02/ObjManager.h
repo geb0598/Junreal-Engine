@@ -107,7 +107,10 @@ public:
                 wss >> vx >> vy >> vz;
 
                 if (bIsRHCoordSys)
-                    OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
+                {
+                    //OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
+                    OutObjInfo->Positions.push_back(FVector(vz, -vy, vx));
+                }
                 else
                     OutObjInfo->Positions.push_back(FVector(vx, vy, vz));
             }
