@@ -588,7 +588,7 @@ public:
         //}
 
         // Material 정보 정리
-        /*if (!InObjInfo.bHasMtl)
+        if (!InObjInfo.bHasMtl)
         {
             OutStaticMesh->bHasMaterial = false;
             return;
@@ -607,7 +607,7 @@ public:
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
-        }*/
+        }
     }
 
 private:

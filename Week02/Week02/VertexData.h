@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Vector.h"
 #include "Enums.h"
 
@@ -20,14 +20,13 @@ struct FVertexDynamic
     FVector Normal;
     FVector4 Color;
     FVector2D UV;
-    FVector4 Normal;
 
     void FillFrom(const FMeshData& mesh, size_t i)
  {
         Position = mesh.Vertices[i];
         Color = (i < mesh.Color.size()) ? mesh.Color[i] : FVector4(1, 1, 1, 1);
         UV = (i < mesh.UV.size()) ? mesh.UV[i] : FVector2D(0, 0);
-        Normal = (i < mesh.Normal.size()) ? mesh.Normal[i] : FVector4(0, 0, 1, 0);
+        Normal = (i < mesh.Normal.size()) ? mesh.Normal[i] : FVector(0, 0, 1);
     }
 };
 

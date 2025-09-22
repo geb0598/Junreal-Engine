@@ -9,14 +9,20 @@ TMap<FString, FStaticMesh*> FObjManager::ObjStaticMeshMap;
 
 void FObjManager::Preload()
 {
+    //LoadObjStaticMesh("Data/tree9/trees9.obj"); // 해당 obj는 정점 수가 너무 많아서(약, 20만개 이상) 수집하는데 오래 걸림
     LoadObjStaticMesh("Data/Cube.obj");
     LoadObjStaticMesh("Data/Sphere.obj");
     LoadObjStaticMesh("Data/Triangle.obj");
     LoadObjStaticMesh("Data/Arrow.obj");
     LoadObjStaticMesh("Data/RotationHandle.obj");
     LoadObjStaticMesh("Data/ScaleHandle.obj");
-    LoadObjStaticMesh("Data/car.obj");
-	LoadObjStaticMesh("Data/spaceCompound.obj");
+    //LoadObjStaticMesh("Data/car.obj");
+    LoadObjStaticMesh("Data/cube-tex.obj");
+    LoadObjStaticMesh("Data/spaceCompound.obj");
+    LoadObjStaticMesh("Data/cube_tex_blender.obj");
+    LoadObjStaticMesh("Data/pony-cartoon/Pony_cartoon.obj");
+    LoadObjStaticMesh("Data/ship/ship.obj");
+    LoadObjStaticMesh("Data/OtherTeam/cube-tex2.obj");
 }
 
 void FObjManager::Clear()
