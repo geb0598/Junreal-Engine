@@ -78,6 +78,11 @@ void URenderer::UpdateBillboardConstantBuffers(const FVector& pos,const FMatrix&
     RHIDevice->UpdateBillboardConstantBuffers(pos,ViewMatrix, ProjMatrix, CameraRight, CameraUp);
 }
 
+void URenderer::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
+{
+    RHIDevice->UpdatePixelConstantBuffers(InMaterialInfo, bHasMaterial, bHasTexture);
+}
+
 void URenderer::UpdateColorBuffer(const FVector4& Color)
 {
     RHIDevice->UpdateColorConstantBuffers(Color);
@@ -112,16 +117,22 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
         const uint32 Len = MeshGroupInfos.size();
         for (const FGroupInfo& GroupInfo : MeshGroupInfos)
         {
-            FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
-            FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
-            RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
-            RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &(TextureData->SamplerState));
-
+            bool bHasTexture = !(GroupInfo.MaterialInfo.DiffuseTextureFileName.empty());
+            if (bHasTexture)
+            {
+                FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
+                FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
+                RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
+                RHIDevice->GetDeviceContext()->PSSetSamplers(0, 1, &(TextureData->SamplerState));
+            }
+            RHIDevice->UpdatePixelConstantBuffers(GroupInfo.MaterialInfo, true, bHasTexture); // PSSet도 해줌
             RHIDevice->GetDeviceContext()->DrawIndexed(GroupInfo.IndexCount, GroupInfo.StartIndex, 0);
         }
     }
     else
     {
+        FObjMaterialInfo ObjMaterialInfo;
+        RHIDevice->UpdatePixelConstantBuffers(ObjMaterialInfo, false, false); // PSSet도 해줌
         RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
     }
     

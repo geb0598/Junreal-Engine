@@ -359,6 +359,12 @@
     <FxCompile Include="ShaderLine.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="StaticMeshVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="StaticMeshPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
