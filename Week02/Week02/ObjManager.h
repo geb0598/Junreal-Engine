@@ -382,6 +382,7 @@ public:
                 {
                     TextureFileName = line.substr(7);
                 }
+                std::replace(TextureFileName.begin(), TextureFileName.end(), '\\', '/');
                 OutMaterialInfos[MatCount - 1].DiffuseTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_d ", 0) == 0)

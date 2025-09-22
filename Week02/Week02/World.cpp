@@ -168,6 +168,7 @@ void UWorld::InitializeGizmo()
 
 void UWorld::InitializeObjManager()
 {
+    //FObjManager::LoadObjStaticMesh("Data/tree9/trees9.obj");
 	FObjManager::LoadObjStaticMesh("Data/Cube.obj");
 	FObjManager::LoadObjStaticMesh("Data/Sphere.obj");
 	FObjManager::LoadObjStaticMesh("Data/Triangle.obj");
@@ -181,7 +182,8 @@ void UWorld::InitializeObjManager()
 	FObjManager::LoadObjStaticMesh("Data/pony-cartoon/Pony_cartoon.obj");
 	FObjManager::LoadObjStaticMesh("Data/ship/ship.obj");
 	FObjManager::LoadObjStaticMesh("Data/OtherTeam/cube-tex2.obj");
-	FObjManager::LoadObjStaticMesh("Data/stone/Stone.obj");
+	
+	//FObjManager::LoadObjStaticMesh("Data/85-cottage_obj/cottage_obj.obj");
 
     //FObjManager::LoadObjStaticMesh("Cube.obj");
     //FObjManager::LoadObjStaticMesh("Sphere.obj");

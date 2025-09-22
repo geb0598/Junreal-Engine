@@ -234,10 +234,6 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
         vinitData.pSysMem = vertexArray.data();
 
         hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
-        if (FAILED(hr))
-        {
-            assert(SUCCEEDED(hr));
-        }
         break;
     }
     default:
@@ -245,7 +241,12 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
         return;
     }
 
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr))
+    {
+        UE_LOG("vertexBuffer 만들기 실패");
+        assert(SUCCEEDED(hr));
+    }
+    //assert(SUCCEEDED(hr));
 }
 
 void UStaticMesh::CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
