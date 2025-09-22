@@ -217,6 +217,12 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 			return;
 		}
 
+		// 로드 직전: Transform 위젯 선택 해제 + 선택 포인터 초기화
+		// - 위젯 내부 SelectedActor 즉시 nullptr
+		// - UIManager의 PickedActor도 해제하여 같은 프레임 내 덩글링 포인터 방지
+		UUIManager::GetInstance().ClearTransformWidgetSelection();
+		UUIManager::GetInstance().ResetPickedActor();
+
 		// Call World's LoadScene
 		CurrentWorld->LoadScene(SceneName);
 		

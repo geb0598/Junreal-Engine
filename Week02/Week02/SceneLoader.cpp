@@ -30,11 +30,7 @@ TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
 void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& SceneName)
 {
     // 상단 메타 정보
-    uint32 NextUUID = 0;
-    for (UObject* Object : GUObjectArray)
-    {
-        NextUUID = std::max(Object->UUID, NextUUID);
-    }
+	uint32 NextUUID = UObject::PeekNextUUID();
 
     // 파일명 보정(.Scene 보장)
     std::string FileName = SceneName;

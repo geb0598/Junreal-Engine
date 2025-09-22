@@ -93,32 +93,10 @@ void UWorld::Initialize()
 {
 	FObjManager::Preload();
 
-    // === Scene 로딩 (임시) 및 Actor초기화  ===
-    auto Primitives = FSceneLoader::Load("WorldData.Scene");
-    for (auto Primitive : Primitives)
-    {
-        FString PrimitiveType = "Data/" + Primitive.Type + ".obj";
-
-        AActor* Actor = NewObject<AStaticMeshActor>();
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetStaticMesh(PrimitiveType);
-        Cast<AStaticMeshActor>(Actor)->GetStaticMeshComponent()->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
-		if(PrimitiveType == "Data/Sphere.obj")
-            Cast<AStaticMeshActor>(Actor)->SetCollisionComponent(EPrimitiveType::Sphere);
-        else
-            Cast<AStaticMeshActor>(Actor)->SetCollisionComponent();
-        //추후 변경 필요 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        Actor->SetActorTransform(FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation),
-            Primitive.Scale));
-        Actor->SetWorld(this);
-        UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
-        TextComp->SetOwner(Actor);
-        Actor->AddComponent(TextComp);
-        Actor->SetWorld(this);
-        TextComp->SetupAttachment( Actor->GetRootComponent());
-//        Actors.push_back(Actor);
-        Actors.push_back(Actor);
-    }
-    
+    // === 씬 로드를 UWorld::LoadScene으로 위임 ===
+    // - 확장자는 LoadScene 내부에서 ".scene"을 자동으로 붙여서 로드함
+    // - 기존 수동 액터 생성/컴포넌트 부착 로직 제거
+    LoadScene("WorldData");
 
 	InitializeMainCamera();
     InitializeGrid();
@@ -126,9 +104,6 @@ void UWorld::Initialize()
 	
 	// 액터 간 참조 설정
 	SetupActorReferences();
-
-
-
 }
 
 void UWorld::InitializeMainCamera()
@@ -522,6 +497,9 @@ void UWorld::CreateNewScene()
         ObjectFactory::DeleteObject(Actor);
     }
     Actors.Empty();
+
+    // 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
+    ObjectTypeCounts.clear();
 }
 
 
@@ -625,6 +603,20 @@ void UWorld::LoadScene(const FString& SceneName)
                 StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
             else
                 StaticMeshActor->SetCollisionComponent();
+
+            // ─────────────────────────────────────────────
+            // 위젯과 동일한 네이밍 규칙 적용
+            // - 메시 경로가 있으면 파일명(확장자 제외)을 베이스로
+            // - 없으면 "StaticMesh"를 베이스로 사용
+            // - 월드의 GenerateUniqueActorName으로 유니크 보장
+            // ─────────────────────────────────────────────
+            FString BaseName = "StaticMesh";
+            if (!LoadedAssetPath.empty())
+            {
+                BaseName = RemoveObjExtension(LoadedAssetPath); // 예: "Data/Cube.obj" -> "Cube"
+            }
+            const FString UniqueName = GenerateUniqueActorName(BaseName);
+            StaticMeshActor->SetName(UniqueName);
         }
     }
 }
