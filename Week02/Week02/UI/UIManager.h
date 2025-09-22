@@ -7,6 +7,7 @@ class UUIWindow;
 class UImGuiHelper;
 class UWidget;
 class UWorld;
+class UTargetActorTransformWidget;
 
 // Forward declarations for compatibility
 struct ID3D11Device;
@@ -89,6 +90,10 @@ public:
 	// Keyboard shortcut handling for viewport switching
 	void HandleViewportShortcuts();
 
+	// Transform Widget registration and management
+	void RegisterTargetTransformWidget(UTargetActorTransformWidget* InWidget);
+	void ClearTransformWidgetSelection(); // Transform 위젯의 선택을 즉시 해제
+
 public:
 	UUIManager();
 protected:
@@ -124,4 +129,7 @@ private:
 
 	void SortUIWindowsByPriority();
 	void UpdateFocusState();
+
+	// Transform Widget reference
+	UTargetActorTransformWidget* TargetTransformWidgetRef = nullptr;
 };

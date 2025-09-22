@@ -15,7 +15,8 @@ void FObjManager::Preload()
     LoadObjStaticMesh("Data/Arrow.obj");
     LoadObjStaticMesh("Data/RotationHandle.obj");
     LoadObjStaticMesh("Data/ScaleHandle.obj");
-    // FObjManager::LoadObjStaticMesh("Data/car.obj");
+    LoadObjStaticMesh("Data/car.obj");
+	LoadObjStaticMesh("Data/spaceCompound.obj");
 }
 
 void FObjManager::Clear()

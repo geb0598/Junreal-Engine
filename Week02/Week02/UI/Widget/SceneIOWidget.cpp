@@ -8,6 +8,8 @@
 #include <filesystem>
 #include <exception>
 #include "../UIManager.h"
+#include "../../SceneLoader.h"
+#include "../../Object.h"
 
 USceneIOWidget::USceneIOWidget()
 	: UWidget("Scene IO Widget")
@@ -90,9 +92,7 @@ void USceneIOWidget::RenderLoadSection()
 void USceneIOWidget::RenderNewSceneSection()
 {
 	ImGui::Text("Create New Scene");
-	
-	ImGui::InputText("Scene Name", NewLevelNameBuffer, sizeof(NewLevelNameBuffer));
-	
+
 	if (ImGui::Button("Create New Scene", ImVec2(150, 25)))
 	{
 		CreateNewLevel();
@@ -147,13 +147,22 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 			SetStatusMessage("Cannot find World!", true);
 			return;
 		}
-		
+
 		if (InFilePath.empty())
 		{
-			// Quick Save (QuickSave.scene)
-			CurrentWorld->SaveScene("QuickSave");
-			UE_LOG("SceneIO: Quick Save executed");
-			SetStatusMessage("Quick Save completed successfully!");
+			// Quick Save: Scene 디렉토리에 저장
+			namespace fs = std::filesystem;
+
+			fs::path sceneDir = fs::path("Scene");
+			std::error_code ec;
+			fs::create_directories(sceneDir, ec); // 디렉토리 없으면 생성 (에러는 무시)
+
+			// "Scene/QuickSave" 를 베이스로 넘기면 내부에서 ".Scene" 확장자가 붙음
+			const FString SceneBase = (sceneDir / "QuickSave").string();
+			CurrentWorld->SaveScene(SceneBase);
+
+			UE_LOG("SceneIO: Quick Save executed to %s.Scene", SceneBase.c_str());
+			SetStatusMessage("Quick Save completed: " + SceneBase + ".Scene");
 		}
 		else
 		{
@@ -170,7 +179,7 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 				SceneName = SceneName.substr(0, LastDot);
 			}
 
-			// Save scene through World
+			// Save scene through World (원하는 전체 경로로 저장하려면 InFilePath를 그대로 넘겨도 됨)
 			CurrentWorld->SaveScene(SceneName);
 			UE_LOG("SceneIO: Scene saved successfully: %s", SceneName.c_str());
 			SetStatusMessage("Scene saved: " + SceneName);
@@ -192,24 +201,20 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 {
 	try
 	{
-		// Extract scene name from file path
+		// 파일명에서 씬 이름 추출
 		FString SceneName = InFilePath;
-
-		// Find last slash to get filename
 		size_t LastSlash = SceneName.find_last_of("\\/");
 		if (LastSlash != std::string::npos)
 		{
 			SceneName = SceneName.substr(LastSlash + 1);
 		}
-
-		// Remove .scene extension
 		size_t LastDot = SceneName.find_last_of(".");
 		if (LastDot != std::string::npos)
 		{
 			SceneName = SceneName.substr(0, LastDot);
 		}
 
-		// Load scene through World (uses SceneLoader internally)
+		// World 가져오기
 		UWorld* CurrentWorld = UUIManager::GetInstance().GetWorld();
 		if (!CurrentWorld)
 		{
@@ -217,9 +222,26 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 			return;
 		}
 
-		// Call World's LoadScene
+		// 로드 직전: Transform 위젯/선택 초기화
+		UUIManager::GetInstance().ClearTransformWidgetSelection();
+		UUIManager::GetInstance().ResetPickedActor();
+
+		// 1) 선택된 파일 경로에서 NextUUID 읽기
+		// Save 포맷상 NextUUID는 "마지막으로 사용된 UUID" → 다음 값으로 쓰려면 +1 필요
+		uint32 LoadedNextUUID = 0;
+		if (FSceneLoader::TryReadNextUUID(InFilePath, LoadedNextUUID))
+		{
+			UObject::SetNextUUID(LoadedNextUUID + 1);
+		}
+		else
+		{
+			// 실패 시 선택적으로 리셋하거나 유지 (여기선 유지)
+			// UObject::SetNextUUID(1); // 필요하면 활성화
+		}
+
+		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".scene"으로 접근)
 		CurrentWorld->LoadScene(SceneName);
-		
+
 		UE_LOG("SceneIO: Scene loaded successfully: %s", SceneName.c_str());
 		SetStatusMessage("Scene loaded successfully: " + SceneName);
 	}
@@ -238,15 +260,6 @@ void USceneIOWidget::CreateNewLevel()
 {
 	try
 	{
-		FString LevelName = FString(NewLevelNameBuffer);
-
-		// Validate input
-		if (LevelName.empty() || LevelName == " ")
-		{
-			SetStatusMessage("Please enter a valid scene name!", true);
-			return;
-		}
-
 		// Get World reference
 		UWorld* CurrentWorld = UUIManager::GetInstance().GetWorld();
 		if (!CurrentWorld)
@@ -255,14 +268,15 @@ void USceneIOWidget::CreateNewLevel()
 			return;
 		}
 
-		// Create new scene through World
+		// 로드 직전: Transform 위젯/선택 초기화
+		UUIManager::GetInstance().ClearTransformWidgetSelection();
+		UUIManager::GetInstance().ResetPickedActor();
+
+		// 새 씬 생성 (이름 입력 없이)
 		CurrentWorld->CreateNewScene();
-		
-		UE_LOG("SceneIO: New scene created: %s", LevelName.c_str());
-		SetStatusMessage("New scene created: " + LevelName);
-			
-		// Reset input field
-		strcpy_s(NewLevelNameBuffer, "NewScene");
+
+		UE_LOG("SceneIO: New scene created");
+		SetStatusMessage("New scene created");
 	}
 	catch (const std::exception& Exception)
 	{

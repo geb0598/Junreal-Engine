@@ -457,7 +457,7 @@ void UResourceManager::CreateTextBillboardTexture()
 void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBillboardVertexInfo_GPU>& vertices)
 {
     UStaticMesh* Mesh = Get<UStaticMesh>(Name);
-    Mesh->SetIndexCount(vertices.size()*2);
+    Mesh->SetIndexCount((vertices.size() / 4) * 6);
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);//리소스 데이터의 버텍스 데이터를 mappedResource에 매핑
     memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardVertexInfo_GPU) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라

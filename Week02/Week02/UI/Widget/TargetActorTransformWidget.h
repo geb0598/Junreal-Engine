@@ -26,6 +26,9 @@ public:
 	UTargetActorTransformWidget();
 	~UTargetActorTransformWidget() override;
 
+	// 선택된 액터가 외부에서 삭제되었을 때 호출되어 내부 상태를 정리
+	void OnSelectedActorCleared();
+
 private:
 	UUIManager* UIManager = nullptr;
 	AActor* SelectedActor = nullptr;
