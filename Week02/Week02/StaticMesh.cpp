@@ -1,4 +1,6 @@
-﻿#include "pch.h"
+﻿#pragma once
+
+#include "pch.h"
 #include "StaticMesh.h"
 #include "MeshLoader.h"
 #include "ResourceManager.h"
@@ -55,89 +57,112 @@ void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevi
     
     D3D11_SUBRESOURCE_DATA vinitData = {};
     HRESULT hr;
-    
+
     switch (InVertexType)
     {
     case EVertexLayoutType::PositionColor:
-    {
-        vbd.Usage = D3D11_USAGE_DEFAULT;
-        vbd.CPUAccessFlags = 0;
-        // FMeshData의 Vertices + Color를 FVertexSimple로 조합
-        std::vector<FVertexSimple> vertexArray;
-        vertexArray.reserve(InMeshData->Vertices.size());
-        
-        for (size_t i = 0; i < InMeshData->Vertices.size(); ++i)
-        {
-            FVertexSimple vertex;
-            vertex.Position = InMeshData->Vertices[i];
-            vertex.Color = (i < InMeshData->Color.size()) ? InMeshData->Color[i] : FVector4(1,1,1,1);
-            vertexArray.push_back(vertex);
-        }
-        
-        vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexSimple) * vertexArray.size());
-        vinitData.pSysMem = vertexArray.data();
-        
-        hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+        hr = D3D11RHI::CreateVertexBuffer<FVertexSimple>(InDevice, *InMeshData, &VertexBuffer);
+        assert(SUCCEEDED(hr));
         break;
-    }
     case EVertexLayoutType::PositionColorTexturNormal:
-    {
-        vbd.Usage = D3D11_USAGE_DEFAULT;
-        vbd.CPUAccessFlags = 0;
-        // FMeshData의 모든 데이터를 FVertexDynamic으로 조합
-        std::vector<FVertexDynamic> vertexArray;
-        vertexArray.reserve(InMeshData->Vertices.size());
-        
-        for (size_t i = 0; i < InMeshData->Vertices.size(); ++i)
-        {
-            FVertexDynamic vertex;
-            vertex.Position = InMeshData->Vertices[i];
-            vertex.Color = (i < InMeshData->Color.size()) ? InMeshData->Color[i] : FVector4(1,1,1,1);
-            vertex.UV = (i < InMeshData->UV.size()) ? InMeshData->UV[i] : FVector2D(0,0);
-            vertex.Normal = (i < InMeshData->Normal.size()) ? InMeshData->Normal[i] : FVector4(0,0,1,0);
-            vertexArray.push_back(vertex);
-        }
-        
-        vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexDynamic) * vertexArray.size());
-        vinitData.pSysMem = vertexArray.data();
-        
-        hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+        hr = D3D11RHI::CreateVertexBuffer<FVertexDynamic>(InDevice, *InMeshData, &VertexBuffer);
+        assert(SUCCEEDED(hr));
         break;
-    }
     case EVertexLayoutType::PositionBillBoard:
-    {
-        vbd.Usage = D3D11_USAGE_DYNAMIC;
-        vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        std::vector<FBillboardVertexInfo_GPU> vertexArray;
-        vertexArray.reserve(InMeshData->Vertices.size());//billboard world position
-        for (size_t i = 0;i < InMeshData->Vertices.size();++i)
-        {
-            FBillboardVertexInfo_GPU VertexInfo;
-            VertexInfo.Position[0] = InMeshData->Vertices[i].X;
-            VertexInfo.Position[1] = InMeshData->Vertices[i].Y;
-            VertexInfo.Position[2] = InMeshData->Vertices[i].Z;
-
-            VertexInfo.CharSize[0] = InMeshData->UV[i].X;
-            VertexInfo.CharSize[1] = InMeshData->UV[i].Y;
-
-            VertexInfo.UVRect[0] = InMeshData->Color[i].X;
-            VertexInfo.UVRect[1] = InMeshData->Color[i].Y;
-            VertexInfo.UVRect[2] = InMeshData->Color[i].Z;
-            VertexInfo.UVRect[3] = InMeshData->Color[i].W;
-            vertexArray.push_back(VertexInfo);
-        }
-        vbd.ByteWidth = static_cast<UINT>(sizeof(FBillboardVertexInfo_GPU) * vertexArray.size());
-        vinitData.pSysMem = vertexArray.data();
-
-        hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+        hr = D3D11RHI::CreateVertexBuffer<FBillboardVertexInfo_GPU>(InDevice, *InMeshData, &VertexBuffer);
+        assert(SUCCEEDED(hr));
         break;
+
     }
-    default:
-        assert(false && "Unknown VertexType");
-        return;
-    }
+     
+    //D3D11_BUFFER_DESC vbd = {};
+    //vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    //
+    //D3D11_SUBRESOURCE_DATA vinitData = {};
+    //HRESULT hr;
+    //
+    //switch (InVertexType)
+    //{
+    //case EVertexLayoutType::PositionColor:
+    //{
+    //    vbd.Usage = D3D11_USAGE_DEFAULT;
+    //    vbd.CPUAccessFlags = 0;
+    //    // FMeshData의 Vertices + Color를 FVertexSimple로 조합
+    //    std::vector<FVertexSimple> vertexArray;
+    //    vertexArray.reserve(InMeshData->Vertices.size());
+    //    
+    //    for (size_t i = 0; i < InMeshData->Vertices.size(); ++i)
+    //    {
+    //        FVertexSimple vertex;
+    //        vertex.Position = InMeshData->Vertices[i];
+    //        vertex.Color = (i < InMeshData->Color.size()) ? InMeshData->Color[i] : FVector4(1,1,1,1);
+    //        vertexArray.push_back(vertex);
+    //    }
+    //    
+    //    vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexSimple) * vertexArray.size());
+    //    vinitData.pSysMem = vertexArray.data();
+    //    
+    //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+    //    break;
+    //}
+    //case EVertexLayoutType::PositionColorTexturNormal:
+    //{
+    //    vbd.Usage = D3D11_USAGE_DEFAULT;
+    //    vbd.CPUAccessFlags = 0;
+    //    // FMeshData의 모든 데이터를 FVertexDynamic으로 조합
+    //    std::vector<FVertexDynamic> vertexArray;
+    //    vertexArray.reserve(InMeshData->Vertices.size());
+    //    
+    //    for (size_t i = 0; i < InMeshData->Vertices.size(); ++i)
+    //    {
+    //        FVertexDynamic vertex;
+    //        vertex.Position = InMeshData->Vertices[i];
+    //        vertex.Color = (i < InMeshData->Color.size()) ? InMeshData->Color[i] : FVector4(1,1,1,1);
+    //        vertex.UV = (i < InMeshData->UV.size()) ? InMeshData->UV[i] : FVector2D(0,0);
+    //        vertex.Normal = (i < InMeshData->Normal.size()) ? InMeshData->Normal[i] : FVector4(0,0,1,0);
+    //        vertexArray.push_back(vertex);
+    //    }
+    //    
+    //    vbd.ByteWidth = static_cast<UINT>(sizeof(FVertexDynamic) * vertexArray.size());
+    //    vinitData.pSysMem = vertexArray.data();
+    //    
+    //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+    //    break;
+    //}
+    //case EVertexLayoutType::PositionBillBoard:
+    //{
+    //    vbd.Usage = D3D11_USAGE_DYNAMIC;
+    //    vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    //    std::vector<FBillboardVertexInfo_GPU> vertexArray;
+    //    vertexArray.reserve(InMeshData->Vertices.size());//billboard world position
+    //    for (size_t i = 0;i < InMeshData->Vertices.size();++i)
+    //    {
+    //        FBillboardVertexInfo_GPU VertexInfo;
+    //        VertexInfo.Position[0] = InMeshData->Vertices[i].X;
+    //        VertexInfo.Position[1] = InMeshData->Vertices[i].Y;
+    //        VertexInfo.Position[2] = InMeshData->Vertices[i].Z;
+    //
+    //        VertexInfo.CharSize[0] = InMeshData->UV[i].X;
+    //        VertexInfo.CharSize[1] = InMeshData->UV[i].Y;
+    //
+    //        VertexInfo.UVRect[0] = InMeshData->Color[i].X;
+    //        VertexInfo.UVRect[1] = InMeshData->Color[i].Y;
+    //        VertexInfo.UVRect[2] = InMeshData->Color[i].Z;
+    //        VertexInfo.UVRect[3] = InMeshData->Color[i].W;
+    //        vertexArray.push_back(VertexInfo);
+    //    }
+    //    vbd.ByteWidth = static_cast<UINT>(sizeof(FBillboardVertexInfo_GPU) * vertexArray.size());
+    //    vinitData.pSysMem = vertexArray.data();
+    //
+    //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+    //    break;
+    //}
+    //default:
+    //    assert(false && "Unknown VertexType");
+    //    return;
+    //}
     
-    assert(SUCCEEDED(hr));
+    //assert(SUCCEEDED(hr));
 }
 
 void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
@@ -202,40 +227,40 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
         hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
         break;
     }
-    case EVertexLayoutType::PositionBillBoard:
-    {
-        vbd.Usage = D3D11_USAGE_DYNAMIC;
-        vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-        std::vector<FBillboardVertexInfo_GPU> vertexArray;
-        vertexArray.reserve(InStaticMesh->Vertices.size());
-
-        for (size_t i = 0; i < InStaticMesh->Vertices.size(); ++i)
-        {
-            const FNormalVertex& src = InStaticMesh->Vertices[i];
-
-            FBillboardVertexInfo_GPU info{};
-            info.Position[0] = src.pos.X;
-            info.Position[1] = src.pos.Y;
-            info.Position[2] = src.pos.Z;
-
-            info.CharSize[0] = src.tex.X;
-            info.CharSize[1] = src.tex.Y;
-
-            info.UVRect[0] = src.color.X;
-            info.UVRect[1] = src.color.Y;
-            info.UVRect[2] = src.color.Z;
-            info.UVRect[3] = src.color.W;
-
-            vertexArray.push_back(info);
-        }
-
-        vbd.ByteWidth = static_cast<UINT>(sizeof(FBillboardVertexInfo_GPU) * vertexArray.size());
-        vinitData.pSysMem = vertexArray.data();
-
-        hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
-        break;
-    }
+    //case EVertexLayoutType::PositionBillBoard:
+    //{
+    //    vbd.Usage = D3D11_USAGE_DYNAMIC;
+    //    vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    //
+    //    std::vector<FBillboardVertexInfo_GPU> vertexArray;
+    //    vertexArray.reserve(InStaticMesh->Vertices.size());
+    //
+    //    for (size_t i = 0; i < InStaticMesh->Vertices.size(); ++i)
+    //    {
+    //        const FNormalVertex& src = InStaticMesh->Vertices[i];
+    //
+    //        FBillboardVertexInfo_GPU info{};
+    //        info.Position[0] = src.pos.X;
+    //        info.Position[1] = src.pos.Y;
+    //        info.Position[2] = src.pos.Z;
+    //
+    //        info.CharSize[0] = src.tex.X;
+    //        info.CharSize[1] = src.tex.Y;
+    //
+    //        info.UVRect[0] = src.color.X;
+    //        info.UVRect[1] = src.color.Y;
+    //        info.UVRect[2] = src.color.Z;
+    //        info.UVRect[3] = src.color.W;
+    //
+    //        vertexArray.push_back(info);
+    //    }
+    //
+    //    vbd.ByteWidth = static_cast<UINT>(sizeof(FBillboardVertexInfo_GPU) * vertexArray.size());
+    //    vinitData.pSysMem = vertexArray.data();
+    //
+    //    hr = InDevice->CreateBuffer(&vbd, &vinitData, &VertexBuffer);
+    //    break;
+    //}
     default:
         assert(false && "Unknown VertexType");
         return;
