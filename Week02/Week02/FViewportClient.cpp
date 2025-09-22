@@ -7,7 +7,7 @@
 #include "Picking.h"
 #include "SelectionManager.h"
 #include"GizmoActor.h"
-
+FVector FViewportClient::CameraAddPosition{};
 FViewportClient::FViewportClient()
 {
     ViewportType = EViewportType::Perspective;
@@ -93,35 +93,35 @@ void FViewportClient::SetupCameraMode()
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
             break;
         case EViewportType::Orthographic_Top:
-            
-            Camera->SetActorLocation({ 0, 0, 1000  } );
+
+            Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, 1000  });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
             Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Bottom:
 
-            Camera->SetActorLocation({ 0, 0, -1000 });
+            Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, -1000 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
             Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Left:
-            Camera->SetActorLocation({ 0, 1000 , 0 });
+            Camera->SetActorLocation({ CameraAddPosition.X, 1000 , CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
             Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Right:
-            Camera->SetActorLocation({ 0, 1000 , 0 });
+            Camera->SetActorLocation({ CameraAddPosition.X, -1000, CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
             Camera->GetCameraComponent()->SetFOV(100);
             break;
 
         case EViewportType::Orthographic_Front:
-            Camera->SetActorLocation({ -1000, 0, 0 });
+            Camera->SetActorLocation({ -1000 , CameraAddPosition.Y, CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
             Camera->GetCameraComponent()->SetFOV(100);
             break;
         case EViewportType::Orthographic_Back:
-            Camera->SetActorLocation({ 1000, 0, 0 });
+            Camera->SetActorLocation({ 1000 , CameraAddPosition.Y, CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
             Camera->GetCameraComponent()->SetFOV(100);
             break;
@@ -133,11 +133,39 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
 
+    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
+    {
+        int32 deltaX = X - MouseLastX;
+        int32 deltaY = Y - MouseLastY;
+
+        if (Camera && (deltaX != 0 || deltaY != 0))
+        {
+            float moveSpeed = 0.1f; // 픽셀 이동량을 월드 좌표로 바꿀 스케일
+
+            // 직교 투영에서는 회전없이 그냥 화면 평면에 맞게 이동
+            FVector right = Camera->GetRight(); // 수평 방향
+            FVector up = Camera->GetUp();    // 수직 방향
+
+            CameraAddPosition = CameraAddPosition - right * (deltaX * moveSpeed)
+                + up * (deltaY * moveSpeed);
+
+            // 카메라 위치 즉시 업데이트
+            SetupCameraMode();
+        }
+
+        MouseLastX = X;
+        MouseLastY = Y;
+    }
 }
 void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button)
 {
     if (!Viewport || !World || Button != 0) // Only handle left mouse button
         return;
+
+    // 마우스 위치 초기화 및 드래그 시작
+    MouseLastX = X;
+    MouseLastY = Y;
+    bIsMouseButtonDown = true;
 
     // Get viewport size
     FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
@@ -188,6 +216,14 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
             // Clear selection if nothing was picked
             USelectionManager::GetInstance().ClearSelection();
         }
+    }
+}
+
+void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button)
+{
+    if (Button == 0) // Left mouse button
+    {
+        bIsMouseButtonDown = false;
     }
 }
 
