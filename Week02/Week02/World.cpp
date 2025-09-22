@@ -93,10 +93,8 @@ void UWorld::Initialize()
 {
 	FObjManager::Preload();
 
-    // === 씬 로드를 UWorld::LoadScene으로 위임 ===
-    // - 확장자는 LoadScene 내부에서 ".scene"을 자동으로 붙여서 로드함
-    // - 기존 수동 액터 생성/컴포넌트 부착 로직 제거
-    LoadScene("WorldData");
+	// 새 씬 생성
+	CreateNewScene();
 
 	InitializeMainCamera();
     InitializeGrid();
