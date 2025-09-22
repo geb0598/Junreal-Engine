@@ -31,7 +31,6 @@ UControlPanelWindow::UControlPanelWindow()
 	SetConfig(Config);
 
 	AddWidget(NewObject<UFPSWidget>());
-	// AddWidget(NewObject<UTargetActorTransformWidget>());
 	AddWidget(NewObject<UActorTerminationWidget>());
 	AddWidget(NewObject<UPrimitiveSpawnWidget>());
 	AddWidget(NewObject<USceneIOWidget>());

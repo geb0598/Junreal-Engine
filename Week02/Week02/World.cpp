@@ -144,7 +144,7 @@ void UWorld::InitializeMainCamera()
 
 void UWorld::InitializeGrid()
 {
-    GridActor = SpawnActor<AGridActor>(FTransform());
+    GridActor = NewObject<AGridActor>();
     GridActor->Initialize();
   
 
