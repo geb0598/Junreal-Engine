@@ -7,6 +7,27 @@
 
 TMap<FString, FStaticMesh*> FObjManager::ObjStaticMeshMap;
 
+void FObjManager::Preload()
+{
+    LoadObjStaticMesh("Data/Cube.obj");
+    LoadObjStaticMesh("Data/Sphere.obj");
+    LoadObjStaticMesh("Data/Triangle.obj");
+    LoadObjStaticMesh("Data/Arrow.obj");
+    LoadObjStaticMesh("Data/RotationHandle.obj");
+    LoadObjStaticMesh("Data/ScaleHandle.obj");
+    // FObjManager::LoadObjStaticMesh("Data/car.obj");
+}
+
+void FObjManager::Clear()
+{
+    for (auto& Pair : ObjStaticMeshMap)
+    {
+        delete Pair.second;
+    }
+
+    ObjStaticMeshMap.Empty();
+}
+
 FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
 {
     // 2) 캐시 히트 시 즉시 반환 (Find는 FStaticMesh** 반환)

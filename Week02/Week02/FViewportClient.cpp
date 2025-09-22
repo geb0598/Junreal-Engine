@@ -29,6 +29,7 @@ void FViewportClient::Tick(float DeltaTime) {
 }
 void FViewportClient::Draw(FViewport* Viewport)
 {
+
     if (!Viewport || !World) return;
 
     // 뷰포트의 실제 크기로 aspect ratio 계산
@@ -38,6 +39,7 @@ void FViewportClient::Draw(FViewport* Viewport)
  
     FMatrix ViewMatrix{};
     FMatrix ProjectionMatrix{};
+    ACameraActor* SceneCamera=nullptr;
     switch (ViewportType)
     {
     case EViewportType::Perspective:
@@ -47,7 +49,7 @@ void FViewportClient::Draw(FViewport* Viewport)
        
         ViewMatrix = MainCamera->GetViewMatrix();
         ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
-        Camera = MainCamera;
+        SceneCamera = MainCamera;
       /*  if (World)
         {
             World->SetViewModeIndex(ViewModeIndex);
@@ -63,11 +65,12 @@ void FViewportClient::Draw(FViewport* Viewport)
     case EViewportType::Orthographic_Bottom:
     case EViewportType::Orthographic_Right:
     {
-        Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
+        SceneCamera = Camera;
+        SceneCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
        
         SetupCameraMode();
-        ViewMatrix = Camera->GetViewMatrix();
-        ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+        ViewMatrix = SceneCamera->GetViewMatrix();
+        ProjectionMatrix = SceneCamera->GetProjectionMatrix(ViewportAspectRatio);
      
         break;
     }
@@ -76,8 +79,8 @@ void FViewportClient::Draw(FViewport* Viewport)
     if (World)
     {
         World->SetViewModeIndex(ViewModeIndex);
-        World->RenderViewports(Camera, Viewport);
-        World->GetGizmoActor()->Render(Camera, Viewport);
+        World->RenderViewports(SceneCamera, Viewport);
+        World->GetGizmoActor()->Render(SceneCamera, Viewport);
     }
   
 }
@@ -89,9 +92,10 @@ void FViewportClient::SetupCameraMode()
     switch (ViewportType)
     {
         case EViewportType::Perspective:
-          
-            Camera->SetActorLocation({ 0, 0, 0 });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+            if(World)
+            //Camera = World->GetCameraActor();
+           // Camera->SetActorLocation({ 0, 0, 0 });
+            //Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
             break;
         case EViewportType::Orthographic_Top:
 

@@ -560,7 +560,9 @@ private:
     static TMap<FString, FStaticMesh*> ObjStaticMeshMap;
 
 public:
-    static FStaticMesh* LoadObjStaticMeshAsset(const FString& PathFileName);
+	static void Preload();
+	static void Clear();
 
+    static FStaticMesh* LoadObjStaticMeshAsset(const FString& PathFileName);
     static UStaticMesh* LoadObjStaticMesh(const FString& PathFileName);
 };
