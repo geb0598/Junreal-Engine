@@ -169,6 +169,8 @@ void UTargetActorTransformWidget::RenderWidget()
 		// 액터 이름 표시 (캐시된 이름 사용)
 		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", 
 		                   CachedActorName.c_str());
+		// 선택된 액터 UUID 표시(전역 고유 ID)
+		ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));
 		ImGui::Spacing();
 		
 		// Location 편집
