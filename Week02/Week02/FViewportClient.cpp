@@ -12,7 +12,7 @@ float FViewportClient::CameraWheelDelta{};
 FViewportClient::FViewportClient()
 {
     ViewportType = EViewportType::Perspective;
-    
+
 
     // 직교 뷰별 기본 카메라 설정
 
@@ -24,38 +24,36 @@ FViewportClient::~FViewportClient()
 {
 }
 void FViewportClient::Tick(float DeltaTime) {
-  
+
 
 }
 void FViewportClient::Draw(FViewport* Viewport)
 {
-
     if (!Viewport || !World) return;
 
     // 뷰포트의 실제 크기로 aspect ratio 계산
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
     if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
 
- 
+
     FMatrix ViewMatrix{};
     FMatrix ProjectionMatrix{};
-    ACameraActor* SceneCamera=nullptr;
     switch (ViewportType)
     {
     case EViewportType::Perspective:
     {
         ACameraActor* MainCamera = World->GetCameraActor();
         MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
-       
+
         ViewMatrix = MainCamera->GetViewMatrix();
         ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
-        SceneCamera = MainCamera;
-      /*  if (World)
-        {
-            World->SetViewModeIndex(ViewModeIndex);
-            World->RenderViewports(MainCamera, Viewport);
-            World->GetGizmoActor()->Render(MainCamera, Viewport);
-        }*/
+        Camera = MainCamera;
+        /*  if (World)
+          {
+              World->SetViewModeIndex(ViewModeIndex);
+              World->RenderViewports(MainCamera, Viewport);
+              World->GetGizmoActor()->Render(MainCamera, Viewport);
+          }*/
         break;
     }
     case EViewportType::Orthographic_Top:
@@ -65,13 +63,12 @@ void FViewportClient::Draw(FViewport* Viewport)
     case EViewportType::Orthographic_Bottom:
     case EViewportType::Orthographic_Right:
     {
-        SceneCamera = Camera;
-        SceneCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
-       
+        Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
+
         SetupCameraMode();
-        ViewMatrix = SceneCamera->GetViewMatrix();
-        ProjectionMatrix = SceneCamera->GetProjectionMatrix(ViewportAspectRatio);
-     
+        ViewMatrix = Camera->GetViewMatrix();
+        ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+
         break;
     }
     }
@@ -79,10 +76,10 @@ void FViewportClient::Draw(FViewport* Viewport)
     if (World)
     {
         World->SetViewModeIndex(ViewModeIndex);
-        World->RenderViewports(SceneCamera, Viewport);
-        World->GetGizmoActor()->Render(SceneCamera, Viewport);
+        World->RenderViewports(Camera, Viewport);
+        World->GetGizmoActor()->Render(Camera, Viewport);
     }
-  
+
 }
 
 
@@ -91,56 +88,55 @@ void FViewportClient::SetupCameraMode()
 {
     switch (ViewportType)
     {
-        case EViewportType::Perspective:
-            if(World)
-            //Camera = World->GetCameraActor();
-           // Camera->SetActorLocation({ 0, 0, 0 });
-            //Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
-            break;
-        case EViewportType::Orthographic_Top:
+    case EViewportType::Perspective:
 
-            Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, 1000  });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
-            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
-            break;
-        case EViewportType::Orthographic_Bottom:
+        Camera->SetActorLocation({ 0, 0, 0 });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+        break;
+    case EViewportType::Orthographic_Top:
 
-            Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, -1000 });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
-            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
-            break;
-        case EViewportType::Orthographic_Left:
-            Camera->SetActorLocation({ CameraAddPosition.X, 1000 , CameraAddPosition.Z });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
-            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
-            break;
-        case EViewportType::Orthographic_Right:
-            Camera->SetActorLocation({ CameraAddPosition.X, -1000, CameraAddPosition.Z });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
-            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
-            break;
+        Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, 1000 });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
+        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        break;
+    case EViewportType::Orthographic_Bottom:
 
-        case EViewportType::Orthographic_Front:
-            Camera->SetActorLocation({ -1000 , CameraAddPosition.Y, CameraAddPosition.Z });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
-            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
-            break;
-        case EViewportType::Orthographic_Back:
-            Camera->SetActorLocation({ 1000 , CameraAddPosition.Y, CameraAddPosition.Z });
-            Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
-            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
-            break;
+        Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, -1000 });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
+        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        break;
+    case EViewportType::Orthographic_Left:
+        Camera->SetActorLocation({ CameraAddPosition.X, 1000 , CameraAddPosition.Z });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
+        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        break;
+    case EViewportType::Orthographic_Right:
+        Camera->SetActorLocation({ CameraAddPosition.X, -1000, CameraAddPosition.Z });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
+        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        break;
+
+    case EViewportType::Orthographic_Front:
+        Camera->SetActorLocation({ -1000 , CameraAddPosition.Y, CameraAddPosition.Z });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        break;
+    case EViewportType::Orthographic_Back:
+        Camera->SetActorLocation({ 1000 , CameraAddPosition.Y, CameraAddPosition.Z });
+        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
+        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        break;
 
 
     }
 }
 void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
-    
+
     MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
 
-    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
+    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsDragging()) // 직교투영이고 마우스 버튼이 눌려있을 때
     {
         int32 deltaX = X - MouseLastX;
         int32 deltaY = Y - MouseLastY;
@@ -189,7 +185,7 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     //UE_LOG(debugBuf);
 
     // Get the appropriate camera for this viewport
-  
+
 
     if (Camera)
     {
@@ -202,7 +198,7 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
 
         PickedActor = CPickingSystem::PerformViewportPicking(AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
-        
+
 
         if (PickedActor)
         {
@@ -219,7 +215,7 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
             if (World->GetGizmoActor()->GetbIsHovering()) {
                 return;
             }
-            UUIManager::GetInstance().ResetPickedActor(); 
+            UUIManager::GetInstance().ResetPickedActor();
             // Clear selection if nothing was picked
             USelectionManager::GetInstance().ClearSelection();
         }
@@ -240,11 +236,11 @@ void FViewportClient::MouseWheel()
 
     UCameraComponent* CameraComponent = Camera->GetCameraComponent();
     if (!CameraComponent) return;
-    float WheelDelta=UInputManager::GetInstance().GetMouseWheelDelta();
+    float WheelDelta = UInputManager::GetInstance().GetMouseWheelDelta();
     // FOV 변경 속도 조절
     float FOVChangeSpeed = 3.0f;
     float currentFOV = CameraComponent->GetFOV();
-    CameraWheelDelta +=-(WheelDelta * FOVChangeSpeed);
+    CameraWheelDelta += -(WheelDelta * FOVChangeSpeed);
 
 
 }
