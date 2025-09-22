@@ -40,10 +40,11 @@ public:
 
     SWindow* SideLT = nullptr;  // Left or Top
     SWindow* SideRB = nullptr;  // Right or Bottom
+    float SplitRatio = 0.5f;    // 분할 비율
 protected:
 
 
-    float SplitRatio = 0.5f;    // 분할 비율
+   
     int SplitterThickness = 8;  // 스플리터 두께
 
     bool bIsDragging = false;
