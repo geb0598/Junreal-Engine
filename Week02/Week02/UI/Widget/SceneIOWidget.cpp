@@ -270,6 +270,10 @@ void USceneIOWidget::CreateNewLevel()
 			return;
 		}
 
+		// 로드 직전: Transform 위젯/선택 초기화
+		UUIManager::GetInstance().ClearTransformWidgetSelection();
+		UUIManager::GetInstance().ResetPickedActor();
+
 		// Create new scene through World
 		CurrentWorld->CreateNewScene();
 		
