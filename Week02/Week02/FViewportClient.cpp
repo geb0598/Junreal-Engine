@@ -8,6 +8,7 @@
 #include "SelectionManager.h"
 #include"GizmoActor.h"
 FVector FViewportClient::CameraAddPosition{};
+float FViewportClient::CameraWheelDelta{};
 FViewportClient::FViewportClient()
 {
     ViewportType = EViewportType::Perspective;
@@ -96,34 +97,34 @@ void FViewportClient::SetupCameraMode()
 
             Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, 1000  });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
-            Camera->GetCameraComponent()->SetFOV(100);
+            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
             break;
         case EViewportType::Orthographic_Bottom:
 
             Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, -1000 });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
-            Camera->GetCameraComponent()->SetFOV(100);
+            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
             break;
         case EViewportType::Orthographic_Left:
             Camera->SetActorLocation({ CameraAddPosition.X, 1000 , CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
-            Camera->GetCameraComponent()->SetFOV(100);
+            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
             break;
         case EViewportType::Orthographic_Right:
             Camera->SetActorLocation({ CameraAddPosition.X, -1000, CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
-            Camera->GetCameraComponent()->SetFOV(100);
+            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
             break;
 
         case EViewportType::Orthographic_Front:
             Camera->SetActorLocation({ -1000 , CameraAddPosition.Y, CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
-            Camera->GetCameraComponent()->SetFOV(100);
+            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
             break;
         case EViewportType::Orthographic_Back:
             Camera->SetActorLocation({ 1000 , CameraAddPosition.Y, CameraAddPosition.Z });
             Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
-            Camera->GetCameraComponent()->SetFOV(100);
+            Camera->GetCameraComponent()->SetFOV(100+ CameraWheelDelta);
             break;
 
 
@@ -131,6 +132,8 @@ void FViewportClient::SetupCameraMode()
 }
 void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
+    
+    MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
 
     if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
@@ -225,5 +228,20 @@ void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32
     {
         bIsMouseButtonDown = false;
     }
+}
+
+void FViewportClient::MouseWheel()
+{
+    if (!Camera) return;
+
+    UCameraComponent* CameraComponent = Camera->GetCameraComponent();
+    if (!CameraComponent) return;
+    float WheelDelta=UInputManager::GetInstance().GetMouseWheelDelta();
+    // FOV 변경 속도 조절
+    float FOVChangeSpeed = 3.0f;
+    float currentFOV = CameraComponent->GetFOV();
+    CameraWheelDelta +=-(WheelDelta * FOVChangeSpeed);
+
+
 }
 

@@ -14,6 +14,7 @@ UInputManager::UInputManager()
     , MousePosition(0.0f, 0.0f)
     , PreviousMousePosition(0.0f, 0.0f)
     , ScreenSize(1.0f, 1.0f)
+    , MouseWheelDelta(0.0f)
 {
     // 배열 초기화
     memset(MouseButtons, false, sizeof(MouseButtons));
@@ -67,6 +68,9 @@ void UInputManager::Update()
 {
     // 이전 프레임 상태 저장
     PreviousMousePosition = MousePosition;
+
+    // 마우스 휠 델타 초기화 (프레임마다 리셋)
+    MouseWheelDelta = 0.0f;
     
     // 매 프레임마다 실시간 마우스 위치 업데이트
     if (WindowHandle)
@@ -234,7 +238,23 @@ void UInputManager::ProcessMessage(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 UpdateMouseButton(XButton2, false);
         }
         break;
-        
+
+    case WM_MOUSEWHEEL:
+        if (!imguiWantsMouse)
+        {
+            // 휠 델타값 추출 (HIWORD에서 signed short로 캐스팅)
+            short wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+            MouseWheelDelta = static_cast<float>(wheelDelta) / WHEEL_DELTA; // 정규화 (-1.0 ~ 1.0)
+
+            if (bEnableDebugLogging)
+            {
+                char debugMsg[64];
+                sprintf_s(debugMsg, "InputManager: Mouse Wheel - Delta: %.2f\n", MouseWheelDelta);
+                UE_LOG(debugMsg);
+            }
+        }
+        break;
+
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
         if (!imguiWantsKeyboard)  // ImGui가 키보드를 사용하지 않을 때만

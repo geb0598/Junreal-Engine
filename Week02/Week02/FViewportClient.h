@@ -38,6 +38,7 @@ public:
     virtual void MouseMove(FViewport* Viewport, int32 X, int32 Y);
     virtual void MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button);
     virtual void MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button);
+    virtual void MouseWheel();
     virtual void KeyDown(FViewport* Viewport, int32 KeyCode) {}
     virtual void KeyUp(FViewport* Viewport, int32 KeyCode) {}
 
@@ -71,7 +72,7 @@ protected:
     int32 MouseLastY{};
     bool bIsMouseButtonDown = false;
     static FVector CameraAddPosition;
-
+    static float CameraWheelDelta;
 
     // 직교 뷰용 카메라 설정
     uint32 OrthographicAddXPosition;

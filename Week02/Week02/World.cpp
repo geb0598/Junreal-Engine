@@ -418,8 +418,7 @@ void UWorld::Tick(float DeltaSeconds)
     ProcessActorSelection();
     ProcessViewportInput();
     //Input Manager가 카메라 후에 업데이트 되어야함
-    InputManager.Update();
-    UIManager.Update(DeltaSeconds);
+   
 
     // 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
     if (UIManager.IsUsingMainViewport())
@@ -437,6 +436,8 @@ void UWorld::Tick(float DeltaSeconds)
             MultiViewport->OnUpdate();
         }
     }
+    InputManager.Update();
+    UIManager.Update(DeltaSeconds);
 }
 
 float UWorld::GetTimeSeconds() const
@@ -648,73 +649,7 @@ void UWorld::SaveScene(const FString& SceneName)
     FSceneLoader::Save(Primitives, SceneName);
 }
 
-//
-//void UWorld::RenderGizmoActor(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
-//{
-//    if (!GizmoActor || !Renderer || !MainCameraActor) return;
-//    
-//    if (!SelectionManager.HasSelection()) return;
-//  
-//    FMatrix ModelMatrix;
-//    FVector rgb(1.0f, 1.0f, 1.0f);
-//    
-//    TArray<USceneComponent*>* Components = GizmoActor->GetGizmoComponents();
-//    if (!Components) return;
-//    
-//    for (uint32 i = 0; i < Components->Num(); ++i)
-//    {
-//        USceneComponent* Component = (*Components)[i];
-//        if (!Component) continue;
-//        
-//        // 컴포넌트 활성 상태 확인
-//        if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-//        {
-//            if (!ActorComp->IsActive()) continue;
-//        }
-//        
-//        ModelMatrix = Component->GetWorldMatrix();
-//        Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
-//
-//        // 드래그 중이면 드래그하는 축만 하이라이트
-//        if (InputManager.GetIsGizmoDragging())
-//        {
-//            if (InputManager.GetDraggingAxis() == i + 1)
-//            {
-//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-//            }
-//            else
-//            {
-//                Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-//            }
-//        }
-//        // 드래그 중이 아니면 호버링 한 축만 하이라이트
-//        else if (CPickingSystem::IsHoveringGizmo(GizmoActor, MainCameraActor) == i + 1)
-//        {
-//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
-//        }
-//        else
-//        {
-//            Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
-//        }
-//
-//        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-//        {
-//            Renderer->SetViewModeType(EViewModeIndex::VMI_Unlit);
-//            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-//            Renderer->OMSetBlendState(true); // 필요 시
-//
-//            Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-//            // 상태 복구
-//            Renderer->OMSetBlendState(false);
-//            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-//            Renderer->SetViewModeType(ViewModeIndex);
-//        }
-//    }
-//    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-//    
-//    // 알파 블랜딩을 위한 blendstate
-//    Renderer->OMSetBlendState(true);
-//}
+
 
 AGizmoActor* UWorld::GetGizmoActor()
 {
