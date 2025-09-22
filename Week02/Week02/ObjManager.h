@@ -75,6 +75,9 @@ public:
         uint32 TotalVerts = 0; // 현재까지 파싱된 vertex 개수(중복 제거 후)
         uint32 MeshTriangles = 0; // 현재까지 파싱된 Triangle 개수
 
+        size_t pos = InFileName.find_last_of("/\\");
+        std::string objDir = (pos == std::string::npos) ? "" : InFileName.substr(0, pos + 1);
+
         std::ifstream FileIn(InFileName.c_str());
 
         if (!FileIn)
@@ -104,7 +107,10 @@ public:
                 wss >> vx >> vy >> vz;
 
                 if (bIsRHCoordSys)
-                    OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
+                {
+                    //OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
+                    OutObjInfo->Positions.push_back(FVector(vz, -vy, vx));
+                }
                 else
                     OutObjInfo->Positions.push_back(FVector(vx, vy, vz));
             }
@@ -201,7 +207,15 @@ public:
             }
             else if (line.rfind("mtllib ", 0) == 0)
             {
-                MtlFileName = line.substr(7);
+                MtlFileName = objDir + line.substr(7);
+                /*if (line.substr(7).rfind("Data/") != 0)
+                {
+                    MtlFileName = "Data/" + line.substr(7);
+                }
+                else
+                {
+                    MtlFileName = line.substr(7);
+                }*/
             }
             else if (line.rfind("usemtl ", 0) == 0)
             {
@@ -359,27 +373,82 @@ public:
             }
             else if (line.rfind("map_Kd ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].DiffuseTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                std::replace(TextureFileName.begin(), TextureFileName.end(), '\\', '/');
+                OutMaterialInfos[MatCount - 1].DiffuseTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_d ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].TransparencyTextureFileName = line.substr(6);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].TransparencyTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ka ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].AmbientTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].AmbientTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ks ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].SpecularTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].SpecularTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ns ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].SpecularExponentTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].SpecularExponentTextureFileName = TextureFileName;
             }
             else if (line.rfind("map_Ke ", 0) == 0)
             {
-                OutMaterialInfos[MatCount - 1].EmissiveTextureFileName = line.substr(7);
+                FString TextureFileName;
+                if (line.substr(7).rfind(objDir) != 0)
+                {
+                    TextureFileName = objDir + line.substr(7);
+                }
+                else
+                {
+                    TextureFileName = line.substr(7);
+                }
+                OutMaterialInfos[MatCount - 1].EmissiveTextureFileName = TextureFileName;
             }
             else if (line.rfind("newmtl ", 0) == 0)
             {
@@ -418,51 +487,108 @@ public:
         }
     }
 
+    struct VertexKey
+    {
+        int PosIndex;
+        int TexIndex;
+        int NormalIndex;
+
+        bool operator==(const VertexKey& Other) const
+        {
+            return PosIndex == Other.PosIndex &&
+                TexIndex == Other.TexIndex &&
+                NormalIndex == Other.NormalIndex;
+        }
+    };
+
+    struct VertexKeyHash
+    {
+        size_t operator()(const VertexKey& Key) const
+        {
+            // 간단한 해시 조합
+            return ((size_t)Key.PosIndex * 73856093) ^
+                ((size_t)Key.TexIndex * 19349663) ^
+                ((size_t)Key.NormalIndex * 83492791);
+        }
+    };
+
     static void ConvertToStaticMesh(const FObjInfo& InObjInfo, const TArray<FObjMaterialInfo>& InMaterialInfos, FStaticMesh* const OutStaticMesh)
     {
         OutStaticMesh->PathFileName = InObjInfo.ObjFileName;
-
-        // 정점 및 인덱스 정보 정리
         uint32 NumDuplicatedVertex = InObjInfo.PositionIndices.size();
+
+        // 해시로 빠르게 중복찾기
+        std::unordered_map<VertexKey, uint32, VertexKeyHash> VertexMap;
         for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
         {
-            bool bIsDuplicate = false;
-            /*for (int PreIndex = 0; PreIndex < CurIndex; ++PreIndex)
-            {
-                if (InObjInfo.PositionIndices[CurIndex] == InObjInfo.PositionIndices[PreIndex] && InObjInfo.TexCoordIndices[CurIndex] == InObjInfo.TexCoordIndices[PreIndex])
-                {
-                    OutStaticMesh->Indices.push_back(PreIndex);
-                    bIsDuplicate = true;
-                    break;
-                }
-            }*/
+            VertexKey Key{ InObjInfo.PositionIndices[CurIndex],
+                           InObjInfo.TexCoordIndices[CurIndex],
+                           InObjInfo.NormalIndices[CurIndex] };
 
-            const uint64 VertexLen = OutStaticMesh->Vertices.size();
-            for (uint32 VertexIndex = 0; VertexIndex < VertexLen; ++VertexIndex)
+            auto It = VertexMap.find(Key);
+            if (It != VertexMap.end())
             {
-                if (OutStaticMesh->Vertices[VertexIndex].pos == InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]] && OutStaticMesh->Vertices[VertexIndex].tex == InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]])
-                {
-                    OutStaticMesh->Indices.push_back(VertexIndex);
-                    bIsDuplicate = true;
-                    break;
-                }
+                // 이미 존재하는 정점
+                OutStaticMesh->Indices.push_back(It->second);
             }
-
-            if (!bIsDuplicate)
+            else
             {
-                FVector Pos = InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]];
-                FVector Normal = InObjInfo.Normals[InObjInfo.NormalIndices[CurIndex]];
-                FVector2D TexCoord = InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]];
-                FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f); // default color
-                FNormalVertex NormalVertex = FNormalVertex(Pos, Normal, Color, TexCoord);
+                // 새 정점 추가
+                FVector Pos = InObjInfo.Positions[Key.PosIndex];
+                FVector Normal = InObjInfo.Normals[Key.NormalIndex];
+                FVector2D TexCoord = InObjInfo.TexCoords[Key.TexIndex];
+                FVector4 Color(1, 1, 1, 1);
+
+                FNormalVertex NormalVertex(Pos, Normal, Color, TexCoord);
                 OutStaticMesh->Vertices.push_back(NormalVertex);
 
-                OutStaticMesh->Indices.push_back(OutStaticMesh->Vertices.size() - 1);
+                uint32 NewIndex = OutStaticMesh->Vertices.size() - 1;
+                OutStaticMesh->Indices.push_back(NewIndex);
+
+                VertexMap[Key] = NewIndex;
             }
         }
 
+        // 정점 및 인덱스 정보 정리
+        //for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
+        //{
+        //    bool bIsDuplicate = false;
+        //    /*for (int PreIndex = 0; PreIndex < CurIndex; ++PreIndex)
+        //    {
+        //        if (InObjInfo.PositionIndices[CurIndex] == InObjInfo.PositionIndices[PreIndex] && InObjInfo.TexCoordIndices[CurIndex] == InObjInfo.TexCoordIndices[PreIndex])
+        //        {
+        //            OutStaticMesh->Indices.push_back(PreIndex);
+        //            bIsDuplicate = true;
+        //            break;
+        //        }
+        //    }*/
+
+        //    const uint64 VertexLen = OutStaticMesh->Vertices.size();
+        //    for (uint32 VertexIndex = 0; VertexIndex < VertexLen; ++VertexIndex)
+        //    {
+        //        if (OutStaticMesh->Vertices[VertexIndex].pos == InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]] && OutStaticMesh->Vertices[VertexIndex].tex == InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]])
+        //        {
+        //            OutStaticMesh->Indices.push_back(VertexIndex);
+        //            bIsDuplicate = true;
+        //            break;
+        //        }
+        //    }
+
+        //    if (!bIsDuplicate)
+        //    {
+        //        FVector Pos = InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]];
+        //        FVector Normal = InObjInfo.Normals[InObjInfo.NormalIndices[CurIndex]];
+        //        FVector2D TexCoord = InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]];
+        //        FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f); // default color
+        //        FNormalVertex NormalVertex = FNormalVertex(Pos, Normal, Color, TexCoord);
+        //        OutStaticMesh->Vertices.push_back(NormalVertex);
+
+        //        OutStaticMesh->Indices.push_back(OutStaticMesh->Vertices.size() - 1);
+        //    }
+        //}
+
         // Material 정보 정리
-        /*if (!InObjInfo.bHasMtl)
+        if (!InObjInfo.bHasMtl)
         {
             OutStaticMesh->bHasMaterial = false;
             return;
@@ -471,12 +597,17 @@ public:
         OutStaticMesh->bHasMaterial = true;
         uint32 NumGroup = InObjInfo.MaterialNames.size();
         OutStaticMesh->GroupInfos.resize(NumGroup);
+        if (InMaterialInfos.size() == 0)
+        {
+            UE_LOG("\'%s\''s InMaterialInfos's size is 0!");
+            return;
+        }
         for (int i = 0; i < NumGroup; ++i)
         {
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
-        }*/
+        }
     }
 
 private:

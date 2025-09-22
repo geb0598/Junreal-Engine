@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "pch.h"
 #include "StaticMesh.h"
@@ -216,7 +216,7 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
             vtx.Position = src.pos;
             vtx.Color = src.color;
             vtx.UV = src.tex;
-            vtx.Normal = FVector4(src.normal.X, src.normal.Y, src.normal.Z, 0.0f);
+            vtx.Normal = FVector(src.normal.X, src.normal.Y, src.normal.Z);
 
             vertexArray.push_back(vtx);
         }
@@ -266,7 +266,12 @@ void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* In
         return;
     }
 
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr))
+    {
+        UE_LOG("vertexBuffer 만들기 실패");
+        assert(SUCCEEDED(hr));
+    }
+    //assert(SUCCEEDED(hr));
 }
 
 void UStaticMesh::CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)

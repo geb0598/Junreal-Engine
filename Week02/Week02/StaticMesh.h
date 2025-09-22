@@ -11,13 +11,14 @@ public:
     UStaticMesh() = default;
     virtual ~UStaticMesh() override;
 
-    void Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InVertexType = EVertexLayoutType::PositionColor);
-    void Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType = EVertexLayoutType::PositionColor);
+    void Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InVertexType = EVertexLayoutType::PositionColorTexturNormal);
+    void Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType = EVertexLayoutType::PositionColorTexturNormal);
 
     ID3D11Buffer* GetVertexBuffer() const { return VertexBuffer; }
     ID3D11Buffer* GetIndexBuffer() const { return IndexBuffer; }
     uint32 GetVertexCount() { return VertexCount; }
     uint32 GetIndexCount() { return IndexCount; }
+    EVertexLayoutType GetVertexType() const { return VertexType; }
     void SetIndexCount(uint32 Cnt) { IndexCount = Cnt; }
 
 	const FString& GetAssetPathFileName() const { return StaticMeshAsset ? StaticMeshAsset->PathFileName : FilePath; }
@@ -39,7 +40,7 @@ private:
     ID3D11Buffer* IndexBuffer = nullptr;
     uint32 VertexCount = 0;     // 정점 개수
     uint32 IndexCount = 0;     // 버텍스 점의 개수 
-    EVertexLayoutType VertexType = EVertexLayoutType::PositionColor;  // 버텍스 타입
+    EVertexLayoutType VertexType = EVertexLayoutType::PositionColorTexturNormal;  // 버텍스 타입
 
 	// CPU 리소스
     FStaticMesh* StaticMeshAsset = nullptr;

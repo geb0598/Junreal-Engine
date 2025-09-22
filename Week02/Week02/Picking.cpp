@@ -562,19 +562,19 @@ uint32 CPickingSystem::IsHoveringGizmoForViewport(AGizmoActor* GizmoTransActor, 
     FRay Ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
                                    ViewportMousePos, ViewportSize, ViewportOffset);
     char debugBuf[512];
-    sprintf_s(
-        debugBuf,
-        "Mouse Local: (%.1f, %.1f) | Global: (%.1f, %.1f)\n"
-        "Viewport Size: (%.1f, %.1f) | Offset: (%.1f, %.1f)\n"
-        "Ray Origin: (%.2f, %.2f, %.2f) | Ray Dir: (%.2f, %.2f, %.2f)\n",
-        static_cast<float>(ViewportMousePos.X), static_cast<float>(ViewportMousePos.Y),        // 로컬 마우스 좌표
-        ViewportMousePos.X, ViewportMousePos.Y,              // 글로벌 마우스 좌표
-        ViewportSize.X, ViewportSize.Y,                      // 뷰포트 크기
-        ViewportOffset.X, ViewportOffset.Y,                  // 뷰포트 오프셋
-        Ray.Origin.X, Ray.Origin.Y, Ray.Origin.Z,            // 레이 시작점
-        Ray.Direction.X, Ray.Direction.Y, Ray.Direction.Z    // 레이 방향
-    );
-    UE_LOG(debugBuf);
+    //sprintf_s(
+    //    debugBuf,
+    //    "Mouse Local: (%.1f, %.1f) | Global: (%.1f, %.1f)\n"
+    //    "Viewport Size: (%.1f, %.1f) | Offset: (%.1f, %.1f)\n"
+    //    "Ray Origin: (%.2f, %.2f, %.2f) | Ray Dir: (%.2f, %.2f, %.2f)\n",
+    //    static_cast<float>(ViewportMousePos.X), static_cast<float>(ViewportMousePos.Y),        // 로컬 마우스 좌표
+    //    ViewportMousePos.X, ViewportMousePos.Y,              // 글로벌 마우스 좌표
+    //    ViewportSize.X, ViewportSize.Y,                      // 뷰포트 크기
+    //    ViewportOffset.X, ViewportOffset.Y,                  // 뷰포트 오프셋
+    //    Ray.Origin.X, Ray.Origin.Y, Ray.Origin.Z,            // 레이 시작점
+    //    Ray.Direction.X, Ray.Direction.Y, Ray.Direction.Z    // 레이 방향
+    //);
+    //UE_LOG(debugBuf);
     uint32 ClosestAxis = 0;
     float ClosestDistance = 1e9f;
     float HitDistance;
