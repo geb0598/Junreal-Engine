@@ -51,6 +51,8 @@ public:
     //FMeshData* CreateWireBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
    // void CreateBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
     void CreateDefaultShader();
+    void InitShaderILMap();
+    void InitTexToShaderMap();
 
     template<typename T>
     bool Add(const FString& InFilePath, UObject* InObject);
@@ -69,6 +71,8 @@ public:
     // Convenience for UStaticMesh
     TArray<UStaticMesh*> GetAllStaticMeshes() { return GetAll<UStaticMesh>(); }
     TArray<FString> GetAllStaticMeshFilePaths() { return GetAllFilePaths<UStaticMesh>(); }
+    TArray<D3D11_INPUT_ELEMENT_DESC>& GetProperInputLayout(const FString& InShaderName);
+    FString& GetProperShader(const FString& InTextureName);
 
 public:
     UResourceManager() = default;
@@ -92,6 +96,9 @@ protected:
 
     FShader PrimitiveShader;
     TMap<FWideString,FShader*> ShaderList;
+
+    TMap<FString, TArray<D3D11_INPUT_ELEMENT_DESC>> ShaderToInputLayoutMap;
+    TMap<FString, FString> TextureToShaderMap;
 
 private:
     TMap<FString, UMaterial*> MaterialMap;
@@ -136,7 +143,7 @@ inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)//�
     else//없으면 해당 리소스의 Load실행
     {
         T* Resource = NewObject<T>();
-        Resource->Load(InFilePath, Device, std::forward<Args>(InArgs)...);
+        Resource->Load(InFilePath, Device);
         Resource->SetFilePath(InFilePath);
         Resources[typeIndex][InFilePath] = Resource;
         return Resource;

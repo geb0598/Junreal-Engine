@@ -9,7 +9,7 @@ class UMaterial : public UResourceBase
 	DECLARE_CLASS(UMaterial, UResourceBase)
 public:
     UMaterial() = default;
-    void Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InLayoutType);
+    void Load(const FString& InFilePath, ID3D11Device* InDevice);
 
 protected:
     ~UMaterial() override = default;
