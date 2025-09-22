@@ -390,7 +390,9 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
 
 void UResourceManager::CreateDefaultShader()
 {
+    // 템플릿 Load 멤버함수 호출해서 Resources[UShader의 typeIndex][shader 파일 이름]에 UShader 포인터 할당
     Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
+    Load<UShader>("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 
@@ -407,7 +409,7 @@ void UResourceManager::InitShaderILMap()
     layout.Add({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     layout.Add({ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     layout.Add({ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 });
-    layout.Add({ "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     ShaderToInputLayoutMap["StaticMeshShader.hlsl"] = layout;
     layout.clear();
 
@@ -498,9 +500,9 @@ FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePa
     D3D11_SAMPLER_DESC SamplerDesc;
     ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
     SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     SamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     SamplerDesc.MinLOD = 0;
     SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;

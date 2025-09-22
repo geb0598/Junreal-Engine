@@ -64,12 +64,18 @@ public:
     bool IsA(const UClass* C) const noexcept { return GetClass()->IsChildOf(C); }
     template<class T> bool IsA() const noexcept { return IsA(T::StaticClass()); }
 
-    // 네가 쓰던 UUID 발급기 유지
-    static uint32_t GenerateUUID()
-    {
-        static uint32 Counter = 1;
-        return Counter++;
-    }
+    // 다음으로 발급될 UUID를 조회 (증가 없음)
+    static uint32 PeekNextUUID() { return GUUIDCounter; }
+
+    // 다음으로 발급될 UUID를 설정 (예: 씬 로드시 메타와 동기화)
+    static void SetNextUUID(uint32 Next) { GUUIDCounter = Next; }
+
+    // UUID 발급기: 현재 카운터를 반환하고 1 증가
+    static uint32 GenerateUUID() { return GUUIDCounter++; }
+
+private:
+    // 전역 UUID 카운터(초기값 1)
+    inline static uint32 GUUIDCounter = 1;
 };
 
 // ── Cast 헬퍼 (UE Cast<> 와 동일 UX) ────────────────────────────

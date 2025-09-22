@@ -117,6 +117,18 @@ void UActorTerminationWidget::DeleteSelectedActor()
 	CachedActorName = "";
 	UIManager->ResetPickedActor();
 
+	// Transform 위젯의 선택도 해제
+	UIManager->ClearTransformWidgetSelection();
+
+	// 기즈모가 이 액터를 타겟으로 잡고 있다면 해제
+	if (AGizmoActor* Gizmo = UIManager->GetGizmoActor())
+	{
+		if (Gizmo->GetTargetActor() == ActorToDelete)
+		{
+			Gizmo->SetTargetActor(nullptr);
+		}
+	}
+
 	// World를 통해 액터 삭제
 	if (World->DestroyActor(ActorToDelete))
 	{
