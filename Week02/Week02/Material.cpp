@@ -4,26 +4,24 @@
 #include "Texture.h"
 #include "ResourceManager.h"
 
-void UMaterial::Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InLayoutType)
+void UMaterial::Load(const FString& InFilePath, ID3D11Device* InDevice)
 {
     // 기본 쉐이더 로드 (LayoutType에 따라)
-    FString shaderName;
-    if (InLayoutType == EVertexLayoutType::PositionColor)
-        shaderName = "Primitive.hlsl";
-    else if (InLayoutType == EVertexLayoutType::PositionBillBoard)
-        shaderName = "TextBillboard.hlsl";
-    else if (InLayoutType == EVertexLayoutType::PositionCollisionDebug)
-        shaderName = "CollisionDebug.hlsl";
-    
-    if (!shaderName.empty())
+
+    if (InFilePath.find(".dds") != std::string::npos)
     {
-        Shader = UResourceManager::GetInstance().Load<UShader>(shaderName, InLayoutType);
-    }
-    
-    // 텍스처가 지정되었다면 로드
-    if (!InFilePath.empty())
-    {
+        FString shaderName = UResourceManager::GetInstance().GetProperShader(InFilePath);
+
+        Shader = UResourceManager::GetInstance().Load<UShader>(shaderName);
         Texture = UResourceManager::GetInstance().Load<UTexture>(InFilePath);
+    }
+    else if (InFilePath.find(".hlsl") != std::string::npos)
+    {
+        Shader = UResourceManager::GetInstance().Load<UShader>(InFilePath);
+    }
+    else
+    {
+        throw std::runtime_error(".dds나 .hlsl만 입력해주세요. 현재 입력 파일명 : " + InFilePath);
     }
 }
 

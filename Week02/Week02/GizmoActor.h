@@ -49,6 +49,7 @@ public:
     bool GetbIsHovering() const { return bIsHovering; }
     void SetbIsHovering(bool bInIsHovering) { bIsHovering = bInIsHovering; }
 
+    bool GetbIsDragging() const { return bIsDragging; }
 
     void NextMode(EGizmoMode GizmoMode);
     TArray<USceneComponent*>* GetGizmoComponents();

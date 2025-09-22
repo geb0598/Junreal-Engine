@@ -56,6 +56,8 @@ public:
     bool IsKeyPressed(int KeyCode) const; // 이번 프레임에 눌림
     bool IsKeyReleased(int KeyCode) const; // 이번 프레임에 떼짐
 
+    // 마우스 휠 함수들
+    float GetMouseWheelDelta() const { return MouseWheelDelta; }
     // 디버그 로그 토글
     void SetDebugLoggingEnabled(bool bEnabled) { bEnableDebugLogging = bEnabled; }
     bool IsDebugLoggingEnabled() const { return bEnableDebugLogging; }
@@ -82,6 +84,9 @@ private:
     FVector2D ScreenSize;
     bool MouseButtons[MaxMouseButtons];
     bool PreviousMouseButtons[MaxMouseButtons];
+
+    // 마우스 휠 상태
+    float MouseWheelDelta;
 
     // 키보드 상태 (Virtual Key Code 기준)
     bool KeyStates[256];

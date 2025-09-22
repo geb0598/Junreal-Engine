@@ -385,8 +385,7 @@ void UWorld::Tick(float DeltaSeconds)
     ProcessActorSelection();
     ProcessViewportInput();
     //Input Manager가 카메라 후에 업데이트 되어야함
-    InputManager.Update();
-    UIManager.Update(DeltaSeconds);
+   
 
     // 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
     if (UIManager.IsUsingMainViewport())
@@ -404,6 +403,8 @@ void UWorld::Tick(float DeltaSeconds)
             MultiViewport->OnUpdate();
         }
     }
+    InputManager.Update();
+    UIManager.Update(DeltaSeconds);
 }
 
 float UWorld::GetTimeSeconds() const

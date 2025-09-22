@@ -136,7 +136,7 @@ void UTextRenderComponent::Render(URenderer* Renderer, const FMatrix& View, cons
 {
     if (Owner->GetIsPicked() == true)
     {
-        Material->Load("TextBillboard.dds", Renderer->GetRHIDevice()->GetDevice(), EVertexLayoutType::PositionBillBoard);//texture 불러오기 초기화는 ResourceManager Initialize() -> CreateTextBillboardTexture();
+        Material->Load("TextBillboard.dds", Renderer->GetRHIDevice()->GetDevice());//texture 불러오기 초기화는 ResourceManager Initialize() -> CreateTextBillboardTexture();
         ACameraActor* CameraActor = GetOwner()->GetWorld()->GetCameraActor();
         FVector CamRight = CameraActor->GetActorRight();
         FVector CamUp = CameraActor->GetActorUp();
