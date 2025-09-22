@@ -37,7 +37,8 @@ public:
 
     uint32 GetStartX() const { return StartX; }
     uint32 GetStartY() const { return StartY; }
-
+    
+    FVector2D GetViewportMousePosition() { return ViewportMousePosition; }
     ID3D11RenderTargetView* GetRenderTargetView() const { return RenderTargetView; }
     ID3D11DepthStencilView* GetDepthStencilView() const { return DepthStencilView; }
     ID3D11ShaderResourceView* GetShaderResourceView() const { return ShaderResourceView; }
@@ -75,5 +76,7 @@ private:
 
     // ViewportClient
     FViewportClient* ViewportClient = nullptr;
+
+    FVector2D ViewportMousePosition{};
 };
 
