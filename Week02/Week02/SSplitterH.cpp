@@ -3,6 +3,11 @@
 
 SSplitterH::~SSplitterH()
 {
+    // 자식 윈도우 재귀 해제
+    delete SideLT;
+    delete SideRB;
+    SideLT = nullptr;
+    SideRB = nullptr;
 }
 void SSplitterH::UpdateDrag(FVector2D MousePos)
 {
