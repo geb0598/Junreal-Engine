@@ -103,6 +103,12 @@
     <Filter Include="헤더 파일\Widget\Window">
       <UniqueIdentifier>{944dd88d-c43b-4706-9d88-91e46a374ff3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\SWidget">
+      <UniqueIdentifier>{720bdb67-4c8e-456c-8ac3-7abca66188ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\SWidget\SWindow">
+      <UniqueIdentifier>{660c7cb8-a55e-46c1-834b-94a246e50d57}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -321,18 +327,6 @@
     <ClCompile Include="MemoryManager.cpp">
       <Filter>소스 파일\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="SWindow.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="SSplitter.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="SSplitterH.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="SSplitterV.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="FViewportClient.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -342,9 +336,6 @@
     <ClCompile Include="ObjManager.cpp">
       <Filter>소스 파일\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="SMultiViewportWindow.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="SViewportWindow.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -352,6 +343,33 @@
       <Filter>소스 파일\UI\Window</Filter>
     </ClCompile>
     <ClCompile Include="TextQuad.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SSplitter.cpp">
+      <Filter>소스 파일\SWidget\SWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SMultiViewportWindow.cpp">
+      <Filter>소스 파일\SWidget\SWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SSplitterH.cpp">
+      <Filter>소스 파일\SWidget\SWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SSplitterV.cpp">
+      <Filter>소스 파일\SWidget\SWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SWindow.cpp">
+      <Filter>소스 파일\SWidget\SWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneIOWindow.cpp">
+      <Filter>소스 파일\SWidget\SWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SDetailsWindow.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SControlPanel.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderViewportSwitcherWidget.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -638,6 +656,18 @@
       <Filter>헤더 파일\UI\Window</Filter>
     </ClInclude>
     <ClInclude Include="TextQuad.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneIOWindow.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SDetailsWindow.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SControlPanel.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderViewportSwitcherWidget.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

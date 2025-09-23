@@ -207,7 +207,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         //======================================================================================================================
         //월드 생성
-        UWorld* World = NewObject<UWorld>();
+        UWorld* World = &UWorld::GetInstance();
         World->SetRenderer(&renderer);//렌더러 설정
         World->Initialize(); 
 
@@ -218,7 +218,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         SMultiViewportWindow* MultiViewportWindow = nullptr;
         MultiViewportWindow = new SMultiViewportWindow();
         FRect ScreenRect(0, 0, windowWidth, windowHeight);
-        MultiViewportWindow->Initialize(renderer.GetRHIDevice()->GetDevice(),World, ScreenRect);
+        MultiViewportWindow->Initialize(renderer.GetRHIDevice()->GetDevice(),World, ScreenRect,MainViewport);
         //월드에 뷰포드 설정
         World->SetMultiViewportWindow(MultiViewportWindow);
         World->SetMainViewport(MainViewport);
@@ -286,7 +286,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
 
         delete MultiViewportWindow;
-        delete MainViewport;
+     
         UUIManager::GetInstance().Release();
         ObjectFactory::DeleteAll(true);
     }

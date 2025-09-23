@@ -5,13 +5,16 @@
 #include "SViewportWindow.h"
 
 class SSceneIOWindow; // 새로 추가할 UI
+class SDetailsWindow;
 class SMultiViewportWindow : public SWindow
 {
 public:
     SMultiViewportWindow();
     virtual ~SMultiViewportWindow();
 
-    void Initialize(ID3D11Device* Device, UWorld* World, const FRect& InRect);
+    void Initialize(ID3D11Device* Device, UWorld* World, const FRect& InRect, SViewportWindow* MainViewport);
+    void SwitchLayout(EViewportLayoutMode NewMode);
+
 
     virtual void OnRender() override;
     virtual void OnUpdate() override;
@@ -22,15 +25,29 @@ public:
 
     void OnShutdown();
 private:
-    // 오른쪽 고정 UI
-    SSceneIOWindow* SceneIOPanel = nullptr;
-    // 아래쪽 UI
-    SSceneIOWindow* ConsolePanel = nullptr;
-    SSceneIOWindow* PropertyPanel = nullptr;
     UWorld* World = nullptr;
+    ID3D11Device* Device = nullptr;
+
     SSplitterH* RootSplitter = nullptr;
+
+    // 두 가지 레이아웃을 미리 생성해둠
+    SSplitter* FourSplitLayout = nullptr;
+    SSplitter* SingleLayout = nullptr;
+
+    // 뷰포트
     SViewportWindow* Viewports[4];
+    SViewportWindow* MainViewport;
+ 
+    // 오른쪽 고정 UI
+    SWindow* SceneIOPanel = nullptr;
+    // 아래쪽 UI
+    SWindow* ControlPanel = nullptr;
+    SWindow* DetailPanel = nullptr;
 
-
+    SSplitterV* TopPanel = nullptr;
+    SSplitterV* LeftPanel = nullptr;
+    
+    // 현재 모드
+    EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;
 
 };

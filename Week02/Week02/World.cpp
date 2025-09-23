@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "SelectionManager.h"
 #include "Picking.h"
 #include "SceneLoader.h"
@@ -22,6 +22,15 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 , InputManager(UInputManager::GetInstance())
 , SelectionManager(USelectionManager::GetInstance())
 {
+}
+UWorld& UWorld::GetInstance()
+{
+    static UWorld* Instance = nullptr;
+    if (Instance == nullptr)
+    {
+        Instance = NewObject<UWorld>();
+    }
+    return *Instance;
 }
 
 

@@ -1,2 +1,40 @@
 ﻿#include"pch.h"
 #include"SceneIOWindow.h"
+#include"UI/Window/ConsoleWindow.h"
+SSceneIOWindow::SSceneIOWindow()
+{
+	ConsoleWindow = new UConsoleWindow;
+}
+
+SSceneIOWindow::~SSceneIOWindow()
+{
+    delete ConsoleWindow;
+   
+}
+void SSceneIOWindow::Initialize()
+{
+}
+void SSceneIOWindow::OnRender()
+{
+    ImGui::SetNextWindowPos(ImVec2(Rect.Min.X, Rect.Min.Y));
+    ImGui::SetNextWindowSize(ImVec2(Rect.GetWidth(), Rect.GetHeight()));
+
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse
+        | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoMove;
+
+    if (ImGui::Begin("Console", nullptr, flags))
+    {
+        if (ConsoleWindow) {
+            ConsoleWindow->RenderWidget();
+        }
+    }
+    ImGui::End();
+}
+
+void SSceneIOWindow::OnUpdate()
+{
+    if (ConsoleWindow) {
+        ConsoleWindow->Update();
+    }
+}
