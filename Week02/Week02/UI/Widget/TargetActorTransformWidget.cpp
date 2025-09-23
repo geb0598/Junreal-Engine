@@ -260,7 +260,8 @@ void UTargetActorTransformWidget::RenderWidget()
 				{
 					// 현재 메시 경로 표시
 					FString CurrentPath;
-					if (UStaticMesh* CurMesh = SMC->GetStaticMesh())
+					UStaticMesh* CurMesh = SMC->GetStaticMesh();
+					if (CurMesh)
 					{
 						CurrentPath = CurMesh->GetAssetPathFileName();
 						ImGui::Text("Current: %s", CurrentPath.c_str());
@@ -345,6 +346,51 @@ void UTargetActorTransformWidget::RenderWidget()
 									}
 								}
 							}
+						}
+					}
+
+					// Material 설정
+					ImGui::Separator();
+
+					const TArray<FString> MaterialNames = UResourceManager::GetInstance().GetAllFilePaths<UMaterial>();
+					// ImGui 콤보 아이템 배열
+					TArray<const char*> MaterialNamesCharP;
+					MaterialNamesCharP.reserve(MaterialNames.size());
+					for (const FString& n : MaterialNames)
+						MaterialNamesCharP.push_back(n.c_str());
+
+					if (CurMesh)
+					{
+						const uint32 MeshGroupCount = CurMesh->GetMeshGroupCount();
+
+						static TArray<int32> SelectedMaterialIdxAt; // i번 째 Material Slot이 가지고 있는 MaterialName이 MaterialNames의 몇번쩨 값인지.
+						if (SelectedMaterialIdxAt.size() < MeshGroupCount)
+						{
+							SelectedMaterialIdxAt.resize(MeshGroupCount);
+						}
+
+						// 현재 SMC의 MaterialSlots 정보를 UI에 반영
+						const TArray<FMaterialSlot>& MaterialSlots = SMC->GetMaterailSlots();
+						for (int MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
+						{
+							for (uint32 MaterialIndex = 0; MaterialIndex < MaterialNames.size(); ++MaterialIndex)
+							{
+								if (MaterialSlots[MaterialSlotIndex].MaterialName == MaterialNames[MaterialIndex])
+								{
+									SelectedMaterialIdxAt[MaterialSlotIndex] = MaterialIndex;
+								}
+							}
+						}
+
+						// Material 선택
+						for (int MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
+						{
+							ImGui::PushID(MaterialSlotIndex);
+							if (ImGui::Combo("Material", &SelectedMaterialIdxAt[MaterialSlotIndex], MaterialNamesCharP.data(), static_cast<int>(MaterialNamesCharP.size())))
+							{
+								SMC->SetMaterialByUser(MaterialSlotIndex, MaterialNames[SelectedMaterialIdxAt[MaterialSlotIndex]]);
+							}
+							ImGui::PopID();
 						}
 					}
 				}

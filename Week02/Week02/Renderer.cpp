@@ -1,8 +1,9 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "TextRenderComponent.h"
 #include "Shader.h"
 #include "StaticMesh.h"
 #include "TextQuad.h"
+#include "StaticMeshComponent.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -89,7 +90,7 @@ void URenderer::UpdateColorBuffer(const FVector4& Color)
     RHIDevice->UpdateColorConstantBuffers(Color);
 }
 
-void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology)
+void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
 {
     UINT stride = 0;
     switch (InMesh->GetVertexType())
@@ -129,18 +130,20 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     if (InMesh->HasMaterial())
     {
         const TArray<FGroupInfo> MeshGroupInfos = InMesh->GetMeshGroupInfo();
-        const uint32 Len = static_cast<uint32>(MeshGroupInfos.size());
-        for (const FGroupInfo& GroupInfo : MeshGroupInfos)
+        const uint32 NumMeshGroupInfos = MeshGroupInfos.size();
+        for (int i = 0; i < NumMeshGroupInfos; ++i)
         {
-            bool bHasTexture = !(GroupInfo.MaterialInfo.DiffuseTextureFileName.empty());
+            const UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
+            const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();
+            bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName.empty());
             if (bHasTexture)
             {
-                FWideString WTextureFileName(GroupInfo.MaterialInfo.DiffuseTextureFileName.begin(), GroupInfo.MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
+                FWideString WTextureFileName(MaterialInfo.DiffuseTextureFileName.begin(), MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
                 FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
                 RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
             }
-            RHIDevice->UpdatePixelConstantBuffers(GroupInfo.MaterialInfo, true, bHasTexture); // PSSet도 해줌
-            RHIDevice->GetDeviceContext()->DrawIndexed(GroupInfo.IndexCount, GroupInfo.StartIndex, 0);
+            RHIDevice->UpdatePixelConstantBuffers(MaterialInfo, true, bHasTexture); // PSSet도 해줌
+            RHIDevice->GetDeviceContext()->DrawIndexed(MeshGroupInfos[i].IndexCount, MeshGroupInfos[i].StartIndex, 0);
         }
     }
     else
