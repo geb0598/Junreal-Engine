@@ -26,8 +26,8 @@ void UTextQuad::Load(const FString& InFilePath, ID3D11Device* InDevice)
 
     CreateVertexBuffer(StaticMeshAsset, InDevice);
     CreateIndexBuffer(StaticMeshAsset, InDevice);
-    VertexCount = StaticMeshAsset->Vertices.size();
-    IndexCount = StaticMeshAsset->Indices.size();
+    VertexCount = static_cast<uint32>(StaticMeshAsset->Vertices.size());
+    IndexCount = static_cast<uint32>(StaticMeshAsset->Indices.size());
 
     /*MeshDataCPU = UMeshLoader::GetInstance().LoadMesh(InFilePath.c_str());
     CreateVertexBuffer(MeshDataCPU, InDevice, InVertexType);
@@ -50,8 +50,8 @@ void UTextQuad::Load(FMeshData* InData, ID3D11Device* InDevice)
     CreateVertexBuffer(InData, InDevice);
     CreateIndexBuffer(InData, InDevice);
 
-    VertexCount = InData->Vertices.size();
-    IndexCount = InData->Indices.size();
+    VertexCount = static_cast<uint32>(InData->Vertices.size());
+    IndexCount = static_cast<uint32>(InData->Indices.size());
 }
 
 void UTextQuad::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)

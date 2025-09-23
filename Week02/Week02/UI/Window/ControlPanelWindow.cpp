@@ -7,8 +7,8 @@
 #include "../Widget/PrimitiveSpawnWidget.h"
 #include "../Widget/SceneIOWidget.h"
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 /**
  * @brief Control Panel Constructor

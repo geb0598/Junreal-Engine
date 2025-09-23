@@ -26,7 +26,7 @@ SViewportWindow::~SViewportWindow()
 	}
 }
 
-bool SViewportWindow::Initialize(uint32 StartX, uint32 StartY, uint32 Width, uint32 Height, UWorld* World, ID3D11Device* Device, EViewportType InViewportType)
+bool SViewportWindow::Initialize(float StartX, float StartY, float Width, float Height, UWorld* World, ID3D11Device* Device, EViewportType InViewportType)
 {
 	ViewportType = InViewportType;
 

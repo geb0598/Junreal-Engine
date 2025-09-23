@@ -149,25 +149,10 @@ enum class EKeyInput : uint8
     Unknown
 };
 
-enum class ResourceDataType : uint8
-{
-
-};
-
-enum class EVertexType : uint8
-{
-    None = -1,
-
-    VertexSimple,
-    VertexDynamic,
-
-    End, 
-};
-
 //TODO EResourceType으로 재정의
 enum class ResourceType : uint8
 {
-    None = -1,
+    None,
 
     StaticMesh,
     TextQuad,

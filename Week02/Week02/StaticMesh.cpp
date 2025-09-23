@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "StaticMesh.h"
 #include "ObjManager.h"
 
@@ -16,8 +16,8 @@ void UStaticMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVerte
     StaticMeshAsset = FObjManager::LoadObjStaticMeshAsset(InFilePath);
     CreateVertexBuffer(StaticMeshAsset, InDevice, InVertexType);
     CreateIndexBuffer(StaticMeshAsset, InDevice);
-    VertexCount = StaticMeshAsset->Vertices.size();
-    IndexCount = StaticMeshAsset->Indices.size();
+    VertexCount = static_cast<uint32>(StaticMeshAsset->Vertices.size());
+    IndexCount = static_cast<uint32>(StaticMeshAsset->Indices.size());
 }
 
 void UStaticMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
@@ -38,8 +38,8 @@ void UStaticMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutT
     CreateVertexBuffer(InData, InDevice, InVertexType);
     CreateIndexBuffer(InData, InDevice);
 
-    VertexCount = InData->Vertices.size();
-    IndexCount = InData->Indices.size();
+    VertexCount = static_cast<uint32>(InData->Vertices.size());
+    IndexCount = static_cast<uint32>(InData->Indices.size());
 }
 
 void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice, EVertexLayoutType InVertexType)

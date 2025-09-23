@@ -8,8 +8,8 @@
 using namespace std;
 // #include "Manager/Time/Public/TimeManager.h"  // TimeManager를 찾을 수 없으므로 주석처리
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 constexpr float REFRESH_INTERVAL = 0.1f;
 

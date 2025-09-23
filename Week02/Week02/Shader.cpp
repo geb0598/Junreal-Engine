@@ -37,7 +37,7 @@ void UShader::CreateInputLayout(ID3D11Device* Device, const FString& InShaderPat
 {
     TArray<D3D11_INPUT_ELEMENT_DESC> descArray = UResourceManager::GetInstance().GetProperInputLayout(InShaderPath);
     const D3D11_INPUT_ELEMENT_DESC* layout = descArray.data();
-    uint32 layoutCount = descArray.size();
+    uint32 layoutCount = static_cast<uint32>(descArray.size());
 
     HRESULT hr = Device->CreateInputLayout(
         layout,

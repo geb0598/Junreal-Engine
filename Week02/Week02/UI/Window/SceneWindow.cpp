@@ -3,8 +3,8 @@
 #include "../Widget/SceneManagerWidget.h"
 #include "../Widget/ShowFlagWidget.h"
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 USceneWindow::USceneWindow()
 {

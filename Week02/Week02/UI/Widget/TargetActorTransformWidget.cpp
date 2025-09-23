@@ -13,8 +13,8 @@
 
 using namespace std;
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 // 파일명 스템(Cube 등) 추출 + .obj 확장자 제거
 static inline FString GetBaseNameNoExt(const FString& Path)

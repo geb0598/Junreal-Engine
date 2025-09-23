@@ -69,7 +69,7 @@ void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& 
     RHIDevice->UpdateConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
 }
 
-void URenderer::UpdateHighLightConstantBuffer(const float InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
+void URenderer::UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
 {
     RHIDevice->UpdateHighLightConstantBuffers(InPicked, InColor, X, Y, Z, Gizmo);
 }
@@ -129,7 +129,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     if (InMesh->HasMaterial())
     {
         const TArray<FGroupInfo> MeshGroupInfos = InMesh->GetMeshGroupInfo();
-        const uint32 Len = MeshGroupInfos.size();
+        const uint32 Len = static_cast<uint32>(MeshGroupInfos.size());
         for (const FGroupInfo& GroupInfo : MeshGroupInfos)
         {
             bool bHasTexture = !(GroupInfo.MaterialInfo.DiffuseTextureFileName.empty());

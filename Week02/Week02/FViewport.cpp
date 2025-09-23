@@ -11,17 +11,17 @@ FViewport::~FViewport()
     Cleanup();
 }
 
-bool FViewport::Initialize(uint32 InStartX, uint32 InStartY, uint32 InSizeX, uint32 InSizeY, ID3D11Device* Device)
+bool FViewport::Initialize(float InStartX, float InStartY, float InSizeX, float InSizeY, ID3D11Device* Device)
 {
     if (!Device)
         return false;
 
     D3DDevice = Device;
     D3DDevice->GetImmediateContext(&D3DDeviceContext);
-    StartX = InStartX;
-    StartY = InStartY;
-    SizeX = InSizeX;
-    SizeY = InSizeY;
+    StartX = static_cast<uint32>(InStartX);
+    StartY = static_cast<uint32>(InStartY);
+    SizeX = static_cast<uint32>(InSizeX);
+    SizeY = static_cast<uint32>(InSizeY);
 
     CreateRenderTargets();
 
@@ -104,8 +104,8 @@ void FViewport::ProcessMouseMove(int32 X, int32 Y)
 
     if (ViewportClient)
     {
-        ViewportMousePosition.X = X;
-        ViewportMousePosition.Y = Y;
+        ViewportMousePosition.X = static_cast<float>(X);
+        ViewportMousePosition.Y = static_cast<float>(Y);
         ViewportClient->MouseMove(this, X, Y);
     }
 }

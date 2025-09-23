@@ -2,8 +2,8 @@
 #include "ExperimentalFeatureWindow.h"
 #include "../Widget/InputInformationWidget.h"
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 /**
  * @brief Window Constructor
