@@ -84,6 +84,7 @@ void D3D11RHI::Initialize(HWND hWindow)
     CreateBlendState();
     CreateConstantBuffer();
 	CreateDepthStencilState();
+	CreateSamplerState();
     UResourceManager::GetInstance().Initialize(Device,DeviceContext);
 }
 
@@ -100,6 +101,8 @@ void D3D11RHI::Release()
         DeviceContext->ClearState();
         DeviceContext->Flush();
     }
+
+    ReleaseSamplerState();
 
     // 상수버퍼
     if (HighLightCB) { HighLightCB->Release(); HighLightCB = nullptr; }
@@ -190,6 +193,20 @@ void D3D11RHI::CreateDepthStencilState()
     desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
     Device->CreateDepthStencilState(&desc, &DepthStencilStateGreaterEqualWrite);
+}
+
+void D3D11RHI::CreateSamplerState()
+{
+    D3D11_SAMPLER_DESC SampleDesc = {};
+    SampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    SampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    SampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    SampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    SampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    SampleDesc.MinLOD = 0;
+    SampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	HRESULT HR = Device->CreateSamplerState(&SampleDesc, &DefaultSamplerState);
 }
 
 HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FMeshData* meshData, ID3D11Buffer** outBuffer)
@@ -512,6 +529,15 @@ void D3D11RHI::CreateConstantBuffer()
 }
 
 
+void D3D11RHI::ReleaseSamplerState()
+{
+    if (DefaultSamplerState)
+    {
+        DefaultSamplerState->Release();
+        DefaultSamplerState = nullptr;
+	}
+}
+
 void D3D11RHI::ReleaseBlendState()
 {
     if (BlendState)
@@ -765,4 +791,9 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
 
     // 뷰포트도 갱신
     setviewort(width, height);
+}
+
+void D3D11RHI::PSSetDefaultSampler(UINT StartSlot)
+{
+	DeviceContext->PSSetSamplers(StartSlot, 1, &DefaultSamplerState);
 }

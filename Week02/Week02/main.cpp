@@ -69,8 +69,8 @@ void GetViewportSize(HWND hWnd)
     RECT clientRect{};
     GetClientRect(hWnd, &clientRect);
 
-    CLIENTWIDTH = clientRect.right - clientRect.left;
-    CLIENTHEIGHT = clientRect.bottom - clientRect.top;
+    CLIENTWIDTH = static_cast<float>(clientRect.right - clientRect.left);
+    CLIENTHEIGHT = static_cast<float>(clientRect.bottom - clientRect.top);
 
     if (CLIENTWIDTH <= 0) CLIENTWIDTH = 1;
     if (CLIENTHEIGHT <= 0) CLIENTHEIGHT = 1;
@@ -177,7 +177,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         try
         {
-            windowHeight = std::stof(EditorINI["WindowHeight"]);
+            windowHeight = std::stoi(EditorINI["WindowHeight"]);
         }
         catch (...)
         {
@@ -207,7 +207,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         //======================================================================================================================
         //월드 생성
-        UWorld* World = NewObject<UWorld>();
+        UWorld* World = &UWorld::GetInstance();
         World->SetRenderer(&renderer);//렌더러 설정
         World->Initialize(); 
 
@@ -217,8 +217,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // 멀티 뷰포트 생성
         SMultiViewportWindow* MultiViewportWindow = nullptr;
         MultiViewportWindow = new SMultiViewportWindow();
-        FRect ScreenRect(0, 0, windowWidth, windowHeight);
-        MultiViewportWindow->Initialize(renderer.GetRHIDevice()->GetDevice(),World, ScreenRect);
+        FRect ScreenRect(0, 0, static_cast<float>(windowWidth), static_cast<float>(windowHeight));
+        MultiViewportWindow->Initialize(renderer.GetRHIDevice()->GetDevice(),World, ScreenRect,MainViewport);
         //월드에 뷰포드 설정
         World->SetMultiViewportWindow(MultiViewportWindow);
         World->SetMainViewport(MainViewport);
@@ -281,12 +281,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             {
                 FVector2D mousePos = InputMgr.GetMousePosition();
                 FVector2D mouseDelta = InputMgr.GetMouseDelta();
-                char debugMsg[128];
+                // char debugMsg[128];
             }
         }
 
         delete MultiViewportWindow;
-        delete MainViewport;
+     
         UUIManager::GetInstance().Release();
         ObjectFactory::DeleteAll(true);
     }

@@ -134,7 +134,7 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
 
     MouseWheel();//마우스 휠도 해줍니다 
-    World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
+    World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
     if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsDragging()) // 직교투영이고 마우스 버튼이 눌려있을 때
     {
@@ -196,7 +196,9 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         // 뷰포트의 실제 aspect ratio 계산
         float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
-
+        if (World->GetGizmoActor()->GetbIsHovering()) {
+            return;
+        }
         PickedActor = CPickingSystem::PerformViewportPicking(AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio);
 
 
@@ -212,9 +214,9 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         }
         else
         {
-            if (World->GetGizmoActor()->GetbIsHovering()) {
+           /* if (World->GetGizmoActor()->GetbIsHovering()) {
                 return;
-            }
+            }*/
             UUIManager::GetInstance().ResetPickedActor();
             // Clear selection if nothing was picked
             USelectionManager::GetInstance().ClearSelection();

@@ -6,8 +6,8 @@
 #include "../../InputManager.h"
 #include "../../World.h"
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 UActorTerminationWidget::UActorTerminationWidget()
 	: UWidget("Actor Termination Widget")

@@ -113,7 +113,6 @@ struct FTextureData
     ID3D11Resource* Texture = nullptr;
     ID3D11ShaderResourceView* TextureSRV = nullptr;
     ID3D11BlendState* BlendState = nullptr;
-    ID3D11SamplerState* SamplerState = nullptr;
 };
 
 enum class EResourceType
@@ -150,25 +149,10 @@ enum class EKeyInput : uint8
     Unknown
 };
 
-enum class ResourceDataType : uint8
-{
-
-};
-
-enum class EVertexType : uint8
-{
-    None = -1,
-
-    VertexSimple,
-    VertexDynamic,
-
-    End, 
-};
-
 //TODO EResourceType으로 재정의
 enum class ResourceType : uint8
 {
-    None = -1,
+    None,
 
     StaticMesh,
     TextQuad,
@@ -241,6 +225,13 @@ enum class EEngineShowFlags : uint64
     // All flags (for initialization/reset)
     SF_All = 0xFFFFFFFFFFFFFFFFull
 };
+
+enum class EViewportLayoutMode
+{
+    SingleMain,
+    FourSplit
+};
+
 
 // Bit flag operators for EEngineShowFlags
 inline EEngineShowFlags operator|(EEngineShowFlags a, EEngineShowFlags b)

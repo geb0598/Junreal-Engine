@@ -9,7 +9,7 @@ public:
     SViewportWindow();
     virtual ~SViewportWindow();
 
-    bool Initialize(uint32 StartX, uint32 StartY, uint32 Width, uint32 Height, UWorld* World, ID3D11Device* Device, EViewportType InViewportType);
+    bool Initialize(float StartX, float StartY, float Width, float Height, UWorld* World, ID3D11Device* Device, EViewportType InViewportType);
 
     virtual void OnRender() override;
     virtual void OnUpdate() override;

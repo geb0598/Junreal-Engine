@@ -26,7 +26,7 @@ public:
     bool IsLineVisible() const { return bLinesVisible; }
     
     const TArray<ULine*>& GetLines() const { return Lines; }
-    int32 GetLineCount() const { return Lines.size(); }
+    int64 GetLineCount() const { return static_cast<int64>(Lines.size()); }
     
     // Efficient world coordinate line data extraction
     void GetWorldLineData(TArray<FVector>& OutStartPoints, TArray<FVector>& OutEndPoints, TArray<FVector4>& OutColors) const;

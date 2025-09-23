@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "UEContainer.h"
 #include "Vector.h"
 #include "Enums.h"
@@ -29,7 +29,7 @@ struct FObjImporter
 {
     // TODO: 변수이름 가독성 있게 재설정
 public:
-    static bool LoadObjModel(const FString& InFileName, FObjInfo* const OutObjInfo, TArray<FObjMaterialInfo>& const OutMaterialInfos, bool bIsRHCoordSys, bool bComputeNormals)
+    static bool LoadObjModel(const FString& InFileName, FObjInfo* const OutObjInfo, TArray<FObjMaterialInfo>& OutMaterialInfos, bool bIsRHCoordSys, bool bComputeNormals)
     {
         // mtl 파싱할 때 필요한 정보들. 이거를 함수 밖으로 보내줘야 할수도? obj 파싱하면서 저장.(아래 링크 기반) 나중에 형식 바뀔수도 있음
         // https://www.braynzarsoft.net/viewtutorial/q16390-22-loading-static-3d-models-obj-format
@@ -42,9 +42,9 @@ public:
         bool bHasNormal = false;
 
         FString MaterialNameTemp;
-        uint32 VertexPositionIndexTemp;
-        uint32 VertexTexIndexTemp;
-        uint32 VertexNormalIndexTemp;
+        // uint32 VertexPositionIndexTemp;
+        // uint32 VertexTexIndexTemp;
+        // uint32 VertexNormalIndexTemp;
 
         FString Face;
         uint32 VIndex = 0; // 현재 파싱중인 vertex의 넘버(start: 0. 중복 고려x)
@@ -237,7 +237,7 @@ public:
 
         OutMaterialInfos.reserve(OutObjInfo->MaterialNames.size());
         /*OutMaterialInfos->resize(OutObjInfo->MaterialNames.size());*/
-        uint32 MatCount = OutMaterialInfos.size();
+        uint32 MatCount = static_cast<uint32>(OutMaterialInfos.size());
         //FString line;
         while (std::getline(FileIn, line))
         {
@@ -326,7 +326,7 @@ public:
                 float value;
                 wss >> value;
 
-                OutMaterialInfos[MatCount - 1].IlluminationModel = value;
+                OutMaterialInfos[MatCount - 1].IlluminationModel = static_cast<int32>(value);
             }
             else if (line.rfind("map_Kd ", 0) == 0)
             {
@@ -442,13 +442,15 @@ public:
                 OutObjInfo->GroupMaterialArray.push_back(0); 
             }
         }
+
+		return true;
     }
 
     struct VertexKey
     {
-        int PosIndex;
-        int TexIndex;
-        int NormalIndex;
+        uint32 PosIndex;
+        uint32 TexIndex;
+        uint32 NormalIndex;
 
         bool operator==(const VertexKey& Other) const
         {
@@ -472,11 +474,11 @@ public:
     static void ConvertToStaticMesh(const FObjInfo& InObjInfo, const TArray<FObjMaterialInfo>& InMaterialInfos, FStaticMesh* const OutStaticMesh)
     {
         OutStaticMesh->PathFileName = InObjInfo.ObjFileName;
-        uint32 NumDuplicatedVertex = InObjInfo.PositionIndices.size();
+        uint32 NumDuplicatedVertex = static_cast<uint32>(InObjInfo.PositionIndices.size());
 
         // 1) Vertices, Indices 설정: 해시로 빠르게 중복찾기
         std::unordered_map<VertexKey, uint32, VertexKeyHash> VertexMap;
-        for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
+        for (uint32 CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
         {
             VertexKey Key{ InObjInfo.PositionIndices[CurIndex],
                            InObjInfo.TexCoordIndices[CurIndex],
@@ -499,7 +501,7 @@ public:
                 FNormalVertex NormalVertex(Pos, Normal, Color, TexCoord);
                 OutStaticMesh->Vertices.push_back(NormalVertex);
 
-                uint32 NewIndex = OutStaticMesh->Vertices.size() - 1;
+                uint32 NewIndex = static_cast<uint32>(OutStaticMesh->Vertices.size() - 1);
                 OutStaticMesh->Indices.push_back(NewIndex);
 
                 VertexMap[Key] = NewIndex;
@@ -514,7 +516,7 @@ public:
         }
 
         OutStaticMesh->bHasMaterial = true;
-        uint32 NumGroup = InObjInfo.MaterialNames.size();
+        uint32 NumGroup = static_cast<uint32>(InObjInfo.MaterialNames.size());
         OutStaticMesh->GroupInfos.resize(NumGroup);
         if (InMaterialInfos.size() == 0)
         {

@@ -45,23 +45,6 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     
 }
 
-//FResourceData* UResourceManager::CreateOrGetResourceData(const FString& Name, uint32 Size , const TArray<uint32>& Indicies)
-//{
-//    auto it = ResourceMap.find(Name);
-//    if(it!=ResourceMap.end())
-//    {
-//        return it->second;
-//    }
-//
-//    FResourceData* ResourceData = new FResourceData();
-//
-//    CreateDynamicVertexBuffer(ResourceData, Size, Device);
-//    //CreateIndexBuffer(ResourceData, Indicies, Device);
-//
-//    ResourceMap[Name] = ResourceData;
-//    return ResourceData;
-//}
-
 UMaterial* UResourceManager::GetOrCreateMaterial(const FString& Name, EVertexLayoutType layoutType)
 {
     auto it = MaterialMap.find(Name);
@@ -131,7 +114,6 @@ void UResourceManager::Clear()
             {
                 if (Data->Texture) { Data->Texture->Release(); Data->Texture = nullptr; }
                 if (Data->TextureSRV) { Data->TextureSRV->Release(); Data->TextureSRV = nullptr; }
-                if (Data->SamplerState) { Data->SamplerState->Release(); Data->SamplerState = nullptr; }
                 if (Data->BlendState) { Data->BlendState->Release(); Data->BlendState = nullptr; }
                 delete Data;
             }
@@ -492,28 +474,6 @@ FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePa
     else
     {
         hr = DirectX::CreateWICTextureFromFile(Device, Context, FilePath.c_str(), &Data->Texture, &Data->TextureSRV);
-    }
-
-    if (FAILED(hr))
-    {
-        int a = 0;
-        D3D11_SAMPLER_DESC SamplerDesc;
-        ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
-    }
-    D3D11_SAMPLER_DESC SamplerDesc;
-    ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
-    SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    SamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    SamplerDesc.MinLOD = 0;
-    SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-    hr = Device->CreateSamplerState(&SamplerDesc, &Data->SamplerState);
-    if (FAILED(hr))
-    {
-
     }
 
     D3D11_BLEND_DESC blendDesc;

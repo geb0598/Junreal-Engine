@@ -128,6 +128,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>d3dtk\Bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,6 +151,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>d3dtk\Bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -185,6 +187,7 @@
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
+    <ClCompile Include="RenderViewportSwitcherWidget.cpp" />
     <ClCompile Include="ResourceBase.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
@@ -236,6 +239,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RHIDevice.cpp" />
+    <ClCompile Include="SControlPanel.cpp" />
+    <ClCompile Include="SDetailsWindow.cpp" />
     <ClCompile Include="ShapeComponent.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SMultiViewportWindow.cpp" />
@@ -340,6 +345,7 @@
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PrimitiveComponent.h" />
+    <ClInclude Include="RenderViewportSwitcherWidget.h" />
     <ClInclude Include="ResourceBase.h" />
     <ClInclude Include="SceneComponent.h" />
     <ClInclude Include="MemoryManager.h" />
@@ -358,6 +364,8 @@
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RHIDevice.h" />
+    <ClInclude Include="SControlPanel.h" />
+    <ClInclude Include="SDetailsWindow.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShapeComponent.h" />
     <ClInclude Include="SMultiViewportWindow.h" />
