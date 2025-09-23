@@ -8,7 +8,7 @@ class UMeshComponent;
 class URHIDevice;
 class UShader;
 class UStaticMesh;
-class FMaterialSlot;
+struct FMaterialSlot;
 
 class URenderer
 {
