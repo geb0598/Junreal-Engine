@@ -16,6 +16,8 @@ public:
     void Initialize(ID3D11Device* Device, UWorld* World, const FRect& InRect, SViewportWindow* MainViewport);
     void SwitchLayout(EViewportLayoutMode NewMode);
 
+    void SwitchPanel(SWindow* SwitchPanel);
+
 
     virtual void OnRender() override;
     virtual void OnUpdate() override;

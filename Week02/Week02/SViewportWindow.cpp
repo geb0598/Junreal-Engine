@@ -2,6 +2,7 @@
 #include "SViewportWindow.h"
 #include "World.h"
 #include "ImGui/imgui.h"
+#include"SMultiViewportWindow.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 SViewportWindow::SViewportWindow()
@@ -221,18 +222,39 @@ void SViewportWindow::RenderToolbar()
 		int currentViewMode = static_cast<int>(ViewportClient-> GetViewModeIndex())-1; // 0=Lit, 1=Unlit, 2=Wireframe -1이유 1부터 시작이여서 
 
 		ImGui::SameLine();
-		if (ImGui::Combo("##ViewMode", &currentViewMode, viewModes, IM_ARRAYSIZE(viewModes)))
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 2)); // 버튼/콤보 내부 여백 축소
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 0)); // 아이템 간 간격 축소
+		ImGui::SetNextItemWidth(80.0f);                                // ✅ 폭 줄이기
+		bool changed = ImGui::Combo("##ViewMode", &currentViewMode, viewModes, IM_ARRAYSIZE(viewModes));
+		ImGui::PopStyleVar(2);
+
+		if (changed && ViewportClient)
 		{
-			if (ViewportClient)
+			switch (currentViewMode)
 			{
-				switch (currentViewMode)
-				{
-				case 0: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Lit); break;
-				case 1: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Unlit); break;
-				case 2: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Wireframe); break;
-				}
+			case 0: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Lit); break;
+			case 1: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Unlit); break;
+			case 2: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Wireframe); break;
 			}
 		}
+		// 🔘 여기 ‘한 번 클릭’ 버튼 추가
+		const float btnW = 60.0f;
+		const ImVec2 btnSize(btnW, 0.0f);
+
+		ImGui::SameLine();
+		float avail = ImGui::GetContentRegionAvail().x;      // 현재 라인에서 남은 가로폭
+		if (avail > btnW) {
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - btnW));
+		}
+
+		if (ImGui::Button("Switch##ToThis", btnSize))
+		{
+			if (auto* MVP = UWorld::GetInstance().GetMultiViewportWindow())
+				MVP->SwitchPanel(this);
+		}
+
+		//ImGui::PopStyleVar();
+
 	}
 	ImGui::End();
 }

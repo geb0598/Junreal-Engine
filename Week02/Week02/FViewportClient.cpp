@@ -134,16 +134,21 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
         if (Camera && (deltaX != 0 || deltaY != 0))
         {
-            float moveSpeed = 0.1f; // 픽셀 이동량을 월드 좌표로 바꿀 스케일
+            // 기준 픽셀→월드 스케일
+            const float basePixelToWorld = 0.05f;
 
-            // 직교 투영에서는 회전없이 그냥 화면 평면에 맞게 이동
-            FVector right = Camera->GetRight(); // 수평 방향
-            FVector up = Camera->GetUp();    // 수직 방향
+            // 줌인(값↑)일수록 더 천천히 움직이도록 역수 적용
+            float zoom = Camera->GetCameraComponent()->GetZoomFactor();
+            zoom = (zoom <= 0.f) ? 1.f : zoom; // 안전장치
+            const float pixelToWorld = basePixelToWorld * zoom;
 
-            CameraAddPosition = CameraAddPosition - right * (deltaX * moveSpeed)
-                + up * (deltaY * moveSpeed);
+            const FVector right = Camera->GetRight();
+            const FVector up = Camera->GetUp();
 
-            // 카메라 위치 즉시 업데이트
+            CameraAddPosition = CameraAddPosition
+                - right * (deltaX * pixelToWorld)
+                + up * (deltaY * pixelToWorld);
+
             SetupCameraMode();
         }
 

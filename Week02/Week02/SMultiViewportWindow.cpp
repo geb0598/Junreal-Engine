@@ -94,13 +94,13 @@ SMultiViewportWindow::~SMultiViewportWindow()
 
 	// 뷰포트들 정리 (MainViewport는 외부에서 주입받았으므로 delete 금지)
 	if (CurrentMode == EViewportLayoutMode::SingleMain) {
-		for (int i = 1; i < 4; i++)  // Viewports[0]은 InMainViewport (외부 관리)
-		{
-			if (Viewports[i]) {
-				delete Viewports[i];
-				Viewports[i] = nullptr;
-			}
-		}
+		//for (int i = 1; i < 4; i++)  // Viewports[0]은 InMainViewport (외부 관리)
+		//{
+		//	if (Viewports[i]) {
+		//		delete Viewports[i];
+		//		Viewports[i] = nullptr;
+		//	}
+		//}
 	}
 
 	//// UI 패널 정리 (RootSplitter에서 정리되지 않는 경우 직접 delete)
@@ -225,6 +225,17 @@ void SMultiViewportWindow::SwitchLayout(EViewportLayoutMode NewMode)
 	}
 
 	CurrentMode = NewMode;
+}
+
+void SMultiViewportWindow::SwitchPanel(SWindow* SwitchPanel)
+{
+
+	if (TopPanel->SideLT != SwitchPanel) {
+		TopPanel->SideLT = SwitchPanel;
+	}
+	else {
+		TopPanel->SideLT = LeftPanel;
+	}
 }
 
 void SMultiViewportWindow::OnRender()

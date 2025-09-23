@@ -33,7 +33,7 @@ private:
 
     FViewport* Viewport = nullptr;
     FViewportClient* ViewportClient = nullptr;
-
+       
  
     EViewportType ViewportType;
     FName ViewportName;
