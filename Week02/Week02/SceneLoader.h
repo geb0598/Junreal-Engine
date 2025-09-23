@@ -30,7 +30,7 @@ struct FPerspectiveCameraData
 class FSceneLoader
 {
 public:
-    static TArray<FPrimitiveData> Load(const FString& FileName);
+    static TArray<FPrimitiveData> Load(const FString& FileName, FPerspectiveCameraData* OutCameraData);
     static void Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspectiveCameraData* InCameraData, const FString& SceneName);
     static bool TryReadNextUUID(const FString& FilePath, uint32& OutNextUUID);
 

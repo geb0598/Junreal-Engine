@@ -576,7 +576,22 @@ void UWorld::LoadScene(const FString& SceneName)
     CreateNewScene();
 
     // [4] 로드
-    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
+    FPerspectiveCameraData CamData{};
+    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath, &CamData);
+
+    // 카메라 적용
+    if (MainCameraActor && MainCameraActor->GetCameraComponent())
+    {
+        UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
+
+        // 위치/회전
+        MainCameraActor->SetActorLocation(CamData.Location);
+        MainCameraActor->SetActorRotation(FQuat::MakeFromEuler(CamData.Rotation));
+
+        // 프로젝션 파라미터
+        Cam->SetFOV(CamData.FOV);
+        Cam->SetClipPlanes(CamData.NearClip, CamData.FarClip);
+    }
 
     uint32 MaxLoadedUUID = 0;
     for (const FPrimitiveData& Primitive : Primitives)
@@ -621,7 +636,7 @@ void UWorld::LoadScene(const FString& SceneName)
     }
 
     // [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
-    const uint32 DuringLoadNext = UObject::PeekNextUUID();        // 로딩 중 SpawnActor로 증가했을 수 있음
+    const uint32 DuringLoadNext = UObject::PeekNextUUID();
     const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
     UObject::SetNextUUID(SafeNext);
 }
