@@ -112,7 +112,6 @@ struct FTextureData
     ID3D11Resource* Texture = nullptr;
     ID3D11ShaderResourceView* TextureSRV = nullptr;
     ID3D11BlendState* BlendState = nullptr;
-    ID3D11SamplerState* SamplerState = nullptr;
 };
 
 enum class EResourceType

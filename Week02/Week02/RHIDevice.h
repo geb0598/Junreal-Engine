@@ -58,5 +58,6 @@ public:
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;
     virtual void OmSetDepthStencilState(EComparisonFunc Func) = 0;
     virtual void Present() = 0;
+    virtual void PSSetDefaultSampler(UINT StartSlot) = 0;
 };
 
