@@ -2,9 +2,9 @@
 #include "SceneComponent.h"
 #include "Material.h"
 
-// 렌더링/콜리전 속성
-// 여기는 보여질 것인지 ? 메쉬 콜리전 사용할 것인지 ? 
-// 속성 종류
+// 전방 선언
+struct FPrimitiveData;
+
 class URenderer;
 
 class UPrimitiveComponent :public USceneComponent
@@ -18,12 +18,11 @@ public:
     virtual void SetMaterial(const FString& FilePath, EVertexLayoutType layoutType);
     virtual UMaterial* GetMaterial() { return Material; }
 
+    // 트랜스폼 직렬화/역직렬화 (월드 트랜스폼 기준)
+    virtual void Serialize(bool bIsLoading, FPrimitiveData& InOut);
+
     virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) {}
 
 protected:
-
-    UMaterial* Material;
-
-
+    UMaterial* Material = nullptr;
 };
-
