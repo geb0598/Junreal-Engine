@@ -2,6 +2,7 @@
 #include "PrimitiveComponent.h"
 #include "SceneLoader.h"
 #include "SceneComponent.h"
+#include "SceneRotationUtils.h"
 
 void UPrimitiveComponent::SetMaterial(const FString& FilePath, EVertexLayoutType layoutType)
 {
@@ -13,9 +14,9 @@ void UPrimitiveComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
     if (bIsLoading)
     {
         // FPrimitiveData -> 컴포넌트 월드 트랜스폼
-        FTransform WT;
+        FTransform WT = GetWorldTransform();
         WT.Translation = InOut.Location;
-        WT.Rotation = FQuat::MakeFromEuler(InOut.Rotation);
+        WT.Rotation = SceneRotUtil::QuatFromEulerZYX_Deg(InOut.Rotation);
         WT.Scale3D = InOut.Scale;
         SetWorldTransform(WT);
     }
@@ -24,7 +25,7 @@ void UPrimitiveComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
         // 컴포넌트 월드 트랜스폼 -> FPrimitiveData
         const FTransform WT = GetWorldTransform();
         InOut.Location = WT.Translation;
-        InOut.Rotation = WT.Rotation.ToEuler();
+        InOut.Rotation = SceneRotUtil::EulerZYX_Deg_FromQuat(WT.Rotation);
         InOut.Scale = WT.Scale3D;
     }
 }

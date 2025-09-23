@@ -13,6 +13,7 @@
 #include "SMultiViewportWindow.h"
 #include "StaticMesh.h"
 #include "ObjManager.h"
+#include "SceneRotationUtils.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -607,9 +608,10 @@ void UWorld::LoadScene(const FString& SceneName)
     uint32 MaxLoadedUUID = 0;
     for (const FPrimitiveData& Primitive : Primitives)
     {
-        // 스폰 시 필요한 초기 트랜스폼은 그대로 넘겨 초기화 안전 보장
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale));
+            FTransform(Primitive.Location,
+                SceneRotUtil::QuatFromEulerZYX_Deg(Primitive.Rotation), // ← 변경
+                Primitive.Scale));
 
         if (Primitive.UUID != 0)
         {
@@ -658,36 +660,32 @@ void UWorld::SaveScene(const FString& SceneName)
 
     for (AActor* Actor : Actors)
     {
-        // StaticMeshActor 직렬화
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
             FPrimitiveData Data;
             Data.UUID = Actor->UUID;
             Data.Type = "StaticMeshComp";
-
             if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
             {
-                // 트랜스폼 + 메시 경로 기록
-                SMC->Serialize(false, Data);
+                SMC->Serialize(false, Data); // 여기서 RotUtil 적용됨(상위 Serialize)
             }
-
             Primitives.push_back(Data);
         }
         else
         {
-            // 필요 시 일반 액터 직렬화 확장 가능(트랜스폼만 저장 등)
             FPrimitiveData Data;
             Data.UUID = Actor->UUID;
             Data.Type = "Actor";
 
             if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
             {
-                Prim->Serialize(false, Data);
+                Prim->Serialize(false, Data); // 여기서 RotUtil 적용됨
             }
             else
             {
+                // 루트가 Primitive가 아닐 때도 동일 규칙으로 저장
                 Data.Location = Actor->GetActorLocation();
-                Data.Rotation = Actor->GetActorRotation().ToEuler();
+                Data.Rotation = SceneRotUtil::EulerZYX_Deg_FromQuat(Actor->GetActorRotation());
                 Data.Scale = Actor->GetActorScale();
             }
 
