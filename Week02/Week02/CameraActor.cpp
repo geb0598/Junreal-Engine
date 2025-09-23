@@ -53,6 +53,45 @@ void ACameraActor::Tick(float DeltaSeconds)
     }
 }
 
+static inline float ClampPitch(float P)
+{
+    // 입력 경로와 동일한 클램프 적용
+    return std::clamp(P, -89.9f, 89.9f);
+}
+
+void ACameraActor::SetAnglesImmediate(float InPitchDeg, float InYawDeg)
+{
+    // 내부 상태 갱신
+    CameraPitchDeg = ClampPitch(InPitchDeg);
+    CameraYawDeg = InYawDeg;
+
+    // 입력 경로와 동일한 축/순서로 쿼터니언 조립
+    // 사용 중인 좌표계: Pitch = Y축, Yaw = Z축 (질문에서 언급하신 매핑)
+    const float RadPitch = DegreeToRadian(CameraPitchDeg);
+    const float RadYaw = DegreeToRadian(CameraYawDeg);
+
+    const FQuat QYaw = FQuat::FromAxisAngle(FVector{ 0, 0, 1 }, RadYaw);
+    const FQuat QPitch = FQuat::FromAxisAngle(FVector{ 0, 1, 0 }, RadPitch);
+
+    // 조립 순서도 입력 경로와 동일하게
+    const FQuat FinalRot = QYaw * QPitch;
+
+    SetActorRotation(FinalRot);
+
+    // 스무딩/보간 캐시가 있다면 현재 상태로 초기화
+    SyncRotationCache();
+}
+
+void ACameraActor::SyncRotationCache()
+{
+    // 만약 ProcessCameraRotation에서 이전 각도/쿼터니언을 보간에 사용한다면
+    // 그 캐시를 현재 상태로 맞춰 1프레임 스냅을 방지
+    // 예시:
+    // LastYawDeg = CameraYawDeg;
+    // LastPitchDeg = CameraPitchDeg;
+    // LastRotQuat = GetActorRotation();
+}
+
 ACameraActor::~ACameraActor()
 {
     if (CameraComponent)

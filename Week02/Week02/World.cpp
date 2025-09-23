@@ -13,6 +13,7 @@
 #include "SMultiViewportWindow.h"
 #include "StaticMesh.h"
 #include "ObjManager.h"
+#include "SceneRotationUtils.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -575,15 +576,42 @@ void UWorld::LoadScene(const FString& SceneName)
 	// [3] 기존 씬 비우기
 	CreateNewScene();
 
-	// [4] 로드
-	const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
+    // [4] 로드
+    FPerspectiveCameraData CamData{};
+    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath, &CamData);
 
-	uint32 MaxLoadedUUID = 0;
-	for (const FPrimitiveData& Primitive : Primitives)
-	{
-		// 스폰 시 필요한 초기 트랜스폼은 그대로 넘겨 초기화 안전 보장
-		AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-			FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale));
+    // 마우스 델타 초기화
+    const FVector2D CurrentMousePos = UInputManager::GetInstance().GetMousePosition();
+    UInputManager::GetInstance().SetLastMousePosition(CurrentMousePos);
+
+    // 카메라 적용
+    if (MainCameraActor && MainCameraActor->GetCameraComponent())
+    {
+        UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
+
+        // 위치/회전(월드 트랜스폼)
+        MainCameraActor->SetActorLocation(CamData.Location);
+        MainCameraActor->SetActorRotation(FQuat::MakeFromEuler(CamData.Rotation));
+
+        // 입력 경로와 동일한 방식으로 각도/회전 적용
+        // 매핑: Pitch = CamData.Rotation.Y, Yaw = CamData.Rotation.Z
+        MainCameraActor->SetAnglesImmediate(CamData.Rotation.Y, CamData.Rotation.Z);
+
+		// UIManager의 카메라 회전 상태도 동기화
+		UIManager.UpdateMouseRotation(CamData.Rotation.Y, CamData.Rotation.Z);
+
+        // 프로젝션 파라미터
+        Cam->SetFOV(CamData.FOV);
+        Cam->SetClipPlanes(CamData.NearClip, CamData.FarClip);
+    }
+
+    uint32 MaxLoadedUUID = 0;
+    for (const FPrimitiveData& Primitive : Primitives)
+    {
+        AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
+            FTransform(Primitive.Location,
+                SceneRotUtil::QuatFromEulerZYX_Deg(Primitive.Rotation), // ← 변경
+                Primitive.Scale));
 
 		if (Primitive.UUID != 0)
 		{
@@ -620,60 +648,74 @@ void UWorld::LoadScene(const FString& SceneName)
 		}
 	}
 
-	// [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
-	const uint32 DuringLoadNext = UObject::PeekNextUUID();        // 로딩 중 SpawnActor로 증가했을 수 있음
-	const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
-	UObject::SetNextUUID(SafeNext);
+    // [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
+    const uint32 DuringLoadNext = UObject::PeekNextUUID();
+    const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
+    UObject::SetNextUUID(SafeNext);
 }
 
 void UWorld::SaveScene(const FString& SceneName)
 {
 	TArray<FPrimitiveData> Primitives;
 
-	for (AActor* Actor : Actors)
-	{
-		// StaticMeshActor 직렬화
-		if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
-		{
-			FPrimitiveData Data;
-			Data.UUID = Actor->UUID;
-			Data.Type = "StaticMeshComp";
+    for (AActor* Actor : Actors)
+    {
+        if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
+        {
+            FPrimitiveData Data;
+            Data.UUID = Actor->UUID;
+            Data.Type = "StaticMeshComp";
+            if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
+            {
+                SMC->Serialize(false, Data); // 여기서 RotUtil 적용됨(상위 Serialize)
+            }
+            Primitives.push_back(Data);
+        }
+        else
+        {
+            FPrimitiveData Data;
+            Data.UUID = Actor->UUID;
+            Data.Type = "Actor";
 
-			if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
-			{
-				// 트랜스폼 + 메시 경로 기록
-				SMC->Serialize(false, Data);
-			}
+            if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+            {
+                Prim->Serialize(false, Data); // 여기서 RotUtil 적용됨
+            }
+            else
+            {
+                // 루트가 Primitive가 아닐 때도 동일 규칙으로 저장
+                Data.Location = Actor->GetActorLocation();
+                Data.Rotation = SceneRotUtil::EulerZYX_Deg_FromQuat(Actor->GetActorRotation());
+                Data.Scale = Actor->GetActorScale();
+            }
 
-			Primitives.push_back(Data);
-		}
-		else
-		{
-			// 필요 시 일반 액터 직렬화 확장 가능(트랜스폼만 저장 등)
-			FPrimitiveData Data;
-			Data.UUID = Actor->UUID;
-			Data.Type = "Actor";
+            Data.ObjStaticMeshAsset.clear();
+            Primitives.push_back(Data);
+        }
+    }
 
-			// 가능하면 루트 컴포넌트(Primitive) 기준으로 기록
-			if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
-			{
-				Prim->Serialize(false, Data);
-			}
-			else
-			{
-				// 폴백: 액터 트랜스폼
-				Data.Location = Actor->GetActorLocation();
-				Data.Rotation = Actor->GetActorRotation().ToEuler();
-				Data.Scale = Actor->GetActorScale();
-			}
+    // 카메라 데이터 채우기
+    const FPerspectiveCameraData* CamPtr = nullptr;
+    FPerspectiveCameraData CamData;
+    if (MainCameraActor && MainCameraActor->GetCameraComponent())
+    {
+        UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
 
-			Data.ObjStaticMeshAsset.clear();
-			Primitives.push_back(Data);
-		}
-	}
+        CamData.Location = MainCameraActor->GetActorLocation();
 
-	// Scene 디렉터리에 저장
-	FSceneLoader::Save(Primitives, "Scene/" + SceneName);
+        // 내부 누적 각도로 저장: Pitch=Y, Yaw=Z, Roll=0
+        CamData.Rotation.X = 0.0f;
+        CamData.Rotation.Y = MainCameraActor->GetCameraPitch();
+        CamData.Rotation.Z = MainCameraActor->GetCameraYaw();
+
+        CamData.FOV = Cam->GetFOV();
+        CamData.NearClip = Cam->GetNearClip();
+        CamData.FarClip = Cam->GetFarClip();
+        CamPtr = &CamData;
+    }
+
+    // Scene 디렉터리에 저장
+    FSceneLoader::Save(Primitives, CamPtr, SceneName);
 }
 
 AGizmoActor* UWorld::GetGizmoActor()

@@ -47,6 +47,8 @@ public:
     // 화면 크기 (픽셀) - 매 호출 시 동적 조회
     FVector2D GetScreenSize() const;
 
+	void SetLastMousePosition(const FVector2D& Pos) { PreviousMousePosition = Pos; }
+
     bool IsMouseButtonDown(EMouseButton Button) const;
     bool IsMouseButtonPressed(EMouseButton Button) const; // 이번 프레임에 눌림
     bool IsMouseButtonReleased(EMouseButton Button) const; // 이번 프레임에 떼짐

@@ -4,30 +4,80 @@
 #include <algorithm>
 #include <iomanip>
 
-TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
+static bool ParsePerspectiveCamera(const JSON& Root, FPerspectiveCameraData& OutCam)
+{
+    if (!Root.hasKey("PerspectiveCamera"))
+    {
+        return false;
+    }
+
+    const JSON& Cam = Root.at("PerspectiveCamera");
+
+    // 벡터들
+    if (Cam.hasKey("Location"))
+    {
+        auto loc = Cam.at("Location");
+        OutCam.Location = FVector(
+            (float)loc[0].ToFloat(),
+            (float)loc[1].ToFloat(),
+            (float)loc[2].ToFloat());
+    }
+    if (Cam.hasKey("Rotation"))
+    {
+        auto rot = Cam.at("Rotation");
+        OutCam.Rotation = FVector(
+            (float)rot[0].ToFloat(),
+            (float)rot[1].ToFloat(),
+            (float)rot[2].ToFloat());
+    }
+
+    // 스칼라들
+    if (Cam.hasKey("FOV"))      OutCam.FOV = (float)Cam.at("FOV").ToFloat();
+    if (Cam.hasKey("NearClip")) OutCam.NearClip = (float)Cam.at("NearClip").ToFloat();
+    if (Cam.hasKey("FarClip"))  OutCam.FarClip = (float)Cam.at("FarClip").ToFloat();
+
+    return true;
+}
+
+TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName, FPerspectiveCameraData* OutCameraData)
 {
     std::ifstream file(FileName);
     if (!file.is_open())
     {
-        std::cerr << "파일을 열 수 없습니다: " << FileName << std::endl;
+		UE_LOG("Scene load failed. Cannot open file: %s", FileName.c_str());
         return {};
     }
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string content = buffer.str();
+    std::stringstream Buffer;
+    Buffer << file.rdbuf();
+    std::string content = Buffer.str();
 
     try {
         JSON j = JSON::Load(content);
+
+        // 카메라 먼저 파싱
+        if (OutCameraData)
+        {
+            FPerspectiveCameraData Temp{};
+            if (ParsePerspectiveCamera(j, Temp))
+            {
+                *OutCameraData = Temp;
+            }
+            else
+            {
+                // 카메라 블록이 없으면 값을 건드리지 않음
+            }
+        }
+
         return Parse(j);
     }
     catch (const std::exception& e) {
-        std::cerr << "JSON 파싱 실패: " << e.what() << std::endl;
+		UE_LOG("Scene load failed. JSON parse error: %s", e.what());
         return {};
     }
 }
 
-void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& SceneName)
+void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspectiveCameraData* InCameraData, const FString& SceneName)
 {
     // 상단 메타 정보
     uint32 NextUUID = UObject::PeekNextUUID();
@@ -66,8 +116,9 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
     oss << "{\n";
     oss << "  \"Version\": 1,\n";
     oss << "  \"NextUUID\": " << NextUUID << ",\n";
-    oss << "  \"Primitives\": {\n";
 
+    // Primitives
+    oss << "  \"Primitives\": {\n";
     for (size_t i = 0; i < InPrimitiveData.size(); ++i)
     {
         const FPrimitiveData& Data = InPrimitiveData[i];
@@ -79,8 +130,25 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
         oss << "      \"Type\": " << "\"" << Data.Type << "\"\n";
         oss << "    }" << (i + 1 < InPrimitiveData.size() ? "," : "") << "\n";
     }
+    oss << "  }";
 
-    oss << "  }\n";
+    // PerspectiveCamera
+    if (InCameraData)
+    {
+        oss << ",\n";
+        oss << "  \"PerspectiveCamera\": {\n";
+        writeVec3("Location", InCameraData->Location, 4); oss << ",\n";
+        writeVec3("Rotation", InCameraData->Rotation, 4); oss << ",\n";
+        oss << "    \"FOV\": " << InCameraData->FOV << ",\n";
+        oss << "    \"NearClip\": " << InCameraData->NearClip << ",\n";
+        oss << "    \"FarClip\": " << InCameraData->FarClip << "\n";
+        oss << "  }\n";
+    }
+    else
+    {
+        oss << "\n";
+    }
+
     oss << "}\n";
 
     const std::string finalPath = outPath.make_preferred().string();
