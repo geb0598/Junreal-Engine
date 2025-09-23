@@ -15,6 +15,13 @@ public:
     ACameraActor();
     virtual void Tick(float DeltaSeconds) override;
 
+    // 씬 로드 등 외부에서 카메라 각도를 즉시 세팅하고
+    // 입력 경로와 동일한 방식으로 트랜스폼을 재조립
+    void SetAnglesImmediate(float InPitchDeg, float InYawDeg);
+
+    // 선택: 스무딩/보간 캐시가 있다면 여기서 동기화
+    void SyncRotationCache();
+
 protected:
     ~ACameraActor() override;
 

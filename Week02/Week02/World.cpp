@@ -579,14 +579,25 @@ void UWorld::LoadScene(const FString& SceneName)
     FPerspectiveCameraData CamData{};
     const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath, &CamData);
 
+    // 마우스 델타 초기화
+    const FVector2D CurrentMousePos = UInputManager::GetInstance().GetMousePosition();
+    UInputManager::GetInstance().SetLastMousePosition(CurrentMousePos);
+
     // 카메라 적용
     if (MainCameraActor && MainCameraActor->GetCameraComponent())
     {
         UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
 
-        // 위치/회전
+        // 위치/회전(월드 트랜스폼)
         MainCameraActor->SetActorLocation(CamData.Location);
         MainCameraActor->SetActorRotation(FQuat::MakeFromEuler(CamData.Rotation));
+
+        // 입력 경로와 동일한 방식으로 각도/회전 적용
+        // 매핑: Pitch = CamData.Rotation.Y, Yaw = CamData.Rotation.Z
+        MainCameraActor->SetAnglesImmediate(CamData.Rotation.Y, CamData.Rotation.Z);
+
+		// UIManager의 카메라 회전 상태도 동기화
+		UIManager.UpdateMouseRotation(CamData.Rotation.Y, CamData.Rotation.Z);
 
         // 프로젝션 파라미터
         Cam->SetFOV(CamData.FOV);
