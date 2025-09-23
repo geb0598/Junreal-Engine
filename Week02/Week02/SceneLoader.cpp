@@ -27,7 +27,7 @@ TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName)
     }
 }
 
-void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& SceneName)
+void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspectiveCameraData* InCameraData, const FString& SceneName)
 {
     // 상단 메타 정보
     uint32 NextUUID = UObject::PeekNextUUID();
@@ -66,8 +66,9 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
     oss << "{\n";
     oss << "  \"Version\": 1,\n";
     oss << "  \"NextUUID\": " << NextUUID << ",\n";
-    oss << "  \"Primitives\": {\n";
 
+    // Primitives
+    oss << "  \"Primitives\": {\n";
     for (size_t i = 0; i < InPrimitiveData.size(); ++i)
     {
         const FPrimitiveData& Data = InPrimitiveData[i];
@@ -79,8 +80,25 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
         oss << "      \"Type\": " << "\"" << Data.Type << "\"\n";
         oss << "    }" << (i + 1 < InPrimitiveData.size() ? "," : "") << "\n";
     }
+    oss << "  }";
 
-    oss << "  }\n";
+    // PerspectiveCamera
+    if (InCameraData)
+    {
+        oss << ",\n";
+        oss << "  \"PerspectiveCamera\": {\n";
+        writeVec3("Location", InCameraData->Location, 4); oss << ",\n";
+        writeVec3("Rotation", InCameraData->Rotation, 4); oss << ",\n";
+        oss << "    \"FOV\": " << InCameraData->FOV << ",\n";
+        oss << "    \"NearClip\": " << InCameraData->NearClip << ",\n";
+        oss << "    \"FarClip\": " << InCameraData->FarClip << "\n";
+        oss << "  }\n";
+    }
+    else
+    {
+        oss << "\n";
+    }
+
     oss << "}\n";
 
     const std::string finalPath = outPath.make_preferred().string();

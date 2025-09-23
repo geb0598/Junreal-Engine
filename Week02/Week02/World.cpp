@@ -654,14 +654,12 @@ void UWorld::SaveScene(const FString& SceneName)
             Data.UUID = Actor->UUID;
             Data.Type = "Actor";
 
-            // 가능하면 루트 컴포넌트(Primitive) 기준으로 기록
             if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
             {
                 Prim->Serialize(false, Data);
             }
             else
             {
-                // 폴백: 액터 트랜스폼
                 Data.Location = Actor->GetActorLocation();
                 Data.Rotation = Actor->GetActorRotation().ToEuler();
                 Data.Scale = Actor->GetActorScale();
@@ -672,8 +670,22 @@ void UWorld::SaveScene(const FString& SceneName)
         }
     }
 
+    // 카메라 데이터 채우기
+    const FPerspectiveCameraData* CamPtr = nullptr;
+    FPerspectiveCameraData CamData;
+    if (MainCameraActor && MainCameraActor->GetCameraComponent())
+    {
+        UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
+        CamData.Location = MainCameraActor->GetActorLocation();
+        CamData.Rotation = MainCameraActor->GetActorRotation().ToEuler();
+        CamData.FOV = Cam->GetFOV();
+        CamData.NearClip = Cam->GetNearClip();
+        CamData.FarClip = Cam->GetFarClip();
+        CamPtr = &CamData;
+    }
+
     // Scene 디렉터리에 저장
-    FSceneLoader::Save(Primitives, "Scene/" + SceneName);
+    FSceneLoader::Save(Primitives, CamPtr, SceneName);
 }
 
 AGizmoActor* UWorld::GetGizmoActor()

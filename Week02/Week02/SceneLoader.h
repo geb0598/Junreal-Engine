@@ -18,15 +18,20 @@ struct FPrimitiveData
     FString ObjStaticMeshAsset;
 };
 
+struct FPerspectiveCameraData
+{
+    FVector Location;
+	FVector Rotation;
+	float FOV;
+	float NearClip;
+	float FarClip;
+};
+
 class FSceneLoader
 {
 public:
     static TArray<FPrimitiveData> Load(const FString& FileName);
-
-public:
-    static void Save(TArray<FPrimitiveData> InPrimitiveData, const FString& SceneName);
-
-    // 씬 파일에서 NextUUID 메타만 읽어오는 헬퍼
+    static void Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspectiveCameraData* InCameraData, const FString& SceneName);
     static bool TryReadNextUUID(const FString& FilePath, uint32& OutNextUUID);
 
 private:
