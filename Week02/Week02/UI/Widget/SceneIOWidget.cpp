@@ -57,20 +57,39 @@ void USceneIOWidget::RenderWidget()
 void USceneIOWidget::RenderSaveSection()
 {
 	ImGui::Text("Save Scene");
-	
+
+	// 씬 이름 입력(저장은 항상 Scene/Name.Scene으로 강제)
+	ImGui::SetNextItemWidth(220);
+	ImGui::InputText("Scene Name", NewLevelNameBuffer, sizeof(NewLevelNameBuffer));
+
 	if (ImGui::Button("Save Scene", ImVec2(100, 25)))
 	{
-		path FilePath = OpenSaveFileDialog();
-		if (!FilePath.empty())
+		// 간단 유효성 검사(빈 문자열/공백만 입력 방지)
+		FString SceneName = NewLevelNameBuffer;
+		bool bValid = false;
+		for (char c : SceneName)
 		{
-			SaveLevel(FilePath.string());
+			if (c != ' ' && c != '\t')
+			{
+				bValid = true;
+				break;
+			}
+		}
+
+		if (!bValid)
+		{
+			SetStatusMessage("Please enter a valid scene name!", true);
+		}
+		else
+		{
+			// 파일 다이얼로그 없이 이름만 전달 → FSceneLoader::Save가 Scene/Name.Scene으로 저장
+			SaveLevel(SceneName);
 		}
 	}
-	
+
 	ImGui::SameLine();
 	if (ImGui::Button("Quick Save", ImVec2(100, 25)))
 	{
-		// Quick save to default location
 		SaveLevel("");
 	}
 }
