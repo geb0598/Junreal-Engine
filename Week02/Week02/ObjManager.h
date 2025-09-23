@@ -6,14 +6,6 @@
 // Raw Data
 struct FObjInfo
 {
-    // Vertex List
-    // UV List
-    // Normal List
-    // Vertex Index List
-    // UV Index List
-    // Normal Index List
-    // other...
-
     TArray<FVector> Positions;
     TArray<FVector2D> TexCoords;
     TArray<FVector> Normals;
@@ -22,10 +14,6 @@ struct FObjInfo
     TArray<uint32> TexCoordIndices;
     TArray<uint32> NormalIndices;
 
-    // TODO: Material 관련 정보 추가 필요
-    // Material List
-    // Texture List
-    // other...
     TArray<FString> MaterialNames; // == 강의 글의 meshMaterials
     TArray<uint32> GroupIndexStartArray; // i번째 Group이 사용하는 indices 범위: GroupIndexStartArray[i] ~ GroupIndexStartArray[i+1]
     TArray<uint32> GroupMaterialArray; // i번쩨 Group이 사용하는 MaterialInfos 인덱스 넘버
@@ -39,22 +27,12 @@ struct FObjInfo
 
 struct FObjImporter
 {
-    // Obj Parsing (*.obj to FObjInfo)
-    // Material Parsing (*.obj to MaterialInfo)
-    // Convert the Raw data to Cooked data (FStaticMesh)
-    // other...
-
-    // TODO: Material 파싱도 필요
     // TODO: 변수이름 가독성 있게 재설정
 public:
     static bool LoadObjModel(const FString& InFileName, FObjInfo* const OutObjInfo, TArray<FObjMaterialInfo>& const OutMaterialInfos, bool bIsRHCoordSys, bool bComputeNormals)
     {
         // mtl 파싱할 때 필요한 정보들. 이거를 함수 밖으로 보내줘야 할수도? obj 파싱하면서 저장.(아래 링크 기반) 나중에 형식 바뀔수도 있음
         // https://www.braynzarsoft.net/viewtutorial/q16390-22-loading-static-3d-models-obj-format
-        //TArray<uint32> GroupIndexStartArray; // i번째 Group이 사용하는 indices 범위: GroupIndexStartArray[i] ~ GroupIndexStartArray[i+1]
-        //TArray<uint32> GroupMaterialArray; // i번쩨 Group이 사용하는 Materials 인덱스 넘버
-        //TArray<FObjMaterialInfo> MaterialInfos; // Material 정보들
-        // TArray<ID3D11ShaderResourceView*> meshSRV; // MaterialInfos의 각 원소에 저장된 index로 여기서 참조.
         uint32 subsetCount = 0;
 
         FString MtlFileName;
@@ -68,11 +46,8 @@ public:
         uint32 VertexTexIndexTemp;
         uint32 VertexNormalIndexTemp;
 
-        WIDECHAR CheckChar;
         FString Face;
         uint32 VIndex = 0; // 현재 파싱중인 vertex의 넘버(start: 0. 중복 고려x)
-        uint32 TriangleCount = 0; // 현재 face 한줄에 들어있는 triangle 개수
-        uint32 TotalVerts = 0; // 현재까지 파싱된 vertex 개수(중복 제거 후)
         uint32 MeshTriangles = 0; // 현재까지 파싱된 Triangle 개수
 
         size_t pos = InFileName.find_last_of("/\\");
@@ -154,18 +129,8 @@ public:
                     continue;
                 }
 
-                // 1) TriangleCount 구하기
                 std::stringstream wss(Face);
                 FString VertexDef; // ex: 3/2/2
-                //uint32 VertexCount = 0;
-                //while (wss >> VertexDef)
-                //{
-                //    VertexCount++;
-                //}
-                //TriangleCount = (VertexCount >= 3) ? VertexCount - 2 : 0;
-
-                //wss.clear();              // 스트림 상태 플래그 초기화 (EOF, fail 등)
-                //wss.seekg(0, std::ios::beg); // 읽기 위치를 맨 앞으로 이동
 
                 // 2) 실제 Face 파싱
                 TArray<FFaceVertex> LineFaceVertices;
@@ -208,14 +173,6 @@ public:
             else if (line.rfind("mtllib ", 0) == 0)
             {
                 MtlFileName = objDir + line.substr(7);
-                /*if (line.substr(7).rfind("Data/") != 0)
-                {
-                    MtlFileName = "Data/" + line.substr(7);
-                }
-                else
-                {
-                    MtlFileName = line.substr(7);
-                }*/
             }
             else if (line.rfind("usemtl ", 0) == 0)
             {
@@ -548,44 +505,6 @@ public:
                 VertexMap[Key] = NewIndex;
             }
         }
-
-        // 정점 및 인덱스 정보 정리
-        //for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
-        //{
-        //    bool bIsDuplicate = false;
-        //    /*for (int PreIndex = 0; PreIndex < CurIndex; ++PreIndex)
-        //    {
-        //        if (InObjInfo.PositionIndices[CurIndex] == InObjInfo.PositionIndices[PreIndex] && InObjInfo.TexCoordIndices[CurIndex] == InObjInfo.TexCoordIndices[PreIndex])
-        //        {
-        //            OutStaticMesh->Indices.push_back(PreIndex);
-        //            bIsDuplicate = true;
-        //            break;
-        //        }
-        //    }*/
-
-        //    const uint64 VertexLen = OutStaticMesh->Vertices.size();
-        //    for (uint32 VertexIndex = 0; VertexIndex < VertexLen; ++VertexIndex)
-        //    {
-        //        if (OutStaticMesh->Vertices[VertexIndex].pos == InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]] && OutStaticMesh->Vertices[VertexIndex].tex == InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]])
-        //        {
-        //            OutStaticMesh->Indices.push_back(VertexIndex);
-        //            bIsDuplicate = true;
-        //            break;
-        //        }
-        //    }
-
-        //    if (!bIsDuplicate)
-        //    {
-        //        FVector Pos = InObjInfo.Positions[InObjInfo.PositionIndices[CurIndex]];
-        //        FVector Normal = InObjInfo.Normals[InObjInfo.NormalIndices[CurIndex]];
-        //        FVector2D TexCoord = InObjInfo.TexCoords[InObjInfo.TexCoordIndices[CurIndex]];
-        //        FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f); // default color
-        //        FNormalVertex NormalVertex = FNormalVertex(Pos, Normal, Color, TexCoord);
-        //        OutStaticMesh->Vertices.push_back(NormalVertex);
-
-        //        OutStaticMesh->Indices.push_back(OutStaticMesh->Vertices.size() - 1);
-        //    }
-        //}
 
         // Material 정보 정리
         if (!InObjInfo.bHasMtl)
