@@ -9,7 +9,7 @@
 
 UStaticMeshComponent::UStaticMeshComponent()
 {
-
+    SetMaterial("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
 }
 
 UStaticMeshComponent::~UStaticMeshComponent()

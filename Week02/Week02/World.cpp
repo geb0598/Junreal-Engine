@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "SelectionManager.h"
 #include "Picking.h"
 #include "SceneLoader.h"
@@ -568,11 +568,16 @@ void UWorld::ProcessViewportInput()
     }
 }
 
-
 void UWorld::LoadScene(const FString& SceneName)
 {
-    // 0) 파일 경로 구성
-    const FString FilePath = SceneName + ".Scene";
+    // 0) 파일 경로를 Scene 디렉터리로 고정하고 확장자 보정
+    namespace fs = std::filesystem;
+    fs::path path = fs::path("Scene") / SceneName;
+    if (path.extension().string() != ".Scene")
+    {
+        path.replace_extension(".Scene");
+    }
+    const FString FilePath = path.make_preferred().string();
 
     // 1) 파일 메타의 NextUUID를 먼저 동기화 (없으면 무시)
     uint32 LoadedNextUUID = 0;
@@ -611,7 +616,6 @@ void UWorld::LoadScene(const FString& SceneName)
         {
             FPrimitiveData Temp = Primitive;
             SMC->Serialize(true, Temp);
-            SMC->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
             FString LoadedAssetPath;
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
@@ -659,11 +663,8 @@ void UWorld::SaveScene(const FString& SceneName)
         {
             if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
             {
-                // 컴포넌트가 스스로 메시(에셋 경로) 직렬화 수행
                 SMC->Serialize(false, Data);
             }
-
-            // 타입 표기는 유지(레거시/디버깅용)
             Data.Type = "StaticMeshComp";
         }
         else
@@ -675,7 +676,8 @@ void UWorld::SaveScene(const FString& SceneName)
         Primitives.push_back(Data);
     }
 
-    FSceneLoader::Save(Primitives, SceneName);
+    // Scene 디렉터리에 저장
+    FSceneLoader::Save(Primitives, "Scene/" + SceneName);
 }
 
 AGizmoActor* UWorld::GetGizmoActor()
