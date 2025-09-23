@@ -42,29 +42,22 @@ void USceneIOWidget::RenderWidget()
 	ImGui::Text("Scene Management");
 	ImGui::Separator();
 	
-	RenderSaveSection();
-	ImGui::Spacing();
-	
-	RenderLoadSection();
-	ImGui::Spacing();
-	
-	RenderNewSceneSection();
+	RenderSaveLoadSection();
 	ImGui::Spacing();
 	
 	RenderStatusMessage();
 }
 
-void USceneIOWidget::RenderSaveSection()
+void USceneIOWidget::RenderSaveLoadSection()
 {
-	ImGui::Text("Save Scene");
-
-	// 씬 이름 입력(저장은 항상 Scene/Name.Scene으로 강제)
+	// 공용 씬 이름 입력 (Scene/Name.Scene 으로 강제 저장/로드)
 	ImGui::SetNextItemWidth(220);
 	ImGui::InputText("Scene Name", NewLevelNameBuffer, sizeof(NewLevelNameBuffer));
 
-	if (ImGui::Button("Save Scene", ImVec2(100, 25)))
+	// 버튼들: Save / Quick Save / Load / Quick Load / New Scene
+	if (ImGui::Button("Save Scene", ImVec2(110, 25)))
 	{
-		// 간단 유효성 검사(빈 문자열/공백만 입력 방지)
+		// 유효성 검사
 		FString SceneName = NewLevelNameBuffer;
 		bool bValid = false;
 		for (char c : SceneName)
@@ -88,31 +81,73 @@ void USceneIOWidget::RenderSaveSection()
 	}
 
 	ImGui::SameLine();
-	if (ImGui::Button("Quick Save", ImVec2(100, 25)))
+	if (ImGui::Button("Quick Save", ImVec2(110, 25)))
 	{
 		SaveLevel("");
 	}
-}
 
-void USceneIOWidget::RenderLoadSection()
-{
-	ImGui::Text("Load Scene");
 	
-	if (ImGui::Button("Load Scene", ImVec2(100, 25)))
+	if (ImGui::Button("Load Scene", ImVec2(110, 25)))
 	{
-		path FilePath = OpenLoadFileDialog();
-		if (!FilePath.empty())
+		// 유효성 검사
+		FString SceneName = NewLevelNameBuffer;
+		bool bValid = false;
+		for (char c : SceneName)
 		{
-			LoadLevel(FilePath.string());
+			if (c != ' ' && c != '\t')
+			{
+				bValid = true;
+				break;
+			}
+		}
+
+		if (!bValid)
+		{
+			SetStatusMessage("Please enter a valid scene name!", true);
+		}
+		else
+		{
+			// Scene/Name.Scene 경로 구성 및 존재 확인
+			namespace fs = std::filesystem;
+			fs::path path = fs::path("Scene") / SceneName;
+			if (path.extension().string() != ".Scene")
+			{
+				path.replace_extension(".Scene");
+			}
+
+			if (!fs::exists(path))
+			{
+				SetStatusMessage("Scene file not found: " + path.string(), true);
+			}
+			else
+			{
+				// 절대/정규 경로 전달 → LoadLevel에서 NextUUID 읽기/로드 처리
+				LoadLevel(path.make_preferred().string());
+			}
 		}
 	}
-}
 
-void USceneIOWidget::RenderNewSceneSection()
-{
-	ImGui::Text("Create New Scene");
+	ImGui::SameLine();
+	if (ImGui::Button("Quick Load", ImVec2(110, 25)))
+	{
+		namespace fs = std::filesystem;
+		fs::path quick = fs::path("Scene") / "QuickSave";
+		if (quick.extension().string() != ".Scene")
+		{
+			quick.replace_extension(".Scene");
+		}
 
-	if (ImGui::Button("Create New Scene", ImVec2(150, 25)))
+		if (!fs::exists(quick))
+		{
+			SetStatusMessage("QuickSave not found: " + quick.make_preferred().string(), true);
+		}
+		else
+		{
+			LoadLevel(quick.make_preferred().string());
+		}
+	}
+
+	if (ImGui::Button("New Scene", ImVec2(110, 25)))
 	{
 		CreateNewLevel();
 	}
