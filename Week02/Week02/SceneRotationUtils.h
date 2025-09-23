@@ -4,8 +4,8 @@
 
 namespace SceneRotUtil
 {
-    inline float DegToRad(float d) { return d * (3.14159265358979323846 / 180.0); }
-    inline float RadToDeg(float r) { return r * (180.0 / 3.14159265358979323846); }
+    inline float DegToRad(float d) { return d * (3.14159f/ 180.0f); }
+    inline float RadToDeg(float r) { return r * (180.0f / 3.141592f); }
 
     inline float Clamp(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
@@ -33,9 +33,9 @@ namespace SceneRotUtil
         const float y = DegToRad((float)eulerDeg.Y);
         const float z = DegToRad((float)eulerDeg.Z);
 
-        const float cx = std::cos(x * 0.5), sx = std::sin(x * 0.5);
-        const float cy = std::cos(y * 0.5), sy = std::sin(y * 0.5);
-        const float cz = std::cos(z * 0.5), sz = std::sin(z * 0.5);
+        const float cx = std::cosf(x * 0.5f), sx = std::sinf(x * 0.5f);
+        const float cy = std::cosf(y * 0.5f), sy = std::sinf(y * 0.5f);
+        const float cz = std::cosf(z * 0.5f), sz = std::sinf(z * 0.5f);
 
         // q = qz * qy * qx
         float qw = cz * cy * cx + sz * sy * sx;
@@ -55,15 +55,15 @@ namespace SceneRotUtil
         NormalizeQuat(x, y, z, w);
 
         // 회전 행렬 성분 (float)
-        const float r00 = 1.0 - 2.0 * (y * y + z * z);
-        const float r01 = 2.0 * (x * y - z * w);
-        const float r02 = 2.0 * (x * z + y * w);
-        const float r10 = 2.0 * (x * y + z * w);
-        const float r11 = 1.0 - 2.0 * (x * x + z * z);
-        const float r12 = 2.0 * (y * z - x * w);
-        const float r20 = 2.0 * (x * z - y * w);
-        const float r21 = 2.0 * (y * z + x * w);
-        const float r22 = 1.0 - 2.0 * (x * x + y * y);
+        const float r00 = 1.0f - 2.0f * (y * y + z * z);
+        const float r01 = 2.0f * (x * y - z * w);
+        const float r02 = 2.0f * (x * z + y * w);
+        const float r10 = 2.0f * (x * y + z * w);
+        const float r11 = 1.0f - 2.0f * (x * x + z * z);
+        const float r12 = 2.0f * (y * z - x * w);
+        const float r20 = 2.0f * (x * z - y * w);
+        const float r21 = 2.0f * (y * z + x * w);
+        const float r22 = 1.0f - 2.0f * (x * x + y * y);
 
         // ZYX 분해
         // pitch(y) = asin(-r20)
