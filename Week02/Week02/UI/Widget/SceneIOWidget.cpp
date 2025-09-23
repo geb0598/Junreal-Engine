@@ -239,7 +239,7 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 			// UObject::SetNextUUID(1); // 필요하면 활성화
 		}
 
-		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".scene"으로 접근)
+		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".Scene"으로 접근)
 		CurrentWorld->LoadScene(SceneName);
 
 		UE_LOG("SceneIO: Scene loaded successfully: %s", SceneName.c_str());

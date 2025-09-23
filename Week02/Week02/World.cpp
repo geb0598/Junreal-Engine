@@ -611,7 +611,6 @@ void UWorld::LoadScene(const FString& SceneName)
         {
             FPrimitiveData Temp = Primitive;
             SMC->Serialize(true, Temp);
-            SMC->SetMaterial("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
 
             FString LoadedAssetPath;
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
