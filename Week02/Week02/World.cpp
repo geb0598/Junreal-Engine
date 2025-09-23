@@ -702,8 +702,14 @@ void UWorld::SaveScene(const FString& SceneName)
     if (MainCameraActor && MainCameraActor->GetCameraComponent())
     {
         UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
+
         CamData.Location = MainCameraActor->GetActorLocation();
-        CamData.Rotation = MainCameraActor->GetActorRotation().ToEuler();
+
+        // 내부 누적 각도로 저장: Pitch=Y, Yaw=Z, Roll=0
+        CamData.Rotation.X = 0.0f;
+        CamData.Rotation.Y = MainCameraActor->GetCameraPitch();
+        CamData.Rotation.Z = MainCameraActor->GetCameraYaw();
+
         CamData.FOV = Cam->GetFOV();
         CamData.NearClip = Cam->GetNearClip();
         CamData.FarClip = Cam->GetFarClip();
