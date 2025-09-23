@@ -148,6 +148,8 @@ void UTargetActorTransformWidget::RenderWidget()
 	}
 
 	ImGui::Text("Transform Editor");
+
+	SelectedActor = GetCurrentSelectedActor();
 	
 	// 기즈모 스페이스 모드 선택
 	if (GizmoActor)
