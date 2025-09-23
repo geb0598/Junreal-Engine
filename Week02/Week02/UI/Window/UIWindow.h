@@ -135,15 +135,19 @@ public:
 
 	void OnMainWindowResized();
 	void ClampWindow();
+
+	void RenderWidget() const;
+	void Update() const;
+	// Render
+	void RenderWindow();
 protected:
 	void RenderInternal();
 	void ApplyDockingSettings() const;
 	void UpdateWindowInfo();
 
-	// Render
-	void RenderWindow();
-	void RenderWidget() const;
-	void Update() const;
+
+
+	
 
 private:
 	static int IssuedWindowID;

@@ -29,9 +29,11 @@ class UWorld final : public UObject
 public:
     DECLARE_CLASS(UWorld, UObject)
     UWorld();
-
-protected:
     ~UWorld() override;
+    static UWorld& GetInstance();
+    
+protected:
+
 
 public:
     /** 초기화 */

@@ -4,6 +4,8 @@
 #include "SSplitterV.h"
 #include "ImGui/imgui.h"
 #include"SceneIOWindow.h"
+#include"SDetailsWindow.h"
+#include"SControlPanel.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 
@@ -85,17 +87,40 @@ SMultiViewportWindow::SMultiViewportWindow()
 SMultiViewportWindow::~SMultiViewportWindow()
 {
 	OnShutdown();
+	// 루트 스플리터만 delete → 내부에서 SideLT/SideRB 재귀적으로 정리
 	delete RootSplitter;
-	for (int i = 0; i < 4; i++)
-		delete Viewports[i];
+	RootSplitter = nullptr;
+
+	// 뷰포트들 정리 (MainViewport는 외부에서 주입받았으므로 delete 금지)
+	if (CurrentMode == EViewportLayoutMode::SingleMain) {
+		for (int i = 1; i < 4; i++)  // Viewports[0]은 InMainViewport (외부 관리)
+		{
+			if (Viewports[i]) {
+				delete Viewports[i];
+				Viewports[i] = nullptr;
+			}
+		}
+	}
+
+	//// UI 패널 정리 (RootSplitter에서 정리되지 않는 경우 직접 delete)
+	//delete SceneIOPanel;
+	//SceneIOPanel = nullptr;
+
+	//delete ControlPanel;
+	//ControlPanel = nullptr;
+
+	//delete DetailPanel;
+	//DetailPanel = nullptr;
 
 
 }
 
-void SMultiViewportWindow::Initialize(ID3D11Device* Device, UWorld* World, const FRect& InRect)
+void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, const FRect& InRect, SViewportWindow* InMainViewport)
 {
+	MainViewport = InMainViewport;
 
-
+	Device = InDevice;
+	World = InWorld;
 	Rect = InRect;
 
 	// 최상위: 수평 스플리터 (위: 뷰포트+오른쪽UI, 아래: Console/Property)
@@ -107,12 +132,12 @@ void SMultiViewportWindow::Initialize(ID3D11Device* Device, UWorld* World, const
 
 	// === 위쪽: 좌(4뷰포트) + 우(SceneIO) ===
 
-	SSplitterV* TopPanel = new SSplitterV();
+	TopPanel = new SSplitterV();
 	TopPanel->SetSplitRatio(0.7f);
 
 
 	// 왼쪽: 4분할 뷰포트
-	SSplitterV* LeftPanel = new SSplitterV();
+	LeftPanel = new SSplitterV();
 	SSplitterH*	LeftTop = new SSplitterH();
 	SSplitterH* LeftBottom = new SSplitterH();
 	LeftPanel->SideLT = LeftTop;
@@ -129,17 +154,17 @@ void SMultiViewportWindow::Initialize(ID3D11Device* Device, UWorld* World, const
 	// === 아래쪽: Console + Property ===
 	SSplitterV* BottomPanel = new SSplitterV();
 	//BottomPanel->SetSplitRatio(0.7);
-	ConsolePanel = new SSceneIOWindow();   // 직접 만든 ConsoleWindow 클래스
-	PropertyPanel = new SSceneIOWindow();  // 직접 만든 PropertyWindow 클래스
-	BottomPanel->SideLT = ConsolePanel;
-	BottomPanel->SideRB = PropertyPanel;
+	ControlPanel = new SControlPanel();   // 직접 만든 ConsoleWindow 클래스
+	DetailPanel = new SDetailsWindow();  // 직접 만든 PropertyWindow 클래스
+	BottomPanel->SideLT = ControlPanel;
+	BottomPanel->SideRB = DetailPanel;
 
 	// 최상위 스플리터에 연결
 	RootSplitter->SideLT = TopPanel;
 	RootSplitter->SideRB = BottomPanel;
 
 	// === 뷰포트 생성 ===
-	Viewports[0] = new SViewportWindow();
+	Viewports[0] = InMainViewport;
 	Viewports[1] = new SViewportWindow();
 	Viewports[2] = new SViewportWindow();
 	Viewports[3] = new SViewportWindow();
@@ -166,7 +191,36 @@ void SMultiViewportWindow::Initialize(ID3D11Device* Device, UWorld* World, const
 	LeftBottom->SideLT = Viewports[2];
 	LeftBottom->SideRB = Viewports[3];
 
+	//MainViewport = new SViewportWindow();
+	//MainViewport->Initialize(0, 0, Rect.GetWidth(), Rect.GetHeight(), World, Device, EViewportType::Perspective);
+	
+	//// ==== Single 레이아웃 구성 ====
+	//{
+	//	SSplitterH* FullLayout = new SSplitterH();
+	//	FullLayout->SideLT = MainViewport;
+	//	FullLayout->SideRB = nullptr;
+	//	SingleLayout = FullLayout;
+	//}
+	// 기본은 FourSplit
+	SwitchLayout(EViewportLayoutMode::SingleMain);
+
 	LoadSplitterConfig(RootSplitter);
+}
+void SMultiViewportWindow::SwitchLayout(EViewportLayoutMode NewMode)
+{
+	if (NewMode == CurrentMode) return;
+
+	if (NewMode == EViewportLayoutMode::FourSplit)
+	{
+		TopPanel->SideLT = LeftPanel;
+	
+	}
+	else if (NewMode == EViewportLayoutMode::SingleMain)
+	{
+		TopPanel->SideLT = MainViewport;
+	}
+
+	CurrentMode = NewMode;
 }
 
 void SMultiViewportWindow::OnRender()

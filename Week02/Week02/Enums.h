@@ -225,6 +225,13 @@ enum class EEngineShowFlags : uint64
     SF_All = 0xFFFFFFFFFFFFFFFFull
 };
 
+enum class EViewportLayoutMode
+{
+    SingleMain,
+    FourSplit
+};
+
+
 // Bit flag operators for EEngineShowFlags
 inline EEngineShowFlags operator|(EEngineShowFlags a, EEngineShowFlags b)
 {
