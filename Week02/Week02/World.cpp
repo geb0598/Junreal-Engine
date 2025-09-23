@@ -570,60 +570,52 @@ void UWorld::ProcessViewportInput()
 
 void UWorld::LoadScene(const FString& SceneName)
 {
-    // 0) 파일 경로를 Scene 디렉터리로 고정하고 확장자 보정
     namespace fs = std::filesystem;
     fs::path path = fs::path("Scene") / SceneName;
     if (path.extension().string() != ".Scene")
     {
         path.replace_extension(".Scene");
     }
+
     const FString FilePath = path.make_preferred().string();
 
-    // 1) 파일 메타의 NextUUID를 먼저 동기화 (없으면 무시)
+    // [1] 로드 시작 전 현재 카운터 백업
+    const uint32 PreLoadNext = UObject::PeekNextUUID();
+
+    // [2] 파일 NextUUID는 현재보다 클 때만 반영(절대 하향 설정 금지)
     uint32 LoadedNextUUID = 0;
     if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
     {
-        UObject::SetNextUUID(LoadedNextUUID);
+        if (LoadedNextUUID > UObject::PeekNextUUID())
+        {
+            UObject::SetNextUUID(LoadedNextUUID);
+        }
     }
 
-    // 2) 기존 씬 비우기 + 이름 카운터 초기화
+    // [3] 기존 씬 비우기
     CreateNewScene();
 
-    // 3) 프리미티브 로드
+    // [4] 로드
     const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
 
-    // 4) 로딩된 오브젝트들의 최대 UUID 추적(레거시 파일이면 0 유지)
     uint32 MaxLoadedUUID = 0;
-
     for (const FPrimitiveData& Primitive : Primitives)
     {
-        // 스폰 시 트랜스폼을 전달하여 SpawnActor 내부 초기화가 올바르게 동작하도록 함
-        const FTransform InitialXform(
-            Primitive.Location,
-            FQuat::MakeFromEuler(Primitive.Rotation),
-            Primitive.Scale
-        );
+        // 스폰 시 필요한 초기 트랜스폼은 그대로 넘겨 초기화 안전 보장
+        AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
+            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale));
 
-        AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(InitialXform);
-
-        // 읽은 UUID가 있으면 대입
         if (Primitive.UUID != 0)
         {
             StaticMeshActor->UUID = Primitive.UUID;
-            if (Primitive.UUID > MaxLoadedUUID)
-            {
-                MaxLoadedUUID = Primitive.UUID;
-            }
+            MaxLoadedUUID = std::max(MaxLoadedUUID, Primitive.UUID);
         }
 
         if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
         {
             FPrimitiveData Temp = Primitive;
-
-            // 트랜스폼 + 메시 모두 복원 (스폰 시 넘긴 값과 동일하므로 안전)
             SMC->Serialize(true, Temp);
 
-            // 콜리전 지정
             FString LoadedAssetPath;
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
             {
@@ -639,19 +631,18 @@ void UWorld::LoadScene(const FString& SceneName)
                 StaticMeshActor->SetCollisionComponent();
             }
 
-            // 이름 설정
             FString BaseName = "StaticMesh";
             if (!LoadedAssetPath.empty())
             {
                 BaseName = RemoveObjExtension(LoadedAssetPath);
             }
-            const FString UniqueName = GenerateUniqueActorName(BaseName);
-            StaticMeshActor->SetName(UniqueName);
+            StaticMeshActor->SetName(GenerateUniqueActorName(BaseName));
         }
     }
 
-    // 5) 로드 완료 후 전역 카운터를 안전하게 재설정
-    const uint32 SafeNext = std::max(UObject::PeekNextUUID(), MaxLoadedUUID + 1);
+    // [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
+    const uint32 DuringLoadNext = UObject::PeekNextUUID();        // 로딩 중 SpawnActor로 증가했을 수 있음
+    const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
     UObject::SetNextUUID(SafeNext);
 }
 
