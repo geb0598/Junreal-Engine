@@ -10,6 +10,8 @@ UCameraComponent::UCameraComponent()
     , NearClip(0.1f)
     , FarClip(4000.0f)
     , ProjectionMode(ECameraProjectionMode::Perspective)
+    , ZooMFactor(1.0f)
+
 {
 }
 
@@ -43,6 +45,11 @@ FMatrix UCameraComponent::GetProjectionMatrix(float ViewportAspectRatio) const
     {
         float orthoHeight = 2.0f * tanf((FieldOfView * PI / 180.0f) * 0.5f) * 10.0f;
         float orthoWidth = orthoHeight * ViewportAspectRatio;
+
+        // 줌 계산
+        orthoWidth = orthoWidth * ZooMFactor;
+        orthoHeight = orthoWidth / ViewportAspectRatio;
+
 
         return FMatrix::OrthoLH(orthoWidth, orthoHeight,
             NearClip, FarClip);
