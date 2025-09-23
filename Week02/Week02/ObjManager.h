@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "UEContainer.h"
 #include "Vector.h"
 #include "Enums.h"
@@ -534,7 +534,7 @@ public:
         }
 
         // 4) GroupInfo 정보 설정
-        for (int i = 0; i < NumGroup; ++i)
+        for (uint32 i = 0; i < NumGroup; ++i)
         {
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];

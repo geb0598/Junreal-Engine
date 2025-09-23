@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "TextRenderComponent.h"
 #include "Shader.h"
 #include "StaticMesh.h"
@@ -130,8 +130,8 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     if (InMesh->HasMaterial())
     {
         const TArray<FGroupInfo> MeshGroupInfos = InMesh->GetMeshGroupInfo();
-        const uint32 NumMeshGroupInfos = MeshGroupInfos.size();
-        for (int i = 0; i < NumMeshGroupInfos; ++i)
+        const uint32 NumMeshGroupInfos = static_cast<uint32>(MeshGroupInfos.size());
+        for (uint32 i = 0; i < NumMeshGroupInfos; ++i)
         {
             const UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
             const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();

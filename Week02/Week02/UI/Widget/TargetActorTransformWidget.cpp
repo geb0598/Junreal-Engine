@@ -363,7 +363,7 @@ void UTargetActorTransformWidget::RenderWidget()
 
 					if (CurMesh)
 					{
-						const uint32 MeshGroupCount = CurMesh->GetMeshGroupCount();
+						const uint64 MeshGroupCount = CurMesh->GetMeshGroupCount();
 
 						static TArray<int32> SelectedMaterialIdxAt; // i번 째 Material Slot이 가지고 있는 MaterialName이 MaterialNames의 몇번쩨 값인지.
 						if (SelectedMaterialIdxAt.size() < MeshGroupCount)
@@ -373,7 +373,7 @@ void UTargetActorTransformWidget::RenderWidget()
 
 						// 현재 SMC의 MaterialSlots 정보를 UI에 반영
 						const TArray<FMaterialSlot>& MaterialSlots = SMC->GetMaterailSlots();
-						for (int MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
+						for (uint64 MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
 						{
 							for (uint32 MaterialIndex = 0; MaterialIndex < MaterialNames.size(); ++MaterialIndex)
 							{
@@ -385,12 +385,12 @@ void UTargetActorTransformWidget::RenderWidget()
 						}
 
 						// Material 선택
-						for (int MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
+						for (uint64 MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
 						{
-							ImGui::PushID(MaterialSlotIndex);
+							ImGui::PushID(static_cast<int>(MaterialSlotIndex));
 							if (ImGui::Combo("Material", &SelectedMaterialIdxAt[MaterialSlotIndex], MaterialNamesCharP.data(), static_cast<int>(MaterialNamesCharP.size())))
 							{
-								SMC->SetMaterialByUser(MaterialSlotIndex, MaterialNames[SelectedMaterialIdxAt[MaterialSlotIndex]]);
+								SMC->SetMaterialByUser(static_cast<uint32>(MaterialSlotIndex), MaterialNames[SelectedMaterialIdxAt[MaterialSlotIndex]]);
 							}
 							ImGui::PopID();
 						}
