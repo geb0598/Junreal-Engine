@@ -162,20 +162,13 @@ void UWorld::Render()
     UIManager.Render();
  
     // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경 SWidget으로 변경해줄거임
-    if (UIManager.IsUsingMainViewport())
-    {
-        if (MainViewport)
-        {
-            MainViewport->OnRender();
-        }
-    }
-    else
-    {
+ 
+    
         if (MultiViewport)
         {
             MultiViewport->OnRender();
         }
-    }
+    
 
 
     //프레임 종료 
@@ -395,21 +388,12 @@ void UWorld::Tick(float DeltaSeconds)
    
 
     // 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
-    if (UIManager.IsUsingMainViewport())
-    {
-        if (MainViewport)
-        {
-            MainViewport->SetRect(0, 0, CLIENTWIDTH, CLIENTHEIGHT);
-            MainViewport->OnUpdate();
-        }
-    }
-    else
-    {
+ 
         if (MultiViewport)
         {
             MultiViewport->OnUpdate();
         }
-    }
+    
     InputManager.Update();
     UIManager.Update(DeltaSeconds);
 }
@@ -531,14 +515,14 @@ void UWorld::ProcessActorSelection()
         const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
 
         // UIManager의 뷰포트 전환 상태에 따라 마우스 처리
-        if (UIManager.IsUsingMainViewport())
+        /*if (UIManager.IsUsingMainViewport())
         {
             if (MainViewport)
             {
                 MainViewport->OnMouseDown(MousePosition);
             }
-        }
-        else
+        }*/
+        //else
         {
             if (MultiViewport)
             {
@@ -551,20 +535,7 @@ void UWorld::ProcessViewportInput()
 {
     const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
 
-    if (UIManager.IsUsingMainViewport())
-    {
-        if (MainViewport)
-        {
-            if (InputManager.IsMouseButtonPressed(LeftButton))
-                MainViewport->OnMouseDown(MousePosition);
-            if (InputManager.IsMouseButtonReleased(LeftButton))
-                MainViewport->OnMouseUp(MousePosition);
-
-            MainViewport->OnMouseMove(MousePosition);
-        }
-    }
-    else
-    {
+   
         if (MultiViewport)
         {
             if (InputManager.IsMouseButtonPressed(LeftButton))
@@ -574,7 +545,7 @@ void UWorld::ProcessViewportInput()
 
             MultiViewport->OnMouseMove(MousePosition);
         }
-    }
+    
 }
 
 

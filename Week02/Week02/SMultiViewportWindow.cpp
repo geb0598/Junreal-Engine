@@ -202,7 +202,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	//	SingleLayout = FullLayout;
 	//}
 	// 기본은 FourSplit
-	//SwitchLayout(EViewportLayoutMode::SingleMain);
+	SwitchLayout(EViewportLayoutMode::SingleMain);
 
 	LoadSplitterConfig(RootSplitter);
 }

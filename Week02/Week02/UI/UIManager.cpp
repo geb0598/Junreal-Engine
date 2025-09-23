@@ -134,8 +134,7 @@ void UUIManager::Update(float DeltaTime)
 	// 포커스 상태 업데이트
 	UpdateFocusState();
 
-	// 키보드 단축키 처리
-	HandleViewportShortcuts();
+
 }
 
 /**
@@ -173,8 +172,7 @@ void UUIManager::Render()
 }
 void UUIManager::EndFrame() {
 
-	// 뷰포트 전환 UI 렌더링
-	RenderViewportSwitcher();
+
 
 	// ImGui 프레임 종료
 	ImGuiHelper->EndFrame();
@@ -506,154 +504,7 @@ void UUIManager::ResetPickedActor()
 	}
 }
 
-/**
- * @brief 뷰포트 전환 UI 렌더링
- */
-void UUIManager::RenderViewportSwitcher()
-{
-	// 화면 상단 중앙에 고정된 위치에 버튼 표시
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImVec2 work_pos = viewport->WorkPos;
-	ImVec2 work_size = viewport->WorkSize;
 
-	// 버튼 크기 설정
-	float button_width = 120.0f;
-	float button_height = 35.0f;
-	float spacing = 15.0f;
-
-	// 중앙 위치 계산
-	float center_x = work_pos.x + (work_size.x - (button_width * 2 + spacing)) * 0.5f;
-	float top_y = work_pos.y + 15.0f;
-
-	// 윈도우 플래그 설정 (타이틀바 없음, 크기 조정 불가, 이동 불가)
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar
-		| ImGuiWindowFlags_NoResize
-		| ImGuiWindowFlags_NoMove
-		| ImGuiWindowFlags_NoCollapse
-		| ImGuiWindowFlags_AlwaysAutoResize
-		| ImGuiWindowFlags_NoBackground
-		| ImGuiWindowFlags_NoScrollbar;
-
-	// 윈도우 위치 설정
-	ImGui::SetNextWindowPos(ImVec2(center_x, top_y), ImGuiCond_Always);
-
-	if (ImGui::Begin("ViewportSwitcher", nullptr, window_flags))
-	{
-		// 현재 상태 표시
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
-		ImGui::Text("Viewport Mode:");
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine();
-		ImGui::Spacing();
-		ImGui::SameLine();
-
-		// 메인 뷰포트 버튼
-		if (bUseMainViewport)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.1f, 1.0f));
-		}
-		else
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
-		}
-
-		if (ImGui::Button("Single View", ImVec2(button_width, button_height)))
-		{
-			SetViewportMode(true);
-			UE_LOG("UIManager: Switched to Main Viewport mode");
-		}
-
-		// 툴팁 추가
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::SetTooltip("Switch to single perspective viewport\nShortcut: F1");
-		}
-
-		ImGui::PopStyleColor(3);
-
-		ImGui::SameLine();
-
-		// 멀티 뷰포트 버튼
-		if (!bUseMainViewport)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.1f, 1.0f));
-		}
-		else
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
-		}
-
-		if (ImGui::Button("Multi View", ImVec2(button_width, button_height)))
-		{
-			SetViewportMode(false);
-			UE_LOG("UIManager: Switched to Multi Viewport mode");
-		}
-
-		// 툴팁 추가
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::SetTooltip("Switch to 4-panel viewport (Perspective, Front, Left, Top)\nShortcut: F2");
-		}
-
-		ImGui::PopStyleColor(3);
-
-		// 현재 활성 모드 표시
-		ImGui::Spacing();
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.8f, 1.0f, 1.0f));
-		if (bUseMainViewport)
-		{
-			ImGui::Text("Active: Single Perspective View");
-		}
-		else
-		{
-			ImGui::Text("Active: 4-Panel Multi View");
-		}
-		ImGui::PopStyleColor();
-
-		// 단축키 정보 표시
-		ImGui::Spacing();
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-		ImGui::Text("Shortcuts: F1/F2 or Ctrl+V to toggle");
-		ImGui::PopStyleColor();
-	}
-	ImGui::End();
-}
-
-/**
- * @brief 뷰포트 전환을 위한 키보드 단축키 처리
- */
-void UUIManager::HandleViewportShortcuts()
-{
-	// Ctrl + V: 뷰포트 모드 전환
-	if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_V))
-	{
-		ToggleViewportMode();
-		UE_LOG("UIManager: Viewport mode toggled via keyboard shortcut (Ctrl+V)");
-	}
-
-	// F1: 단일 뷰포트 모드
-	if (ImGui::IsKeyPressed(ImGuiKey_F1))
-	{
-		SetViewportMode(true);
-		UE_LOG("UIManager: Switched to Single Viewport mode via F1");
-	}
-
-	// F2: 멀티 뷰포트 모드
-	if (ImGui::IsKeyPressed(ImGuiKey_F2))
-	{
-		SetViewportMode(false);
-		UE_LOG("UIManager: Switched to Multi Viewport mode via F2");
-	}
-}
 
 void UUIManager::RegisterTargetTransformWidget(UTargetActorTransformWidget* InWidget)
 {
@@ -668,44 +519,3 @@ void UUIManager::ClearTransformWidgetSelection()
 	}
 }
 
-/**
- * @brief 뷰포트 모드 설정 (개선된 버전)
- */
-void UUIManager::SetViewportMode(bool bUseMain)
-{
-	if (bUseMainViewport != bUseMain)
-	{
-		bool bPreviousMode = bUseMainViewport;
-		bUseMainViewport = bUseMain;
-
-		// 상세한 로깅
-		if (bUseMain)
-		{
-			UE_LOG("UIManager: Viewport mode changed to Single View (Main Viewport)");
-			UE_LOG("UIManager: Now using single perspective viewport for detailed work");
-		}
-		else
-		{
-			UE_LOG("UIManager: Viewport mode changed to Multi View (4-Panel Layout)");
-			UE_LOG("UIManager: Now using 4-panel view: Perspective, Front, Left, Top");
-		}
-
-		// UI 윈도우들의 위치 재조정이 필요할 수 있음
-		RepositionImGuiWindows();
-	}
-	else
-	{
-		// 이미 같은 모드인 경우
-		UE_LOG("UIManager: Viewport mode already set to %s",
-			   bUseMain ? "Single View" : "Multi View");
-	}
-}
-
-/**
- * @brief 뷰포트 모드 토글 (개선된 버전)
- */
-void UUIManager::ToggleViewportMode()
-{
-	SetViewportMode(!bUseMainViewport);
-	UE_LOG("UIManager: Viewport mode toggled");
-}
