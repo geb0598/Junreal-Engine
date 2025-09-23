@@ -8,6 +8,7 @@ class UMeshComponent;
 class URHIDevice;
 class UShader;
 class UStaticMesh;
+class FMaterialSlot;
 
 class URenderer
 {
@@ -37,7 +38,7 @@ public:
 
     void UpdateColorBuffer(const FVector4& Color);
 
-    void DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology);
+    void DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots);
 
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 

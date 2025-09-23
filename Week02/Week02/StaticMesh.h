@@ -28,6 +28,7 @@ public:
     const TArray<FGroupInfo>& GetMeshGroupInfo() const { return StaticMeshAsset->GroupInfos; }
     bool HasMaterial() const { return StaticMeshAsset->bHasMaterial; }
 
+    uint64 GetMeshGroupCount() const { return StaticMeshAsset->GroupInfos.size(); }
 private:
     void CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice, EVertexLayoutType InVertexType);
 	void CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice, EVertexLayoutType InVertexType);
