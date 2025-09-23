@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <sstream>
 #include <iterator>
+#include <filesystem>
 
 // Windows & DirectX
 #include <windows.h>

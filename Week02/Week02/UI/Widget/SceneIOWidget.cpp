@@ -140,7 +140,6 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 {
 	try
 	{
-		// Get World reference
 		UWorld* CurrentWorld = UUIManager::GetInstance().GetWorld();
 		if (!CurrentWorld)
 		{
@@ -150,39 +149,28 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 
 		if (InFilePath.empty())
 		{
-			// Quick Save: Scene 디렉토리에 저장
-			namespace fs = std::filesystem;
-
-			fs::path sceneDir = fs::path("Scene");
-			std::error_code ec;
-			fs::create_directories(sceneDir, ec); // 디렉토리 없으면 생성 (에러는 무시)
-
-			// "Scene/QuickSave" 를 베이스로 넘기면 내부에서 ".Scene" 확장자가 붙음
-			const FString SceneBase = (sceneDir / "QuickSave").string();
-			CurrentWorld->SaveScene(SceneBase);
-
-			UE_LOG("SceneIO: Quick Save executed to %s.Scene", SceneBase.c_str());
-			SetStatusMessage("Quick Save completed: " + SceneBase + ".Scene");
+			// Quick Save: 이름만 넘김. Scene 경로/확장자는 FSceneLoader::Save가 처리
+			CurrentWorld->SaveScene("QuickSave");
+			UE_LOG("SceneIO: Quick Save executed to Scene/QuickSave.Scene");
+			SetStatusMessage("Quick Save completed: Scene/QuickSave.Scene");
 		}
 		else
 		{
-			// Extract scene name from file path
+			// 파일 경로에서 베이스 이름만 추출하여 넘김
 			FString SceneName = InFilePath;
 			size_t LastSlash = SceneName.find_last_of("\\/");
-			if (LastSlash != std::string::npos)
+			if (LastSlash != std::string::npos) 
 			{
 				SceneName = SceneName.substr(LastSlash + 1);
 			}
 			size_t LastDot = SceneName.find_last_of(".");
-			if (LastDot != std::string::npos)
 			{
-				SceneName = SceneName.substr(0, LastDot);
+				if (LastDot != std::string::npos) SceneName = SceneName.substr(0, LastDot);
 			}
 
-			// Save scene through World (원하는 전체 경로로 저장하려면 InFilePath를 그대로 넘겨도 됨)
 			CurrentWorld->SaveScene(SceneName);
-			UE_LOG("SceneIO: Scene saved successfully: %s", SceneName.c_str());
-			SetStatusMessage("Scene saved: " + SceneName);
+			UE_LOG("SceneIO: Scene saved: %s", SceneName.c_str());
+			SetStatusMessage("Scene saved: Scene/" + SceneName + ".Scene");
 		}
 	}
 	catch (const std::exception& Exception)
@@ -310,7 +298,7 @@ path USceneIOWidget::OpenSaveFileDialog()
      ofn.nMaxFileTitle = 0;
      ofn.lpstrInitialDir = nullptr;
      ofn.lpstrTitle = L"Save Level File";
-     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_HIDEREADONLY;
+	 ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
      ofn.lpstrDefExt = L"json";
    
      // Modal 다이얼로그 표시 - 이 함수가 리턴될 때까지 다른 입력 차단
@@ -347,7 +335,7 @@ path USceneIOWidget::OpenLoadFileDialog()
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = nullptr;
     ofn.lpstrTitle = L"Load Level File";
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_HIDEREADONLY;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
 
     UE_LOG("SceneIO: Opening Load Dialog (Modal)...");
 

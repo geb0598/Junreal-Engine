@@ -32,13 +32,24 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
     // 상단 메타 정보
     uint32 NextUUID = UObject::PeekNextUUID();
 
-    // 파일명 보정(.Scene 보장)
-    std::string FileName = SceneName;
-    const std::string Ext = ".Scene";
-    if (FileName.size() < Ext.size() || FileName.substr(FileName.size() - Ext.size()) != Ext)
+    // 파일 경로 구성: SceneName이 디렉터리를 포함하지 않으면 "Scene/"를 붙임
+    namespace fs = std::filesystem;
+    fs::path outPath(SceneName);
+
+    if (!outPath.has_parent_path())
     {
-        FileName += Ext;
+        outPath = fs::path("Scene") / outPath; // Scene/Name
     }
+
+    // 확장자 보정(.Scene)
+    if (outPath.extension().string() != ".Scene")
+    {
+        outPath.replace_extension(".Scene");
+    }
+
+    // 상위 디렉터리 생성 보장
+    std::error_code ec;
+    fs::create_directories(outPath.parent_path(), ec);
 
     // 수동 직렬화로 키 순서를 고정
     std::ostringstream oss;
@@ -60,27 +71,28 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FString& S
     for (size_t i = 0; i < InPrimitiveData.size(); ++i)
     {
         const FPrimitiveData& Data = InPrimitiveData[i];
-        // 키를 i 대신 UUID로 출력
         oss << "    \"" << Data.UUID << "\": {\n";
-
-        // 원하는 순서대로 출력
         oss << "      \"ObjStaticMeshAsset\": " << "\"" << Data.ObjStaticMeshAsset << "\",\n";
         writeVec3("Location", Data.Location, 6); oss << ",\n";
         writeVec3("Rotation", Data.Rotation, 6); oss << ",\n";
         writeVec3("Scale", Data.Scale, 6); oss << ",\n";
         oss << "      \"Type\": " << "\"" << Data.Type << "\"\n";
-
         oss << "    }" << (i + 1 < InPrimitiveData.size() ? "," : "") << "\n";
     }
 
     oss << "  }\n";
     oss << "}\n";
 
-    std::ofstream OutFile(FileName.c_str(), std::ios::out | std::ios::trunc);
+    const std::string finalPath = outPath.make_preferred().string();
+    std::ofstream OutFile(finalPath.c_str(), std::ios::out | std::ios::trunc);
     if (OutFile.is_open())
     {
         OutFile << oss.str();
         OutFile.close();
+    }
+    else
+    {
+        std::cerr << "Scene save failed. Cannot open file: " << finalPath << std::endl;
     }
 }
 
