@@ -157,6 +157,7 @@
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="AABoundingBoxComponent.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
+    <ClCompile Include="MenuBarWidget.cpp" />
     <ClCompile Include="ObjManager.cpp" />
     <ClCompile Include="OBoundingBoxComponent.cpp" />
     <ClCompile Include="CameraActor.cpp" />
@@ -318,6 +319,7 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
     <ClInclude Include="FViewportClient.h" />
+    <ClInclude Include="MenuBarWidget.h" />
     <ClInclude Include="ObjManager.h" />
     <ClInclude Include="OBoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />

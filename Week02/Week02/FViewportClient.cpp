@@ -12,10 +12,7 @@ float FViewportClient::CameraWheelDelta{};
 FViewportClient::FViewportClient()
 {
     ViewportType = EViewportType::Perspective;
-
-
     // 직교 뷰별 기본 카메라 설정
-
     Camera = NewObject<ACameraActor>();
     SetupCameraMode();
 }
@@ -134,6 +131,7 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
 
     MouseWheel();//마우스 휠도 해줍니다 
+
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
 
     if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsDragging()) // 직교투영이고 마우스 버튼이 눌려있을 때
@@ -177,14 +175,6 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     // X, Y are already local coordinates within the viewport, convert to global coordinates for picking
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
 
-    // Debug log for viewport picking
-    //char debugBuf[256];
-    //sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
-    //    static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
-    //    ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
-    //UE_LOG(debugBuf);
-
-    // Get the appropriate camera for this viewport
 
 
     if (Camera)

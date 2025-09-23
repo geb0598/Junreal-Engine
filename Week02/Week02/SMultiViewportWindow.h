@@ -6,6 +6,7 @@
 
 class SSceneIOWindow; // 새로 추가할 UI
 class SDetailsWindow;
+class UMenuBarWidget;
 class SMultiViewportWindow : public SWindow
 {
 public:
@@ -21,6 +22,8 @@ public:
     virtual void OnMouseMove(FVector2D MousePos) override;
     virtual void OnMouseDown(FVector2D MousePos) override;
     virtual void OnMouseUp(FVector2D MousePos) override;
+
+    
 
 
     void OnShutdown();
@@ -50,4 +53,11 @@ private:
     // 현재 모드
     EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;
 
+    // 메뉴바 관련
+    void OnFileMenuAction(const char* action);
+    void OnEditMenuAction(const char* action);
+    void OnWindowMenuAction(const char* action);
+    void OnHelpMenuAction(const char* action);
+
+    UMenuBarWidget* MenuBar;
 };

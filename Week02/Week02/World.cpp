@@ -25,30 +25,30 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 }
 UWorld& UWorld::GetInstance()
 {
-    static UWorld* Instance = nullptr;
-    if (Instance == nullptr)
-    {
-        Instance = NewObject<UWorld>();
-    }
-    return *Instance;
+	static UWorld* Instance = nullptr;
+	if (Instance == nullptr)
+	{
+		Instance = NewObject<UWorld>();
+	}
+	return *Instance;
 }
 
 
 UWorld::~UWorld()
 {
-    for (AActor* Actor : Actors)
-    {
-        ObjectFactory::DeleteObject(Actor);
-    }
-    Actors.clear();
+	for (AActor* Actor : Actors)
+	{
+		ObjectFactory::DeleteObject(Actor);
+	}
+	Actors.clear();
 
-    // 카메라 정리
-    ObjectFactory::DeleteObject(MainCameraActor);
-    MainCameraActor = nullptr;
+	// 카메라 정리
+	ObjectFactory::DeleteObject(MainCameraActor);
+	MainCameraActor = nullptr;
 
-    // Grid 정리 
-    ObjectFactory::DeleteObject(GridActor);
-    GridActor = nullptr;
+	// Grid 정리 
+	ObjectFactory::DeleteObject(GridActor);
+	GridActor = nullptr;
 
 	// ObjManager 정리
 	FObjManager::Clear();
@@ -56,46 +56,46 @@ UWorld::~UWorld()
 
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
 {
-    if (!Obj)
-    {
-        UE_LOG("[RTTI] Obj == null\r\n");
-        return;
-    }
+	if (!Obj)
+	{
+		UE_LOG("[RTTI] Obj == null\r\n");
+		return;
+	}
 
-    char buf[256];
-    UE_LOG("========== RTTI CHECK ==========\r\n");
-    if (Title)
-    {
-        std::snprintf(buf, sizeof(buf), "[RTTI] %s\r\n", Title);
-        UE_LOG(buf);
-    }
+	char buf[256];
+	UE_LOG("========== RTTI CHECK ==========\r\n");
+	if (Title)
+	{
+		std::snprintf(buf, sizeof(buf), "[RTTI] %s\r\n", Title);
+		UE_LOG(buf);
+	}
 
-    // 1) 현재 동적 타입 이름
-    std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetClass()->Name);
-    UE_LOG(buf);
+	// 1) 현재 동적 타입 이름
+	std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetClass()->Name);
+	UE_LOG(buf);
 
-    // 2) IsA 체크 (파생 포함)
-    std::snprintf(buf, sizeof(buf), "[RTTI] IsA<AActor>      = %d\r\n", (int)Obj->IsA<AActor>());
-    UE_LOG(buf);
-    std::snprintf(buf, sizeof(buf), "[RTTI] IsA<ACameraActor> = %d\r\n", (int)Obj->IsA<ACameraActor>());
-    UE_LOG(buf);
+	// 2) IsA 체크 (파생 포함)
+	std::snprintf(buf, sizeof(buf), "[RTTI] IsA<AActor>      = %d\r\n", (int)Obj->IsA<AActor>());
+	UE_LOG(buf);
+	std::snprintf(buf, sizeof(buf), "[RTTI] IsA<ACameraActor> = %d\r\n", (int)Obj->IsA<ACameraActor>());
+	UE_LOG(buf);
 
-    //// 3) 정확한 타입 비교 (파생 제외)
-    //std::snprintf(buf, sizeof(buf), "[RTTI] EXACT ACameraActor = %d\r\n",
-    //    (int)(Obj->GetClass() == ACameraActor::StaticClass()));
-    //UE_LOG(buf);
+	//// 3) 정확한 타입 비교 (파생 제외)
+	//std::snprintf(buf, sizeof(buf), "[RTTI] EXACT ACameraActor = %d\r\n",
+	//    (int)(Obj->GetClass() == ACameraActor::StaticClass()));
+	//UE_LOG(buf);
 
-    // 4) 상속 체인 출력
-    UE_LOG("[RTTI] Inheritance chain: ");
-    for (const UClass* c = Obj->GetClass(); c; c = c->Super)
-    {
-        std::snprintf(buf, sizeof(buf), "%s%s", c->Name, c->Super ? " <- " : "\r\n");
-        UE_LOG(buf);
-    }
-    //FString Name = Obj->GetName();
-    std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetName().c_str());
-    OutputDebugStringA(buf);
-    OutputDebugStringA("================================\r\n");
+	// 4) 상속 체인 출력
+	UE_LOG("[RTTI] Inheritance chain: ");
+	for (const UClass* c = Obj->GetClass(); c; c = c->Super)
+	{
+		std::snprintf(buf, sizeof(buf), "%s%s", c->Name, c->Super ? " <- " : "\r\n");
+		UE_LOG(buf);
+	}
+	//FString Name = Obj->GetName();
+	std::snprintf(buf, sizeof(buf), "[RTTI] TypeName = %s\r\n", Obj->GetName().c_str());
+	OutputDebugStringA(buf);
+	OutputDebugStringA("================================\r\n");
 }
 
 void UWorld::Initialize()
@@ -106,310 +106,310 @@ void UWorld::Initialize()
 	CreateNewScene();
 
 	InitializeMainCamera();
-    InitializeGrid();
+	InitializeGrid();
 	InitializeGizmo();
-	
+
 	// 액터 간 참조 설정
 	SetupActorReferences();
 }
 
 void UWorld::InitializeMainCamera()
 {
-    
-    MainCameraActor = NewObject<ACameraActor>();
 
-    DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
-    UIManager.SetCamera(MainCameraActor);
+	MainCameraActor = NewObject<ACameraActor>();
 
-    EngineActors.Add(MainCameraActor);
+	DebugRTTI_UObject(MainCameraActor, "MainCameraActor");
+	UIManager.SetCamera(MainCameraActor);
+
+	EngineActors.Add(MainCameraActor);
 }
 
 void UWorld::InitializeGrid()
 {
-    GridActor = NewObject<AGridActor>();
-    GridActor->Initialize();
-  
+	GridActor = NewObject<AGridActor>();
+	GridActor->Initialize();
 
-    // Add GridActor to Actors array so it gets rendered in the main loop
-    EngineActors.push_back(GridActor);
-    //EngineActors.push_back(GridActor);
+
+	// Add GridActor to Actors array so it gets rendered in the main loop
+	EngineActors.push_back(GridActor);
+	//EngineActors.push_back(GridActor);
 }
 
 void UWorld::InitializeGizmo()
 {
-    // === 기즈모 엑터 초기화 ===
-    GizmoActor = NewObject<AGizmoActor>();
-    GizmoActor->SetWorld(this);
-    GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
-        FVector{ 1, 1, 1 }));
-    // 기즈모에 카메라 참조 설정
-    if (MainCameraActor)
-    {
-        GizmoActor->SetCameraActor(MainCameraActor);
-    }
-    
-    UIManager.SetGizmoActor(GizmoActor);
+	// === 기즈모 엑터 초기화 ===
+	GizmoActor = NewObject<AGizmoActor>();
+	GizmoActor->SetWorld(this);
+	GizmoActor->SetActorTransform(FTransform(FVector{ 0, 0, 0 }, FQuat::MakeFromEuler(FVector{ 0, -90, 0 }),
+		FVector{ 1, 1, 1 }));
+	// 기즈모에 카메라 참조 설정
+	if (MainCameraActor)
+	{
+		GizmoActor->SetCameraActor(MainCameraActor);
+	}
+
+	UIManager.SetGizmoActor(GizmoActor);
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
 {
-    Renderer = InRenderer;
+	Renderer = InRenderer;
 }
 
 void UWorld::Render()
 {
-    Renderer->BeginFrame();
-    UIManager.Render();
- 
-    // UIManager의 뷰포트 전환 상태에 따라 렌더링 변경 SWidget으로 변경해줄거임
- 
-    
-        if (MultiViewport)
-        {
-            MultiViewport->OnRender();
-        }
-    
+	Renderer->BeginFrame();
+	UIManager.Render();
+
+	// UIManager의 뷰포트 전환 상태에 따라 렌더링 변경 SWidget으로 변경해줄거임
 
 
-    //프레임 종료 
-    UIManager.EndFrame();
-    Renderer->EndFrame();
+	if (MultiViewport)
+	{
+		MultiViewport->OnRender();
+	}
+
+
+
+	//프레임 종료 
+	UIManager.EndFrame();
+	Renderer->EndFrame();
 }
 
 void UWorld::RenderSingleViewport()
 {
-    FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
-    FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
-    FMatrix ModelMatrix;
-    FVector rgb(1.0f, 1.0f, 1.0f);
+	FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
+	FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
+	FMatrix ModelMatrix;
+	FVector rgb(1.0f, 1.0f, 1.0f);
 
-    if (!Renderer) return;
-    // === Begin Frame ===
-    Renderer->BeginFrame();
+	if (!Renderer) return;
+	// === Begin Frame ===
+	Renderer->BeginFrame();
 
-    // === Begin Line Batch for all actors ===
-    Renderer->BeginLineBatch();
+	// === Begin Line Batch for all actors ===
+	Renderer->BeginLineBatch();
 
-    // === Draw Actors with Show Flag checks ===
-    Renderer->SetViewModeType(ViewModeIndex);
+	// === Draw Actors with Show Flag checks ===
+	Renderer->SetViewModeType(ViewModeIndex);
 
-    // 일반 액터들 렌더링 (Primitives Show Flag 체크)
-    if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-    {
-        for (AActor* Actor : Actors)
-        {
-            if (!Actor) continue;
-            if (Actor->GetActorHiddenInGame()) continue;
+	// 일반 액터들 렌더링 (Primitives Show Flag 체크)
+	if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+	{
+		for (AActor* Actor : Actors)
+		{
+			if (!Actor) continue;
+			if (Actor->GetActorHiddenInGame()) continue;
 
-            // StaticMesh Show Flag 체크
-            if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
-                continue;
+			// StaticMesh Show Flag 체크
+			if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+				continue;
 
-            bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-            if (bIsSelected) {
-                Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-            }
-            Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+			bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+			if (bIsSelected) {
+				Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+			}
+			Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
 
-            for (USceneComponent* Component : Actor->GetComponents())
-            {
-                if (!Component) continue;
+			for (USceneComponent* Component : Actor->GetComponents())
+			{
+				if (!Component) continue;
 
-                if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-                {
-                    if (!ActorComp->IsActive()) continue;
-                }
+				if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+				{
+					if (!ActorComp->IsActive()) continue;
+				}
 
-                // Text Render Component Show Flag 체크
-                if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
-                    continue;
+				// Text Render Component Show Flag 체크
+				if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+					continue;
 
-                // Bounding Box Show Flag 체크  
-                if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-                    continue;
+				// Bounding Box Show Flag 체크  
+				if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+					continue;
 
-                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-                {
-                    Renderer->SetViewModeType(ViewModeIndex);
-                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-                }
-            }
-            // 블랜드 스테이드 종료
-            Renderer->OMSetBlendState(false);
-        }
-    }
+				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+				{
+					Renderer->SetViewModeType(ViewModeIndex);
+					Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+					Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+				}
+			}
+			// 블랜드 스테이드 종료
+			Renderer->OMSetBlendState(false);
+		}
+	}
 
-    // Engine Actors (그리드 등) 렌더링
-    for (AActor* EngineActor : EngineActors)
-    {
-        if (!EngineActor) continue;
-        if (EngineActor->GetActorHiddenInGame()) continue;
+	// Engine Actors (그리드 등) 렌더링
+	for (AActor* EngineActor : EngineActors)
+	{
+		if (!EngineActor) continue;
+		if (EngineActor->GetActorHiddenInGame()) continue;
 
-        // Grid Show Flag 체크
-        if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
-            continue;
+		// Grid Show Flag 체크
+		if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+			continue;
 
-        for (USceneComponent* Component : EngineActor->GetComponents())
-        {
-            if (!Component) continue;
+		for (USceneComponent* Component : EngineActor->GetComponents())
+		{
+			if (!Component) continue;
 
-            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-            {
-                if (!ActorComp->IsActive()) continue;
-            }
-            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-            {
-                Renderer->SetViewModeType(ViewModeIndex);
-                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-            }
-        }
-        // 블랜드 스테이드 종료
-        Renderer->OMSetBlendState(false);
-    }
-    Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+			if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+			{
+				if (!ActorComp->IsActive()) continue;
+			}
+			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+			{
+				Renderer->SetViewModeType(ViewModeIndex);
+				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+				Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+			}
+		}
+		// 블랜드 스테이드 종료
+		Renderer->OMSetBlendState(false);
+	}
+	Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
-    
 
-    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-    UIManager.Render();
-    // === End Frame ===
-    Renderer->EndFrame();
+
+	Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+	UIManager.Render();
+	// === End Frame ===
+	Renderer->EndFrame();
 }
 
 void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 {
-    // 뷰포트의 실제 크기로 aspect ratio 계산
-    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
-    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+	// 뷰포트의 실제 크기로 aspect ratio 계산
+	float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+	if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
 
-    FMatrix ViewMatrix = Camera->GetViewMatrix();
-    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
-    if (!Renderer) return;
-    FVector rgb(1.0f, 1.0f, 1.0f);
+	FMatrix ViewMatrix = Camera->GetViewMatrix();
+	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+	if (!Renderer) return;
+	FVector rgb(1.0f, 1.0f, 1.0f);
 
-    // === Begin Line Batch for all actors ===
-    Renderer->BeginLineBatch();
+	// === Begin Line Batch for all actors ===
+	Renderer->BeginLineBatch();
 
-    // === Draw Actors with Show Flag checks ===
-    Renderer->SetViewModeType(ViewModeIndex);
+	// === Draw Actors with Show Flag checks ===
+	Renderer->SetViewModeType(ViewModeIndex);
 
-    // 일반 액터들 렌더링
-    if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-    {
-        for (AActor* Actor : Actors)
-        {
-            if (!Actor) continue;
-            if (Actor->GetActorHiddenInGame()) continue;
+	// 일반 액터들 렌더링
+	if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+	{
+		for (AActor* Actor : Actors)
+		{
+			if (!Actor) continue;
+			if (Actor->GetActorHiddenInGame()) continue;
 
-            if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
-                continue;
+			if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+				continue;
 
-            bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-            if (bIsSelected)
-                Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+			bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+			if (bIsSelected)
+				Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
 
-            Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+			Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
 
-            for (USceneComponent* Component : Actor->GetComponents())
-            {
-                if (!Component) continue;
-                if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-                    if (!ActorComp->IsActive()) continue;
+			for (USceneComponent* Component : Actor->GetComponents())
+			{
+				if (!Component) continue;
+				if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+					if (!ActorComp->IsActive()) continue;
 
-                if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
-                    continue;
+				if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+					continue;
 
-                if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-                    continue;
+				if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+					continue;
 
-                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-                {
-                    Renderer->SetViewModeType(ViewModeIndex);
-                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-                }
-            }
-            Renderer->OMSetBlendState(false);
-        }
-    }
+				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+				{
+					Renderer->SetViewModeType(ViewModeIndex);
+					Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+					Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+				}
+			}
+			Renderer->OMSetBlendState(false);
+		}
+	}
 
-    // 엔진 액터들 (그리드 등)
-    for (AActor* EngineActor : EngineActors)
-    {
-        if (!EngineActor) continue;
-        if (EngineActor->GetActorHiddenInGame()) continue;
+	// 엔진 액터들 (그리드 등)
+	for (AActor* EngineActor : EngineActors)
+	{
+		if (!EngineActor) continue;
+		if (EngineActor->GetActorHiddenInGame()) continue;
 
-        if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
-            continue;
+		if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+			continue;
 
-        for (USceneComponent* Component : EngineActor->GetComponents())
-        {
-            if (!Component) continue;
-            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-                if (!ActorComp->IsActive()) continue;
+		for (USceneComponent* Component : EngineActor->GetComponents())
+		{
+			if (!Component) continue;
+			if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+				if (!ActorComp->IsActive()) continue;
 
-            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-            {
-                Renderer->SetViewModeType(ViewModeIndex);
-                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-            }
-        }
-        Renderer->OMSetBlendState(false);
-    }
+			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+			{
+				Renderer->SetViewModeType(ViewModeIndex);
+				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+				Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+			}
+		}
+		Renderer->OMSetBlendState(false);
+	}
 
-    Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+	Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
-  
-    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-   
+
+	Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+
 }
 
 
 
 void UWorld::Tick(float DeltaSeconds)
 {
-    //순서 바꾸면 안댐
-    for (AActor* Actor : Actors)
-    {
-        if (Actor) Actor->Tick(DeltaSeconds);
-    }
-    for (AActor* EngineActor : EngineActors)
-    {
-        if (EngineActor) EngineActor->Tick(DeltaSeconds);
-    }
-    GizmoActor->Tick(DeltaSeconds);
+	//순서 바꾸면 안댐
+	for (AActor* Actor : Actors)
+	{
+		if (Actor) Actor->Tick(DeltaSeconds);
+	}
+	for (AActor* EngineActor : EngineActors)
+	{
+		if (EngineActor) EngineActor->Tick(DeltaSeconds);
+	}
+	GizmoActor->Tick(DeltaSeconds);
 
-    ProcessActorSelection();
-    ProcessViewportInput();
-    //Input Manager가 카메라 후에 업데이트 되어야함
-   
+	ProcessActorSelection();
+	ProcessViewportInput();
+	//Input Manager가 카메라 후에 업데이트 되어야함
 
-    // 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
- 
-        if (MultiViewport)
-        {
-            MultiViewport->OnUpdate();
-        }
-    
-    InputManager.Update();
-    UIManager.Update(DeltaSeconds);
+
+	// 뷰포트 업데이트 - UIManager의 뷰포트 전환 상태에 따라
+
+	if (MultiViewport)
+	{
+		MultiViewport->OnUpdate();
+	}
+
+	InputManager.Update();
+	UIManager.Update(DeltaSeconds);
 }
 
 float UWorld::GetTimeSeconds() const
 {
-    return 0.0f;
+	return 0.0f;
 }
 
 FString UWorld::GenerateUniqueActorName(const FString& ActorType)
 {
-    // Get current count for this type
-    int32& CurrentCount = ObjectTypeCounts[ActorType];
-    FString UniqueName = ActorType + "_" + std::to_string(CurrentCount);
-    CurrentCount++;
-    return UniqueName;
+	// Get current count for this type
+	int32& CurrentCount = ObjectTypeCounts[ActorType];
+	FString UniqueName = ActorType + "_" + std::to_string(CurrentCount);
+	CurrentCount++;
+	return UniqueName;
 }
 
 //
@@ -417,81 +417,81 @@ FString UWorld::GenerateUniqueActorName(const FString& ActorType)
 //
 bool UWorld::DestroyActor(AActor* Actor)
 {
-    if (!Actor)
-    {
-        return false; // nullptr 들어옴 → 실패
-    }
+	if (!Actor)
+	{
+		return false; // nullptr 들어옴 → 실패
+	}
 
-    // SelectionManager에서 선택 해제 (메모리 해제 전에 하자)
-    USelectionManager::GetInstance().DeselectActor(Actor);
-    
-    // UIManager에서 픽된 액터 정리
-    if (UIManager.GetPickedActor() == Actor)
-    {
-        UIManager.ResetPickedActor();
-    }
+	// SelectionManager에서 선택 해제 (메모리 해제 전에 하자)
+	USelectionManager::GetInstance().DeselectActor(Actor);
 
-    // 배열에서 제거 시도
-    auto it = std::find(Actors.begin(), Actors.end(), Actor);
-    if (it != Actors.end())
-    {
-        Actors.erase(it);
+	// UIManager에서 픽된 액터 정리
+	if (UIManager.GetPickedActor() == Actor)
+	{
+		UIManager.ResetPickedActor();
+	}
 
-        // 메모리 해제
-        ObjectFactory::DeleteObject(Actor);
-        
+	// 배열에서 제거 시도
+	auto it = std::find(Actors.begin(), Actors.end(), Actor);
+	if (it != Actors.end())
+	{
+		Actors.erase(it);
+
+		// 메모리 해제
+		ObjectFactory::DeleteObject(Actor);
+
 		// 삭제된 액터 정리
 		USelectionManager::GetInstance().CleanupInvalidActors();
-		
-		return true; // 성공적으로 삭제
-    }
 
-    return false; // 월드에 없는 액터
+		return true; // 성공적으로 삭제
+	}
+
+	return false; // 월드에 없는 액터
 }
 
 inline FString ToObjFileName(const FString& TypeName)
 {
-    return "Data/" + TypeName + ".obj";
+	return "Data/" + TypeName + ".obj";
 }
 
 inline FString RemoveObjExtension(const FString& FileName)
 {
-    const FString Extension = ".obj";
+	const FString Extension = ".obj";
 
-    // 마지막 경로 구분자 위치 탐색 (POSIX/Windows 모두 지원)
-    const uint64 Sep = FileName.find_last_of("/\\");
-    const uint64 Start = (Sep == FString::npos) ? 0 : Sep + 1;
+	// 마지막 경로 구분자 위치 탐색 (POSIX/Windows 모두 지원)
+	const uint64 Sep = FileName.find_last_of("/\\");
+	const uint64 Start = (Sep == FString::npos) ? 0 : Sep + 1;
 
-    // 확장자 제거 위치 결정
-    uint64 End = FileName.size();
-    if (End >= Extension.size() &&
-        FileName.compare(End - Extension.size(), Extension.size(), Extension) == 0)
-    {
-        End -= Extension.size();
-    }
+	// 확장자 제거 위치 결정
+	uint64 End = FileName.size();
+	if (End >= Extension.size() &&
+		FileName.compare(End - Extension.size(), Extension.size(), Extension) == 0)
+	{
+		End -= Extension.size();
+	}
 
-    // 베이스 이름(확장자 없는 파일명) 반환
-    if (Start <= End)
-        return FileName.substr(Start, End - Start);
+	// 베이스 이름(확장자 없는 파일명) 반환
+	if (Start <= End)
+		return FileName.substr(Start, End - Start);
 
-    // 비정상 입력 시 원본 반환 (안전장치)
-    return FileName;
+	// 비정상 입력 시 원본 반환 (안전장치)
+	return FileName;
 }
 
 void UWorld::CreateNewScene()
 {
-    // Safety: clear interactions that may hold stale pointers
-    SelectionManager.ClearSelection();
-    UIManager.ResetPickedActor();
+	// Safety: clear interactions that may hold stale pointers
+	SelectionManager.ClearSelection();
+	UIManager.ResetPickedActor();
 
-    for (AActor* Actor : Actors)
-    {
-        ObjectFactory::DeleteObject(Actor);
-    }
-    Actors.Empty();
+	for (AActor* Actor : Actors)
+	{
+		ObjectFactory::DeleteObject(Actor);
+	}
+	Actors.Empty();
 
-    // 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
-    ObjectTypeCounts.clear();
+	// 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
+	ObjectTypeCounts.clear();
 }
 
 
@@ -499,184 +499,184 @@ void UWorld::CreateNewScene()
 // 액터 인터페이스 관리 메소드들
 void UWorld::SetupActorReferences()
 {
-    if (GizmoActor && MainCameraActor)
-    {
-        GizmoActor->SetCameraActor(MainCameraActor);
-    }
+	if (GizmoActor && MainCameraActor)
+	{
+		GizmoActor->SetCameraActor(MainCameraActor);
+	}
 
 }
 //마우스 피킹관련 메소드
 void UWorld::ProcessActorSelection()
 {
-    if (!MainCameraActor) return;
+	if (!MainCameraActor) return;
 
-    if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
-    {
-        const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+	if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
 
-        // UIManager의 뷰포트 전환 상태에 따라 마우스 처리
-        /*if (UIManager.IsUsingMainViewport())
-        {
-            if (MainViewport)
-            {
-                MainViewport->OnMouseDown(MousePosition);
-            }
-        }*/
-        //else
-        {
-            if (MultiViewport)
-            {
-                MultiViewport->OnMouseDown(MousePosition);
-            }
-        }
-    }
+		// UIManager의 뷰포트 전환 상태에 따라 마우스 처리
+		/*if (UIManager.IsUsingMainViewport())
+		{
+			if (MainViewport)
+			{
+				MainViewport->OnMouseDown(MousePosition);
+			}
+		}*/
+		//else
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseDown(MousePosition);
+			}
+		}
+	}
 }
 void UWorld::ProcessViewportInput()
 {
-    const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+	const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
 
-   
-        if (MultiViewport)
-        {
-            if (InputManager.IsMouseButtonPressed(LeftButton))
-                MultiViewport->OnMouseDown(MousePosition);
-            if (InputManager.IsMouseButtonReleased(LeftButton))
-                MultiViewport->OnMouseUp(MousePosition);
 
-            MultiViewport->OnMouseMove(MousePosition);
-        }
-    
+	if (MultiViewport)
+	{
+		if (InputManager.IsMouseButtonPressed(LeftButton))
+			MultiViewport->OnMouseDown(MousePosition);
+		if (InputManager.IsMouseButtonReleased(LeftButton))
+			MultiViewport->OnMouseUp(MousePosition);
+
+		MultiViewport->OnMouseMove(MousePosition);
+	}
+
 }
 
 void UWorld::LoadScene(const FString& SceneName)
 {
-    namespace fs = std::filesystem;
-    fs::path path = fs::path("Scene") / SceneName;
-    if (path.extension().string() != ".Scene")
-    {
-        path.replace_extension(".Scene");
-    }
+	namespace fs = std::filesystem;
+	fs::path path = fs::path("Scene") / SceneName;
+	if (path.extension().string() != ".Scene")
+	{
+		path.replace_extension(".Scene");
+	}
 
-    const FString FilePath = path.make_preferred().string();
+	const FString FilePath = path.make_preferred().string();
 
-    // [1] 로드 시작 전 현재 카운터 백업
-    const uint32 PreLoadNext = UObject::PeekNextUUID();
+	// [1] 로드 시작 전 현재 카운터 백업
+	const uint32 PreLoadNext = UObject::PeekNextUUID();
 
-    // [2] 파일 NextUUID는 현재보다 클 때만 반영(절대 하향 설정 금지)
-    uint32 LoadedNextUUID = 0;
-    if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
-    {
-        if (LoadedNextUUID > UObject::PeekNextUUID())
-        {
-            UObject::SetNextUUID(LoadedNextUUID);
-        }
-    }
+	// [2] 파일 NextUUID는 현재보다 클 때만 반영(절대 하향 설정 금지)
+	uint32 LoadedNextUUID = 0;
+	if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
+	{
+		if (LoadedNextUUID > UObject::PeekNextUUID())
+		{
+			UObject::SetNextUUID(LoadedNextUUID);
+		}
+	}
 
-    // [3] 기존 씬 비우기
-    CreateNewScene();
+	// [3] 기존 씬 비우기
+	CreateNewScene();
 
-    // [4] 로드
-    const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
+	// [4] 로드
+	const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
 
-    uint32 MaxLoadedUUID = 0;
-    for (const FPrimitiveData& Primitive : Primitives)
-    {
-        // 스폰 시 필요한 초기 트랜스폼은 그대로 넘겨 초기화 안전 보장
-        AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale));
+	uint32 MaxLoadedUUID = 0;
+	for (const FPrimitiveData& Primitive : Primitives)
+	{
+		// 스폰 시 필요한 초기 트랜스폼은 그대로 넘겨 초기화 안전 보장
+		AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
+			FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale));
 
-        if (Primitive.UUID != 0)
-        {
-            StaticMeshActor->UUID = Primitive.UUID;
-            MaxLoadedUUID = std::max(MaxLoadedUUID, Primitive.UUID);
-        }
+		if (Primitive.UUID != 0)
+		{
+			StaticMeshActor->UUID = Primitive.UUID;
+			MaxLoadedUUID = std::max(MaxLoadedUUID, Primitive.UUID);
+		}
 
-        if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
-        {
-            FPrimitiveData Temp = Primitive;
-            SMC->Serialize(true, Temp);
+		if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
+		{
+			FPrimitiveData Temp = Primitive;
+			SMC->Serialize(true, Temp);
 
-            FString LoadedAssetPath;
-            if (UStaticMesh* Mesh = SMC->GetStaticMesh())
-            {
-                LoadedAssetPath = Mesh->GetAssetPathFileName();
-            }
+			FString LoadedAssetPath;
+			if (UStaticMesh* Mesh = SMC->GetStaticMesh())
+			{
+				LoadedAssetPath = Mesh->GetAssetPathFileName();
+			}
 
-            if (LoadedAssetPath == "Data/Sphere.obj")
-            {
-                StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
-            }
-            else
-            {
-                StaticMeshActor->SetCollisionComponent();
-            }
+			if (LoadedAssetPath == "Data/Sphere.obj")
+			{
+				StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
+			}
+			else
+			{
+				StaticMeshActor->SetCollisionComponent();
+			}
 
-            FString BaseName = "StaticMesh";
-            if (!LoadedAssetPath.empty())
-            {
-                BaseName = RemoveObjExtension(LoadedAssetPath);
-            }
-            StaticMeshActor->SetName(GenerateUniqueActorName(BaseName));
-        }
-    }
+			FString BaseName = "StaticMesh";
+			if (!LoadedAssetPath.empty())
+			{
+				BaseName = RemoveObjExtension(LoadedAssetPath);
+			}
+			StaticMeshActor->SetName(GenerateUniqueActorName(BaseName));
+		}
+	}
 
-    // [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
-    const uint32 DuringLoadNext = UObject::PeekNextUUID();        // 로딩 중 SpawnActor로 증가했을 수 있음
-    const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
-    UObject::SetNextUUID(SafeNext);
+	// [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
+	const uint32 DuringLoadNext = UObject::PeekNextUUID();        // 로딩 중 SpawnActor로 증가했을 수 있음
+	const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
+	UObject::SetNextUUID(SafeNext);
 }
 
 void UWorld::SaveScene(const FString& SceneName)
 {
-    TArray<FPrimitiveData> Primitives;
+	TArray<FPrimitiveData> Primitives;
 
-    for (AActor* Actor : Actors)
-    {
-        // StaticMeshActor 직렬화
-        if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
-        {
-            FPrimitiveData Data;
-            Data.UUID = Actor->UUID;
-            Data.Type = "StaticMeshComp";
+	for (AActor* Actor : Actors)
+	{
+		// StaticMeshActor 직렬화
+		if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
+		{
+			FPrimitiveData Data;
+			Data.UUID = Actor->UUID;
+			Data.Type = "StaticMeshComp";
 
-            if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
-            {
-                // 트랜스폼 + 메시 경로 기록
-                SMC->Serialize(false, Data);
-            }
+			if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
+			{
+				// 트랜스폼 + 메시 경로 기록
+				SMC->Serialize(false, Data);
+			}
 
-            Primitives.push_back(Data);
-        }
-        else
-        {
-            // 필요 시 일반 액터 직렬화 확장 가능(트랜스폼만 저장 등)
-            FPrimitiveData Data;
-            Data.UUID = Actor->UUID;
-            Data.Type = "Actor";
+			Primitives.push_back(Data);
+		}
+		else
+		{
+			// 필요 시 일반 액터 직렬화 확장 가능(트랜스폼만 저장 등)
+			FPrimitiveData Data;
+			Data.UUID = Actor->UUID;
+			Data.Type = "Actor";
 
-            // 가능하면 루트 컴포넌트(Primitive) 기준으로 기록
-            if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
-            {
-                Prim->Serialize(false, Data);
-            }
-            else
-            {
-                // 폴백: 액터 트랜스폼
-                Data.Location = Actor->GetActorLocation();
-                Data.Rotation = Actor->GetActorRotation().ToEuler();
-                Data.Scale = Actor->GetActorScale();
-            }
+			// 가능하면 루트 컴포넌트(Primitive) 기준으로 기록
+			if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+			{
+				Prim->Serialize(false, Data);
+			}
+			else
+			{
+				// 폴백: 액터 트랜스폼
+				Data.Location = Actor->GetActorLocation();
+				Data.Rotation = Actor->GetActorRotation().ToEuler();
+				Data.Scale = Actor->GetActorScale();
+			}
 
-            Data.ObjStaticMeshAsset.clear();
-            Primitives.push_back(Data);
-        }
-    }
+			Data.ObjStaticMeshAsset.clear();
+			Primitives.push_back(Data);
+		}
+	}
 
-    // Scene 디렉터리에 저장
-    FSceneLoader::Save(Primitives, "Scene/" + SceneName);
+	// Scene 디렉터리에 저장
+	FSceneLoader::Save(Primitives, "Scene/" + SceneName);
 }
 
 AGizmoActor* UWorld::GetGizmoActor()
 {
-    return GizmoActor;
+	return GizmoActor;
 }

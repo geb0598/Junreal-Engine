@@ -118,7 +118,7 @@ void USceneManagerWidget::RenderWidget()
     ImGui::Spacing();
     
     // Toolbar
-    RenderToolbar();
+    //RenderToolbar();
     ImGui::Separator();
     
     // World status
@@ -133,7 +133,7 @@ void USceneManagerWidget::RenderWidget()
     ImGui::Separator();
     
     // Actor tree view
-    ImGui::BeginChild("ActorTreeView", ImVec2(0, -30), true);
+    ImGui::BeginChild("ActorTreeView", ImVec2(0, 240), true);
     
     // 렌더링 전에 트리 유효성 사전 검사
     bool bTreeNeedsRefresh = false;

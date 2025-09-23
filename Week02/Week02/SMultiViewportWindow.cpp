@@ -6,6 +6,7 @@
 #include"SceneIOWindow.h"
 #include"SDetailsWindow.h"
 #include"SControlPanel.h"
+#include"MenuBarWidget.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 
@@ -117,6 +118,10 @@ SMultiViewportWindow::~SMultiViewportWindow()
 
 void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, const FRect& InRect, SViewportWindow* InMainViewport)
 {
+	MenuBar = NewObject<UMenuBarWidget>();
+	MenuBar->SetOwner(this);   // 레이아웃 스위칭 등 제어를 위해 주입
+	MenuBar->Initialize();
+
 	MainViewport = InMainViewport;
 
 	Device = InDevice;
@@ -153,7 +158,6 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 
 	// === 아래쪽: Console + Property ===
 	SSplitterV* BottomPanel = new SSplitterV();
-	//BottomPanel->SetSplitRatio(0.7);
 	ControlPanel = new SControlPanel();   // 직접 만든 ConsoleWindow 클래스
 	DetailPanel = new SDetailsWindow();  // 직접 만든 PropertyWindow 클래스
 	BottomPanel->SideLT = ControlPanel;
@@ -225,12 +229,14 @@ void SMultiViewportWindow::SwitchLayout(EViewportLayoutMode NewMode)
 
 void SMultiViewportWindow::OnRender()
 {
+	// 메뉴바 렌더링 (항상 최상단에)
+	
+	MenuBar->RenderWidget();
 	if (RootSplitter)
 	{
 		RootSplitter->OnRender();
 
-		// 뷰포트 간 경계선을 더 명확하게 표시
-	   // ImDrawList* DrawList = ImGui::GetBackgroundDrawList();
+		
 
 	}
 }
@@ -238,7 +244,9 @@ void SMultiViewportWindow::OnRender()
 void SMultiViewportWindow::OnUpdate()
 {
 	if (RootSplitter) {
-		RootSplitter->Rect = FRect(0, 0, CLIENTWIDTH, CLIENTHEIGHT);
+		// 메뉴바 높이만큼 아래로 이동
+		float menuBarHeight = ImGui::GetFrameHeight();
+		RootSplitter->Rect = FRect(0, menuBarHeight, CLIENTWIDTH, CLIENTHEIGHT);
 		RootSplitter->OnUpdate();
 	}
 
@@ -267,3 +275,4 @@ void SMultiViewportWindow::OnShutdown()
 	SaveSplitterConfig(RootSplitter);
 	//SaveEditorINI("editor.ini");
 }
+
