@@ -38,7 +38,8 @@ struct FGroupInfo
 {
     uint32 StartIndex;
     uint32 IndexCount;
-    FObjMaterialInfo MaterialInfo;
+    //FObjMaterialInfo MaterialInfo;
+    FString InitialMaterialName; // obj 파일 자체에 맵핑된 material 이름
 };
 
 struct FNormalVertex

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "UEContainer.h"
 #include "Vector.h"
 #include "Enums.h"
@@ -476,7 +476,7 @@ public:
         OutStaticMesh->PathFileName = InObjInfo.ObjFileName;
         uint32 NumDuplicatedVertex = static_cast<uint32>(InObjInfo.PositionIndices.size());
 
-        // 해시로 빠르게 중복찾기
+        // 1) Vertices, Indices 설정: 해시로 빠르게 중복찾기
         std::unordered_map<VertexKey, uint32, VertexKeyHash> VertexMap;
         for (uint32 CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
         {
@@ -507,8 +507,8 @@ public:
                 VertexMap[Key] = NewIndex;
             }
         }
-
-        // Material 정보 정리
+        
+        // 2) Material 관련 각 case 처리
         if (!InObjInfo.bHasMtl)
         {
             OutStaticMesh->bHasMaterial = false;
@@ -523,11 +523,36 @@ public:
             UE_LOG("\'%s\''s InMaterialInfos's size is 0!");
             return;
         }
-        for (uint32 i = 0; i < NumGroup; ++i)
+
+        // 3) 리소스 매니저에 Material 리소스 맵핑
+        for (const FObjMaterialInfo& InMaterialInfo : InMaterialInfos)
+        {
+            UMaterial* Material = NewObject<UMaterial>();
+            Material->SetMaterialInfo(InMaterialInfo);
+
+            UResourceManager::GetInstance().Add<UMaterial>(InMaterialInfo.MaterialName, Material);
+        }
+
+        // 4) GroupInfo 정보 설정
+        for (int i = 0; i < NumGroup; ++i)
         {
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];
-            OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
+
+            // <생각의 흔적...>
+            // MaterialInfo를 그대로 가져오는 게 아니라, 해당 InMaterialInfos[InObjInfo.GroupMaterialArray[i]].MaterialName으로 가져오기
+            // 그리고 StaticMeshComp쪽에서, 이 초기 Info name들을 이용해, 자기가 갖고있는 names FString배열에 집어넣는 거야.
+            // 그러면, ResourdeManger를 가져와서, Resoures map 배열에 집어넣는거야. 관련 설정도 필요하겠지.
+            // UMaterial을 써야 하나?. 아니면, 차라리. 이거 그대로 넣고. 나중에 StaticMeshComp의 SetStaticMesh(fileName)에서 해줄까?
+            // 
+            // 최종 로직:
+            // 1) for문 밖에서: InMaterialInfos의 각 요소마다, Umaterial 생성해서, 거기의 생성자에서 InMaterialInfo들을 설정해주는 거야.
+            // 그렇게 생성된 Umaterial과, InMaterialInfos.MaterialName을 맵핑해서, 리소스 매니저의 Add 함수로 집어넣는 거지.
+            // 2) 여기서: OutStaticMesh는 MaterialInfo 대신 파일네임만 가지게 하고.(변수이름 변경)
+            // 3) 이후: StaticMeshComp의 SetStaticMesh(filename) 내부에서, OutStaticMesh->GroupInfos[i].InitialMatNames와, dirty flag를 가지고, 멤버변수 MatSlots를 설정해줘.
+            // 일단 여기까지 하고, 나중에, imgui에서 material slot의 matName을 바꾸면, dirty flag true로 바꾸는 로직도 설정하기.->완료.
+            //OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
+            OutStaticMesh->GroupInfos[i].InitialMaterialName = InMaterialInfos[InObjInfo.GroupMaterialArray[i]].MaterialName;
         }
     }
 

@@ -21,12 +21,27 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
 {
     Renderer->UpdateConstantBuffer(GetWorldMatrix(), ViewMatrix, ProjectionMatrix);
     Renderer->PrepareShader(GetMaterial()->GetShader());
-    Renderer->DrawIndexedPrimitiveComponent(GetStaticMesh(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Renderer->DrawIndexedPrimitiveComponent(GetStaticMesh(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, MaterailSlots);
 }
 
 void UStaticMeshComponent::SetStaticMesh(const FString& PathFileName)
 {
 	StaticMesh = FObjManager::LoadObjStaticMesh(PathFileName);
+    
+    const TArray<FGroupInfo>& GroupInfos = StaticMesh->GetMeshGroupInfo();
+    if (MaterailSlots.size() < GroupInfos.size())
+    {
+        MaterailSlots.resize(GroupInfos.size());
+    }
+
+    // MaterailSlots.size()가 GroupInfos.size() 보다 클 수 있기 때문에, GroupInfos.size()로 설정
+    for (int i = 0; i < GroupInfos.size(); ++i) 
+    {
+        if (MaterailSlots[i].bChangedByUser == false)
+        {
+            MaterailSlots[i].MaterialName = GroupInfos[i].InitialMaterialName;
+        }
+    }
 }
 
 void UStaticMeshComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
@@ -63,4 +78,21 @@ void UStaticMeshComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
         }
         // Type은 상위(월드/액터) 정책에 따라 별도 기록 (예: "StaticMeshComp")
     }
+}
+
+void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, const FString& InMaterialName)
+{
+    assert((0 <= InMaterialSlotIndex && InMaterialSlotIndex < MaterailSlots.size()) && "out of range InMaterialSlotIndex");
+
+    if (0 <= InMaterialSlotIndex && InMaterialSlotIndex < MaterailSlots.size())
+    {
+        MaterailSlots[InMaterialSlotIndex].MaterialName = InMaterialName;
+        MaterailSlots[InMaterialSlotIndex].bChangedByUser = true;
+    }
+    else
+    {
+        UE_LOG("out of range InMaterialSlotIndex: %d", InMaterialSlotIndex);
+    }
+
+    assert(MaterailSlots[InMaterialSlotIndex].bChangedByUser == true);
 }
