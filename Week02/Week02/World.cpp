@@ -548,50 +548,53 @@ void UWorld::ProcessViewportInput()
     
 }
 
-
 void UWorld::LoadScene(const FString& SceneName)
 {
-    // 0) 파일 경로 구성
-    const FString FilePath = SceneName + ".Scene";
+    namespace fs = std::filesystem;
+    fs::path path = fs::path("Scene") / SceneName;
+    if (path.extension().string() != ".Scene")
+    {
+        path.replace_extension(".Scene");
+    }
 
-    // 1) 파일 메타의 NextUUID를 먼저 동기화 (없으면 무시)
+    const FString FilePath = path.make_preferred().string();
+
+    // [1] 로드 시작 전 현재 카운터 백업
+    const uint32 PreLoadNext = UObject::PeekNextUUID();
+
+    // [2] 파일 NextUUID는 현재보다 클 때만 반영(절대 하향 설정 금지)
     uint32 LoadedNextUUID = 0;
     if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
     {
-        // Save는 PeekNextUUID(=다음 발급값)를 기록하므로 그대로 설정
-        UObject::SetNextUUID(LoadedNextUUID);
+        if (LoadedNextUUID > UObject::PeekNextUUID())
+        {
+            UObject::SetNextUUID(LoadedNextUUID);
+        }
     }
 
-    // 2) 기존 씬 비우기 + 이름 카운터 초기화
+    // [3] 기존 씬 비우기
     CreateNewScene();
 
-    // 3) 프리미티브 로드
+    // [4] 로드
     const TArray<FPrimitiveData>& Primitives = FSceneLoader::Load(FilePath);
 
-    // 4) 로딩된 오브젝트들의 최대 UUID 추적(레거시 파일이면 0 유지)
     uint32 MaxLoadedUUID = 0;
-
     for (const FPrimitiveData& Primitive : Primitives)
     {
+        // 스폰 시 필요한 초기 트랜스폼은 그대로 넘겨 초기화 안전 보장
         AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale)
-        );
+            FTransform(Primitive.Location, FQuat::MakeFromEuler(Primitive.Rotation), Primitive.Scale));
 
-        // 읽은 UUID가 있으면 대입 (0이면 레거시 → 자동 발급 유지)
         if (Primitive.UUID != 0)
         {
             StaticMeshActor->UUID = Primitive.UUID;
-            if (Primitive.UUID > MaxLoadedUUID)
-            {
-                MaxLoadedUUID = Primitive.UUID;
-            }
+            MaxLoadedUUID = std::max(MaxLoadedUUID, Primitive.UUID);
         }
 
         if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
         {
             FPrimitiveData Temp = Primitive;
             SMC->Serialize(true, Temp);
-            SMC->SetMaterial("Primitive.hlsl", EVertexLayoutType::PositionColor);
 
             FString LoadedAssetPath;
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
@@ -613,13 +616,13 @@ void UWorld::LoadScene(const FString& SceneName)
             {
                 BaseName = RemoveObjExtension(LoadedAssetPath);
             }
-            const FString UniqueName = GenerateUniqueActorName(BaseName);
-            StaticMeshActor->SetName(UniqueName);
+            StaticMeshActor->SetName(GenerateUniqueActorName(BaseName));
         }
     }
 
-    // 5) 로드 완료 후 전역 카운터를 안전하게 재설정
-    const uint32 SafeNext = std::max(UObject::PeekNextUUID(), MaxLoadedUUID + 1);
+    // [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
+    const uint32 DuringLoadNext = UObject::PeekNextUUID();        // 로딩 중 SpawnActor로 증가했을 수 있음
+    const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
     UObject::SetNextUUID(SafeNext);
 }
 
@@ -629,33 +632,48 @@ void UWorld::SaveScene(const FString& SceneName)
 
     for (AActor* Actor : Actors)
     {
-        FPrimitiveData Data;
-        Data.UUID = Actor->UUID;
-        Data.Location = Actor->GetActorLocation();
-        Data.Rotation = Actor->GetActorRotation().ToEuler();
-        Data.Scale = Actor->GetActorScale();
-
+        // StaticMeshActor 직렬화
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
+            FPrimitiveData Data;
+            Data.UUID = Actor->UUID;
+            Data.Type = "StaticMeshComp";
+
             if (UStaticMeshComponent* SMC = MeshActor->GetStaticMeshComponent())
             {
-                // 컴포넌트가 스스로 메시(에셋 경로) 직렬화 수행
+                // 트랜스폼 + 메시 경로 기록
                 SMC->Serialize(false, Data);
             }
 
-            // 타입 표기는 유지(레거시/디버깅용)
-            Data.Type = "StaticMeshComp";
+            Primitives.push_back(Data);
         }
         else
         {
+            // 필요 시 일반 액터 직렬화 확장 가능(트랜스폼만 저장 등)
+            FPrimitiveData Data;
+            Data.UUID = Actor->UUID;
             Data.Type = "Actor";
-            Data.ObjStaticMeshAsset.clear();
-        }
 
-        Primitives.push_back(Data);
+            // 가능하면 루트 컴포넌트(Primitive) 기준으로 기록
+            if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+            {
+                Prim->Serialize(false, Data);
+            }
+            else
+            {
+                // 폴백: 액터 트랜스폼
+                Data.Location = Actor->GetActorLocation();
+                Data.Rotation = Actor->GetActorRotation().ToEuler();
+                Data.Scale = Actor->GetActorScale();
+            }
+
+            Data.ObjStaticMeshAsset.clear();
+            Primitives.push_back(Data);
+        }
     }
 
-    FSceneLoader::Save(Primitives, SceneName);
+    // Scene 디렉터리에 저장
+    FSceneLoader::Save(Primitives, "Scene/" + SceneName);
 }
 
 AGizmoActor* UWorld::GetGizmoActor()

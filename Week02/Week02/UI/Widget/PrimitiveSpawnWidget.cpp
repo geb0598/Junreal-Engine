@@ -323,7 +323,6 @@ void UPrimitiveSpawnWidget::SpawnActors() const
             if (auto* StaticMeshComp = NewActor->GetStaticMeshComponent())
             {
                 StaticMeshComp->SetStaticMesh(MeshPath);
-                StaticMeshComp->SetMaterial("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
 
                 // 충돌 컴포넌트 설정 (Sphere만 특례)
                 if (GetBaseNameNoExt(MeshPath) == "Sphere")

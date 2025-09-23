@@ -9,7 +9,7 @@
 
 UStaticMeshComponent::UStaticMeshComponent()
 {
-
+    SetMaterial("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
 }
 
 UStaticMeshComponent::~UStaticMeshComponent()
@@ -31,6 +31,9 @@ void UStaticMeshComponent::SetStaticMesh(const FString& PathFileName)
 
 void UStaticMeshComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
 {
+    // 0) 트랜스폼 직렬화/역직렬화는 상위(UPrimitiveComponent)에서 처리
+    UPrimitiveComponent::Serialize(bIsLoading, InOut);
+
     if (bIsLoading)
     {
         // 1) 신규 포맷: ObjStaticMeshAsset가 있으면 우선 사용
@@ -61,4 +64,3 @@ void UStaticMeshComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
         // Type은 상위(월드/액터) 정책에 따라 별도 기록 (예: "StaticMeshComp")
     }
 }
-

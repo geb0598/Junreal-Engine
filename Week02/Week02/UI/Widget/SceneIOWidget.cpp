@@ -42,58 +42,112 @@ void USceneIOWidget::RenderWidget()
 	ImGui::Text("Scene Management");
 	ImGui::Separator();
 	
-	RenderSaveSection();
-	ImGui::Spacing();
-	
-	RenderLoadSection();
-	ImGui::Spacing();
-	
-	RenderNewSceneSection();
+	RenderSaveLoadSection();
 	ImGui::Spacing();
 	
 	RenderStatusMessage();
 }
 
-void USceneIOWidget::RenderSaveSection()
+void USceneIOWidget::RenderSaveLoadSection()
 {
-	ImGui::Text("Save Scene");
-	
-	if (ImGui::Button("Save Scene", ImVec2(100, 25)))
+	// 공용 씬 이름 입력 (Scene/Name.Scene 으로 강제 저장/로드)
+	ImGui::SetNextItemWidth(220);
+	ImGui::InputText("Scene Name", NewLevelNameBuffer, sizeof(NewLevelNameBuffer));
+
+	// 버튼들: Save / Quick Save / Load / Quick Load / New Scene
+	if (ImGui::Button("Save Scene", ImVec2(110, 25)))
 	{
-		path FilePath = OpenSaveFileDialog();
-		if (!FilePath.empty())
+		// 유효성 검사
+		FString SceneName = NewLevelNameBuffer;
+		bool bValid = false;
+		for (char c : SceneName)
 		{
-			SaveLevel(FilePath.string());
+			if (c != ' ' && c != '\t')
+			{
+				bValid = true;
+				break;
+			}
+		}
+
+		if (!bValid)
+		{
+			SetStatusMessage("Please enter a valid scene name!", true);
+		}
+		else
+		{
+			// 파일 다이얼로그 없이 이름만 전달 → FSceneLoader::Save가 Scene/Name.Scene으로 저장
+			SaveLevel(SceneName);
 		}
 	}
-	
+
 	ImGui::SameLine();
-	if (ImGui::Button("Quick Save", ImVec2(100, 25)))
+	if (ImGui::Button("Quick Save", ImVec2(110, 25)))
 	{
-		// Quick save to default location
 		SaveLevel("");
 	}
-}
 
-void USceneIOWidget::RenderLoadSection()
-{
-	ImGui::Text("Load Scene");
 	
-	if (ImGui::Button("Load Scene", ImVec2(100, 25)))
+	if (ImGui::Button("Load Scene", ImVec2(110, 25)))
 	{
-		path FilePath = OpenLoadFileDialog();
-		if (!FilePath.empty())
+		// 유효성 검사
+		FString SceneName = NewLevelNameBuffer;
+		bool bValid = false;
+		for (char c : SceneName)
 		{
-			LoadLevel(FilePath.string());
+			if (c != ' ' && c != '\t')
+			{
+				bValid = true;
+				break;
+			}
+		}
+
+		if (!bValid)
+		{
+			SetStatusMessage("Please enter a valid scene name!", true);
+		}
+		else
+		{
+			// Scene/Name.Scene 경로 구성 및 존재 확인
+			namespace fs = std::filesystem;
+			fs::path path = fs::path("Scene") / SceneName;
+			if (path.extension().string() != ".Scene")
+			{
+				path.replace_extension(".Scene");
+			}
+
+			if (!fs::exists(path))
+			{
+				SetStatusMessage("Scene file not found: " + path.string(), true);
+			}
+			else
+			{
+				// 절대/정규 경로 전달 → LoadLevel에서 NextUUID 읽기/로드 처리
+				LoadLevel(path.make_preferred().string());
+			}
 		}
 	}
-}
 
-void USceneIOWidget::RenderNewSceneSection()
-{
-	ImGui::Text("Create New Scene");
+	ImGui::SameLine();
+	if (ImGui::Button("Quick Load", ImVec2(110, 25)))
+	{
+		namespace fs = std::filesystem;
+		fs::path quick = fs::path("Scene") / "QuickSave";
+		if (quick.extension().string() != ".Scene")
+		{
+			quick.replace_extension(".Scene");
+		}
 
-	if (ImGui::Button("Create New Scene", ImVec2(150, 25)))
+		if (!fs::exists(quick))
+		{
+			SetStatusMessage("QuickSave not found: " + quick.make_preferred().string(), true);
+		}
+		else
+		{
+			LoadLevel(quick.make_preferred().string());
+		}
+	}
+
+	if (ImGui::Button("New Scene", ImVec2(110, 25)))
 	{
 		CreateNewLevel();
 	}
@@ -140,7 +194,6 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 {
 	try
 	{
-		// Get World reference
 		UWorld* CurrentWorld = UUIManager::GetInstance().GetWorld();
 		if (!CurrentWorld)
 		{
@@ -150,39 +203,28 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 
 		if (InFilePath.empty())
 		{
-			// Quick Save: Scene 디렉토리에 저장
-			namespace fs = std::filesystem;
-
-			fs::path sceneDir = fs::path("Scene");
-			std::error_code ec;
-			fs::create_directories(sceneDir, ec); // 디렉토리 없으면 생성 (에러는 무시)
-
-			// "Scene/QuickSave" 를 베이스로 넘기면 내부에서 ".Scene" 확장자가 붙음
-			const FString SceneBase = (sceneDir / "QuickSave").string();
-			CurrentWorld->SaveScene(SceneBase);
-
-			UE_LOG("SceneIO: Quick Save executed to %s.Scene", SceneBase.c_str());
-			SetStatusMessage("Quick Save completed: " + SceneBase + ".Scene");
+			// Quick Save: 이름만 넘김. Scene 경로/확장자는 FSceneLoader::Save가 처리
+			CurrentWorld->SaveScene("QuickSave");
+			UE_LOG("SceneIO: Quick Save executed to Scene/QuickSave.Scene");
+			SetStatusMessage("Quick Save completed: Scene/QuickSave.Scene");
 		}
 		else
 		{
-			// Extract scene name from file path
+			// 파일 경로에서 베이스 이름만 추출하여 넘김
 			FString SceneName = InFilePath;
 			size_t LastSlash = SceneName.find_last_of("\\/");
-			if (LastSlash != std::string::npos)
+			if (LastSlash != std::string::npos) 
 			{
 				SceneName = SceneName.substr(LastSlash + 1);
 			}
 			size_t LastDot = SceneName.find_last_of(".");
-			if (LastDot != std::string::npos)
 			{
-				SceneName = SceneName.substr(0, LastDot);
+				if (LastDot != std::string::npos) SceneName = SceneName.substr(0, LastDot);
 			}
 
-			// Save scene through World (원하는 전체 경로로 저장하려면 InFilePath를 그대로 넘겨도 됨)
 			CurrentWorld->SaveScene(SceneName);
-			UE_LOG("SceneIO: Scene saved successfully: %s", SceneName.c_str());
-			SetStatusMessage("Scene saved: " + SceneName);
+			UE_LOG("SceneIO: Scene saved: %s", SceneName.c_str());
+			SetStatusMessage("Scene saved: Scene/" + SceneName + ".Scene");
 		}
 	}
 	catch (const std::exception& Exception)
@@ -239,7 +281,7 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 			// UObject::SetNextUUID(1); // 필요하면 활성화
 		}
 
-		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".scene"으로 접근)
+		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".Scene"으로 접근)
 		CurrentWorld->LoadScene(SceneName);
 
 		UE_LOG("SceneIO: Scene loaded successfully: %s", SceneName.c_str());
@@ -310,7 +352,7 @@ path USceneIOWidget::OpenSaveFileDialog()
      ofn.nMaxFileTitle = 0;
      ofn.lpstrInitialDir = nullptr;
      ofn.lpstrTitle = L"Save Level File";
-     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_HIDEREADONLY;
+	 ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
      ofn.lpstrDefExt = L"json";
    
      // Modal 다이얼로그 표시 - 이 함수가 리턴될 때까지 다른 입력 차단
@@ -347,7 +389,7 @@ path USceneIOWidget::OpenLoadFileDialog()
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = nullptr;
     ofn.lpstrTitle = L"Load Level File";
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_HIDEREADONLY;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
 
     UE_LOG("SceneIO: Opening Load Dialog (Modal)...");
 

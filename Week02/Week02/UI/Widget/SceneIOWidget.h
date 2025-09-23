@@ -25,9 +25,7 @@ public:
 
 private:
 	// UI Rendering Methods
-	void RenderSaveSection();
-	void RenderLoadSection();
-	void RenderNewSceneSection();
+	void RenderSaveLoadSection();
 	void RenderStatusMessage();
 	
 	// Core Functionality
