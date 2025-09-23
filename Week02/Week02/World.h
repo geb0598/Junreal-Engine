@@ -51,7 +51,7 @@ public:
     void ProcessViewportInput();
 
     void SetRenderer(URenderer* InRenderer);
-    URenderer*& const GetRenderer()  { return Renderer; }
+    URenderer* GetRenderer() { return Renderer; }
 
     void SetMainViewport(SViewportWindow* InViewport) { MainViewport = InViewport; }
     SViewportWindow* GetMainViewport() const { return MainViewport; }

@@ -29,7 +29,7 @@ struct FObjImporter
 {
     // TODO: 변수이름 가독성 있게 재설정
 public:
-    static bool LoadObjModel(const FString& InFileName, FObjInfo* const OutObjInfo, TArray<FObjMaterialInfo>& const OutMaterialInfos, bool bIsRHCoordSys, bool bComputeNormals)
+    static bool LoadObjModel(const FString& InFileName, FObjInfo* const OutObjInfo, TArray<FObjMaterialInfo>& OutMaterialInfos, bool bIsRHCoordSys, bool bComputeNormals)
     {
         // mtl 파싱할 때 필요한 정보들. 이거를 함수 밖으로 보내줘야 할수도? obj 파싱하면서 저장.(아래 링크 기반) 나중에 형식 바뀔수도 있음
         // https://www.braynzarsoft.net/viewtutorial/q16390-22-loading-static-3d-models-obj-format
@@ -42,9 +42,9 @@ public:
         bool bHasNormal = false;
 
         FString MaterialNameTemp;
-        uint32 VertexPositionIndexTemp;
-        uint32 VertexTexIndexTemp;
-        uint32 VertexNormalIndexTemp;
+        // uint32 VertexPositionIndexTemp;
+        // uint32 VertexTexIndexTemp;
+        // uint32 VertexNormalIndexTemp;
 
         FString Face;
         uint32 VIndex = 0; // 현재 파싱중인 vertex의 넘버(start: 0. 중복 고려x)
@@ -237,7 +237,7 @@ public:
 
         OutMaterialInfos.reserve(OutObjInfo->MaterialNames.size());
         /*OutMaterialInfos->resize(OutObjInfo->MaterialNames.size());*/
-        uint32 MatCount = OutMaterialInfos.size();
+        uint32 MatCount = static_cast<uint32>(OutMaterialInfos.size());
         //FString line;
         while (std::getline(FileIn, line))
         {
@@ -326,7 +326,7 @@ public:
                 float value;
                 wss >> value;
 
-                OutMaterialInfos[MatCount - 1].IlluminationModel = value;
+                OutMaterialInfos[MatCount - 1].IlluminationModel = static_cast<int32>(value);
             }
             else if (line.rfind("map_Kd ", 0) == 0)
             {
@@ -442,13 +442,15 @@ public:
                 OutObjInfo->GroupMaterialArray.push_back(0); 
             }
         }
+
+		return true;
     }
 
     struct VertexKey
     {
-        int PosIndex;
-        int TexIndex;
-        int NormalIndex;
+        uint32 PosIndex;
+        uint32 TexIndex;
+        uint32 NormalIndex;
 
         bool operator==(const VertexKey& Other) const
         {
@@ -472,11 +474,11 @@ public:
     static void ConvertToStaticMesh(const FObjInfo& InObjInfo, const TArray<FObjMaterialInfo>& InMaterialInfos, FStaticMesh* const OutStaticMesh)
     {
         OutStaticMesh->PathFileName = InObjInfo.ObjFileName;
-        uint32 NumDuplicatedVertex = InObjInfo.PositionIndices.size();
+        uint32 NumDuplicatedVertex = static_cast<uint32>(InObjInfo.PositionIndices.size());
 
-        // 해시로 빠르게 중복찾기
+        // 1) Vertices, Indices 설정: 해시로 빠르게 중복찾기
         std::unordered_map<VertexKey, uint32, VertexKeyHash> VertexMap;
-        for (int CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
+        for (uint32 CurIndex = 0; CurIndex < NumDuplicatedVertex; ++CurIndex)
         {
             VertexKey Key{ InObjInfo.PositionIndices[CurIndex],
                            InObjInfo.TexCoordIndices[CurIndex],
@@ -499,14 +501,14 @@ public:
                 FNormalVertex NormalVertex(Pos, Normal, Color, TexCoord);
                 OutStaticMesh->Vertices.push_back(NormalVertex);
 
-                uint32 NewIndex = OutStaticMesh->Vertices.size() - 1;
+                uint32 NewIndex = static_cast<uint32>(OutStaticMesh->Vertices.size() - 1);
                 OutStaticMesh->Indices.push_back(NewIndex);
 
                 VertexMap[Key] = NewIndex;
             }
         }
-
-        // Material 정보 정리
+        
+        // 2) Material 관련 각 case 처리
         if (!InObjInfo.bHasMtl)
         {
             OutStaticMesh->bHasMaterial = false;
@@ -514,18 +516,43 @@ public:
         }
 
         OutStaticMesh->bHasMaterial = true;
-        uint32 NumGroup = InObjInfo.MaterialNames.size();
+        uint32 NumGroup = static_cast<uint32>(InObjInfo.MaterialNames.size());
         OutStaticMesh->GroupInfos.resize(NumGroup);
         if (InMaterialInfos.size() == 0)
         {
             UE_LOG("\'%s\''s InMaterialInfos's size is 0!");
             return;
         }
-        for (int i = 0; i < NumGroup; ++i)
+
+        // 3) 리소스 매니저에 Material 리소스 맵핑
+        for (const FObjMaterialInfo& InMaterialInfo : InMaterialInfos)
+        {
+            UMaterial* Material = NewObject<UMaterial>();
+            Material->SetMaterialInfo(InMaterialInfo);
+
+            UResourceManager::GetInstance().Add<UMaterial>(InMaterialInfo.MaterialName, Material);
+        }
+
+        // 4) GroupInfo 정보 설정
+        for (uint32 i = 0; i < NumGroup; ++i)
         {
             OutStaticMesh->GroupInfos[i].StartIndex = InObjInfo.GroupIndexStartArray[i];
             OutStaticMesh->GroupInfos[i].IndexCount = InObjInfo.GroupIndexStartArray[i + 1] - InObjInfo.GroupIndexStartArray[i];
-            OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
+
+            // <생각의 흔적...>
+            // MaterialInfo를 그대로 가져오는 게 아니라, 해당 InMaterialInfos[InObjInfo.GroupMaterialArray[i]].MaterialName으로 가져오기
+            // 그리고 StaticMeshComp쪽에서, 이 초기 Info name들을 이용해, 자기가 갖고있는 names FString배열에 집어넣는 거야.
+            // 그러면, ResourdeManger를 가져와서, Resoures map 배열에 집어넣는거야. 관련 설정도 필요하겠지.
+            // UMaterial을 써야 하나?. 아니면, 차라리. 이거 그대로 넣고. 나중에 StaticMeshComp의 SetStaticMesh(fileName)에서 해줄까?
+            // 
+            // 최종 로직:
+            // 1) for문 밖에서: InMaterialInfos의 각 요소마다, Umaterial 생성해서, 거기의 생성자에서 InMaterialInfo들을 설정해주는 거야.
+            // 그렇게 생성된 Umaterial과, InMaterialInfos.MaterialName을 맵핑해서, 리소스 매니저의 Add 함수로 집어넣는 거지.
+            // 2) 여기서: OutStaticMesh는 MaterialInfo 대신 파일네임만 가지게 하고.(변수이름 변경)
+            // 3) 이후: StaticMeshComp의 SetStaticMesh(filename) 내부에서, OutStaticMesh->GroupInfos[i].InitialMatNames와, dirty flag를 가지고, 멤버변수 MatSlots를 설정해줘.
+            // 일단 여기까지 하고, 나중에, imgui에서 material slot의 matName을 바꾸면, dirty flag true로 바꾸는 로직도 설정하기.->완료.
+            //OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
+            OutStaticMesh->GroupInfos[i].InitialMaterialName = InMaterialInfos[InObjInfo.GroupMaterialArray[i]].MaterialName;
         }
     }
 

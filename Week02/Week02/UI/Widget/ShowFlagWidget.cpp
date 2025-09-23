@@ -52,7 +52,7 @@ void UShowFlagWidget::RenderWidget()
         
         ImGui::Separator();
         
-        if (ImGui::BeginChild("ShowFlagsContent", ImVec2(0, bCompactMode ? 120 : 200), true))
+        if (ImGui::BeginChild("ShowFlagsContent", ImVec2(0, bCompactMode ? 120.0f : 200.0f), true))
         {
             if (bCompactMode)
             {

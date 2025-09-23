@@ -8,6 +8,7 @@ class UMeshComponent;
 class URHIDevice;
 class UShader;
 class UStaticMesh;
+struct FMaterialSlot;
 
 class URenderer
 {
@@ -29,7 +30,7 @@ public:
 
     void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
 
-    void UpdateHighLightConstantBuffer(const float InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo);
+    void UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo);
 
     void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp);
 
@@ -37,7 +38,7 @@ public:
 
     void UpdateColorBuffer(const FVector4& Color);
 
-    void DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology);
+    void DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots);
 
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
@@ -53,7 +54,7 @@ public:
 
     void OMSetDepthStencilState(EComparisonFunc Func);
 
-    URHIDevice*&const  GetRHIDevice() { return RHIDevice; }
+    URHIDevice* GetRHIDevice() { return RHIDevice; }
 private:
 	URHIDevice* RHIDevice;
 

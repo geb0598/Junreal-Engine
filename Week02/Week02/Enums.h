@@ -38,7 +38,8 @@ struct FGroupInfo
 {
     uint32 StartIndex;
     uint32 IndexCount;
-    FObjMaterialInfo MaterialInfo;
+    //FObjMaterialInfo MaterialInfo;
+    FString InitialMaterialName; // obj 파일 자체에 맵핑된 material 이름
 };
 
 struct FNormalVertex
@@ -112,7 +113,6 @@ struct FTextureData
     ID3D11Resource* Texture = nullptr;
     ID3D11ShaderResourceView* TextureSRV = nullptr;
     ID3D11BlendState* BlendState = nullptr;
-    ID3D11SamplerState* SamplerState = nullptr;
 };
 
 enum class EResourceType
@@ -149,25 +149,10 @@ enum class EKeyInput : uint8
     Unknown
 };
 
-enum class ResourceDataType : uint8
-{
-
-};
-
-enum class EVertexType : uint8
-{
-    None = -1,
-
-    VertexSimple,
-    VertexDynamic,
-
-    End, 
-};
-
 //TODO EResourceType으로 재정의
 enum class ResourceType : uint8
 {
-    None = -1,
+    None,
 
     StaticMesh,
     TextQuad,

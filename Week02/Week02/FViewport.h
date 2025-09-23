@@ -15,7 +15,7 @@ public:
     virtual ~FViewport();
 
     // 초기화 및 정리
-    bool Initialize(uint32 StartX, uint32 StartY, uint32 InSizeX, uint32 InSizeY, ID3D11Device* Device);
+    bool Initialize(float StartX, float StartY, float InSizeX, float InSizeY, ID3D11Device* Device);
     void Cleanup();
 
     // 렌더링
@@ -33,7 +33,7 @@ public:
     // 접근자
     uint32 GetSizeX() const { return SizeX; }
     uint32 GetSizeY() const { return SizeY; }
-    FVector2D GetSize() const { return FVector2D(SizeX, SizeY); }
+    FVector2D GetSize() const { return FVector2D(static_cast<float>(SizeX), static_cast<float>(SizeY)); }
 
     uint32 GetStartX() const { return StartX; }
     uint32 GetStartY() const { return StartY; }

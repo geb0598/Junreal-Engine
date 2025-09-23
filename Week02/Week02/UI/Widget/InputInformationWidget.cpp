@@ -6,8 +6,8 @@
 #include <sstream>
 #include <iomanip>
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 using std::max;
 using std::min;

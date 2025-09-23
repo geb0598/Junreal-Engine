@@ -561,7 +561,7 @@ uint32 CPickingSystem::IsHoveringGizmoForViewport(AGizmoActor* GizmoTransActor, 
     const FVector CameraForward = Camera->GetForward();
     FRay Ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
                                    ViewportMousePos, ViewportSize, ViewportOffset);
-    char debugBuf[512];
+    // char debugBuf[512];
     //sprintf_s(
     //    debugBuf,
     //    "Mouse Local: (%.1f, %.1f) | Global: (%.1f, %.1f)\n"

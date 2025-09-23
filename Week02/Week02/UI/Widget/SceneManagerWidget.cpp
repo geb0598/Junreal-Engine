@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <string>
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 USceneManagerWidget::USceneManagerWidget()
     : UWidget("Scene Manager")
@@ -359,7 +359,7 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
             if (DroppedActor != Actor)
             {
                 // TODO: Implement hierarchy reparenting
-                UE_LOG("Would reparent %s to %s", DroppedActor->GetName().c_str(), Actor->GetName().c_str());
+                UE_LOG("Would reparent %s to %s", DroppedActor->GetName().ToString().c_str(), Actor->GetName().ToString().c_str());
             }
         }
         ImGui::EndDragDropTarget();
@@ -415,7 +415,7 @@ void USceneManagerWidget::HandleActorSelection(AActor* Actor)
         }
     }
     
-    UE_LOG("SceneManager: Selected actor %s", Actor->GetName().c_str());
+    UE_LOG("SceneManager: Selected actor %s", Actor->GetName().ToString().c_str());
 }
 
 void USceneManagerWidget::HandleActorVisibilityToggle(AActor* Actor)
@@ -433,7 +433,7 @@ void USceneManagerWidget::HandleActorVisibilityToggle(AActor* Actor)
     {
         Node->bIsVisible = Actor->IsActorVisible();
         UE_LOG("SceneManager: Toggled visibility for %s: %s", 
-               Actor->GetName().c_str(), Node->bIsVisible ? "Visible" : "Hidden");
+               Actor->GetName().ToString().c_str(), Node->bIsVisible ? "Visible" : "Hidden");
     }
 }
 
@@ -452,7 +452,7 @@ void USceneManagerWidget::HandleActorDelete(AActor* Actor)
     if (World)
     {
         World->DestroyActor(Actor);
-        UE_LOG("SceneManager: Deleted actor %s", Actor->GetName().c_str());
+        UE_LOG("SceneManager: Deleted actor %s", Actor->GetName().ToString().c_str());
     }
 }
 
