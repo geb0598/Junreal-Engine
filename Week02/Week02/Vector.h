@@ -206,9 +206,9 @@ struct FVector
     static FVector Cross(const FVector& A, const FVector& B)
     {
         return FVector(
-            A.Z * B.Y - A.Y * B.Z,
-            A.X * B.Z - A.Z * B.X,
-            A.Y * B.X - A.X * B.Y
+            A.Y * B.Z - A.Z * B.Y,
+            A.Z * B.X - A.X * B.Z,
+            A.X * B.Y - A.Y * B.X
         );
     }
 

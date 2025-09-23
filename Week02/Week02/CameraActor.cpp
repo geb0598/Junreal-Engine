@@ -5,6 +5,7 @@
 #include "UI/UIManager.h"
 #include "InputManager.h"
 #include "Vector.h"
+#include "SMultiViewportWindow.h"
 
 // 예전 World에서 사용하던 전역 변수들 (임시)
 static float MouseSensitivity = 0.05f;  // 적당한 값으로 조정
@@ -12,6 +13,7 @@ static float MouseSensitivity = 0.05f;  // 적당한 값으로 조정
 
 ACameraActor::ACameraActor()
 {
+
     Name = "Camera Actor";
     // 카메라 컴포넌트
     CameraComponent = NewObject<UCameraComponent>();
