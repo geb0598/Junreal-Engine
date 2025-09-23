@@ -133,7 +133,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	// === 위쪽: 좌(4뷰포트) + 우(SceneIO) ===
 
 	TopPanel = new SSplitterV();
-	TopPanel->SetSplitRatio(0.7);
+	TopPanel->SetSplitRatio(0.7f);
 
 
 	// 왼쪽: 4분할 뷰포트

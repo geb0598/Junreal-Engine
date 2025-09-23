@@ -66,9 +66,9 @@ AGizmoActor::AGizmoActor()
 	RotateY->SetupAttachment(RootComponent);
 	RotateZ->SetupAttachment(RootComponent);
 
-	RotateX->SetRelativeScale({ 0.02, 0.02, 0.02 });
-	RotateY->SetRelativeScale({ 0.02, 0.02, 0.02 });
-	RotateZ->SetRelativeScale({ 0.02, 0.02, 0.02 });
+	RotateX->SetRelativeScale({ 0.02f, 0.02f, 0.02f });
+	RotateY->SetRelativeScale({ 0.02f, 0.02f, 0.02f });
+	RotateZ->SetRelativeScale({ 0.02f, 0.02f, 0.02f });
 
 	AddComponent(RotateX);
 	AddComponent(RotateY);
@@ -99,9 +99,9 @@ AGizmoActor::AGizmoActor()
 	ScaleY->SetupAttachment(RootComponent);
 	ScaleZ->SetupAttachment(RootComponent);
 
-	ScaleX->SetRelativeScale({ 0.02, 0.02, 0.02 });
-	ScaleY->SetRelativeScale({ 0.02, 0.02, 0.02 });
-	ScaleZ->SetRelativeScale({ 0.02, 0.02, 0.02 });
+	ScaleX->SetRelativeScale({ 0.02f, 0.02f, 0.02f });
+	ScaleY->SetRelativeScale({ 0.02f, 0.02f, 0.02f });
+	ScaleZ->SetRelativeScale({ 0.02f, 0.02f, 0.02f });
 
 	if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
 	if (ScaleY) ScaleY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 00))); // Z축//초
@@ -173,7 +173,7 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) {
 
 
 
-	for (uint32 i = 0; i < Components->Num(); ++i)
+	for (int32 i = 0; i < Components->Num(); ++i)
 	{
 		USceneComponent* Component = (*Components)[i];
 		if (!Component) continue;

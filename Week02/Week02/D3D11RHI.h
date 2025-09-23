@@ -55,6 +55,7 @@ public:
     void OMSetRenderTargets() override;
     void OMSetBlendState(bool bIsBlendMode) override;
     void Present() override;
+	void PSSetDefaultSampler(UINT StartSlot) override;
 
     void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) override;
 
@@ -89,7 +90,10 @@ private:
     void CreateRasterizerState() override;
     void CreateConstantBuffer() override;
     void CreateDepthStencilState() override;
+	void CreateSamplerState();
+
     // release
+	void ReleaseSamplerState();
     void ReleaseBlendState();
     void ReleaseRasterizerState(); // rs
     void ReleaseFrameBuffer(); // fb, rtv
@@ -132,6 +136,8 @@ private:
     ID3D11Buffer* PixelConstCB{};
 
     ID3D11Buffer* ConstantBuffer{};
+
+    ID3D11SamplerState* DefaultSamplerState = nullptr;
 };
 
 

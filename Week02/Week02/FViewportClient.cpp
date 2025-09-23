@@ -134,7 +134,7 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
 
     MouseWheel();//마우스 휠도 해줍니다 
-    World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, X, Y);
+    World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
     if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsDragging()) // 직교투영이고 마우스 버튼이 눌려있을 때
     {

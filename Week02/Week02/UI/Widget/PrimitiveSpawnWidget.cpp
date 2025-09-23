@@ -12,8 +12,8 @@
 #include <string>
 #include "ObjectIterator.h"
 
-// UE_LOG 대체 매크로
-#define UE_LOG(fmt, ...)
+//// UE_LOG 대체 매크로
+//#define UE_LOG(fmt, ...)
 
 // std 함수들 정의
 using std::max;
