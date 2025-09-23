@@ -42,6 +42,7 @@
 #include "LineDynamicMesh.h"
 #include "TextQuad.h"
 #include"RenderViewportSwitcherWidget.h"
+#include "MenuBarWidget.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -97,6 +98,7 @@ IMPLEMENT_CLASS(UPropertyWindow)
 IMPLEMENT_CLASS(UExperimentalFeatureWindow)
 IMPLEMENT_CLASS(USceneWindow)
 IMPLEMENT_CLASS(URenderViewportSwitcherWidget)
+IMPLEMENT_CLASS(UMenuBarWidget)
 //IMPLEMENT_CLASS(UMultiViewportWindow)
 
 IMPLEMENT_CLASS(UGlobalConsole)

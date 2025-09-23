@@ -8,15 +8,13 @@
 #include "SelectionManager.h"
 #include"GizmoActor.h"
 FVector FViewportClient::CameraAddPosition{};
-float FViewportClient::CameraWheelDelta{};
+
 FViewportClient::FViewportClient()
 {
     ViewportType = EViewportType::Perspective;
-
-
     // 직교 뷰별 기본 카메라 설정
-
     Camera = NewObject<ACameraActor>();
+    ViewPortCamera = Camera;
     SetupCameraMode();
 }
 
@@ -35,25 +33,19 @@ void FViewportClient::Draw(FViewport* Viewport)
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
     if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
 
-
-    FMatrix ViewMatrix{};
-    FMatrix ProjectionMatrix{};
     switch (ViewportType)
     {
     case EViewportType::Perspective:
     {
         ACameraActor* MainCamera = World->GetCameraActor();
         MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
-
-        ViewMatrix = MainCamera->GetViewMatrix();
-        ProjectionMatrix = MainCamera->GetProjectionMatrix(ViewportAspectRatio);
         Camera = MainCamera;
-        /*  if (World)
+          if (World)
           {
               World->SetViewModeIndex(ViewModeIndex);
               World->RenderViewports(MainCamera, Viewport);
               World->GetGizmoActor()->Render(MainCamera, Viewport);
-          }*/
+          }
         break;
     }
     case EViewportType::Orthographic_Top:
@@ -63,22 +55,20 @@ void FViewportClient::Draw(FViewport* Viewport)
     case EViewportType::Orthographic_Bottom:
     case EViewportType::Orthographic_Right:
     {
+        Camera = ViewPortCamera;
         Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
-
         SetupCameraMode();
-        ViewMatrix = Camera->GetViewMatrix();
-        ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
-
+        // 월드의 모든 액터들을 렌더링
+        if (World)
+        {
+            World->SetViewModeIndex(ViewModeIndex);
+            World->RenderViewports(Camera, Viewport);
+            World->GetGizmoActor()->Render(Camera, Viewport);
+        }
         break;
     }
     }
-    // 월드의 모든 액터들을 렌더링
-    if (World)
-    {
-        World->SetViewModeIndex(ViewModeIndex);
-        World->RenderViewports(Camera, Viewport);
-        World->GetGizmoActor()->Render(Camera, Viewport);
-    }
+  
 
 }
 
@@ -86,45 +76,46 @@ void FViewportClient::Draw(FViewport* Viewport)
 
 void FViewportClient::SetupCameraMode()
 {
+    Camera = ViewPortCamera;
     switch (ViewportType)
     {
     case EViewportType::Perspective:
 
-        Camera->SetActorLocation({ 0, 0, 0 });
-        Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+        //Camera->SetActorLocation({ 0, 0, 0 });
+        //Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
         break;
     case EViewportType::Orthographic_Top:
 
         Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, 1000 });
         Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 90, 0 }));
-        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        Camera->GetCameraComponent()->SetFOV(100 );
         break;
     case EViewportType::Orthographic_Bottom:
 
         Camera->SetActorLocation({ CameraAddPosition.X, CameraAddPosition.Y, -1000 });
         Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, -90, 0 }));
-        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        Camera->GetCameraComponent()->SetFOV(100 );
         break;
     case EViewportType::Orthographic_Left:
         Camera->SetActorLocation({ CameraAddPosition.X, 1000 , CameraAddPosition.Z });
         Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, -90 }));
-        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        Camera->GetCameraComponent()->SetFOV(100 );
         break;
     case EViewportType::Orthographic_Right:
         Camera->SetActorLocation({ CameraAddPosition.X, -1000, CameraAddPosition.Z });
         Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 90 }));
-        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        Camera->GetCameraComponent()->SetFOV(100 );
         break;
 
     case EViewportType::Orthographic_Front:
         Camera->SetActorLocation({ -1000 , CameraAddPosition.Y, CameraAddPosition.Z });
         Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
-        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        Camera->GetCameraComponent()->SetFOV(100 );
         break;
     case EViewportType::Orthographic_Back:
         Camera->SetActorLocation({ 1000 , CameraAddPosition.Y, CameraAddPosition.Z });
         Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 180 }));
-        Camera->GetCameraComponent()->SetFOV(100 + CameraWheelDelta);
+        Camera->GetCameraComponent()->SetFOV(100 );
         break;
 
 
@@ -136,23 +127,28 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
     MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
-    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsDragging()) // 직교투영이고 마우스 버튼이 눌려있을 때
+    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()) // 직교투영이고 마우스 버튼이 눌려있을 때
     {
         int32 deltaX = X - MouseLastX;
         int32 deltaY = Y - MouseLastY;
 
         if (Camera && (deltaX != 0 || deltaY != 0))
         {
-            float moveSpeed = 0.1f; // 픽셀 이동량을 월드 좌표로 바꿀 스케일
+            // 기준 픽셀→월드 스케일
+            const float basePixelToWorld = 0.05f;
 
-            // 직교 투영에서는 회전없이 그냥 화면 평면에 맞게 이동
-            FVector right = Camera->GetRight(); // 수평 방향
-            FVector up = Camera->GetUp();    // 수직 방향
+            // 줌인(값↑)일수록 더 천천히 움직이도록 역수 적용
+            float zoom = Camera->GetCameraComponent()->GetZoomFactor();
+            zoom = (zoom <= 0.f) ? 1.f : zoom; // 안전장치
+            const float pixelToWorld = basePixelToWorld * zoom;
 
-            CameraAddPosition = CameraAddPosition - right * (deltaX * moveSpeed)
-                + up * (deltaY * moveSpeed);
+            const FVector right = Camera->GetRight();
+            const FVector up = Camera->GetUp();
 
-            // 카메라 위치 즉시 업데이트
+            CameraAddPosition = CameraAddPosition
+                - right * (deltaX * pixelToWorld)
+                + up * (deltaY * pixelToWorld);
+
             SetupCameraMode();
         }
 
@@ -177,14 +173,6 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     // X, Y are already local coordinates within the viewport, convert to global coordinates for picking
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
 
-    // Debug log for viewport picking
-    //char debugBuf[256];
-    //sprintf_s(debugBuf, "[Viewport %d] Local: (%.1f,%.1f) Global: (%.1f,%.1f) Size: (%.1f,%.1f) Offset: (%.1f,%.1f)\n",
-    //    static_cast<int>(ViewportType), static_cast<float>(X), static_cast<float>(Y),
-    //    ViewportMousePos.X, ViewportMousePos.Y, ViewportSize.X, ViewportSize.Y, ViewportOffset.X, ViewportOffset.Y);
-    //UE_LOG(debugBuf);
-
-    // Get the appropriate camera for this viewport
 
 
     if (Camera)
@@ -214,9 +202,6 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         }
         else
         {
-           /* if (World->GetGizmoActor()->GetbIsHovering()) {
-                return;
-            }*/
             UUIManager::GetInstance().ResetPickedActor();
             // Clear selection if nothing was picked
             USelectionManager::GetInstance().ClearSelection();
@@ -239,11 +224,11 @@ void FViewportClient::MouseWheel()
     UCameraComponent* CameraComponent = Camera->GetCameraComponent();
     if (!CameraComponent) return;
     float WheelDelta = UInputManager::GetInstance().GetMouseWheelDelta();
-    // FOV 변경 속도 조절
-    float FOVChangeSpeed = 3.0f;
-    float currentFOV = CameraComponent->GetFOV();
-    CameraWheelDelta += -(WheelDelta * FOVChangeSpeed);
 
+    float zoomFactor = CameraComponent->GetZoomFactor();
+    zoomFactor *= (1.0f - WheelDelta * 0.1f);
+    
+    CameraComponent->SetZoomFactor(zoomFactor);
 
 }
 

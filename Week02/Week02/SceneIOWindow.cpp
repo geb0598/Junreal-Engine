@@ -4,6 +4,7 @@
 SSceneIOWindow::SSceneIOWindow()
 {
 	ConsoleWindow = new UConsoleWindow;
+    UGlobalConsole::SetConsoleWidget(ConsoleWindow->GetConsoleWidget());
 }
 
 SSceneIOWindow::~SSceneIOWindow()

@@ -43,12 +43,6 @@ void FViewport::Cleanup()
 
 void FViewport::BeginRenderFrame()
 {
-//    if (!D3DDeviceContext || !RenderTargetView || !DepthStencilView)
-//        return;
-//
-//    // 렌더 타겟 설정
-//    D3DDeviceContext->OMSetRenderTargets(1, &RenderTargetView, DepthStencilView);
-
     // 뷰포트 설정
     D3D11_VIEWPORT viewport = {};
     viewport.Width = static_cast<float>(SizeX);
@@ -58,21 +52,6 @@ void FViewport::BeginRenderFrame()
     viewport.TopLeftX = static_cast<float>(StartX);
     viewport.TopLeftY = static_cast<float>(StartY);
     D3DDeviceContext->RSSetViewports(1, &viewport);
-
-    //// 렌더 타겟 클리어 - 테스트용으로 서로 다른 색상 사용
-    //static int ViewportIndex = 0;
-    //float ClearColors[4][4] = {
-    //    { 0.3f, 0.1f, 0.1f, 1.0f }, // 빨강 계열
-    //    { 0.1f, 0.3f, 0.1f, 1.0f }, // 초록 계열
-    //    { 0.1f, 0.1f, 0.3f, 1.0f }, // 파랑 계열
-    //    { 0.3f, 0.3f, 0.1f, 1.0f }  // 노랑 계열
-    //};
-
-    //float* ClearColor = ClearColors[ViewportIndex % 4];
-    //ViewportIndex++;
-    //D3DDeviceContext->RSSetViewports()
-    //D3DDeviceContext->ClearRenderTargetView(RenderTargetView, ClearColor);
-    //D3DDeviceContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void FViewport::EndRenderFrame()

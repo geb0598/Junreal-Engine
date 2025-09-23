@@ -24,11 +24,13 @@ public:
     void SetNearClipPlane(float NewNear) { NearClip = NewNear; }
     void SetFarClipPlane(float NewFar) { FarClip = NewFar; }
     void SetProjectionMode(ECameraProjectionMode Mode) { ProjectionMode = Mode; }
-
+    void SetZoomFactor(float InZoomFactor) { ZooMFactor = InZoomFactor; };
+    
     float GetFOV() const { return FieldOfView; }
     float GetAspectRatio() const { return AspectRatio; }
     float GetNearClip() const { return NearClip; }
     float GetFarClip() const { return FarClip; }
+    float GetZoomFactor()const { return ZooMFactor; };
     ECameraProjectionMode GetProjectionMode() const { return ProjectionMode; }
 
     // Matrices
@@ -46,6 +48,10 @@ private:
     float AspectRatio;
     float NearClip;
     float FarClip;
+
+    float ZooMFactor;
+
+
     ECameraProjectionMode ProjectionMode;
 };
 
