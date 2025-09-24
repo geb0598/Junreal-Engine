@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "UI/StatsOverlayD2D.h"
 
 struct FConstants

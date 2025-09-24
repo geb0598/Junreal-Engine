@@ -1,6 +1,9 @@
 ﻿#pragma once
 #include "ShapeComponent.h"
 
+#pragma once
+#include "ShapeComponent.h"
+
 struct FBound
 {
     FVector Min;
@@ -14,13 +17,13 @@ class ULine;
 class UAABoundingBoxComponent :
     public UShapeComponent
 {
-    DECLARE_CLASS(UAABoundingBoxComponent,UShapeComponent)
+    DECLARE_CLASS(UAABoundingBoxComponent, UShapeComponent)
 public:
     UAABoundingBoxComponent();
 
     // 주어진 로컬 버텍스들로부터 Min/Max 계산
     void SetFromVertices(const TArray<FVector>& Verts);
-	void SetFromVertices(const TArray<FNormalVertex>& Verts);
+    void SetFromVertices(const TArray<FNormalVertex>& Verts);
 
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
 
@@ -29,7 +32,6 @@ public:
     FBound GetWorldBoundFromSphere() const;
 
     TArray<FVector4> GetLocalCorners() const;
-
 
     void SetPrimitiveType(EPrimitiveType InType) { PrimitiveType = InType; }
 
@@ -42,7 +44,6 @@ private:
 
     FVector LocalMin;
     FVector LocalMax;
-    FQuat BefRot = { -1, -1, -1, -1 };
 
     EPrimitiveType PrimitiveType = EPrimitiveType::Default;
 };
