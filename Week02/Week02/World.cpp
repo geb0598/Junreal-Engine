@@ -657,19 +657,51 @@ void UWorld::LoadScene(const FString& SceneName)
 		UIManager.SyncCameraControlFromCamera();
     }
 
-    uint32 MaxLoadedUUID = 0;
-    for (const FPrimitiveData& Primitive : Primitives)
-    {
-        AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
-            FTransform(Primitive.Location,
-                SceneRotUtil::QuatFromEulerZYX_Deg(Primitive.Rotation), // ← 변경
-                Primitive.Scale));
+	// 1) 현재 월드에서 이미 사용 중인 UUID 수집(엔진 액터 + 기즈모)
+	std::unordered_set<uint32> UsedUUIDs;
+	auto AddUUID = [&](AActor* A) { if (A) UsedUUIDs.insert(A->UUID); };
+	for (AActor* Eng : EngineActors) 
+	{
+		AddUUID(Eng);
+	}
+	AddUUID(GizmoActor); // Gizmo는 EngineActors에 안 들어갈 수 있으므로 명시 추가
 
+	uint32 MaxAssignedUUID = 0;
+
+	for (const FPrimitiveData& Primitive : Primitives)
+	{
+		// 스폰 시 필요한 초기 트랜스폼은 그대로 넘김
+		AStaticMeshActor* StaticMeshActor = SpawnActor<AStaticMeshActor>(
+			FTransform(Primitive.Location,
+				SceneRotUtil::QuatFromEulerZYX_Deg(Primitive.Rotation),
+				Primitive.Scale));
+
+		// 스폰 시점에 자동 발급된 고유 UUID (충돌 시 폴백으로 사용)
+		uint32 Assigned = StaticMeshActor->UUID;
+
+		// 우선 스폰된 UUID를 사용 중으로 등록
+		UsedUUIDs.insert(Assigned);
+
+		// 2) 파일의 UUID를 우선 적용하되, 충돌이면 스폰된 UUID 유지
 		if (Primitive.UUID != 0)
 		{
-			StaticMeshActor->UUID = Primitive.UUID;
-			MaxLoadedUUID = std::max(MaxLoadedUUID, Primitive.UUID);
+			if (UsedUUIDs.find(Primitive.UUID) == UsedUUIDs.end())
+			{
+				// 스폰된 ID 등록 해제 후 교체
+				UsedUUIDs.erase(Assigned);
+				StaticMeshActor->UUID = Primitive.UUID;
+				Assigned = Primitive.UUID;
+				UsedUUIDs.insert(Assigned);
+			}
+			else
+			{
+				// 충돌: 파일 UUID 사용 불가 → 경고 로그 및 스폰된 고유 UUID 유지
+				UE_LOG("LoadScene: UUID collision detected (%u). Keeping generated %u for actor.",
+					Primitive.UUID, Assigned);
+			}
 		}
+
+		MaxAssignedUUID = std::max(MaxAssignedUUID, Assigned);
 
 		if (UStaticMeshComponent* SMC = StaticMeshActor->GetStaticMeshComponent())
 		{
@@ -700,10 +732,10 @@ void UWorld::LoadScene(const FString& SceneName)
 		}
 	}
 
-    // [5] 최종 보정: 현재/로드된 최대/시작 전 값을 모두 고려한 안전한 next
-    const uint32 DuringLoadNext = UObject::PeekNextUUID();
-    const uint32 SafeNext = std::max({ DuringLoadNext, MaxLoadedUUID + 1, PreLoadNext });
-    UObject::SetNextUUID(SafeNext);
+	// 3) 최종 보정: 전역 카운터는 절대 하향 금지 + 현재 사용된 최대값 이후로 설정
+	const uint32 DuringLoadNext = UObject::PeekNextUUID();
+	const uint32 SafeNext = std::max({ DuringLoadNext, MaxAssignedUUID + 1, PreLoadNext });
+	UObject::SetNextUUID(SafeNext);
 }
 
 void UWorld::SaveScene(const FString& SceneName)
