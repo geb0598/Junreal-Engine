@@ -24,6 +24,9 @@ public:
     FViewport* GetViewport() const { return Viewport; }
     FViewportClient* GetViewportClient() const { return ViewportClient; }
 
+
+    void SetMainViewPort();
+
   
 private:
     void RenderToolbar();
@@ -37,6 +40,12 @@ private:
  
     EViewportType ViewportType;
     FName ViewportName;
+
+
+   
+
+    
+
 
     bool bIsActive;
     bool bIsMouseDown;

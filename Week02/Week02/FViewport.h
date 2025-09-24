@@ -29,7 +29,9 @@ public:
     // ViewportClient 설정
     void SetViewportClient(FViewportClient* InClient) { ViewportClient = InClient; }
     FViewportClient* GetViewportClient() const { return ViewportClient; }
-
+    
+    void SetMainViewport();
+    bool GetMainViewport() { return MainViewport; };
     // 접근자
     uint32 GetSizeX() const { return SizeX; }
     uint32 GetSizeY() const { return SizeY; }
@@ -77,6 +79,8 @@ private:
 
     // ViewportClient
     FViewportClient* ViewportClient = nullptr;
+
+    bool  MainViewport = false;
 
     FVector2D ViewportMousePosition{};
 };

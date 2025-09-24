@@ -131,6 +131,11 @@ void SViewportWindow::OnMouseUp(FVector2D MousePos, uint32 Button)
 	
 }
 
+void SViewportWindow::SetMainViewPort()
+{
+	Viewport->SetMainViewport();
+}
+
 void SViewportWindow::RenderToolbar()
 {
 	if (!Viewport) return;

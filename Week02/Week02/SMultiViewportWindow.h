@@ -27,7 +27,7 @@ public:
     virtual void OnMouseDown(FVector2D MousePos, uint32 Button) override;
     virtual void OnMouseUp(FVector2D MousePos, uint32 Button) override;
 
-    
+    void SetMainViewPort();
 
 
     void OnShutdown();
@@ -60,7 +60,7 @@ private:
 
     SSplitterV* BottomPanel ;
     
-
+   
 
     // 현재 모드
     EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;

@@ -135,6 +135,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 
 	// === 뷰포트 생성 ===
 	Viewports[0] = InMainViewport;
+	Viewports[0]->SetMainViewPort();
 	Viewports[1] = new SViewportWindow();
 	Viewports[2] = new SViewportWindow();
 	Viewports[3] = new SViewportWindow();

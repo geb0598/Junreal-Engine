@@ -39,7 +39,9 @@ void FViewportClient::Draw(FViewport* Viewport)
     {
         ACameraActor* MainCamera = World->GetCameraActor();
         MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
-        Camera = MainCamera;
+      //  if (Viewport->GetMainViewport()) {
+            Camera = MainCamera;
+     //   }
           if (World)
           {
               World->SetViewModeIndex(ViewModeIndex);
