@@ -77,10 +77,9 @@ AGizmoActor::AGizmoActor()
 	GizmoRotateComponents.Add(RotateY);
 	GizmoRotateComponents.Add(RotateZ);
 
-	if (RotateX)         RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // X축
-	if (RotateY)         RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축
-
-	if (RotateZ)          RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
+	if (RotateX) RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0)));
+	if (RotateY) RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
+	if (RotateZ) RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0)));
 
 	//======= Scale Component 생성 =======
 	ScaleX = NewObject<UGizmoScaleComponent>();
@@ -242,9 +241,9 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor)
 
 		// 월드 고정 → 기즈모 축은 항상 X/Y/Z
 		   // 월드 고정 → 기즈모 축은 항상 X/Y/Z
-		if (ArrowX)  ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
+		if (ArrowX) ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
 		if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90)));//초
-		if (ArrowZ)  ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
+		if (ArrowZ) ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
 
 
 		if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
@@ -252,10 +251,9 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor)
 		if (ScaleZ) ScaleZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));//파
 
 
-		if (RotateX)         RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90))); // X축
-		if (RotateY)         RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축
-
-		if (RotateZ)          RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
+		if (RotateX) RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0))); // X축
+		if (RotateY) RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0))); // Z축
+		if (RotateZ) RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0)));
 
 	}
 	else if (NewSpace == EGizmoSpace::Local)
@@ -270,9 +268,9 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor)
 		 // ───────── Translate Gizmo ─────────
 		// ArrowX->AddRelativeRotation(AC);
 			// 월드 고정 → 기즈모 축은 항상 X/Y/Z
-		if (ArrowX)  ArrowX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
+		if (ArrowX) ArrowX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0))); // X축//빨
 		if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 90)));//초
-		if (ArrowZ)  ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
+		if (ArrowZ) ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, -90, 0))); // Z축//파
 
 
 		if (ScaleX) ScaleX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, -90))); // X축//빨
@@ -280,10 +278,9 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor)
 		if (ScaleZ) ScaleZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0)));//파
 
 
-		if (RotateX)         RotateX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 90))); // X축
-		if (RotateY)         RotateY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0))); // Z축
-
-		if (RotateZ)          RotateZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0)));
+		if (RotateX) RotateX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0))); // X축
+		if (RotateY) RotateY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0))); // Z축
+		if (RotateZ) RotateZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0)));
 
 
 	}
