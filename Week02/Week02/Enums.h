@@ -1,7 +1,9 @@
-﻿#ifndef UE_ENUMS_H
-#define UE_ENUMS_H
+﻿//#ifndef UE_ENUMS_H
+//#define UE_ENUMS_H
+#pragma once
 #include "UEContainer.h"
-#include "Enums.h"
+//#include "Enums.h"
+#include "Archive.h"
 #include <d3d11.h>
 
 struct FObjMaterialInfo
@@ -32,7 +34,65 @@ struct FObjMaterialInfo
     float SpecularExponent = -1.f; // Ns
 
     FString MaterialName;
+
+    friend FArchive& operator<<(FArchive& Ar, FObjMaterialInfo& Info)
+    {
+        Ar << Info.IlluminationModel;
+        Ar << Info.DiffuseColor;
+        Ar << Info.AmbientColor;
+        Ar << Info.SpecularColor;
+        Ar << Info.EmissiveColor;
+
+        if (Ar.IsSaving())
+        {
+            Serialization::WriteString(Ar, Info.DiffuseTextureFileName);
+            Serialization::WriteString(Ar, Info.AmbientTextureFileName);
+            Serialization::WriteString(Ar, Info.SpecularTextureFileName);
+            Serialization::WriteString(Ar, Info.EmissiveTextureFileName);
+            Serialization::WriteString(Ar, Info.TransparencyTextureFileName);
+            Serialization::WriteString(Ar, Info.SpecularExponentTextureFileName);
+        }
+        else if (Ar.IsLoading())
+        {
+            Serialization::ReadString(Ar, Info.DiffuseTextureFileName);
+            Serialization::ReadString(Ar, Info.AmbientTextureFileName);
+            Serialization::ReadString(Ar, Info.SpecularTextureFileName);
+            Serialization::ReadString(Ar, Info.EmissiveTextureFileName);
+            Serialization::ReadString(Ar, Info.TransparencyTextureFileName);
+            Serialization::ReadString(Ar, Info.SpecularExponentTextureFileName);
+        }
+
+        Ar << Info.TransmissionFilter;
+        Ar << Info.OpticalDensity;
+        Ar << Info.Transparency;
+        Ar << Info.SpecularExponent;
+
+        if (Ar.IsSaving())
+            Serialization::WriteString(Ar, Info.MaterialName);
+        else if (Ar.IsLoading())
+            Serialization::ReadString(Ar, Info.MaterialName);
+
+        return Ar;
+    }
 };
+
+// ---- FObjMaterialInfo 전용 Serialization 특수화 ----
+namespace Serialization {
+    template<>
+    inline void WriteArray<FObjMaterialInfo>(FArchive& Ar, const TArray<FObjMaterialInfo>& Arr) {
+        uint32 Count = (uint32)Arr.size();
+        Ar << Count;
+        for (auto& Mat : Arr) Ar << const_cast<FObjMaterialInfo&>(Mat);
+    }
+
+    template<>
+    inline void ReadArray<FObjMaterialInfo>(FArchive& Ar, TArray<FObjMaterialInfo>& Arr) {
+        uint32 Count;
+        Ar << Count;
+        Arr.resize(Count);
+        for (auto& Mat : Arr) Ar << Mat;
+    }
+}
 
 struct FGroupInfo
 {
@@ -40,6 +100,19 @@ struct FGroupInfo
     uint32 IndexCount;
     //FObjMaterialInfo MaterialInfo;
     FString InitialMaterialName; // obj 파일 자체에 맵핑된 material 이름
+
+    friend FArchive& operator<<(FArchive& Ar, FGroupInfo& Info)
+    {
+        Ar << Info.StartIndex;
+        Ar << Info.IndexCount;
+
+        if (Ar.IsSaving())
+            Serialization::WriteString(Ar, Info.InitialMaterialName);
+        else if (Ar.IsLoading())
+            Serialization::ReadString(Ar, Info.InitialMaterialName);
+
+        return Ar;
+    }
 };
 
 struct FNormalVertex
@@ -48,6 +121,12 @@ struct FNormalVertex
     FVector normal;
     FVector4 color;
     FVector2D tex;
+
+    friend FArchive& operator<<(FArchive& Ar, FNormalVertex& Vtx)
+    {
+        Ar.Serialize(&Vtx, sizeof(FNormalVertex));
+        return Ar;
+    }
 };
 
 //// Cooked Data
@@ -61,6 +140,36 @@ struct FStaticMesh
     TArray<FGroupInfo> GroupInfos; // 각 group을 render 하기 위한 정보
 
     bool bHasMaterial;
+
+    friend FArchive& operator<<(FArchive& Ar, FStaticMesh& Mesh)
+    {
+        if (Ar.IsSaving())
+        {
+            Serialization::WriteString(Ar, Mesh.PathFileName);
+            Serialization::WriteArray(Ar, Mesh.Vertices);
+            Serialization::WriteArray(Ar, Mesh.Indices);
+
+            uint32_t gCount = (uint32_t)Mesh.GroupInfos.size();
+            Ar << gCount;
+            for (auto& g : Mesh.GroupInfos) Ar << g;
+
+            Ar << Mesh.bHasMaterial;
+        }
+        else if (Ar.IsLoading())
+        {
+            Serialization::ReadString(Ar, Mesh.PathFileName);
+            Serialization::ReadArray(Ar, Mesh.Vertices);
+            Serialization::ReadArray(Ar, Mesh.Indices);
+
+            uint32_t gCount;
+            Ar << gCount;
+            Mesh.GroupInfos.resize(gCount);
+            for (auto& g : Mesh.GroupInfos) Ar << g;
+
+            Ar << Mesh.bHasMaterial;
+        }
+        return Ar;
+    }
 };
 
 struct FMeshData
@@ -267,4 +376,4 @@ inline bool HasShowFlag(EEngineShowFlags flags, EEngineShowFlags flag)
     return (flags & flag) != EEngineShowFlags::None;
 }
 
-#endif /** UE_ENUMS_H */
+//#endif /** UE_ENUMS_H */

@@ -109,6 +109,9 @@
     <Filter Include="소스 파일\SWidget\SWindow">
       <UniqueIdentifier>{660c7cb8-a55e-46c1-834b-94a246e50d57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Archive">
+      <UniqueIdentifier>{163f80df-d568-4e63-8d7a-c54997ff9fd1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -370,6 +373,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="RenderViewportSwitcherWidget.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuBarWidget.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -669,6 +675,21 @@
     </ClInclude>
     <ClInclude Include="RenderViewportSwitcherWidget.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuBarWidget.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneRotationUtils.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Archive.h">
+      <Filter>헤더 파일\Archive</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsBinWriter.h">
+      <Filter>헤더 파일\Archive</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsBinReader.h">
+      <Filter>헤더 파일\Archive</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
