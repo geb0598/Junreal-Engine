@@ -2,6 +2,7 @@
 #include "ConsoleWidget.h"
 #include "../../ObjectFactory.h"
 #include "../GlobalConsole.h"
+#include "../StatsOverlayD2D.h"
 #include <windows.h>
 #include <cstdarg>
 #include <cctype>
@@ -38,6 +39,9 @@ void UConsoleWidget::Initialize()
     Commands.Add("HISTORY");  
     Commands.Add("CLEAR");
     Commands.Add("CLASSIFY");
+    Commands.Add("STAT");
+    Commands.Add("STAT FPS");
+    Commands.Add("STAT MEMORY");
     
     // Add welcome messages
     AddLog("=== Console Widget Initialized ===");
@@ -254,6 +258,22 @@ void UConsoleWidget::ExecCommand(const char* command_line)
     else if (Stricmp(command_line, "CLASSIFY") == 0)
     {
         AddLog("This is a classification test command.");
+    }
+    else if (Stricmp(command_line, "STAT") == 0)
+    {
+        AddLog("STAT commands:");
+        AddLog("- STAT FPS");
+        AddLog("- STAT MEMORY");
+    }
+    else if (Stricmp(command_line, "STAT FPS") == 0)
+    {
+        UStatsOverlayD2D::Get().ToggleFPS();
+        AddLog("STAT FPS: %s", UStatsOverlayD2D::Get().IsFPSVisible() ? "ON" : "OFF");
+    }
+    else if (Stricmp(command_line, "STAT MEMORY") == 0)
+    {
+        UStatsOverlayD2D::Get().ToggleMemory();
+        AddLog("STAT MEMORY: %s", UStatsOverlayD2D::Get().IsMemoryVisible() ? "ON" : "OFF");
     }
     else
     {

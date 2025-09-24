@@ -281,6 +281,7 @@
     <ClCompile Include="UI\Window\UIWindow.cpp" />
     <ClCompile Include="FViewport.cpp" />
     <ClCompile Include="World.cpp" />
+    <ClCompile Include="UI\StatsOverlayD2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Primitive.hlsl">
@@ -413,6 +414,7 @@
     <ClInclude Include="VertexData.h" />
     <ClInclude Include="FViewport.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="UI\StatsOverlayD2D.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
