@@ -11,7 +11,17 @@ SSplitter::SSplitter()
 
 SSplitter::~SSplitter()
 {
-    // 자식 윈도우들은 소유하지 않으므로 삭제하지 않음
+    // 소유권 명확화: 자식 윈도우 재귀 삭제
+    if (SideLT)
+    {
+        delete SideLT;
+        SideLT = nullptr;
+    }
+    if (SideRB)
+    {
+        delete SideRB;
+        SideRB = nullptr;
+    }
 }
 
 bool SSplitter::IsMouseOnSplitter(FVector2D MousePos) const

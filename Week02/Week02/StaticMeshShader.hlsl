@@ -60,6 +60,12 @@ cbuffer PixelConstData : register(b4)
     bool HasMaterial; // 4 bytes
     bool HasTexture;
 }
+cbuffer PSScrollCB : register(b5)
+{
+    float2 UVScrollSpeed;
+    float  UVScrollTime;
+    float  _pad_scrollcb;
+}
 
 struct PS_INPUT
 {
@@ -138,7 +144,8 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     
     if (HasMaterial && HasTexture)
     {
-        finalColor.rgb = g_DiffuseTexColor.Sample(g_Sample, input.texCoord);
+        float2 uv = input.texCoord + UVScrollSpeed * UVScrollTime;
+        finalColor.rgb = g_DiffuseTexColor.Sample(g_Sample, uv);
     }
     
     return finalColor;

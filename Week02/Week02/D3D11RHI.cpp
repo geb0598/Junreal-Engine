@@ -111,6 +111,7 @@ void D3D11RHI::Release()
     if (ViewProjCB) { ViewProjCB->Release(); ViewProjCB = nullptr; }
     if (BillboardCB) { BillboardCB->Release(); BillboardCB = nullptr; }
     if (PixelConstCB) { PixelConstCB->Release(); PixelConstCB = nullptr; }
+    if (UVScrollCB) { UVScrollCB->Release(); UVScrollCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체
@@ -526,6 +527,39 @@ void D3D11RHI::CreateConstantBuffer()
     ColorDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     ColorDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&ColorDesc, nullptr, &ColorCB);
+
+    D3D11_BUFFER_DESC uvScrollDesc = {};
+    uvScrollDesc.Usage = D3D11_USAGE_DYNAMIC;
+    uvScrollDesc.ByteWidth = sizeof(float) * 4; // float2 speed + float time + pad
+    uvScrollDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    uvScrollDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    Device->CreateBuffer(&uvScrollDesc, nullptr, &UVScrollCB);
+    if (UVScrollCB)
+    {
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        if (SUCCEEDED(DeviceContext->Map(UVScrollCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+        {
+            float init[4] = { 0,0,0,0 };
+            memcpy(mapped.pData, init, sizeof(init));
+            DeviceContext->Unmap(UVScrollCB, 0);
+        }
+        DeviceContext->PSSetConstantBuffers(5, 1, &UVScrollCB);
+    }
+}
+
+void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec)
+{
+    if (!UVScrollCB) return;
+
+    struct { float x; float y; float t; float pad; } data { Speed.X, Speed.Y, TimeSec, 0.0f };
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    if (SUCCEEDED(DeviceContext->Map(UVScrollCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+    {
+        memcpy(mapped.pData, &data, sizeof(data));
+        DeviceContext->Unmap(UVScrollCB, 0);
+        DeviceContext->PSSetConstantBuffers(5, 1, &UVScrollCB);
+    }
 }
 
 

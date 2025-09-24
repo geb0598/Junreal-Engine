@@ -87,33 +87,13 @@ SMultiViewportWindow::SMultiViewportWindow()
 
 SMultiViewportWindow::~SMultiViewportWindow()
 {
-	OnShutdown();
-	// 루트 스플리터만 delete → 내부에서 SideLT/SideRB 재귀적으로 정리
-	delete RootSplitter;
-	RootSplitter = nullptr;
 
-	// 뷰포트들 정리 (MainViewport는 외부에서 주입받았으므로 delete 금지)
-	if (CurrentMode == EViewportLayoutMode::SingleMain) {
-		//for (int i = 1; i < 4; i++)  // Viewports[0]은 InMainViewport (외부 관리)
-		//{
-		//	if (Viewports[i]) {
-		//		delete Viewports[i];
-		//		Viewports[i] = nullptr;
-		//	}
-		//}
-	}
-
-	//// UI 패널 정리 (RootSplitter에서 정리되지 않는 경우 직접 delete)
-	//delete SceneIOPanel;
-	//SceneIOPanel = nullptr;
-
-	//delete ControlPanel;
-	//ControlPanel = nullptr;
-
-	//delete DetailPanel;
-	//DetailPanel = nullptr;
-
-
+    OnShutdown();
+    // 루트 스플리터 삭제 시 트리 전체(하위 스플리터/패널/뷰포트)가 재귀적으로 해제됨
+    delete RootSplitter;
+    // 안전: 외부 중복 delete 방지용 널 처리
+    for (int i = 0; i < 4; i++)
+        Viewports[i] = nullptr;
 }
 
 void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, const FRect& InRect, SViewportWindow* InMainViewport)
@@ -286,4 +266,3 @@ void SMultiViewportWindow::OnShutdown()
 	SaveSplitterConfig(RootSplitter);
 	//SaveEditorINI("editor.ini");
 }
-
