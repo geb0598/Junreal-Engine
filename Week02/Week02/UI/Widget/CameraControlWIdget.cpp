@@ -29,6 +29,12 @@ void UCameraControlWidget::Initialize()
 {
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
+
+	// UIManager에 자신 등록(씬 로드시 UI 재동기화 호출 받을 수 있게)
+	if (UIManager)
+	{
+		UIManager->RegisterCameraControlWidget(this);
+	}
 }
 
 void UCameraControlWidget::Update()

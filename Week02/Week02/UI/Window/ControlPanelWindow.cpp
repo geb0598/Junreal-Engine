@@ -30,11 +30,25 @@ UControlPanelWindow::UControlPanelWindow()
 	Config.UpdateWindowFlags();
 	SetConfig(Config);
 
-	AddWidget(NewObject<UFPSWidget>());
-	AddWidget(NewObject<UActorTerminationWidget>());
-	AddWidget(NewObject<UPrimitiveSpawnWidget>());
-	AddWidget(NewObject<USceneIOWidget>());
-	AddWidget(NewObject<UCameraControlWidget>());
+	UFPSWidget* FPSWidget = NewObject<UFPSWidget>();
+	FPSWidget->Initialize();
+	AddWidget(FPSWidget);
+
+	UActorTerminationWidget* ActorTerminationWidget = NewObject<UActorTerminationWidget>();
+	ActorTerminationWidget->Initialize();
+	AddWidget(ActorTerminationWidget);
+
+	UPrimitiveSpawnWidget* PrimitiveSpawnWidget = NewObject<UPrimitiveSpawnWidget>();
+	PrimitiveSpawnWidget->Initialize();
+	AddWidget(PrimitiveSpawnWidget);
+
+	USceneIOWidget* SceneIOWidget = NewObject<USceneIOWidget>();
+	SceneIOWidget->Initialize();
+	AddWidget(SceneIOWidget);
+
+	UCameraControlWidget* CameraControlWidget = NewObject<UCameraControlWidget>();
+	CameraControlWidget->Initialize();
+	AddWidget(CameraControlWidget);
 }
 
 /**

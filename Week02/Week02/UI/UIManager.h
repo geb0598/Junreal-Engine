@@ -15,6 +15,8 @@ struct ID3D11DeviceContext;
 class ACameraActor;
 class AGizmoActor;
 class AActor;
+class UCameraControlWidget;
+
 /**
  * @brief UI 매니저 클래스
  * 모든 UI 윈도우를 관리하는 싱글톤 클래스
@@ -81,12 +83,13 @@ public:
 	float GetStoredRoll() const { return StoredRoll; }
 	void UpdateMouseRotation(float InPitch, float InYaw);
 
-
-
-
 	// Transform Widget registration and management
 	void RegisterTargetTransformWidget(UTargetActorTransformWidget* InWidget);
 	void ClearTransformWidgetSelection(); // Transform 위젯의 선택을 즉시 해제
+
+	// CameraControl 위젯 등록/동기화
+	void RegisterCameraControlWidget(UCameraControlWidget* InWidget);
+	void SyncCameraControlFromCamera();
 
 public:
 	UUIManager();
@@ -126,4 +129,7 @@ private:
 
 	// Transform Widget reference
 	UTargetActorTransformWidget* TargetTransformWidgetRef = nullptr;
+
+	// Camera Control Widget reference
+	UCameraControlWidget* CameraControlWidgetRef = nullptr;
 };
