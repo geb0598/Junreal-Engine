@@ -58,10 +58,11 @@ void UUIWindowFactory::CreateDefaultUILayout()
 	UE_LOG("GlobalConsole 설정 완료 - ConsoleWidget 연결됨");
 	UE_LOG("Console 시스템이 정상적으로 동작하고 있습니다");
 	
-	UIManager.RegisterUIWindow(CreateControlPanelWindow(EUIDockDirection::Left));
-	UIManager.RegisterUIWindow(CreatePropertyWindow(EUIDockDirection::Top));
-	UIManager.RegisterUIWindow(CreateSceneWindow(EUIDockDirection::Center));
-	UIManager.RegisterUIWindow(CreateExperimentalFeatureWindow(EUIDockDirection::Right));
+	/* SWindow를 통해 UI를 표시하기 위해 주석 처리 */
+	// UIManager.RegisterUIWindow(CreateControlPanelWindow(EUIDockDirection::Left));
+	// UIManager.RegisterUIWindow(CreatePropertyWindow(EUIDockDirection::Top));
+	// UIManager.RegisterUIWindow(CreateSceneWindow(EUIDockDirection::Center));
+	// UIManager.RegisterUIWindow(CreateExperimentalFeatureWindow(EUIDockDirection::Right));
 	
 	// 모든 UI 생성 완료 메시지
 	UE_LOG("기본적인 UI 생성이 성공적으로 완료되었습니다");
