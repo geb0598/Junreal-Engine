@@ -391,7 +391,7 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
         if (h <= 0.0f) h = 1.0f;
         float w = Viewport ? static_cast<float>(Viewport->GetSizeX()) : UInputManager::GetInstance().GetScreenSize().X;
         float aspect = w / h;
-        FMatrix Proj = Camera->GetProjectionMatrix(aspect);
+        FMatrix Proj = Camera->GetProjectionMatrix(aspect,Viewport);
         bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
         float worldPerPixel = 0.0f;
         if (bOrtho)
@@ -409,6 +409,9 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
             if (z < 1.0f) z = 1.0f;
             worldPerPixel = (2.0f * z) / (h * yScale);
         }
+	/*	float zoomFactor = Camera->GetCameraComponent()->GetZoomFactor();
+worldPerPixel *= zoomFactor;*/ 
+
         float Movement = px * worldPerPixel;
         FVector CurrentLocation = Target->GetActorLocation();
         Target->SetActorLocation(CurrentLocation + Axis * Movement);
@@ -443,7 +446,7 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
 		if (h <= 0.0f) h = 1.0f;
 		float w = Viewport ? static_cast<float>(Viewport->GetSizeX()) : UInputManager::GetInstance().GetScreenSize().X;
 		float aspect = w / h;
-		FMatrix Proj = Camera->GetProjectionMatrix(aspect);
+		FMatrix Proj = Camera->GetProjectionMatrix(aspect,Viewport);
 		bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
 		float worldPerPixel = 0.0f;
 		if (bOrtho)
@@ -693,7 +696,7 @@ void AGizmoActor::UpdateConstantScreenScale(ACameraActor* Camera, FViewport* Vie
     if (h <= 0.0f) h = 1.0f;
     float w = static_cast<float>(Viewport->GetSizeX());
     float aspect = w / h;
-    FMatrix Proj = Camera->GetProjectionMatrix(aspect);
+    FMatrix Proj = Camera->GetProjectionMatrix(aspect,Viewport);
     bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
     float targetPx = 30.0f;
     float scale = 1.0f;

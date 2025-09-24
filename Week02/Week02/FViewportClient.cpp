@@ -245,7 +245,7 @@ void FViewportClient::MouseWheel(float DeltaSeconds)
     float WheelDelta = UInputManager::GetInstance().GetMouseWheelDelta();
 
     float zoomFactor = CameraComponent->GetZoomFactor();
-    zoomFactor *= (1.0f - WheelDelta * DeltaSeconds);
+    zoomFactor *= (1.0f - WheelDelta * DeltaSeconds*3.0f);
     
     CameraComponent->SetZoomFactor(zoomFactor);
 
