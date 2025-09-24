@@ -35,8 +35,9 @@ void FObjManager::Preload()
         if (Extension == ".obj")
         {
             // Data 기준 상대 경로 생성 -> "Data/<relPath>" 형태 보장
-            fs::path RelPath = fs::relative(Path, DataDir);
-            FString PathStr = "Data/" + RelPath.generic_string();
+            /*fs::path RelPath = fs::relative(Path, DataDir);
+            FString PathStr = "Data/" + RelPath.generic_string();*/
+            FString PathStr = Path.string();
 
             LoadObjStaticMesh(PathStr);
             ++LoadedCount;
