@@ -235,7 +235,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         FVector CameraLocation{ 0, 0, -10.f };
 
 
-        bool bUVScrollPaused = false;
+        bool bUVScrollPaused = true;
         float UVScrollTime = 0.0f;
         FVector2D UVScrollSpeed = FVector2D(0.5f, 0.5f);
 
@@ -256,7 +256,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
 
-            if (InputMgr.IsKeyPressed(VK_SPACE))
+            if (InputMgr.IsKeyPressed('T'))
             {
                 bUVScrollPaused = !bUVScrollPaused;
                 if (bUVScrollPaused)
