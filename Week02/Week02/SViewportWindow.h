@@ -15,8 +15,8 @@ public:
     virtual void OnUpdate() override;
 
     virtual void OnMouseMove(FVector2D MousePos) override;
-    virtual void OnMouseDown(FVector2D MousePos) override;
-    virtual void OnMouseUp(FVector2D MousePos) override;
+    virtual void OnMouseDown(FVector2D MousePos, uint32 Button) override;
+    virtual void OnMouseUp(FVector2D MousePos, uint32 Button) override;
 
     void SetActive(bool bInActive) { bIsActive = bInActive; }
     bool IsActive() const { return bIsActive; }

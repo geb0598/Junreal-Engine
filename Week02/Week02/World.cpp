@@ -383,7 +383,7 @@ void UWorld::Tick(float DeltaSeconds)
 	}
 	GizmoActor->Tick(DeltaSeconds);
 
-	ProcessActorSelection();
+	//ProcessActorSelection();
 	ProcessViewportInput();
 	//Input Manager가 카메라 후에 업데이트 되어야함
 
@@ -509,44 +509,93 @@ void UWorld::SetupActorReferences()
 //마우스 피킹관련 메소드
 void UWorld::ProcessActorSelection()
 {
-	if (!MainCameraActor) return;
-
-	if (InputManager.IsMouseButtonPressed(LeftButton) && !InputManager.GetIsGizmoDragging())
+	if (InputManager.IsMouseButtonPressed(LeftButton))
 	{
 		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
-
-		// UIManager의 뷰포트 전환 상태에 따라 마우스 처리
-		/*if (UIManager.IsUsingMainViewport())
-		{
-			if (MainViewport)
-			{
-				MainViewport->OnMouseDown(MousePosition);
-			}
-		}*/
-		//else
 		{
 			if (MultiViewport)
 			{
-				MultiViewport->OnMouseDown(MousePosition);
+				MultiViewport->OnMouseDown(MousePosition,0);
 			}
 		}
 	}
+	if (InputManager.IsMouseButtonPressed(RightButton))
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseDown(MousePosition, 0);
+			}
+		}
+	}
+	if (InputManager.IsMouseButtonPressed(RightButton) )
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseDown(MousePosition,1);
+			}
+		}
+	}
+	if (InputManager.IsMouseButtonReleased(RightButton))
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseUp(MousePosition,1);
+			}
+		}
+	}
+
 }
 void UWorld::ProcessViewportInput()
 {
 	const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
 
-
-	if (MultiViewport)
+	if (InputManager.IsMouseButtonPressed(LeftButton))
 	{
-		if (InputManager.IsMouseButtonPressed(LeftButton))
-			MultiViewport->OnMouseDown(MousePosition);
-		if (InputManager.IsMouseButtonReleased(LeftButton))
-			MultiViewport->OnMouseUp(MousePosition);
-
-		MultiViewport->OnMouseMove(MousePosition);
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseDown(MousePosition, 0);
+			}
+		}
 	}
-
+	if (InputManager.IsMouseButtonPressed(RightButton))
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseDown(MousePosition, 1);
+			}
+		}
+	}
+	if (InputManager.IsMouseButtonReleased(LeftButton))
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseUp(MousePosition, 0);
+			}
+		}
+	}
+	if (InputManager.IsMouseButtonReleased(RightButton))
+	{
+		const FVector2D MousePosition = UInputManager::GetInstance().GetMousePosition();
+		{
+			if (MultiViewport)
+			{
+				MultiViewport->OnMouseUp(MousePosition, 1);
+			}
+		}
+	}
+	MultiViewport->OnMouseMove(MousePosition);
 }
 
 void UWorld::LoadScene(const FString& SceneName)

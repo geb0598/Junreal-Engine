@@ -127,7 +127,7 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
     MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
-    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()) // 직교투영이고 마우스 버튼이 눌려있을 때
+    if (ViewportType != EViewportType::Perspective && !bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()&& bIsMouseRightButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
     {
         int32 deltaX = X - MouseLastX;
         int32 deltaY = Y - MouseLastY;
@@ -158,13 +158,10 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 }
 void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button)
 {
-    if (!Viewport || !World || Button != 0) // Only handle left mouse button
+    if (!Viewport || !World) // Only handle left mouse button
         return;
 
-    // 마우스 위치 초기화 및 드래그 시작
-    MouseLastX = X;
-    MouseLastY = Y;
-    bIsMouseButtonDown = true;
+
 
     // Get viewport size
     FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
@@ -172,15 +169,10 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
 
     // X, Y are already local coordinates within the viewport, convert to global coordinates for picking
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
-
-
-
-    if (Camera)
-    {
-        // Use the appropriate camera for this viewport type
-        AActor* PickedActor = nullptr;
-        TArray<AActor*> AllActors = World->GetActors();
-
+    AActor* PickedActor = nullptr;
+    TArray<AActor*> AllActors = World->GetActors();
+    if (Button == 0) {
+        bIsMouseButtonDown = true;
         // 뷰포트의 실제 aspect ratio 계산
         float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
@@ -207,6 +199,13 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
             USelectionManager::GetInstance().ClearSelection();
         }
     }
+    else if (Button==1){//우클릭시 
+        bIsMouseRightButtonDown = true;
+        MouseLastX = X;
+        MouseLastY = Y;
+
+    }
+
 }
 
 void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button)
@@ -214,6 +213,9 @@ void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32
     if (Button == 0) // Left mouse button
     {
         bIsMouseButtonDown = false;
+    }
+    else {
+        bIsMouseRightButtonDown = false;
     }
 }
 

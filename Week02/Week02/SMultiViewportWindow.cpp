@@ -7,9 +7,11 @@
 #include"SDetailsWindow.h"
 #include"SControlPanel.h"
 #include"MenuBarWidget.h"
+#include"SViewportWindow.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
-
+// ✅ 정적 멤버 초기화
+SViewportWindow* SMultiViewportWindow::ActiveViewport;
 void SMultiViewportWindow::SaveSplitterConfig()
 {
 	if (!RootSplitter) return;
@@ -218,25 +220,51 @@ void SMultiViewportWindow::OnUpdate()
 
 void SMultiViewportWindow::OnMouseMove(FVector2D MousePos)
 {
-	if (RootSplitter)
+	if (ActiveViewport)
+	{
+		ActiveViewport->OnMouseMove(MousePos);
+	}
+	else if (RootSplitter)
+	{
 		RootSplitter->OnMouseMove(MousePos);
+	}
 }
 
-void SMultiViewportWindow::OnMouseDown(FVector2D MousePos)
+void SMultiViewportWindow::OnMouseDown(FVector2D MousePos,uint32 Button)
 {
 	if (RootSplitter)
-		RootSplitter->OnMouseDown(MousePos);
+	{
+		RootSplitter->OnMouseDown(MousePos,Button);
+
+		// 어떤 뷰포트 안에서 눌렸는지 확인
+		for (auto* VP : Viewports)
+		{
+			if (VP && VP->Rect.Contains(MousePos))
+			{
+				ActiveViewport = VP; // 고정
+				break;
+			}
+		}
+	}
 }
 
-void SMultiViewportWindow::OnMouseUp(FVector2D MousePos)
+
+void SMultiViewportWindow::OnMouseUp(FVector2D MousePos, uint32 Button)
 {
-	if (RootSplitter)
-		RootSplitter->OnMouseUp(MousePos);
+	if (ActiveViewport)
+	{
+		ActiveViewport->OnMouseUp(MousePos, Button);
+		ActiveViewport = nullptr; // 드래그 끝나면 해제
+	}
+	else if (RootSplitter)
+	{
+		RootSplitter->OnMouseUp(MousePos, Button);
+	}
 }
 
 void SMultiViewportWindow::OnShutdown()
 {
 	SaveSplitterConfig();
-	//SaveEditorINI("editor.ini");
+	
 }
 

@@ -24,13 +24,15 @@ public:
     virtual void OnRender() override;
     virtual void OnUpdate() override;
     virtual void OnMouseMove(FVector2D MousePos) override;
-    virtual void OnMouseDown(FVector2D MousePos) override;
-    virtual void OnMouseUp(FVector2D MousePos) override;
+    virtual void OnMouseDown(FVector2D MousePos, uint32 Button) override;
+    virtual void OnMouseUp(FVector2D MousePos, uint32 Button) override;
 
     
 
 
     void OnShutdown();
+
+    static SViewportWindow* ActiveViewport; // 현재 드래그 중인 뷰포트
 private:
     UWorld* World = nullptr;
     ID3D11Device* Device = nullptr;
@@ -58,6 +60,8 @@ private:
 
     SSplitterV* BottomPanel ;
     
+
+
     // 현재 모드
     EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;
 
