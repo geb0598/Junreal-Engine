@@ -13,6 +13,7 @@ class ACameraActor : public AActor
 public:
     DECLARE_CLASS(ACameraActor, AActor)
     ACameraActor();
+   
     virtual void Tick(float DeltaSeconds) override;
 
     // 씬 로드 등 외부에서 카메라 각도를 즉시 세팅하고
@@ -21,6 +22,8 @@ public:
 
     // 선택: 스무딩/보간 캐시가 있다면 여기서 동기화
     void SyncRotationCache();
+
+    void SetPerspectiveCameraInput(bool InPerspectiveCameraInput);
 
 protected:
     ~ACameraActor() override;
@@ -65,6 +68,8 @@ private:
     // Camera rotation state (cumulative)
     float CameraYawDeg = 0.0f;   // World Up(Y) based Yaw (unlimited accumulation)
     float CameraPitchDeg = 0.0f; // Local Right based Pitch (limited)
+
+    bool PerspectiveCameraInput = false;
     
    // ECameraProjectionMode ProjectionMode = ECameraProjectionMode::Perspective;
 
