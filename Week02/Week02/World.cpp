@@ -286,7 +286,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 	if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
 
 	FMatrix ViewMatrix = Camera->GetViewMatrix();
-	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 	if (!Renderer) return;
 	FVector rgb(1.0f, 1.0f, 1.0f);
 

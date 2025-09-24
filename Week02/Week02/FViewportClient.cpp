@@ -26,6 +26,7 @@ void FViewportClient::Tick(float DeltaTime) {
     {
         Camera->ProcessEditorCameraInput(DeltaTime);
     }
+    MouseWheel(DeltaTime);
 }
 void FViewportClient::Draw(FViewport* Viewport)
 {
@@ -133,7 +134,6 @@ void FViewportClient::SetupCameraMode()
 void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
 
-    MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
     if ( !bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()&& bIsMouseRightButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
@@ -236,7 +236,7 @@ void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32
     }
 }
 
-void FViewportClient::MouseWheel()
+void FViewportClient::MouseWheel(float DeltaSeconds)
 {
     if (!Camera) return;
 
@@ -245,7 +245,7 @@ void FViewportClient::MouseWheel()
     float WheelDelta = UInputManager::GetInstance().GetMouseWheelDelta();
 
     float zoomFactor = CameraComponent->GetZoomFactor();
-    zoomFactor *= (1.0f - WheelDelta * 0.1f);
+    zoomFactor *= (1.0f - WheelDelta * DeltaSeconds);
     
     CameraComponent->SetZoomFactor(zoomFactor);
 

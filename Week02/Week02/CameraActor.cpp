@@ -119,6 +119,11 @@ FMatrix ACameraActor::GetProjectionMatrix(float ViewportAspectRatio) const
 {
     return CameraComponent ? CameraComponent->GetProjectionMatrix(ViewportAspectRatio) : FMatrix::Identity();
 }
+FMatrix ACameraActor::GetProjectionMatrix(float ViewportAspectRatio,FViewport* Viewport) const
+{
+    return CameraComponent ? CameraComponent->GetProjectionMatrix(ViewportAspectRatio, Viewport) : FMatrix::Identity();
+}
+
 
 FMatrix ACameraActor::GetViewProjectionMatrix() const
 {
