@@ -42,10 +42,10 @@ void ACameraActor::SetPerspectiveCameraInput(bool InPerspectiveCameraInput) {
 }
 void ACameraActor::Tick(float DeltaSeconds)
 {
-    if (PerspectiveCameraInput) {
-        ProcessEditorCameraInput(DeltaSeconds);
+    //if (PerspectiveCameraInput) {
+       // ProcessEditorCameraInput(DeltaSeconds);
 
-    }
+    //}
     // 우클릭 드래그 종료시 UI와 동기화
     UInputManager& InputManager = UInputManager::GetInstance();
     if (InputManager.IsMouseButtonReleased(RightButton))
@@ -119,6 +119,11 @@ FMatrix ACameraActor::GetProjectionMatrix(float ViewportAspectRatio) const
 {
     return CameraComponent ? CameraComponent->GetProjectionMatrix(ViewportAspectRatio) : FMatrix::Identity();
 }
+FMatrix ACameraActor::GetProjectionMatrix(float ViewportAspectRatio,FViewport* Viewport) const
+{
+    return CameraComponent ? CameraComponent->GetProjectionMatrix(ViewportAspectRatio, Viewport) : FMatrix::Identity();
+}
+
 
 FMatrix ACameraActor::GetViewProjectionMatrix() const
 {

@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "CameraComponent.h"
+#include"FViewport.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -52,6 +53,30 @@ FMatrix UCameraComponent::GetProjectionMatrix(float ViewportAspectRatio) const
 
 
         return FMatrix::OrthoLH(orthoWidth, orthoHeight,
+            NearClip, FarClip);
+    }
+}
+FMatrix UCameraComponent::GetProjectionMatrix(float ViewportAspectRatio, FViewport* Viewport) const
+{
+    if (ProjectionMode == ECameraProjectionMode::Perspective)
+    {
+        return FMatrix::PerspectiveFovLH(
+            FieldOfView * (PI / 180.0f),
+            ViewportAspectRatio,
+            NearClip, FarClip);
+    }
+    else
+    {
+        // 1 world unit = 100 pixels (예시)
+        const float pixelsPerWorldUnit = 10.0f;
+
+        // 뷰포트 크기를 월드 단위로 변환
+        float orthoWidth = (Viewport->GetSizeX() / pixelsPerWorldUnit) * ZooMFactor;
+        float orthoHeight = (Viewport->GetSizeY() / pixelsPerWorldUnit) * ZooMFactor;
+
+        return FMatrix::OrthoLH(
+            orthoWidth,
+            orthoHeight,
             NearClip, FarClip);
     }
 }

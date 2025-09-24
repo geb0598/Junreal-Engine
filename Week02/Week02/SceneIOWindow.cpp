@@ -33,7 +33,7 @@ void SSceneIOWindow::OnRender()
     ImGui::End();
 }
 
-void SSceneIOWindow::OnUpdate()
+void SSceneIOWindow::OnUpdate(float deltaSecond)
 {
     if (ConsoleWindow) {
         ConsoleWindow->Update();

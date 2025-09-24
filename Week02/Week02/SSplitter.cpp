@@ -86,13 +86,13 @@ void SSplitter::OnRender()
     );
 }
 
-void SSplitter::OnUpdate()
+void SSplitter::OnUpdate(float DeltaSeconds)
 {
-    
+
     UpdateChildRects();
 
-    if (SideLT) SideLT->OnUpdate();
-    if (SideRB) SideRB->OnUpdate();
+    if (SideLT) SideLT->OnUpdate(DeltaSeconds);
+    if (SideRB) SideRB->OnUpdate(DeltaSeconds);
 }
 
 void SSplitter::OnMouseMove(FVector2D MousePos)

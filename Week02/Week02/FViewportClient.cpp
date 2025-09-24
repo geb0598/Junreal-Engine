@@ -22,8 +22,11 @@ FViewportClient::~FViewportClient()
 {
 }
 void FViewportClient::Tick(float DeltaTime) {
-
-
+    if (PerspectiveCameraInput)
+    {
+        Camera->ProcessEditorCameraInput(DeltaTime);
+    }
+    MouseWheel(DeltaTime);
 }
 void FViewportClient::Draw(FViewport* Viewport)
 {
@@ -39,14 +42,18 @@ void FViewportClient::Draw(FViewport* Viewport)
     {
         ACameraActor* MainCamera = World->GetCameraActor();
         MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
-      //  if (Viewport->GetMainViewport()) {
+        if (Viewport->GetMainViewport()) {
             Camera = MainCamera;
-     //   }
+        }
+        Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
+        PerspectiveCameraPosition = Camera->GetActorLocation();
+        PerspectiveCameraRotation = Camera->GetActorRotation();
+        PerspectiveCameraFov = Camera->GetCameraComponent()->GetFOV();
           if (World)
           {
               World->SetViewModeIndex(ViewModeIndex);
-              World->RenderViewports(MainCamera, Viewport);
-              World->GetGizmoActor()->Render(MainCamera, Viewport);
+              World->RenderViewports(Camera, Viewport);
+              World->GetGizmoActor()->Render(Camera, Viewport);
           }
         break;
     }
@@ -83,8 +90,9 @@ void FViewportClient::SetupCameraMode()
     {
     case EViewportType::Perspective:
 
-        //Camera->SetActorLocation({ 0, 0, 0 });
-        //Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+        Camera->SetActorLocation(PerspectiveCameraPosition);
+        Camera->SetActorRotation(PerspectiveCameraRotation);
+        Camera->GetCameraComponent()->SetFOV(PerspectiveCameraFov);
         break;
     case EViewportType::Orthographic_Top:
 
@@ -126,7 +134,6 @@ void FViewportClient::SetupCameraMode()
 void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
 
 
-    MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
     if ( !bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()&& bIsMouseRightButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
@@ -160,7 +167,7 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
             MouseLastY = Y;
         }
         else if (ViewportType == EViewportType::Perspective ) {
-            Camera->SetPerspectiveCameraInput(true);
+            PerspectiveCameraInput=true;
         }
     }
    
@@ -225,11 +232,11 @@ void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32
     }
     else {
         bIsMouseRightButtonDown = false;
-        Camera->SetPerspectiveCameraInput(false);
+        PerspectiveCameraInput=false;
     }
 }
 
-void FViewportClient::MouseWheel()
+void FViewportClient::MouseWheel(float DeltaSeconds)
 {
     if (!Camera) return;
 
@@ -238,7 +245,7 @@ void FViewportClient::MouseWheel()
     float WheelDelta = UInputManager::GetInstance().GetMouseWheelDelta();
 
     float zoomFactor = CameraComponent->GetZoomFactor();
-    zoomFactor *= (1.0f - WheelDelta * 0.1f);
+    zoomFactor *= (1.0f - WheelDelta * DeltaSeconds);
     
     CameraComponent->SetZoomFactor(zoomFactor);
 

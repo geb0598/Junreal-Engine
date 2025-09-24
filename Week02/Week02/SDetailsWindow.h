@@ -11,7 +11,7 @@ public:
 
     void Initialize();
     virtual void OnRender() override;
-    virtual void OnUpdate() override;
+    virtual void OnUpdate(float deltaSecond) override;
 
 private:
     UPropertyWindow* DetailsWidget;

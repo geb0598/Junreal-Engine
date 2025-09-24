@@ -29,7 +29,7 @@ public:
 
     // 가상 함수들
     void OnRender() override;
-    void OnUpdate() override;
+    void OnUpdate(float DeltaSeconds) override;
     void OnMouseMove(FVector2D MousePos) override;
     void OnMouseDown(FVector2D MousePos, uint32 Button) override;
     void OnMouseUp(FVector2D MousePos, uint32 Button) override;
