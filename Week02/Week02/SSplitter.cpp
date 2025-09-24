@@ -11,17 +11,17 @@ SSplitter::SSplitter()
 
 SSplitter::~SSplitter()
 {
-    // 소유권 명확화: 자식 윈도우 재귀 삭제
-    if (SideLT)
-    {
-        delete SideLT;
-        SideLT = nullptr;
-    }
-    if (SideRB)
-    {
-        delete SideRB;
-        SideRB = nullptr;
-    }
+    //// 소유권 명확화: 자식 윈도우 재귀 삭제
+    //if (SideLT)
+    //{
+    //    delete SideLT;
+    //    SideLT = nullptr;
+    //}
+    //if (SideRB)
+    //{
+    //    delete SideRB;
+    //    SideRB = nullptr;
+    //}
 }
 
 bool SSplitter::IsMouseOnSplitter(FVector2D MousePos) const
@@ -86,13 +86,13 @@ void SSplitter::OnRender()
     );
 }
 
-void SSplitter::OnUpdate()
+void SSplitter::OnUpdate(float DeltaSeconds)
 {
-    
+
     UpdateChildRects();
 
-    if (SideLT) SideLT->OnUpdate();
-    if (SideRB) SideRB->OnUpdate();
+    if (SideLT) SideLT->OnUpdate(DeltaSeconds);
+    if (SideRB) SideRB->OnUpdate(DeltaSeconds);
 }
 
 void SSplitter::OnMouseMove(FVector2D MousePos)

@@ -9,7 +9,6 @@
 #include "UI/UIManager.h"
 #include"FViewport.h"
 #include "Picking.h"
-#include"CameraComponent.h"
 
 AGizmoActor::AGizmoActor()
 {
@@ -146,9 +145,9 @@ void AGizmoActor::Tick(float DeltaSeconds)
 }
 void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) {
 
-	//ProcessGizmoHovering(Camera,Viewport,1,1);//기즈모 호버링 체크 
+UpdateConstantScreenScale(Camera, Viewport);
 
-	TArray<USceneComponent*>* Components = GetGizmoComponents();
+TArray<USceneComponent*>* Components = GetGizmoComponents();
 	if (!Components) return;
 
 
@@ -159,7 +158,7 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) {
 	URenderer* Renderer = GetWorld()->GetRenderer();
 	if (!USelectionManager::GetInstance().HasSelection()) return;
 	FMatrix ViewMatrix = Camera->GetViewMatrix();
-	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 	FMatrix ModelMatrix;
 	FVector rgb(1.0f, 1.0f, 1.0f);
 	FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
@@ -353,16 +352,10 @@ static FVector2D GetStableAxisDirection(const FVector& WorldAxis, const ACameraA
 
 void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport)
 {
-	if (!Target || !Camera )
-		return;
+    if (!Target || !Camera )
+        return;
 
-	// 화면 크기 정보 가져오기
-
-	FVector2D ScreenSize = UInputManager::GetInstance().GetScreenSize();
-	float Sensitivity = 0.1f; // 이동 민감도 조절
-
-	// 마우스 델타를 정규화 (-1 ~ 1)
-	FVector2D MouseDelta = FVector2D(MouseDeltaX / Viewport->GetSizeX(), MouseDeltaY / Viewport->GetSizeY());
+    FVector2D MouseDelta = FVector2D(MouseDeltaX, MouseDeltaY);
 
 	FVector Axis{};
 	FVector GizmoPosition = GetActorLocation();
@@ -392,17 +385,33 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
 	{
 	case EGizmoMode::Translate:
 	{
-		// 안정적인 축 방향 계산
-		FVector2D ScreenAxis = GetStableAxisDirection(Axis, Camera);
-
-		// 스크린 공간에서 마우스 이동과 축 방향의 내적으로 이동량 계산
-		float Movement = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y) * Sensitivity * 200.0f;
-	
-		//Movement *= Camera->GetCameraComponent()->GetZoomFactor();
-			//UE_LOG("Camera%d", Camera->GetCameraComponent()->GetZoomFactor());
-		// 일관된 방향으로 이동 (Y축 특수 처리 제거)
-		FVector CurrentLocation = Target->GetActorLocation();
-		Target->SetActorLocation(CurrentLocation + Axis * Movement);
+        FVector2D ScreenAxis = GetStableAxisDirection(Axis, Camera);
+        float px = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y);
+        float h = Viewport ? static_cast<float>(Viewport->GetSizeY()) : UInputManager::GetInstance().GetScreenSize().Y;
+        if (h <= 0.0f) h = 1.0f;
+        float w = Viewport ? static_cast<float>(Viewport->GetSizeX()) : UInputManager::GetInstance().GetScreenSize().X;
+        float aspect = w / h;
+        FMatrix Proj = Camera->GetProjectionMatrix(aspect);
+        bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
+        float worldPerPixel = 0.0f;
+        if (bOrtho)
+        {
+            float halfH = 1.0f / Proj.M[1][1];
+            worldPerPixel = (2.0f * halfH) / h;
+        }
+        else
+        {
+            float yScale = Proj.M[1][1];
+            FVector camPos = Camera->GetActorLocation();
+            FVector gizPos = GetActorLocation();
+            FVector camF = Camera->GetForward();
+            float z = FVector::Dot(gizPos - camPos, camF);
+            if (z < 1.0f) z = 1.0f;
+            worldPerPixel = (2.0f * z) / (h * yScale);
+        }
+        float Movement = px * worldPerPixel;
+        FVector CurrentLocation = Target->GetActorLocation();
+        Target->SetActorLocation(CurrentLocation + Axis * Movement);
 
 		break;
 	}
@@ -428,12 +437,31 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
 			}
 		}
 
-		// 안정적인 축 방향 계산
 		FVector2D ScreenAxis = GetStableAxisDirection(Axis, Camera);
-
-		// 스크린 공간에서 마우스 이동과 축 방향의 내적으로 스케일 변화량 계산
-		float Movement = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y) * Sensitivity * 50.0f;
-
+		float px = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y);
+		float h = Viewport ? static_cast<float>(Viewport->GetSizeY()) : UInputManager::GetInstance().GetScreenSize().Y;
+		if (h <= 0.0f) h = 1.0f;
+		float w = Viewport ? static_cast<float>(Viewport->GetSizeX()) : UInputManager::GetInstance().GetScreenSize().X;
+		float aspect = w / h;
+		FMatrix Proj = Camera->GetProjectionMatrix(aspect);
+		bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
+		float worldPerPixel = 0.0f;
+		if (bOrtho)
+		{
+			float halfH = 1.0f / Proj.M[1][1];
+			worldPerPixel = (2.0f * halfH) / h;
+		}
+		else
+		{
+			float yScale = Proj.M[1][1];
+			FVector camPos = Camera->GetActorLocation();
+			FVector gizPos = GetActorLocation();
+			FVector camF = Camera->GetForward();
+			float z = FVector::Dot(gizPos - camPos, camF);
+			if (z < 1.0f) z = 1.0f;
+			worldPerPixel = (2.0f * z) / (h * yScale);
+		}
+		float Movement = px * worldPerPixel;
 		FVector NewScale = Target->GetActorScale();
 
 		// Apply movement to the correct local axis based on which gizmo was dragged
@@ -566,9 +594,10 @@ void AGizmoActor::ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewp
 {
 	if (!TargetActor || !Camera) return;
 
-	UpdateGizmoPosition();
+	
+    UpdateConstantScreenScale(Camera, Viewport);
 
-	ProcessGizmoModeSwitch();
+    ProcessGizmoModeSwitch();
 
 	// 기즈모 드래그
 	ProcessGizmoDragging(Camera, Viewport, MousePositionX, MousePositionY);
@@ -586,7 +615,7 @@ void AGizmoActor::ProcessGizmoHovering(ACameraActor* Camera,FViewport* Viewport 
 	FVector2D ViewportMousePos(static_cast<float>(MousePositionX) + ViewportOffset.X,
 		static_cast<float>(MousePositionY) + ViewportOffset.Y);
 	if(!bIsDragging)
-	GizmoAxis = CPickingSystem::IsHoveringGizmoForViewport(this, Camera, ViewportMousePos, ViewportSize, ViewportOffset);
+	GizmoAxis = CPickingSystem::IsHoveringGizmoForViewport(this, Camera, ViewportMousePos, ViewportSize, ViewportOffset, Viewport);
 
 	if (GizmoAxis > 0)//기즈모 축이 0이상이라면 선택 된것 
 	{
@@ -608,7 +637,7 @@ void AGizmoActor::ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport
 		FVector2D MouseDelta = InputManager->GetMouseDelta();
 		if ((MouseDelta.X * MouseDelta.X + MouseDelta.Y * MouseDelta.Y) > 0.0f)
 		{
-			OnDrag(TargetActor, GizmoAxis, MouseDelta.X, MouseDelta.Y, Camera, Viewport);
+            OnDrag(TargetActor, GizmoAxis, MouseDelta.X, MouseDelta.Y, CameraActor, Viewport);
 			bIsDragging = true;
 			SetActorLocation(TargetActor->GetActorLocation());
 		}
@@ -655,4 +684,40 @@ void AGizmoActor::UpdateComponentVisibility()
 	if (ScaleX) ScaleX->SetActive(bShowScales);
 	if (ScaleY) ScaleY->SetActive(bShowScales);
 	if (ScaleZ) ScaleZ->SetActive(bShowScales);
+}
+
+void AGizmoActor::UpdateConstantScreenScale(ACameraActor* Camera, FViewport* Viewport)
+{
+    if (!Camera || !Viewport) return;
+    float h = static_cast<float>(Viewport->GetSizeY());
+    if (h <= 0.0f) h = 1.0f;
+    float w = static_cast<float>(Viewport->GetSizeX());
+    float aspect = w / h;
+    FMatrix Proj = Camera->GetProjectionMatrix(aspect);
+    bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
+    float targetPx = 30.0f;
+    float scale = 1.0f;
+    if (bOrtho)
+    {
+        float halfH = 1.0f / Proj.M[1][1];
+        scale = (targetPx * 2.0f * halfH) / h;
+    }
+    else
+    {
+        float yScale = Proj.M[1][1];
+        FVector camPos = Camera->GetActorLocation();
+        FVector gizPos = GetActorLocation();
+        FVector camF = Camera->GetForward();
+        float z = FVector::Dot(gizPos - camPos, camF);
+        if (z < 1.0f) z = 1.0f;
+        scale = (targetPx * 2.0f * z) / (h * yScale);
+    }
+    if (scale < 0.001f) scale = 0.001f;
+    if (scale > 10000.0f) scale = 10000.0f;
+    SetActorScale(FVector(scale, scale, scale));
+}
+
+void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera)
+{
+    OnDrag(Target, GizmoAxis, MouseDeltaX, MouseDeltaY, Camera, nullptr);
 }

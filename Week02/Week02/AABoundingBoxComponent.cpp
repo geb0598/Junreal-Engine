@@ -15,34 +15,24 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FVector>& Verts)
 {
     if (Verts.empty()) return;
 
-    FQuat CurRot = GetWorldRotation();
-    if (CurRot.ToEuler() == BefRot.ToEuler())
-        return;
-
     LocalMin = LocalMax = Verts[0];
-    for (auto& v : Verts)
+    for (const auto& v : Verts)
     {
         LocalMin = LocalMin.ComponentMin(v);
         LocalMax = LocalMax.ComponentMax(v);
     }
-    BefRot = CurRot;
 }
 
 void UAABoundingBoxComponent::SetFromVertices(const TArray<FNormalVertex>& Verts)
 {
     if (Verts.empty()) return;
 
-    FQuat CurRot = GetWorldRotation();
-    if (CurRot.ToEuler() == BefRot.ToEuler())
-        return;
-
     LocalMin = LocalMax = Verts[0].pos;
-    for (auto& v : Verts)
+    for (const auto& v : Verts)
     {
         LocalMin = LocalMin.ComponentMin(v.pos);
         LocalMax = LocalMax.ComponentMax(v.pos);
     }
-	BefRot = CurRot;
 }
 
 void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
@@ -54,16 +44,6 @@ void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMat
         TArray<FVector4> Color;
 
         FBound WorldBound = GetWorldBoundFromCube();
-        
-        //if (PrimitiveType == EPrimitiveType::Sphere)
-        //{
-        //    WorldBound = GetWorldBoundFromSphere();
-        //}
-        //else
-        //{
-        //    WorldBound = GetWorldBoundFromCube();
-        //}
-
         CreateLineData(WorldBound.Min, WorldBound.Max, Start, End, Color);
         Renderer->AddLines(Start, End, Color);
     }

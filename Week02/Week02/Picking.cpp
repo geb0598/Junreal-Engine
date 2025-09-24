@@ -333,13 +333,13 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                                                const FVector2D& ViewportMousePos,
                                                const FVector2D& ViewportSize,
                                                const FVector2D& ViewportOffset,
-                                               float ViewportAspectRatio)
+                                               float ViewportAspectRatio, FViewport* Viewport)
 {
     if (!Camera) return nullptr;
 
     // 뷰포트별 레이 생성 - 커스텀 aspect ratio 사용
     const FMatrix View = Camera->GetViewMatrix();
-    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio);
+    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
     const FVector CameraWorldPos = Camera->GetActorLocation();
     const FVector CameraRight = Camera->GetRight();
     const FVector CameraUp = Camera->GetUp();
@@ -546,7 +546,7 @@ uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACame
 uint32 CPickingSystem::IsHoveringGizmoForViewport(AGizmoActor* GizmoTransActor, const ACameraActor* Camera,
                                                   const FVector2D& ViewportMousePos,
                                                   const FVector2D& ViewportSize,
-                                                  const FVector2D& ViewportOffset)
+                                                  const FVector2D& ViewportOffset,FViewport* Viewport)
 {
     if (!GizmoTransActor || !Camera)
         return 0;
@@ -554,7 +554,7 @@ uint32 CPickingSystem::IsHoveringGizmoForViewport(AGizmoActor* GizmoTransActor, 
     if (ViewportSize.Y == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
     // 뷰포트별 레이 생성 - 전달받은 뷰포트 정보 사용
     const FMatrix View = Camera->GetViewMatrix();
-    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio);
+    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
     const FVector CameraWorldPos = Camera->GetActorLocation();
     const FVector CameraRight = Camera->GetRight();
     const FVector CameraUp = Camera->GetUp();

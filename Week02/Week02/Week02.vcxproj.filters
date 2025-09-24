@@ -237,6 +237,9 @@
     <ClCompile Include="UI\Widget\ConsoleWidget.cpp">
       <Filter>소스 파일\UI\Widget</Filter>
     </ClCompile>
+    <ClCompile Include="UI\StatsOverlayD2D.cpp">
+      <Filter>소스 파일\UI</Filter>
+    </ClCompile>
     <ClCompile Include="UI\GlobalConsole.cpp">
       <Filter>소스 파일\UI</Filter>
     </ClCompile>
@@ -528,6 +531,9 @@
     </ClInclude>
     <ClInclude Include="UI\Widget\ConsoleWidget.h">
       <Filter>헤더 파일\UI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\StatsOverlayD2D.h">
+      <Filter>헤더 파일\UI</Filter>
     </ClInclude>
     <ClInclude Include="UI\GlobalConsole.h">
       <Filter>헤더 파일\UI</Filter>

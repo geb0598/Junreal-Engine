@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include "UI/StatsOverlayD2D.h"
 
 struct FConstants
 {
@@ -86,6 +87,9 @@ void D3D11RHI::Initialize(HWND hWindow)
 	CreateDepthStencilState();
 	CreateSamplerState();
     UResourceManager::GetInstance().Initialize(Device,DeviceContext);
+
+    // Initialize Direct2D overlay after device/swapchain ready
+    UStatsOverlayD2D::Get().Initialize(Device, DeviceContext, SwapChain);
 }
 
 void D3D11RHI::Release()
@@ -385,6 +389,8 @@ void D3D11RHI::OMSetBlendState(bool bIsBlendMode)
 
 void D3D11RHI::Present()
 {
+    // Draw any Direct2D overlays before present
+    UStatsOverlayD2D::Get().Draw();
     SwapChain->Present(1, 0); // vsync on
 }
 

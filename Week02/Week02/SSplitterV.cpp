@@ -3,10 +3,10 @@
 
 SSplitterV::~SSplitterV()
 {
-    delete SideLT;
+  /*  delete SideLT;
     delete SideRB;
     SideLT = nullptr;
-    SideRB = nullptr;
+    SideRB = nullptr;*/
 }
 void SSplitterV::UpdateDrag(FVector2D MousePos)
 {

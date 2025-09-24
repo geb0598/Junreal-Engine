@@ -53,31 +53,37 @@ SMultiViewportWindow::SMultiViewportWindow()
 
 SMultiViewportWindow::~SMultiViewportWindow()
 {
+	//스플리터 정보 editor.ini 정보 저장
 	OnShutdown();
-	// 루트 스플리터만 delete → 내부에서 SideLT/SideRB 재귀적으로 정리
 	delete RootSplitter;
 	RootSplitter = nullptr;
+	delete TopPanel;
+	TopPanel = nullptr;
+	delete LeftTop;
+	LeftTop = nullptr;
+	delete LeftBottom;
+	LeftBottom = nullptr;
+	delete LeftPanel;
+	LeftPanel = nullptr;
+	delete BottomPanel;
+	BottomPanel = nullptr;
+	delete SceneIOPanel;
+	SceneIOPanel = nullptr;
+	// 아래쪽 UI
+	delete ControlPanel;
+	ControlPanel = nullptr;
+	delete DetailPanel;
+	DetailPanel = nullptr;
 
-	// 뷰포트들 정리 (MainViewport는 외부에서 주입받았으므로 delete 금지)
-	if (CurrentMode == EViewportLayoutMode::SingleMain) {
-		//for (int i = 1; i < 4; i++)  // Viewports[0]은 InMainViewport (외부 관리)
-		//{
-		//	if (Viewports[i]) {
-		//		delete Viewports[i];
-		//		Viewports[i] = nullptr;
-		//	}
-		//}
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (Viewports[i]) {
+			delete Viewports[i];
+			Viewports[i] = nullptr;
+		}
 	}
 
-	//// UI 패널 정리 (RootSplitter에서 정리되지 않는 경우 직접 delete)
-	//delete SceneIOPanel;
-	//SceneIOPanel = nullptr;
-
-	//delete ControlPanel;
-	//ControlPanel = nullptr;
-
-	//delete DetailPanel;
-	//DetailPanel = nullptr;
 
 
 }
@@ -134,15 +140,15 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	RootSplitter->SideRB = BottomPanel;
 
 	// === 뷰포트 생성 ===
+	InMainViewport->SetMainViewPort();
 	Viewports[0] = InMainViewport;
-	Viewports[0]->SetMainViewPort();
 	Viewports[1] = new SViewportWindow();
 	Viewports[2] = new SViewportWindow();
 	Viewports[3] = new SViewportWindow();
 
-	Viewports[0]->Initialize(0, 0,
-		Rect.GetWidth() / 2, Rect.GetHeight() / 2,
-		World, Device, EViewportType::Perspective);
+	//Viewports[0]->Initialize(0, 0,
+	//	Rect.GetWidth() / 2, Rect.GetHeight() / 2,
+	//	World, Device, EViewportType::Perspective);
 
 	Viewports[1]->Initialize(Rect.GetWidth() / 2, 0,
 		Rect.GetWidth(), Rect.GetHeight() / 2,
@@ -208,13 +214,13 @@ void SMultiViewportWindow::OnRender()
 	}
 }
 
-void SMultiViewportWindow::OnUpdate()
+void SMultiViewportWindow::OnUpdate(float DeltaSeconds)
 {
 	if (RootSplitter) {
 		// 메뉴바 높이만큼 아래로 이동
 		float menuBarHeight = ImGui::GetFrameHeight();
 		RootSplitter->Rect = FRect(0, menuBarHeight, CLIENTWIDTH, CLIENTHEIGHT);
-		RootSplitter->OnUpdate();
+		RootSplitter->OnUpdate(DeltaSeconds);
 	}
 
 }
@@ -231,11 +237,11 @@ void SMultiViewportWindow::OnMouseMove(FVector2D MousePos)
 	}
 }
 
-void SMultiViewportWindow::OnMouseDown(FVector2D MousePos,uint32 Button)
+void SMultiViewportWindow::OnMouseDown(FVector2D MousePos, uint32 Button)
 {
 	if (RootSplitter)
 	{
-		RootSplitter->OnMouseDown(MousePos,Button);
+		RootSplitter->OnMouseDown(MousePos, Button);
 
 		// 어떤 뷰포트 안에서 눌렸는지 확인
 		for (auto* VP : Viewports)
@@ -266,5 +272,5 @@ void SMultiViewportWindow::OnMouseUp(FVector2D MousePos, uint32 Button)
 void SMultiViewportWindow::OnShutdown()
 {
 	SaveSplitterConfig();
-	
+
 }

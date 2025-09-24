@@ -22,7 +22,7 @@ public:
 
 
     virtual void OnRender() override;
-    virtual void OnUpdate() override;
+    virtual void OnUpdate(float deltaSecond) override;
     virtual void OnMouseMove(FVector2D MousePos) override;
     virtual void OnMouseDown(FVector2D MousePos, uint32 Button) override;
     virtual void OnMouseUp(FVector2D MousePos, uint32 Button) override;
