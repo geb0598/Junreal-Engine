@@ -132,7 +132,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	RootSplitter = new SSplitterH();
 	//RootSplitter->SetSplitRatio(0.8);
 
-	
+
 	RootSplitter->SetRect(Rect.Min.X, Rect.Min.Y, Rect.Max.X, Rect.Max.Y);
 
 	// === 위쪽: 좌(4뷰포트) + 우(SceneIO) ===
@@ -143,7 +143,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 
 	// 왼쪽: 4분할 뷰포트
 	LeftPanel = new SSplitterV();
-	SSplitterH*	LeftTop = new SSplitterH();
+	SSplitterH* LeftTop = new SSplitterH();
 	SSplitterH* LeftBottom = new SSplitterH();
 	LeftPanel->SideLT = LeftTop;
 	LeftPanel->SideRB = LeftBottom;
@@ -197,7 +197,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 
 	//MainViewport = new SViewportWindow();
 	//MainViewport->Initialize(0, 0, Rect.GetWidth(), Rect.GetHeight(), World, Device, EViewportType::Perspective);
-	
+
 	//// ==== Single 레이아웃 구성 ====
 	//{
 	//	SSplitterH* FullLayout = new SSplitterH();
@@ -217,7 +217,7 @@ void SMultiViewportWindow::SwitchLayout(EViewportLayoutMode NewMode)
 	if (NewMode == EViewportLayoutMode::FourSplit)
 	{
 		TopPanel->SideLT = LeftPanel;
-	
+
 	}
 	else if (NewMode == EViewportLayoutMode::SingleMain)
 	{
@@ -241,13 +241,13 @@ void SMultiViewportWindow::SwitchPanel(SWindow* SwitchPanel)
 void SMultiViewportWindow::OnRender()
 {
 	// 메뉴바 렌더링 (항상 최상단에)
-	
+
 	MenuBar->RenderWidget();
 	if (RootSplitter)
 	{
 		RootSplitter->OnRender();
 
-		
+
 
 	}
 }
@@ -286,4 +286,3 @@ void SMultiViewportWindow::OnShutdown()
 	SaveSplitterConfig(RootSplitter);
 	//SaveEditorINI("editor.ini");
 }
-

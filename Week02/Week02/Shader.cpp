@@ -21,6 +21,7 @@ void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice)
     {
         char* msg = (char*)errorBlob->GetBufferPointer();
         UE_LOG("shader \'%s\'compile error: %s", InShaderPath, msg);
+        if (errorBlob) errorBlob->Release();
         return;
     }
 
