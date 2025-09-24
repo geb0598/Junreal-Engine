@@ -57,6 +57,7 @@ public:
     
     EGizmoMode GetGizmoMode() const;
 
+    void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport);
     void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera);
     
     // Gizmo interaction methods
@@ -67,6 +68,7 @@ public:
     
 
     void ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
+    void UpdateConstantScreenScale(ACameraActor* Camera, FViewport* Viewport);
   
 protected:
 
