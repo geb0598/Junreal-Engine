@@ -21,9 +21,17 @@ UTextRenderComponent::UTextRenderComponent()
 	
 
     //if(UResourceManager::GetInstance().Get<UMaterial>())
-    TextQuad = UResourceManager::GetInstance().Get<UTextQuad>("TextBillboard");
-    Material = NewObject<UMaterial>();
-    UResourceManager::GetInstance().Add<UMaterial>("TextBillboard", Material);
+    auto& RM = UResourceManager::GetInstance();
+    TextQuad = RM.Get<UTextQuad>("TextBillboard");
+    if (auto* M = RM.Get<UMaterial>("TextBillboard"))
+    {
+        Material = M;
+    }
+    else
+    {
+        Material = NewObject<UMaterial>();
+        RM.Add<UMaterial>("TextBillboard", Material);
+    }
 
     InitCharInfoMap();
 }
