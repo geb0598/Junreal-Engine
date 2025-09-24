@@ -22,8 +22,10 @@ FViewportClient::~FViewportClient()
 {
 }
 void FViewportClient::Tick(float DeltaTime) {
-
-
+    if (PerspectiveCameraInput)
+    {
+        Camera->ProcessEditorCameraInput(DeltaTime);
+    }
 }
 void FViewportClient::Draw(FViewport* Viewport)
 {
@@ -39,14 +41,18 @@ void FViewportClient::Draw(FViewport* Viewport)
     {
         ACameraActor* MainCamera = World->GetCameraActor();
         MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
-      //  if (Viewport->GetMainViewport()) {
+        if (Viewport->GetMainViewport()) {
             Camera = MainCamera;
-     //   }
+        }
+        Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
+        PerspectiveCameraPosition = Camera->GetActorLocation();
+        PerspectiveCameraRotation = Camera->GetActorRotation();
+        PerspectiveCameraFov = Camera->GetCameraComponent()->GetFOV();
           if (World)
           {
               World->SetViewModeIndex(ViewModeIndex);
-              World->RenderViewports(MainCamera, Viewport);
-              World->GetGizmoActor()->Render(MainCamera, Viewport);
+              World->RenderViewports(Camera, Viewport);
+              World->GetGizmoActor()->Render(Camera, Viewport);
           }
         break;
     }
@@ -83,8 +89,9 @@ void FViewportClient::SetupCameraMode()
     {
     case EViewportType::Perspective:
 
-        //Camera->SetActorLocation({ 0, 0, 0 });
-        //Camera->SetActorRotation(FQuat::MakeFromEuler({ 0, 0, 0 }));
+        Camera->SetActorLocation(PerspectiveCameraPosition);
+        Camera->SetActorRotation(PerspectiveCameraRotation);
+        Camera->GetCameraComponent()->SetFOV(PerspectiveCameraFov);
         break;
     case EViewportType::Orthographic_Top:
 
@@ -160,7 +167,7 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
             MouseLastY = Y;
         }
         else if (ViewportType == EViewportType::Perspective ) {
-            Camera->SetPerspectiveCameraInput(true);
+            PerspectiveCameraInput=true;
         }
     }
    
@@ -225,7 +232,7 @@ void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32
     }
     else {
         bIsMouseRightButtonDown = false;
-        Camera->SetPerspectiveCameraInput(false);
+        PerspectiveCameraInput=false;
     }
 }
 

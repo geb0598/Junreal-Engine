@@ -79,7 +79,7 @@ void SViewportWindow::OnRender()
 
 }
 
-void SViewportWindow::OnUpdate()
+void SViewportWindow::OnUpdate(float DeltaSeconds)
 {
 	if (!Viewport)
 		return;
@@ -87,13 +87,14 @@ void SViewportWindow::OnUpdate()
 	if (!Viewport) return;
 
 	// 툴바 높이만큼 뷰포트 영역 조정
-	
+
 	uint32 NewStartX = static_cast<uint32>(Rect.Left);
 	uint32 NewStartY = static_cast<uint32>(Rect.Top );
 	uint32 NewWidth = static_cast<uint32>(Rect.Right - Rect.Left);
 	uint32 NewHeight = static_cast<uint32>(Rect.Bottom - Rect.Top );
 
 	Viewport->Resize(NewStartX, NewStartY, NewWidth, NewHeight);
+	ViewportClient->Tick(DeltaSeconds);
 }
 
 void SViewportWindow::OnMouseMove(FVector2D MousePos)

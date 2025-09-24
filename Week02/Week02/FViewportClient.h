@@ -74,10 +74,17 @@ protected:
     bool bIsMouseRightButtonDown = false;
     static FVector CameraAddPosition;
 
+
     // 직교 뷰용 카메라 설정
     uint32 OrthographicAddXPosition;
     uint32  OrthographicAddYPosition;
     float OrthographicZoom = 30.0f;
     //뷰모드
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Lit;
+
+    //원근 투영
+    bool PerspectiveCameraInput = false;
+    FVector PerspectiveCameraPosition;
+    FQuat PerspectiveCameraRotation;
+    float PerspectiveCameraFov=60;
 };

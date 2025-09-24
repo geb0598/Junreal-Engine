@@ -57,7 +57,7 @@ public:
     float GetCameraSpeed() { return CameraMoveSpeed; }
     void SetCameraSpeed(float InSpeed) { CameraMoveSpeed = InSpeed; EditorINI["CameraSpeed"] = std::to_string(CameraMoveSpeed); }
 
-
+    void ProcessEditorCameraInput(float DeltaSeconds);
 private:
     UCameraComponent* CameraComponent = nullptr;
     
@@ -74,7 +74,7 @@ private:
    // ECameraProjectionMode ProjectionMode = ECameraProjectionMode::Perspective;
 
     // Camera input processing methods
-    void ProcessEditorCameraInput(float DeltaSeconds);
+
     void ProcessCameraRotation(float DeltaSeconds);
     void ProcessCameraMovement(float DeltaSeconds);
 

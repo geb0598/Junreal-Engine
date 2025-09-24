@@ -392,7 +392,7 @@ void UWorld::Tick(float DeltaSeconds)
 
 	if (MultiViewport)
 	{
-		MultiViewport->OnUpdate();
+		MultiViewport->OnUpdate(DeltaSeconds);
 	}
 
 	InputManager.Update();

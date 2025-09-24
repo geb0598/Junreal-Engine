@@ -134,15 +134,15 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	RootSplitter->SideRB = BottomPanel;
 
 	// === 뷰포트 생성 ===
+	InMainViewport->SetMainViewPort();
 	Viewports[0] = InMainViewport;
-	Viewports[0]->SetMainViewPort();
 	Viewports[1] = new SViewportWindow();
 	Viewports[2] = new SViewportWindow();
 	Viewports[3] = new SViewportWindow();
 
-	Viewports[0]->Initialize(0, 0,
-		Rect.GetWidth() / 2, Rect.GetHeight() / 2,
-		World, Device, EViewportType::Perspective);
+	//Viewports[0]->Initialize(0, 0,
+	//	Rect.GetWidth() / 2, Rect.GetHeight() / 2,
+	//	World, Device, EViewportType::Perspective);
 
 	Viewports[1]->Initialize(Rect.GetWidth() / 2, 0,
 		Rect.GetWidth(), Rect.GetHeight() / 2,
@@ -208,13 +208,13 @@ void SMultiViewportWindow::OnRender()
 	}
 }
 
-void SMultiViewportWindow::OnUpdate()
+void SMultiViewportWindow::OnUpdate(float DeltaSeconds)
 {
 	if (RootSplitter) {
 		// 메뉴바 높이만큼 아래로 이동
 		float menuBarHeight = ImGui::GetFrameHeight();
 		RootSplitter->Rect = FRect(0, menuBarHeight, CLIENTWIDTH, CLIENTHEIGHT);
-		RootSplitter->OnUpdate();
+		RootSplitter->OnUpdate(DeltaSeconds);
 	}
 
 }

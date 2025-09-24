@@ -51,7 +51,7 @@ public:
 
     // 가상 함수들
     virtual void OnRender() {}
-    virtual void OnUpdate() {}
+    virtual void OnUpdate(float DeltaSeconds) {}
     virtual void OnMouseMove(FVector2D MousePos) {}
     virtual void OnMouseDown(FVector2D MousePos, uint32 Button) {}
     virtual void OnMouseUp(FVector2D MousePos, uint32 Button) {}
