@@ -603,6 +603,9 @@ void UWorld::LoadScene(const FString& SceneName)
         // 프로젝션 파라미터
         Cam->SetFOV(CamData.FOV);
         Cam->SetClipPlanes(CamData.NearClip, CamData.FarClip);
+
+		// UI 위젯에 현재 카메라 상태로 재동기화 요청
+		UIManager.SyncCameraControlFromCamera();
     }
 
     uint32 MaxLoadedUUID = 0;

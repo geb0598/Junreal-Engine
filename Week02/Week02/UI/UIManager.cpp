@@ -7,6 +7,7 @@
 #include "../ImGui/imgui_impl_dx11.h"
 #include "../imGui/imgui_impl_win32.h"
 #include "UI/Widget/TargetActorTransformWidget.h"
+#include "UI/Widget/CameraControlWidget.h"
 
 UUIManager::UUIManager()
 {
@@ -516,6 +517,19 @@ void UUIManager::ClearTransformWidgetSelection()
 	if (TargetTransformWidgetRef)
 	{
 		TargetTransformWidgetRef->OnSelectedActorCleared();
+	}
+}
+
+void UUIManager::RegisterCameraControlWidget(UCameraControlWidget* InWidget)
+{
+	CameraControlWidgetRef = InWidget;
+}
+
+void UUIManager::SyncCameraControlFromCamera()
+{
+	if (CameraControlWidgetRef)
+	{
+		CameraControlWidgetRef->SyncFromCamera();
 	}
 }
 
