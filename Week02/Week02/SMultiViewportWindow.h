@@ -10,6 +10,8 @@ class UMenuBarWidget;
 class SMultiViewportWindow : public SWindow
 {
 public:
+    void SaveSplitterConfig();
+    void LoadSplitterConfig();
     SMultiViewportWindow();
     virtual ~SMultiViewportWindow();
 
@@ -22,13 +24,15 @@ public:
     virtual void OnRender() override;
     virtual void OnUpdate() override;
     virtual void OnMouseMove(FVector2D MousePos) override;
-    virtual void OnMouseDown(FVector2D MousePos) override;
-    virtual void OnMouseUp(FVector2D MousePos) override;
+    virtual void OnMouseDown(FVector2D MousePos, uint32 Button) override;
+    virtual void OnMouseUp(FVector2D MousePos, uint32 Button) override;
 
-    
+    void SetMainViewPort();
 
 
     void OnShutdown();
+
+    static SViewportWindow* ActiveViewport; // 현재 드래그 중인 뷰포트
 private:
     UWorld* World = nullptr;
     ID3D11Device* Device = nullptr;
@@ -43,6 +47,8 @@ private:
     SViewportWindow* Viewports[4];
     SViewportWindow* MainViewport;
  
+    SSplitterH* LeftTop;
+    SSplitterH* LeftBottom ;
     // 오른쪽 고정 UI
     SWindow* SceneIOPanel = nullptr;
     // 아래쪽 UI
@@ -51,7 +57,11 @@ private:
 
     SSplitterV* TopPanel = nullptr;
     SSplitterV* LeftPanel = nullptr;
+
+    SSplitterV* BottomPanel ;
     
+   
+
     // 현재 모드
     EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;
 

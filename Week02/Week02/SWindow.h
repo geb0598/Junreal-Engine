@@ -53,8 +53,8 @@ public:
     virtual void OnRender() {}
     virtual void OnUpdate() {}
     virtual void OnMouseMove(FVector2D MousePos) {}
-    virtual void OnMouseDown(FVector2D MousePos) {}
-    virtual void OnMouseUp(FVector2D MousePos) {}
+    virtual void OnMouseDown(FVector2D MousePos, uint32 Button) {}
+    virtual void OnMouseUp(FVector2D MousePos, uint32 Button) {}
 
     // 영역 설정
     void SetRect(const FRect& NewRect) { Rect = NewRect; }

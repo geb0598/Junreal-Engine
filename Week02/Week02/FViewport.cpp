@@ -78,6 +78,11 @@ void FViewport::Resize(uint32 NewStartX, uint32 NewStartY,uint32 NewSizeX, uint3
     CreateRenderTargets();
 }
 
+void FViewport::SetMainViewport()
+{
+    MainViewport = true;
+}
+
 void FViewport::ProcessMouseMove(int32 X, int32 Y)
 {
 

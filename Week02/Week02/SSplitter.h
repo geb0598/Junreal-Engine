@@ -31,8 +31,8 @@ public:
     void OnRender() override;
     void OnUpdate() override;
     void OnMouseMove(FVector2D MousePos) override;
-    void OnMouseDown(FVector2D MousePos) override;
-    void OnMouseUp(FVector2D MousePos) override;
+    void OnMouseDown(FVector2D MousePos, uint32 Button) override;
+    void OnMouseUp(FVector2D MousePos, uint32 Button) override;
 
     // 설정 저장/로드
     virtual void SaveToConfig(const FString& SectionName) const;

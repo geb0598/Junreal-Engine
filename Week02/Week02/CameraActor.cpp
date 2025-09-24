@@ -37,11 +37,15 @@ ACameraActor::ACameraActor()
         SetCameraSpeed(10.f);
     }
 }
-
+void ACameraActor::SetPerspectiveCameraInput(bool InPerspectiveCameraInput) {
+    PerspectiveCameraInput = InPerspectiveCameraInput;
+}
 void ACameraActor::Tick(float DeltaSeconds)
 {
-    ProcessEditorCameraInput(DeltaSeconds);
+    if (PerspectiveCameraInput) {
+        ProcessEditorCameraInput(DeltaSeconds);
 
+    }
     // 우클릭 드래그 종료시 UI와 동기화
     UInputManager& InputManager = UInputManager::GetInstance();
     if (InputManager.IsMouseButtonReleased(RightButton))

@@ -39,7 +39,9 @@ void FViewportClient::Draw(FViewport* Viewport)
     {
         ACameraActor* MainCamera = World->GetCameraActor();
         MainCamera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Perspective);
-        Camera = MainCamera;
+      //  if (Viewport->GetMainViewport()) {
+            Camera = MainCamera;
+     //   }
           if (World)
           {
               World->SetViewModeIndex(ViewModeIndex);
@@ -127,44 +129,48 @@ void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y) {
     MouseWheel();//마우스 휠도 해줍니다 
     World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
 
-    if (ViewportType != EViewportType::Perspective && bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()) // 직교투영이고 마우스 버튼이 눌려있을 때
+    if ( !bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering()&& bIsMouseRightButtonDown) // 직교투영이고 마우스 버튼이 눌려있을 때
     {
-        int32 deltaX = X - MouseLastX;
-        int32 deltaY = Y - MouseLastY;
+        if (ViewportType != EViewportType::Perspective) {
+            
+            int32 deltaX = X - MouseLastX;
+            int32 deltaY = Y - MouseLastY;
 
-        if (Camera && (deltaX != 0 || deltaY != 0))
-        {
-            // 기준 픽셀→월드 스케일
-            const float basePixelToWorld = 0.05f;
+            if (Camera && (deltaX != 0 || deltaY != 0))
+            {
+                // 기준 픽셀→월드 스케일
+                const float basePixelToWorld = 0.05f;
 
-            // 줌인(값↑)일수록 더 천천히 움직이도록 역수 적용
-            float zoom = Camera->GetCameraComponent()->GetZoomFactor();
-            zoom = (zoom <= 0.f) ? 1.f : zoom; // 안전장치
-            const float pixelToWorld = basePixelToWorld * zoom;
+                // 줌인(값↑)일수록 더 천천히 움직이도록 역수 적용
+                float zoom = Camera->GetCameraComponent()->GetZoomFactor();
+                zoom = (zoom <= 0.f) ? 1.f : zoom; // 안전장치
+                const float pixelToWorld = basePixelToWorld * zoom;
 
-            const FVector right = Camera->GetRight();
-            const FVector up = Camera->GetUp();
+                const FVector right = Camera->GetRight();
+                const FVector up = Camera->GetUp();
 
-            CameraAddPosition = CameraAddPosition
-                - right * (deltaX * pixelToWorld)
-                + up * (deltaY * pixelToWorld);
+                CameraAddPosition = CameraAddPosition
+                    - right * (deltaX * pixelToWorld)
+                    + up * (deltaY * pixelToWorld);
 
-            SetupCameraMode();
+                SetupCameraMode();
+            }
+
+            MouseLastX = X;
+            MouseLastY = Y;
         }
-
-        MouseLastX = X;
-        MouseLastY = Y;
+        else if (ViewportType == EViewportType::Perspective ) {
+            Camera->SetPerspectiveCameraInput(true);
+        }
     }
+   
 }
 void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int32 Button)
 {
-    if (!Viewport || !World || Button != 0) // Only handle left mouse button
+    if (!Viewport || !World) // Only handle left mouse button
         return;
 
-    // 마우스 위치 초기화 및 드래그 시작
-    MouseLastX = X;
-    MouseLastY = Y;
-    bIsMouseButtonDown = true;
+
 
     // Get viewport size
     FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
@@ -172,15 +178,10 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
 
     // X, Y are already local coordinates within the viewport, convert to global coordinates for picking
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X, static_cast<float>(Y) + ViewportOffset.Y);
-
-
-
-    if (Camera)
-    {
-        // Use the appropriate camera for this viewport type
-        AActor* PickedActor = nullptr;
-        TArray<AActor*> AllActors = World->GetActors();
-
+    AActor* PickedActor = nullptr;
+    TArray<AActor*> AllActors = World->GetActors();
+    if (Button == 0) {
+        bIsMouseButtonDown = true;
         // 뷰포트의 실제 aspect ratio 계산
         float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
@@ -207,6 +208,13 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
             USelectionManager::GetInstance().ClearSelection();
         }
     }
+    else if (Button==1){//우클릭시 
+        bIsMouseRightButtonDown = true;
+        MouseLastX = X;
+        MouseLastY = Y;
+
+    }
+
 }
 
 void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32 Button)
@@ -214,6 +222,10 @@ void FViewportClient::MouseButtonUp(FViewport* Viewport, int32 X, int32 Y, int32
     if (Button == 0) // Left mouse button
     {
         bIsMouseButtonDown = false;
+    }
+    else {
+        bIsMouseRightButtonDown = false;
+        Camera->SetPerspectiveCameraInput(false);
     }
 }
 

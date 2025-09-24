@@ -113,22 +113,23 @@ void SSplitter::OnMouseMove(FVector2D MousePos)
     if (SideRB && SideRB->IsHover(MousePos)) SideRB->OnMouseMove(MousePos);
 }
 
-void SSplitter::OnMouseDown(FVector2D MousePos)
+void SSplitter::OnMouseDown(FVector2D MousePos , uint32 Button)
 {
     StartDrag(MousePos);
 
     // 자식 윈도우에 이벤트 전달
-    if (SideLT && SideLT->IsHover(MousePos)) SideLT->OnMouseDown(MousePos);
-    if (SideRB && SideRB->IsHover(MousePos)) SideRB->OnMouseDown(MousePos);
+    if (SideLT && SideLT->IsHover(MousePos)) SideLT->OnMouseDown(MousePos, Button);
+    if (SideRB && SideRB->IsHover(MousePos)) SideRB->OnMouseDown(MousePos, Button);
 }
 
-void SSplitter::OnMouseUp(FVector2D MousePos)
+
+void SSplitter::OnMouseUp(FVector2D MousePos, uint32 Button)
 {
     EndDrag();
 
     // 자식 윈도우에 이벤트 전달
-    if (SideLT && SideLT->IsHover(MousePos)) SideLT->OnMouseUp(MousePos);
-    if (SideRB && SideRB->IsHover(MousePos)) SideRB->OnMouseUp(MousePos);
+    if (SideLT && SideLT->IsHover(MousePos)) SideLT->OnMouseUp(MousePos, Button);
+    if (SideRB && SideRB->IsHover(MousePos)) SideRB->OnMouseUp(MousePos, Button);
 }
 
 void SSplitter::SaveToConfig(const FString& SectionName) const

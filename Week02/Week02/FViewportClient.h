@@ -71,6 +71,7 @@ protected:
     int32 MouseLastX{};
     int32 MouseLastY{};
     bool bIsMouseButtonDown = false;
+    bool bIsMouseRightButtonDown = false;
     static FVector CameraAddPosition;
 
     // 직교 뷰용 카메라 설정
