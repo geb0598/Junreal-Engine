@@ -308,8 +308,8 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 				continue;
 
 			bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-			if (bIsSelected)
-				Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+			/*if (bIsSelected)
+				Renderer->OMSetDepthStencilState(EComparisonFunc::Always);*/ // 이렇게 하면, 같은 메시에 속한 정점끼리도 뒤에 있는게 앞에 그려지는 경우가 발생해, 이상하게 렌더링 됨.
 
 			Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
 
@@ -652,6 +652,9 @@ void UWorld::LoadScene(const FString& SceneName)
         // 프로젝션 파라미터
         Cam->SetFOV(CamData.FOV);
         Cam->SetClipPlanes(CamData.NearClip, CamData.FarClip);
+
+		// UI 위젯에 현재 카메라 상태로 재동기화 요청
+		UIManager.SyncCameraControlFromCamera();
     }
 
     uint32 MaxLoadedUUID = 0;

@@ -234,6 +234,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         FVector CameraLocation{ 0, 0, -10.f };
 
+
+        bool bUVScrollPaused = true;
+        float UVScrollTime = 0.0f;
+        FVector2D UVScrollSpeed = FVector2D(0.5f, 0.5f);
+
         UInputManager& InputMgr = UInputManager::GetInstance();
 
         bool bIsExit = false;
@@ -249,6 +254,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 );
             PrevTime = CurrTime;
 
+
+
+            if (InputMgr.IsKeyPressed('T'))
+            {
+                bUVScrollPaused = !bUVScrollPaused;
+                if (bUVScrollPaused)
+                {
+                    // reset when paused
+                    UVScrollTime = 0.0f;
+                    renderer.UpdateUVScroll(UVScrollSpeed, UVScrollTime);
+                }
+            }
+
+
+            if (!bUVScrollPaused)
+            {
+                UVScrollTime += DeltaSeconds;
+            }
+
+
+            renderer.UpdateUVScroll(UVScrollSpeed, UVScrollTime);
 
             // 이제 Tick 호출
             World->Tick(DeltaSeconds);
