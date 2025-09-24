@@ -57,7 +57,7 @@ public:
     
     EGizmoMode GetGizmoMode() const;
 
-    void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera);
+    void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera,FViewport* Viewport);
     
     // Gizmo interaction methods
     void SetTargetActor(AActor* InTargetActor) { TargetActor = InTargetActor; Tick(0.f);  }

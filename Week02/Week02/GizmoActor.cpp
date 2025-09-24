@@ -9,6 +9,7 @@
 #include "UI/UIManager.h"
 #include"FViewport.h"
 #include "Picking.h"
+#include"CameraComponent.h"
 
 AGizmoActor::AGizmoActor()
 {
@@ -365,17 +366,18 @@ static FVector2D GetStableAxisDirection(const FVector& WorldAxis, const ACameraA
 	return FVector2D(1.0f, 0.0f);
 }
 
-void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera)
+void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport)
 {
 	if (!Target || !Camera )
 		return;
 
 	// 화면 크기 정보 가져오기
+
 	FVector2D ScreenSize = UInputManager::GetInstance().GetScreenSize();
-	float Sensitivity = 0.05f; // 이동 민감도 조절
+	float Sensitivity = 0.1f; // 이동 민감도 조절
 
 	// 마우스 델타를 정규화 (-1 ~ 1)
-	FVector2D MouseDelta = FVector2D(MouseDeltaX / ScreenSize.X, MouseDeltaY / ScreenSize.Y);
+	FVector2D MouseDelta = FVector2D(MouseDeltaX / Viewport->GetSizeX(), MouseDeltaY / Viewport->GetSizeY());
 
 	FVector Axis{};
 	FVector GizmoPosition = GetActorLocation();
@@ -410,7 +412,9 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
 
 		// 스크린 공간에서 마우스 이동과 축 방향의 내적으로 이동량 계산
 		float Movement = (MouseDelta.X * ScreenAxis.X + MouseDelta.Y * ScreenAxis.Y) * Sensitivity * 200.0f;
-
+	
+		//Movement *= Camera->GetCameraComponent()->GetZoomFactor();
+			//UE_LOG("Camera%d", Camera->GetCameraComponent()->GetZoomFactor());
 		// 일관된 방향으로 이동 (Y축 특수 처리 제거)
 		FVector CurrentLocation = Target->GetActorLocation();
 		Target->SetActorLocation(CurrentLocation + Axis * Movement);
@@ -619,7 +623,7 @@ void AGizmoActor::ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport
 		FVector2D MouseDelta = InputManager->GetMouseDelta();
 		if ((MouseDelta.X * MouseDelta.X + MouseDelta.Y * MouseDelta.Y) > 0.0f)
 		{
-			OnDrag(TargetActor, GizmoAxis, MouseDelta.X, MouseDelta.Y, CameraActor);
+			OnDrag(TargetActor, GizmoAxis, MouseDelta.X, MouseDelta.Y, Camera, Viewport);
 			bIsDragging = true;
 			SetActorLocation(TargetActor->GetActorLocation());
 		}

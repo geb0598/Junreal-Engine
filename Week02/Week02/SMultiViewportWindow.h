@@ -10,6 +10,8 @@ class UMenuBarWidget;
 class SMultiViewportWindow : public SWindow
 {
 public:
+    void SaveSplitterConfig();
+    void LoadSplitterConfig();
     SMultiViewportWindow();
     virtual ~SMultiViewportWindow();
 
@@ -43,6 +45,8 @@ private:
     SViewportWindow* Viewports[4];
     SViewportWindow* MainViewport;
  
+    SSplitterH* LeftTop;
+    SSplitterH* LeftBottom ;
     // 오른쪽 고정 UI
     SWindow* SceneIOPanel = nullptr;
     // 아래쪽 UI
@@ -51,6 +55,8 @@ private:
 
     SSplitterV* TopPanel = nullptr;
     SSplitterV* LeftPanel = nullptr;
+
+    SSplitterV* BottomPanel ;
     
     // 현재 모드
     EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;

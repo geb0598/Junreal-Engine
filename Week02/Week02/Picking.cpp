@@ -715,7 +715,7 @@ void CPickingSystem::DragActorWithGizmo(AActor* Actor, AGizmoActor*  GizmoActor,
     
     if (!Actor || !Camera || GizmoAxis == 0) 
         return;
-    GizmoActor->OnDrag(Actor, GizmoAxis, MouseDelta.X, MouseDelta.Y, Camera);
+    GizmoActor->OnDrag(Actor, GizmoAxis, MouseDelta.X, MouseDelta.Y, Camera,nullptr);
 }
 
 

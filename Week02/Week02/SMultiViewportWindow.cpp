@@ -10,73 +10,37 @@
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 
-void SaveSplitterConfig(SSplitter* RootSplitter)
+void SMultiViewportWindow::SaveSplitterConfig()
 {
 	if (!RootSplitter) return;
 
 	EditorINI["RootSplitter"] = std::to_string(RootSplitter->SplitRatio);
-
-	if (auto TopPanel = dynamic_cast<SSplitterV*>(RootSplitter->SideLT)) {
-		EditorINI["TopPanel"] = std::to_string(TopPanel->SplitRatio);
-
-		{
-			if (auto LeftPanel = dynamic_cast<SSplitterV*>(RootSplitter->SideLT ? ((SSplitterV*)RootSplitter->SideLT)->SideLT : nullptr))
-			{
-				EditorINI["LeftPanel"] = std::to_string(LeftPanel->SplitRatio);
-
-				if (auto LeftTop = dynamic_cast<SSplitterH*>(LeftPanel->SideLT))
-					EditorINI["LeftTop"] = std::to_string(LeftTop->SplitRatio);
-
-				if (auto LeftBottom = dynamic_cast<SSplitterH*>(LeftPanel->SideRB))
-					EditorINI["LeftBottom"] = std::to_string(LeftBottom->SplitRatio);
-			}
-		}
-
-		if (auto BottomPanel = dynamic_cast<SSplitterV*>(RootSplitter->SideRB))
-			EditorINI["BottomPanel"] = std::to_string(BottomPanel->SplitRatio);
-	}
+	EditorINI["TopPanel"] = std::to_string(TopPanel->SplitRatio);
+	EditorINI["LeftTop"] = std::to_string(LeftTop->SplitRatio);
+	EditorINI["LeftBottom"] = std::to_string(LeftBottom->SplitRatio);
+	EditorINI["LeftPanel"] = std::to_string(LeftPanel->SplitRatio);
+	EditorINI["BottomPanel"] = std::to_string(BottomPanel->SplitRatio);
 }
 
 // ------------------------------------------------------------
 // Splitter 비율 불러오기
 // ------------------------------------------------------------
-void LoadSplitterConfig(SSplitter* RootSplitter)
+void SMultiViewportWindow::LoadSplitterConfig()
 {
 	if (!RootSplitter) return;
 
 	if (EditorINI.Contains("RootSplitter"))
 		RootSplitter->SplitRatio = std::stof(EditorINI["RootSplitter"]);
-
-	{
-		if (auto TopPanel = dynamic_cast<SSplitterV*>(RootSplitter->SideLT))
-		{
-			if (EditorINI.Contains("TopPanel"))
-				TopPanel->SplitRatio = std::stof(EditorINI["TopPanel"]);
-
-			{
-
-				if (auto LeftPanel = dynamic_cast<SSplitterV*>(TopPanel->SideLT))
-				{
-					if (EditorINI.Contains("LeftPanel"))
-						LeftPanel->SplitRatio = std::stof(EditorINI["LeftPanel"]);
-
-					if (auto LeftTop = dynamic_cast<SSplitterH*>(LeftPanel->SideLT))
-						if (EditorINI.Contains("LeftTop"))
-							LeftTop->SplitRatio = std::stof(EditorINI["LeftTop"]);
-
-					if (auto LeftBottom = dynamic_cast<SSplitterH*>(LeftPanel->SideRB))
-						if (EditorINI.Contains("LeftBottom"))
-							LeftBottom->SplitRatio = std::stof(EditorINI["LeftBottom"]);
-				}
-
-			}
-		}
-
-
-		if (auto BottomPanel = dynamic_cast<SSplitterV*>(RootSplitter->SideRB))
-			if (EditorINI.Contains("BottomPanel"))
-				BottomPanel->SplitRatio = std::stof(EditorINI["BottomPanel"]);
-	}
+	if (EditorINI.Contains("TopPanel"))
+		TopPanel->SplitRatio = std::stof(EditorINI["TopPanel"]);
+	if (EditorINI.Contains("LeftTop"))
+		LeftTop->SplitRatio = std::stof(EditorINI["LeftTop"]);
+	if (EditorINI.Contains("LeftBottom"))
+		LeftBottom->SplitRatio = std::stof(EditorINI["LeftBottom"]);
+	if (EditorINI.Contains("LeftPanel"))
+		LeftPanel->SplitRatio = std::stof(EditorINI["LeftPanel"]);
+	if (EditorINI.Contains("BottomPanel"))
+		BottomPanel->SplitRatio = std::stof(EditorINI["BottomPanel"]);
 }
 
 SMultiViewportWindow::SMultiViewportWindow()
@@ -143,8 +107,8 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 
 	// 왼쪽: 4분할 뷰포트
 	LeftPanel = new SSplitterV();
-	SSplitterH*	LeftTop = new SSplitterH();
-	SSplitterH* LeftBottom = new SSplitterH();
+	LeftTop = new SSplitterH();
+	LeftBottom = new SSplitterH();
 	LeftPanel->SideLT = LeftTop;
 	LeftPanel->SideRB = LeftBottom;
 
@@ -157,7 +121,7 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	TopPanel->SideRB = SceneIOPanel;
 
 	// === 아래쪽: Console + Property ===
-	SSplitterV* BottomPanel = new SSplitterV();
+	BottomPanel = new SSplitterV();
 	ControlPanel = new SControlPanel();   // 직접 만든 ConsoleWindow 클래스
 	DetailPanel = new SDetailsWindow();  // 직접 만든 PropertyWindow 클래스
 	BottomPanel->SideLT = ControlPanel;
@@ -195,20 +159,9 @@ void SMultiViewportWindow::Initialize(ID3D11Device* InDevice, UWorld* InWorld, c
 	LeftBottom->SideLT = Viewports[2];
 	LeftBottom->SideRB = Viewports[3];
 
-	//MainViewport = new SViewportWindow();
-	//MainViewport->Initialize(0, 0, Rect.GetWidth(), Rect.GetHeight(), World, Device, EViewportType::Perspective);
-	
-	//// ==== Single 레이아웃 구성 ====
-	//{
-	//	SSplitterH* FullLayout = new SSplitterH();
-	//	FullLayout->SideLT = MainViewport;
-	//	FullLayout->SideRB = nullptr;
-	//	SingleLayout = FullLayout;
-	//}
-	// 기본은 FourSplit
 	SwitchLayout(EViewportLayoutMode::SingleMain);
 
-	LoadSplitterConfig(RootSplitter);
+	LoadSplitterConfig();
 }
 void SMultiViewportWindow::SwitchLayout(EViewportLayoutMode NewMode)
 {
@@ -283,7 +236,7 @@ void SMultiViewportWindow::OnMouseUp(FVector2D MousePos)
 
 void SMultiViewportWindow::OnShutdown()
 {
-	SaveSplitterConfig(RootSplitter);
+	SaveSplitterConfig();
 	//SaveEditorINI("editor.ini");
 }
 
