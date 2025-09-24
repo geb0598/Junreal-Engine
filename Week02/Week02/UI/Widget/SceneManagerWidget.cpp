@@ -3,6 +3,8 @@
 #include "../UIManager.h"
 #include "../../ImGui/imgui.h"
 #include "../../World.h"
+#include "../../CameraActor.h"
+#include "../../CameraComponent.h"
 #include "../../Actor.h"
 #include "../../StaticMeshActor.h"
 #include "../../SelectionManager.h"
@@ -331,6 +333,20 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
     if (ImGui::IsItemClicked())
     {
         HandleActorSelection(Actor);
+    }
+    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+    {
+        if (UIManager && UIManager->GetCamera())
+        {
+            ACameraActor* Cam = UIManager->GetCamera();
+            FVector Center = Actor->GetActorLocation();
+            float kDist = 8.0f;
+            FVector Dir = Cam->GetForward();
+            if (Dir.SizeSquared() < KINDA_SMALL_NUMBER) Dir = FVector(1, 0, 0);
+            FVector Pos = Center - Dir * kDist;
+            Cam->SetActorLocation(Pos);
+        }
+        ImGui::ClearActiveID();
     }
     
     // Handle right-click context menu

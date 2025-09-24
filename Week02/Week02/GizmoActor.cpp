@@ -719,5 +719,5 @@ void AGizmoActor::UpdateConstantScreenScale(ACameraActor* Camera, FViewport* Vie
 
 void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera)
 {
-    OnDrag(Target, GizmoAxis, MouseDeltaX, MouseDeltaY, Camera);
+    OnDrag(Target, GizmoAxis, MouseDeltaX, MouseDeltaY, Camera, nullptr);
 }
