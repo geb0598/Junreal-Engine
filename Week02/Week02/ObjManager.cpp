@@ -12,20 +12,38 @@ TMap<FString, FStaticMesh*> FObjManager::ObjStaticMeshMap;
 
 void FObjManager::Preload()
 {
-    LoadObjStaticMesh("Data/tree9/trees9.obj"); // 해당 obj는 정점 수가 너무 많아서(약, 20만개 이상) 수집하는데 오래 걸림
-    LoadObjStaticMesh("Data/Cube.obj");
-    LoadObjStaticMesh("Data/Sphere.obj");
-    LoadObjStaticMesh("Data/Triangle.obj");
-    LoadObjStaticMesh("Data/Arrow.obj");
-    LoadObjStaticMesh("Data/RotationHandle.obj");
-    LoadObjStaticMesh("Data/ScaleHandle.obj");
-    //LoadObjStaticMesh("Data/car.obj");
-    LoadObjStaticMesh("Data/cube-tex.obj");
-    LoadObjStaticMesh("Data/spaceCompound.obj");
-    LoadObjStaticMesh("Data/cube_tex_blender.obj");
-    LoadObjStaticMesh("Data/pony-cartoon/Pony_cartoon.obj");
-    LoadObjStaticMesh("Data/ship/ship.obj");
-    LoadObjStaticMesh("Data/OtherTeam/cube-tex2.obj");
+    namespace fs = std::filesystem;
+    const fs::path DataDir("Data");
+
+    if (!fs::exists(DataDir) || !fs::is_directory(DataDir))
+    {
+        UE_LOG("FObjManager::Preload: Data directory not found: %s", DataDir.string().c_str());
+        return;
+    }
+
+    size_t LoadedCount = 0;
+
+    for (const auto& Entry : fs::recursive_directory_iterator(DataDir))
+    {
+        if (!Entry.is_regular_file())
+            continue;
+
+        const fs::path& Path = Entry.path();
+        std::string Extension = Path.extension().string();
+        std::transform(Extension.begin(), Extension.end(), Extension.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        if (Extension == ".obj")
+        {
+            // Data 기준 상대 경로 생성 -> "Data/<relPath>" 형태 보장
+            fs::path RelPath = fs::relative(Path, DataDir);
+            FString PathStr = "Data/" + RelPath.generic_string();
+
+            LoadObjStaticMesh(PathStr);
+            ++LoadedCount;
+        }
+    }
+
+    UE_LOG("FObjManager::Preload: Loaded %zu .obj files from %s", LoadedCount, DataDir.string().c_str());
 }
 
 void FObjManager::Clear()
@@ -55,7 +73,7 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
     // 존재하면 bin을 가져와서 FStaticMesh에 할당
     // 존재하지 않으면, 아래 과정 진행 후, bin으로 저장
     std::filesystem::path Path(PathFileName);
-    if (Path.extension() != ".obj")
+    if ((Path.extension() != ".obj") && (Path.extension() != ".OBJ"))
     {
         UE_LOG("this file is not obj!: %s", PathFileName);
         return nullptr;
