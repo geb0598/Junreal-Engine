@@ -321,6 +321,7 @@
   <ItemGroup>
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
+    <ClInclude Include="Archive.h" />
     <ClInclude Include="FViewportClient.h" />
     <ClInclude Include="MenuBarWidget.h" />
     <ClInclude Include="ObjManager.h" />
@@ -413,6 +414,8 @@
     <ClInclude Include="Vector.h" />
     <ClInclude Include="VertexData.h" />
     <ClInclude Include="FViewport.h" />
+    <ClInclude Include="WindowsBinReader.h" />
+    <ClInclude Include="WindowsBinWriter.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="UI\StatsOverlayD2D.h" />
   </ItemGroup>

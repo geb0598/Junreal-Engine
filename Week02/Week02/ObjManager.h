@@ -525,13 +525,13 @@ public:
         }
 
         // 3) 리소스 매니저에 Material 리소스 맵핑
-        for (const FObjMaterialInfo& InMaterialInfo : InMaterialInfos)
+        /*for (const FObjMaterialInfo& InMaterialInfo : InMaterialInfos)
         {
             UMaterial* Material = NewObject<UMaterial>();
             Material->SetMaterialInfo(InMaterialInfo);
 
             UResourceManager::GetInstance().Add<UMaterial>(InMaterialInfo.MaterialName, Material);
-        }
+        }*/
 
         // 4) GroupInfo 정보 설정
         for (uint32 i = 0; i < NumGroup; ++i)
