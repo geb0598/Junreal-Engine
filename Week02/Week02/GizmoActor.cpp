@@ -159,7 +159,7 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) {
 	URenderer* Renderer = GetWorld()->GetRenderer();
 	if (!USelectionManager::GetInstance().HasSelection()) return;
 	FMatrix ViewMatrix = Camera->GetViewMatrix();
-	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio);
+	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 	FMatrix ModelMatrix;
 	FVector rgb(1.0f, 1.0f, 1.0f);
 	FVector2D ViewportSize(static_cast<float>(Viewport->GetSizeX()), static_cast<float>(Viewport->GetSizeY()));
@@ -586,7 +586,7 @@ void AGizmoActor::ProcessGizmoHovering(ACameraActor* Camera,FViewport* Viewport 
 	FVector2D ViewportMousePos(static_cast<float>(MousePositionX) + ViewportOffset.X,
 		static_cast<float>(MousePositionY) + ViewportOffset.Y);
 	if(!bIsDragging)
-	GizmoAxis = CPickingSystem::IsHoveringGizmoForViewport(this, Camera, ViewportMousePos, ViewportSize, ViewportOffset);
+	GizmoAxis = CPickingSystem::IsHoveringGizmoForViewport(this, Camera, ViewportMousePos, ViewportSize, ViewportOffset, Viewport);
 
 	if (GizmoAxis > 0)//기즈모 축이 0이상이라면 선택 된것 
 	{
