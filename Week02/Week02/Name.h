@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include"UEContainer.h"
 // ──────────────────────────────
 // FNameEntry & Pool
@@ -22,6 +23,7 @@ public:
 
 private:
     static TArray<FNameEntry> Entries; // 정의는 Name.cpp
+    static std::unordered_map<FString, uint32> NameMap; // 빠른 검색용
 };
 
 // ──────────────────────────────

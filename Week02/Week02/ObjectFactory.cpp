@@ -31,22 +31,21 @@ namespace ObjectFactory
 
         // 배열에 등록: 빈 슬롯 재사용
         int32 idx = -1;
-        for (int32 i = 0; i < GUObjectArray.Num(); ++i)
-        {
-            if (GUObjectArray[i] == nullptr)
-            {
+      /*  GUObjectArray.Num();
+     
+            
                 idx = i;
                 break;
-            }
-        }
-        if (idx >= 0)
+            
+        }*/
+        /*if (idx >= 0)
         {
             GUObjectArray[idx] = Obj;
         }
         else
-        {
+        {*/
             idx = GUObjectArray.Add(Obj);
-        }
+        //}
         Obj->InternalIndex = static_cast<uint32>(idx);
 
         static TMap<UClass*, int> NameCounters;
