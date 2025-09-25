@@ -412,11 +412,15 @@ void D3D11RHI::CreateDeviceAndSwapChain(HWND hWindow)
     swapchaindesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // 스왑 방식
 
     // Direct3D 장치와 스왑 체인을 생성
-    D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_DEBUG,
+    UINT createDeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+#ifdef _DEBUG
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
+        createDeviceFlags,
         featurelevels, ARRAYSIZE(featurelevels), D3D11_SDK_VERSION,
         &swapchaindesc, &SwapChain, &Device, nullptr, &DeviceContext);
-
     // 생성된 스왑 체인의 정보 가져오기
     SwapChain->GetDesc(&swapchaindesc);
 
