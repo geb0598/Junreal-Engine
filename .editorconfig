@@ -1,10 +1,10 @@
 root = true
 
-# °øÅë ±âº» ±ÔÄ¢
+# ê³µí†µ ê¸°ë³¸ ê·œì¹™
 [*]
-charset = utf-8          # ±âº»: BOM ¾ø´Â UTF-8
+charset = utf-8          # ê¸°ë³¸: BOM ì—†ëŠ” UTF-8
 
-# C/C++ ¼Ò½º/Çì´õ¸¸ BOM °­Á¦
+# C/C++ ì†ŒìŠ¤/í—¤ë”ë§Œ BOM ê°•ì œ
 [*.cpp]
 charset = utf-8-bom
 
