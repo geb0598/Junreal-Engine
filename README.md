@@ -10,6 +10,7 @@
 ## 아키텍처: C++ 기반 Actor-Component 시스템
 <img width="1911" height="1104" alt="image" src="https://github.com/user-attachments/assets/2aa029db-2fca-451d-aeaf-607d3256ccee" />
 
+https://drive.google.com/file/d/1bAa-ZufdUz7_mbSy236LDdI_DdKsFZ1b/view?usp=drive_link
 
 ## 🚀 구현 완료 사항
 ### 🎨 1. Editor & Rendering System (눈에 보이는 세상)
@@ -181,7 +182,7 @@ Show Flag 실시간 제어
 # Week04 프로젝트 보고서
 
 # Week04 프로젝트 - UE 스타일 3D 에디터 구현
-
+https://drive.google.com/file/d/1bAa-ZufdUz7_mbSy236LDdI_DdKsFZ1b/view?usp=drive_link
 ## 개요
 
 이 프로젝트는 Unreal Engine 4의 에디터 구조를 모방하여 구현한 3D 렌더링 엔진 및 에디터입니다. DirectX 11을 기반으로 하며, 정적 메시 렌더링, 다중 뷰포트, 오브젝트 관리 시스템 등의 핵심 기능들을 구현했습니다.
