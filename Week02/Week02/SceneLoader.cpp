@@ -7,34 +7,48 @@
 static bool ParsePerspectiveCamera(const JSON& Root, FPerspectiveCameraData& OutCam)
 {
     if (!Root.hasKey("PerspectiveCamera"))
-    {
         return false;
-    }
 
     const JSON& Cam = Root.at("PerspectiveCamera");
 
-    // 벡터들
-    if (Cam.hasKey("Location"))
-    {
-        auto loc = Cam.at("Location");
-        OutCam.Location = FVector(
-            (float)loc[0].ToFloat(),
-            (float)loc[1].ToFloat(),
-            (float)loc[2].ToFloat());
-    }
-    if (Cam.hasKey("Rotation"))
-    {
-        auto rot = Cam.at("Rotation");
-        OutCam.Rotation = FVector(
-            (float)rot[0].ToFloat(),
-            (float)rot[1].ToFloat(),
-            (float)rot[2].ToFloat());
-    }
+    // 배열형 벡터(Location, Rotation) 파싱 (스칼라 실패 시 무시)
+    auto readVec3 = [](JSON arr, FVector& outVec)
+        {
+            try
+            {
+                outVec = FVector(
+                    (float)arr[0].ToFloat(),
+                    (float)arr[1].ToFloat(),
+                    (float)arr[2].ToFloat());
+            }
+            catch (...) {} // 실패 시 기본값 유지
+        };
 
-    // 스칼라들
-    if (Cam.hasKey("FOV"))      OutCam.FOV = (float)Cam.at("FOV").ToFloat();
-    if (Cam.hasKey("NearClip")) OutCam.NearClip = (float)Cam.at("NearClip").ToFloat();
-    if (Cam.hasKey("FarClip"))  OutCam.FarClip = (float)Cam.at("FarClip").ToFloat();
+    if (Cam.hasKey("Location"))
+        readVec3(Cam.at("Location"), OutCam.Location);
+    if (Cam.hasKey("Rotation"))
+        readVec3(Cam.at("Rotation"), OutCam.Rotation);
+
+    // 스칼라 또는 [스칼라] 모두 허용
+    auto readScalarFlexible = [](const JSON& parent, const char* key, float& outVal)
+        {
+            if (!parent.hasKey(key)) return;
+            const JSON& node = parent.at(key);
+            try
+            {
+                // 배열 형태 시도 (예: "FOV": [60.0])
+                outVal = (float)node.at(0).ToFloat();
+            }
+            catch (...)
+            {
+                // 스칼라 (예: "FOV": 60.0)
+                outVal = (float)node.ToFloat();
+            }
+        };
+
+    readScalarFlexible(Cam, "FOV", OutCam.FOV);
+    readScalarFlexible(Cam, "NearClip", OutCam.NearClip);
+    readScalarFlexible(Cam, "FarClip", OutCam.FarClip);
 
     return true;
 }
