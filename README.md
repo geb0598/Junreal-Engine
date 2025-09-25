@@ -35,6 +35,7 @@ Alpha Testing 기반 텍스트 윤곽 처리
 
 #### 1.2 Batch Line 렌더링 시스템
 
+
 파일: ShaderLine.hlsl
 
 기능
@@ -184,7 +185,7 @@ Show Flag 실시간 제어
 ## 개요
 
 이 프로젝트는 Unreal Engine 4의 에디터 구조를 모방하여 구현한 3D 렌더링 엔진 및 에디터입니다. DirectX 11을 기반으로 하며, 정적 메시 렌더링, 다중 뷰포트, 오브젝트 관리 시스템 등의 핵심 기능들을 구현했습니다.
-
+![Adobe Express - 제목 없는 비디오 - Clipchamp로 제작 (2)](https://github.com/user-attachments/assets/1af2b319-b0ae-41eb-9b94-4a9697a79b8b)
 ## 주요 특징
 
 ### 🎮 정적 메시 (Static Mesh) 시스템
