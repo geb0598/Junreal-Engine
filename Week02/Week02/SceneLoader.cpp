@@ -93,29 +93,26 @@ TArray<FPrimitiveData> FSceneLoader::Load(const FString& FileName, FPerspectiveC
 
 void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspectiveCameraData* InCameraData, const FString& SceneName)
 {
-    // 상단 메타 정보
     uint32 NextUUID = UObject::PeekNextUUID();
 
-    // 파일 경로 구성: SceneName이 디렉터리를 포함하지 않으면 "Scene/"를 붙임
     namespace fs = std::filesystem;
     fs::path outPath(SceneName);
-
     if (!outPath.has_parent_path())
-    {
-        outPath = fs::path("Scene") / outPath; // Scene/Name
-    }
-
-    // 확장자 보정(.Scene)
+        outPath = fs::path("Scene") / outPath;
     if (outPath.extension().string() != ".Scene")
-    {
         outPath.replace_extension(".Scene");
-    }
-
-    // 상위 디렉터리 생성 보장
     std::error_code ec;
     fs::create_directories(outPath.parent_path(), ec);
 
-    // 수동 직렬화로 키 순서를 고정
+    auto NormalizePath = [](FString Path) -> FString
+        {
+            for (auto& ch : Path)
+            {
+                if (ch == '\\') ch = '/';
+            }
+            return Path;
+        };
+
     std::ostringstream oss;
     oss.setf(std::ios::fixed);
     oss << std::setprecision(6);
@@ -123,46 +120,47 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspecti
     auto writeVec3 = [&](const char* name, const FVector& v, int indent)
         {
             std::string tabs(indent, ' ');
-            oss << tabs << "\"" << name << "\": [ "
-                << v.X << ", " << v.Y << ", " << v.Z << " ]";
+            oss << tabs << "\"" << name << "\" : [" << v.X << ", " << v.Y << ", " << v.Z << "]";
         };
 
     oss << "{\n";
-    oss << "  \"Version\": 1,\n";
-    oss << "  \"NextUUID\": " << NextUUID << ",\n";
+    oss << "  \"Version\" : 1,\n";
+    oss << "  \"NextUUID\" : " << NextUUID;
 
-    // Primitives
-    oss << "  \"Primitives\": {\n";
+    bool bHasCamera = (InCameraData != nullptr);
+
+    if (bHasCamera)
+    {
+        oss << ",\n";
+        oss << "  \"PerspectiveCamera\" : {\n";
+        // 순서: FOV, FarClip, Location, NearClip, Rotation (FOV/Clip들은 단일 요소 배열)
+        oss << "    \"FOV\" : [" << InCameraData->FOV << "],\n";
+        oss << "    \"FarClip\" : [" << InCameraData->FarClip << "],\n";
+        writeVec3("Location", InCameraData->Location, 4); oss << ",\n";
+        oss << "    \"NearClip\" : [" << InCameraData->NearClip << "],\n";
+        writeVec3("Rotation", InCameraData->Rotation, 4); oss << "\n";
+        oss << "  }";
+    }
+
+    // Primitives 블록
+    oss << (bHasCamera ? ",\n" : ",\n"); // 카메라 없더라도 컴마 후 줄바꿈
+    oss << "  \"Primitives\" : {\n";
     for (size_t i = 0; i < InPrimitiveData.size(); ++i)
     {
         const FPrimitiveData& Data = InPrimitiveData[i];
-        oss << "    \"" << Data.UUID << "\": {\n";
-        oss << "      \"ObjStaticMeshAsset\": " << "\"" << Data.ObjStaticMeshAsset << "\",\n";
+        oss << "    \"" << Data.UUID << "\" : {\n";
+        // 순서: Location, ObjStaticMeshAsset, Rotation, Scale, Type
         writeVec3("Location", Data.Location, 6); oss << ",\n";
+
+        FString AssetPath = NormalizePath(Data.ObjStaticMeshAsset);
+        oss << "      \"ObjStaticMeshAsset\" : " << "\"" << AssetPath << "\",\n";
+
         writeVec3("Rotation", Data.Rotation, 6); oss << ",\n";
         writeVec3("Scale", Data.Scale, 6); oss << ",\n";
-        oss << "      \"Type\": " << "\"" << Data.Type << "\"\n";
+        oss << "      \"Type\" : " << "\"" << Data.Type << "\"\n";
         oss << "    }" << (i + 1 < InPrimitiveData.size() ? "," : "") << "\n";
     }
-    oss << "  }";
-
-    // PerspectiveCamera
-    if (InCameraData)
-    {
-        oss << ",\n";
-        oss << "  \"PerspectiveCamera\": {\n";
-        writeVec3("Location", InCameraData->Location, 4); oss << ",\n";
-        writeVec3("Rotation", InCameraData->Rotation, 4); oss << ",\n";
-        oss << "    \"FOV\": " << InCameraData->FOV << ",\n";
-        oss << "    \"NearClip\": " << InCameraData->NearClip << ",\n";
-        oss << "    \"FarClip\": " << InCameraData->FarClip << "\n";
-        oss << "  }\n";
-    }
-    else
-    {
-        oss << "\n";
-    }
-
+    oss << "  }\n";
     oss << "}\n";
 
     const std::string finalPath = outPath.make_preferred().string();
@@ -174,7 +172,7 @@ void FSceneLoader::Save(TArray<FPrimitiveData> InPrimitiveData, const FPerspecti
     }
     else
     {
-        std::cerr << "Scene save failed. Cannot open file: " << finalPath << std::endl;
+        UE_LOG("Scene save failed. Cannot open file: %s", finalPath.c_str());
     }
 }
 
