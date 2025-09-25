@@ -442,8 +442,7 @@ gmae.ini
 
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,c++
-Week02/Week02/ClassDiagram.cd
 
-Week02/Week02/editor.ini
-
-Week02/Week02/Scene/
+ClassDiagram.cd
+editor.ini
+Scene/

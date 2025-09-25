@@ -22,9 +22,6 @@
     <Filter Include="헤더 파일\Math">
       <UniqueIdentifier>{d0befaf2-bbd6-4030-a2d7-9e6f76b53ca5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NewFilter1">
-      <UniqueIdentifier>{7ea767ae-ff07-45a3-b36a-0e754b719199}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Renderer">
       <UniqueIdentifier>{1e1b6323-1900-4342-80aa-1e8764e95ab2}</UniqueIdentifier>
     </Filter>
