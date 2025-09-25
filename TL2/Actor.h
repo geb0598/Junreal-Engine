@@ -11,7 +11,7 @@ class AActor : public UObject
 {
 public:
     DECLARE_CLASS(AActor, UObject)
-    AActor();
+    AActor(); 
 
 protected:
     ~AActor() override;

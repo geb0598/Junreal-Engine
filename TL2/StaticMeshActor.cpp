@@ -17,6 +17,7 @@ AStaticMeshActor::AStaticMeshActor()
 
 void AStaticMeshActor::Tick(float DeltaTime)
 {
+    if(bIsPicked)
     CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
 }
 

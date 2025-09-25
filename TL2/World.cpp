@@ -319,12 +319,17 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 				if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
 					if (!ActorComp->IsActive()) continue;
 
-				if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+				/*if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
 					continue;
 
 				if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-					continue;
+					continue;*/
 
+					if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+						continue;
+
+					if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+						continue;
 				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
 				{
 					Renderer->SetViewModeType(ViewModeIndex);
