@@ -10,14 +10,14 @@ AStaticMeshActor::AStaticMeshActor()
     AddComponent(StaticMeshComponent);
     StaticMeshComponent->SetupAttachment(RootComponent);
 
-    CollisionComponent = CreateDefaultSubobject<UAABoundingBoxComponent>(FName("CollisionBox"));
-    AddComponent(CollisionComponent);
-	CollisionComponent->SetupAttachment(RootComponent);
+ //   CollisionComponent = CreateDefaultSubobject<UAABoundingBoxComponent>(FName("CollisionBox"));
+ //   AddComponent(CollisionComponent);
+	//CollisionComponent->SetupAttachment(RootComponent);
 }
 
 void AStaticMeshActor::Tick(float DeltaTime)
 {
-    if(bIsPicked)
+    if(bIsPicked&& CollisionComponent)
     CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
 }
 
@@ -37,6 +37,9 @@ void AStaticMeshActor::SetStaticMeshComponent(UStaticMeshComponent* InStaticMesh
 
 void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
 {
+    if (!CollisionComponent) {
+        return;
+    }
     CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
     CollisionComponent->SetPrimitiveType(InType);
 }

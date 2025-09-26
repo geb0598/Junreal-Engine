@@ -26,9 +26,9 @@ void SControlPanel::OnRender()
 
     if (ImGui::Begin("Control", nullptr, flags))
     {
-        if (SceneWindow) {
+       /* if (SceneWindow) {
             SceneWindow->RenderWidget();
-        }
+        }*/
         if (ControlPanelWidget)
             ControlPanelWidget->RenderWidget();
     }
