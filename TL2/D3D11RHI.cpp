@@ -251,8 +251,40 @@ HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mes
 //이거 두개를 나눔
 void D3D11RHI::UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
+   
+    UpdateModelConstantBuffers(ModelMatrix);
+   
+    UpdateViewConstantBuffers(ViewMatrix, ProjMatrix);
+    
+ 
+}
+
+void D3D11RHI::UpdateViewConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
+{
+    static FMatrix LastViewMatrix;
+    static FMatrix LastProjectionMatrix;
+    if (LastViewMatrix != ViewMatrix || LastProjectionMatrix != ProjMatrix)
+    {
+        LastViewMatrix = ViewMatrix;
+        LastProjectionMatrix = ProjMatrix;
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        DeviceContext->Map(ViewProjCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+        auto* dataPtr = reinterpret_cast<ViewProjBufferType*>(mapped.pData);
+
+        dataPtr->View = ViewMatrix;
+        dataPtr->Proj = ProjMatrix;
+
+        DeviceContext->Unmap(ViewProjCB, 0);
+        DeviceContext->VSSetConstantBuffers(1, 1, &ViewProjCB); // b1 슬롯
+       
+    }
+}
+
+void D3D11RHI::UpdateModelConstantBuffers(const FMatrix& ModelMatrix)
+{
     // b0 : 모델 행렬
     {
+
         D3D11_MAPPED_SUBRESOURCE mapped;
         DeviceContext->Map(ModelCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
         auto* dataPtr = reinterpret_cast<ModelBufferType*>(mapped.pData);
@@ -263,24 +295,12 @@ void D3D11RHI::UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& 
         DeviceContext->Unmap(ModelCB, 0);
         DeviceContext->VSSetConstantBuffers(0, 1, &ModelCB); // b0 슬롯
     }
-
-    // b1 : 뷰/프로젝션 행렬
-    {
-        D3D11_MAPPED_SUBRESOURCE mapped;
-        DeviceContext->Map(ViewProjCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-        auto* dataPtr = reinterpret_cast<ViewProjBufferType*>(mapped.pData);
-
-        dataPtr->View = ViewMatrix;
-        dataPtr->Proj = ProjMatrix;
-
-        DeviceContext->Unmap(ViewProjCB, 0);
-        DeviceContext->VSSetConstantBuffers(1, 1, &ViewProjCB); // b1 슬롯
-    }
 }
 
 void D3D11RHI::UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix,
     const FVector& CameraRight, const FVector& CameraUp)
 {
+    
     D3D11_MAPPED_SUBRESOURCE mapped;
     DeviceContext->Map(BillboardCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
     auto* dataPtr = reinterpret_cast<BillboardBufferType*>(mapped.pData);
@@ -391,7 +411,7 @@ void D3D11RHI::Present()
 {
     // Draw any Direct2D overlays before present
     UStatsOverlayD2D::Get().Draw();
-    SwapChain->Present(1, 0); // vsync on
+    SwapChain->Present(0, 0); // vsync on
 }
 
 void D3D11RHI::CreateDeviceAndSwapChain(HWND hWindow)

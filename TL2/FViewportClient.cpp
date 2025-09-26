@@ -72,6 +72,7 @@ void FViewportClient::Draw(FViewport* Viewport)
         {
             World->SetViewModeIndex(ViewModeIndex);
             World->RenderViewports(Camera, Viewport);
+            
             World->GetGizmoActor()->Render(Camera, Viewport);
         }
         break;

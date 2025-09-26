@@ -44,6 +44,8 @@ public:
 
 
     void UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
+    void UpdateViewConstantBuffers( const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) ;
+    void UpdateModelConstantBuffers(const FMatrix& ModelMatrix) ;
     void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp) override;
     void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture) override;
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
@@ -140,6 +142,8 @@ private:
     ID3D11Buffer* ConstantBuffer{};
 
     ID3D11SamplerState* DefaultSamplerState = nullptr;
+
+    
 };
 
 

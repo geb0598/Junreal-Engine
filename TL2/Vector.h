@@ -503,7 +503,26 @@ struct alignas(16) FMatrix
             0, 0, 0, 1
         );
     }
+    // 행렬 == 행렬
+    bool operator==(const FMatrix& B) const noexcept
+    {
+        const FMatrix& A = *this;
+        for (uint8 i = 0; i < 4; ++i)
+        {
+            for (uint8 j = 0; j < 4; ++j)
+            {
+                if (A.M[i][j] != B.M[i][j])
+                    return false;
+            }
+        }
+        return true;
+    }
 
+    // 행렬 != 행렬
+    bool operator!=(const FMatrix& B) const noexcept
+    {
+        return !(*this == B);
+    }
     // 행렬 * 행렬
     FMatrix operator*(const FMatrix& B) const
     {

@@ -329,7 +329,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 				{
 					Renderer->SetViewModeType(ViewModeIndex);
 					Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-					Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+				//	Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
 				}
 			}
 			Renderer->OMSetBlendState(false);

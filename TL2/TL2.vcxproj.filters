@@ -109,6 +109,9 @@
     <Filter Include="헤더 파일\Archive">
       <UniqueIdentifier>{163f80df-d568-4e63-8d7a-c54997ff9fd1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Algorithm">
+      <UniqueIdentifier>{bfcb552f-1833-4310-b4dc-832e9c533166}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -376,6 +379,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="MenuBarWidget.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SpatialDataStructure.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Octree.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -693,6 +702,12 @@
     </ClInclude>
     <ClInclude Include="WindowsBinReader.h">
       <Filter>헤더 파일\Archive</Filter>
+    </ClInclude>
+    <ClInclude Include="SpatialDataStructure.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Octree.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
