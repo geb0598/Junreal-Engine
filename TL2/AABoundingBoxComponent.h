@@ -9,6 +9,29 @@ struct FBound
 
     FBound() : Min(FVector()), Max(FVector()) {}
     FBound(const FVector& InMin, const FVector& InMax) : Min(InMin), Max(InMax) {}
+
+    // 센터 반환
+    FVector GetCenter() const
+    {
+        return (Min + Max) * 0.5f;
+    }
+    // 박스의 절반 크기
+    FVector GetExtent() const
+    {
+        return (Max - Min) * 0.5f;
+    }
+    bool IsInside(const FVector& Point) const
+    {
+        return (Point.X >= Min.X && Point.X <= Max.X &&
+            Point.Y >= Min.Y && Point.Y <= Max.Y &&
+            Point.Z >= Min.Z && Point.Z <= Max.Z);
+    }
+    bool IsIntersect(const FBox& Other) const
+    {
+        return (Min.X <= Other.Max.X && Max.X >= Other.Min.X &&
+            Min.Y <= Other.Max.Y && Max.Y >= Other.Min.Y &&
+            Min.Z <= Other.Max.Z && Max.Z >= Other.Min.Z);
+    }
 };
 
 class ULine;
