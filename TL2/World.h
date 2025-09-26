@@ -19,7 +19,7 @@ class SMultiViewportWindow;
 struct FTransform;
 struct FPrimitiveData;
 class SViewportWindow;
-
+class UOctree;
 /**
  * UWorld
  * - 월드 단위의 액터/타임/매니저 관리 클래스
@@ -41,6 +41,9 @@ public:
     void InitializeMainCamera();
     void InitializeGrid();
     void InitializeGizmo();
+    void InitializeSceneGraph();
+
+    void RenderSceneGraph();
     
     // 액터 인터페이스 관리
     void SetupActorReferences();
@@ -156,6 +159,8 @@ private:
     EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled;
     
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
+
+    UOctree* Octree;
 };
 template<class T>
 inline T* UWorld::SpawnActor()

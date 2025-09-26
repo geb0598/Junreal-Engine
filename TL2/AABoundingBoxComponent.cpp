@@ -2,6 +2,7 @@
 #include "AABoundingBoxComponent.h"
 #include "SelectionManager.h"
 #include "Line.h"   
+#include"OBoundingBoxComponent.h"
 
 UAABoundingBoxComponent::UAABoundingBoxComponent()
     : LocalMin(FVector{}), LocalMax(FVector{})
@@ -35,6 +36,12 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FNormalVertex>& Verts
     }
 }
 
+void UAABoundingBoxComponent::SetMinMax(const FBox& Box)
+{
+    LocalMin = Box.Min;
+    LocalMax = Box.Max;
+}
+
 void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
     if (USelectionManager::GetInstance().GetSelectedActor() == GetOwner())
@@ -53,7 +60,10 @@ FBound UAABoundingBoxComponent::GetWorldBoundFromCube() const
 {
     auto corners = GetLocalCorners();
 
-    FMatrix WorldMat = GetOwner()->GetWorldMatrix();
+    FMatrix WorldMat=FMatrix::Identity();
+    if (GetOwner()) {
+        WorldMat = GetOwner()->GetWorldMatrix();
+    }
     FVector4 MinW = corners[0] * WorldMat;
     FVector4 MaxW = MinW;
 

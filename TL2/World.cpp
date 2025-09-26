@@ -14,6 +14,7 @@
 #include "StaticMesh.h"
 #include "ObjManager.h"
 #include "SceneRotationUtils.h"
+#include "Octree.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -109,6 +110,7 @@ void UWorld::Initialize()
 	InitializeMainCamera();
 	InitializeGrid();
 	InitializeGizmo();
+	InitializeSceneGraph();
 
 	// 액터 간 참조 설정
 	SetupActorReferences();
@@ -152,6 +154,16 @@ void UWorld::InitializeGizmo()
 	UIManager.SetGizmoActor(GizmoActor);
 }
 
+void UWorld::InitializeSceneGraph()
+{
+	Octree = NewObject<UOctree>();
+	Octree->Initialize(FBox({ 0,0,0 }, { 100,100,100 }));
+}
+
+void UWorld::RenderSceneGraph() {
+	Octree->Render(nullptr);
+}
+
 void UWorld::SetRenderer(URenderer* InRenderer)
 {
 	Renderer = InRenderer;
@@ -177,107 +189,108 @@ void UWorld::Render()
 	Renderer->EndFrame();
 }
 
-void UWorld::RenderSingleViewport()
-{
-	FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
-	FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
-	FMatrix ModelMatrix;
-	FVector rgb(1.0f, 1.0f, 1.0f);
-
-	if (!Renderer) return;
-	// === Begin Frame ===
-	Renderer->BeginFrame();
-
-	// === Begin Line Batch for all actors ===
-	Renderer->BeginLineBatch();
-
-	// === Draw Actors with Show Flag checks ===
-	Renderer->SetViewModeType(ViewModeIndex);
-
-	// 일반 액터들 렌더링 (Primitives Show Flag 체크)
-	if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-	{
-		for (AActor* Actor : Actors)
-		{
-			if (!Actor) continue;
-			if (Actor->GetActorHiddenInGame()) continue;
-
-			// StaticMesh Show Flag 체크
-			if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
-				continue;
-
-			bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-			if (bIsSelected) {
-				Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-			}
-			Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-
-			for (USceneComponent* Component : Actor->GetComponents())
-			{
-				if (!Component) continue;
-
-				if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-				{
-					if (!ActorComp->IsActive()) continue;
-				}
-
-				// Text Render Component Show Flag 체크
-				if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
-					continue;
-
-				// Bounding Box Show Flag 체크  
-				if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-					continue;
-
-				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-				{
-					Renderer->SetViewModeType(ViewModeIndex);
-					Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-					Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-				}
-			}
-			// 블랜드 스테이드 종료
-			Renderer->OMSetBlendState(false);
-		}
-	}
-
-	// Engine Actors (그리드 등) 렌더링
-	for (AActor* EngineActor : EngineActors)
-	{
-		if (!EngineActor) continue;
-		if (EngineActor->GetActorHiddenInGame()) continue;
-
-		// Grid Show Flag 체크
-		if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
-			continue;
-
-		for (USceneComponent* Component : EngineActor->GetComponents())
-		{
-			if (!Component) continue;
-
-			if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-			{
-				if (!ActorComp->IsActive()) continue;
-			}
-			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-			{
-				Renderer->SetViewModeType(ViewModeIndex);
-				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-				Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-			}
-		}
-		// 블랜드 스테이드 종료
-		Renderer->OMSetBlendState(false);
-	}
-	Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
-
-
-
-	Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
-	UIManager.Render();
-	// === End Frame ===
-	Renderer->EndFrame();
-}
+//void UWorld::RenderSingleViewport()
+//{
+//	FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
+//	FMatrix ProjectionMatrix = MainCameraActor->GetProjectionMatrix();
+//	FMatrix ModelMatrix;
+//	FVector rgb(1.0f, 1.0f, 1.0f);
+//
+//	if (!Renderer) return;
+//	// === Begin Frame ===
+//	Renderer->BeginFrame();
+//
+//	// === Begin Line Batch for all actors ===
+//	Renderer->BeginLineBatch();
+//
+//	// === Draw Actors with Show Flag checks ===
+//	Renderer->SetViewModeType(ViewModeIndex);
+//
+//	// 일반 액터들 렌더링 (Primitives Show Flag 체크)
+//	if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+//	{
+//		for (AActor* Actor : Actors)
+//		{
+//			if (!Actor) continue;
+//			if (Actor->GetActorHiddenInGame()) continue;
+//
+//			// StaticMesh Show Flag 체크
+//			if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+//				continue;
+//
+//			bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+//			if (bIsSelected) {
+//				Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+//			}
+//			Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+//
+//			for (USceneComponent* Component : Actor->GetComponents())
+//			{
+//				if (!Component) continue;
+//
+//				if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+//				{
+//					if (!ActorComp->IsActive()) continue;
+//				}
+//
+//				// Text Render Component Show Flag 체크
+//				if (Cast<UTextRenderComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+//					continue;
+//
+//				// Bounding Box Show Flag 체크  
+//				if (Cast<UAABoundingBoxComponent>(Component) && !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+//					continue;
+//
+//				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+//				{
+//					Renderer->SetViewModeType(ViewModeIndex);
+//					Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+//					Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+//				}
+//			}
+//			// 블랜드 스테이드 종료
+//			Renderer->OMSetBlendState(false);
+//		}
+//	}
+//
+//	// Engine Actors (그리드 등) 렌더링
+//	for (AActor* EngineActor : EngineActors)
+//	{
+//		if (!EngineActor) continue;
+//		if (EngineActor->GetActorHiddenInGame()) continue;
+//
+//		// Grid Show Flag 체크
+//		if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+//			continue;
+//
+//		for (USceneComponent* Component : EngineActor->GetComponents())
+//		{
+//			if (!Component) continue;
+//
+//			if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+//			{
+//				if (!ActorComp->IsActive()) continue;
+//			}
+//			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+//			{
+//				Renderer->SetViewModeType(ViewModeIndex);
+//				Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+//				Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+//			}
+//		}
+//		// 블랜드 스테이드 종료
+//		Renderer->OMSetBlendState(false);
+//	}
+//
+//	Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+//
+//
+//
+//	Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
+//	UIManager.Render();
+//	// === End Frame ===
+//	Renderer->EndFrame();
+//}
 
 void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 {
@@ -359,7 +372,9 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 			}
 		}
 		Renderer->OMSetBlendState(false);
+
 	}
+	RenderSceneGraph();
 
 	Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 

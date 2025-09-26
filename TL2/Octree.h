@@ -1,16 +1,21 @@
 ﻿#pragma once
 #include "Object.h"
 #include"OBoundingBoxComponent.h"
+#include"AABoundingBoxComponent.h"
 
 struct FOctreeNode
 {
     FBox Bounds;                       // 이 노드의 공간 범위
     TArray<AActor*> Actors;            // 이 범위 안의 Actor들
     FOctreeNode* Children[8] = { nullptr }; // 자식 노드 (최대 8개)
+    
+    UAABoundingBoxComponent* AABoundingBoxComponent;
 
     FOctreeNode(const FBox& InBounds)
         : Bounds(InBounds)
     {
+        AABoundingBoxComponent = NewObject<UAABoundingBoxComponent>();
+        AABoundingBoxComponent->SetMinMax(Bounds);
     }
 };
 
@@ -29,6 +34,7 @@ public:
     // 레이 기반 Actor 검색
     void Query(const FRay& Ray, TArray<AActor*>& OutActors) const;
 
+    void Render(FOctreeNode* Root);
     // 전체 정리
     void Release();
 

@@ -71,7 +71,19 @@ void UOctree::Query(const FRay& Ray, TArray<AActor*>& OutActors) const
 {
     QueryRecursive(Ray, Root, OutActors);
 }
-
+void UOctree::Render(FOctreeNode* ParentNode) {
+    if (ParentNode) {
+        ParentNode->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
+    }
+    else {
+        Root->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
+    }
+    for (auto ChildNode : Root->Children) {
+        if (ChildNode) {
+            Render(ChildNode);
+        }
+    }
+}
 void UOctree::QueryRecursive(const FRay& Ray, FOctreeNode* Node, TArray<AActor*>& OutActors) const
 {
     if (!Node) return;
