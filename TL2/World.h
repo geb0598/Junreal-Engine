@@ -112,6 +112,7 @@ public:
     AGizmoActor* GetGizmoActor();
     AGridActor* GetGridActor() { return GridActor; }
 
+    UOctree* GetOctree() { return Octree; }
     
 
     

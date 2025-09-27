@@ -20,6 +20,8 @@
 #include"stdio.h"
 #include "AABoundingBoxComponent.h"
 #include "PickingTimer.h"
+#include "Octree.h"
+
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
 {
@@ -222,18 +224,19 @@ bool IntersectRayTriangleMT(const FRay& InRay,
     return false;
 }
 
-// slab method - check intersect between Ray and AABB
+// slab method - check intersect between Ray and AABB - 미완성
 bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
 {
-    float TMin = -FLT_MAX;
-    float TMax = FLT_MAX;
+  
+    //float TMin = -FLT_MAX;
+    //float TMax = FLT_MAX;
 
-    FVector p = InBound.GetCenter() - InRay.Origin;
-    // OBB 세 로컬 축(u,v,w)에 대해 test 수행
-    for (int i = 0;i < 3;++i)
-    {
-        //float e = InBound.
-    }
+    //FVector p = InBound.GetCenter() - InRay.Origin;
+    //// OBB 세 로컬 축(u,v,w)에 대해 test 수행
+    //for (int i = 0;i < 3;++i)
+    //{
+    //    //float e = InBound.
+    //}
 
     //// X축 슬랩(Slab)과의 교차 시간 계산
     //if (abs(InRay.Direction.X) < KINDA_SMALL_NUMBER) // 레이가 X축과 평행한 경우
@@ -289,7 +292,7 @@ bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
     //}
 
     //return bIntersects;
-    return 0;
+    return true;
 }
 
 
@@ -443,10 +446,29 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     int pickedIndex = -1;
     float pickedT = 1e9f;
 
-    // 모든 액터에 대해 피킹 테스트
-    for (int i = 0; i < Actors.Num(); ++i)
+    TArray<AActor*> CandidateActors;
+    UOctree* Octree = UWorld::GetInstance().GetOctree();
+    if (Octree)
     {
-        AActor* Actor = Actors[i];
+        Octree->Query(ray, CandidateActors);
+
+        if (CandidateActors.Num() == 0)
+        {
+            UE_LOG("[Optimized Pick] No Candidate found by Octree\n");
+            return nullptr;
+        }
+    }
+    else
+    {
+        // 옥트리가 없다면 모든 액터를 검사하게 됨
+        CandidateActors = Actors;
+    }
+   
+
+    // 후보군 액터에 대해 피킹 테스트
+    for (int i = 0; i < CandidateActors.Num(); ++i)
+    {
+        AActor* Actor = CandidateActors[i];
         if (!Actor) continue;
 
         // Skip hidden actors for picking
@@ -471,7 +493,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
         char buf[256];
         sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
         UE_LOG(buf);
-        return Actors[pickedIndex];
+        return CandidateActors[pickedIndex];
     }
     else
     {

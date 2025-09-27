@@ -119,10 +119,15 @@ void UOctree::QueryRecursive(const FRay& Ray, FOctreeNode* Node, TArray<AActor*>
 
     // 레이-박스 교차 검사
     // 충돌하지 않았으면 자식 노드를 살펴볼 필요 X
-    if (!IntersectRayBound(Ray, Node->Bounds))
+    float distance;
+    if (!Node->Bounds.RayIntersects(Ray.Origin, Ray.Direction, distance))
     {
         return;
     }
+    /*if (!IntersectRayBound(Ray, Node->Bounds))
+    {
+        return;
+    }*/
 
     // Leaf Node일 경우에만 Actor 추가
     if (Node->IsLeafNode())
