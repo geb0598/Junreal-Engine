@@ -36,10 +36,10 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FNormalVertex>& Verts
     }
 }
 
-void UAABoundingBoxComponent::SetMinMax(const FBox& Box)
+void UAABoundingBoxComponent::SetMinMax(const FBound& Bound)
 {
-    LocalMin = Box.Min;
-    LocalMax = Box.Max;
+    LocalMin = Bound.Min;
+    LocalMax = Bound.Max;
 }
 
 void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)

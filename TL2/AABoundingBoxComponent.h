@@ -26,7 +26,7 @@ struct FBound
             Point.Y >= Min.Y && Point.Y <= Max.Y &&
             Point.Z >= Min.Z && Point.Z <= Max.Z);
     }
-    bool IsIntersect(const FBox& Other) const
+    bool IsIntersect(const FBound& Other) const
     {
         return (Min.X <= Other.Max.X && Max.X >= Other.Min.X &&
             Min.Y <= Other.Max.Y && Max.Y >= Other.Min.Y &&
@@ -45,7 +45,7 @@ public:
     // 주어진 로컬 버텍스들로부터 Min/Max 계산
     void SetFromVertices(const TArray<FVector>& Verts);
     void SetFromVertices(const TArray<FNormalVertex>& Verts);
-    void SetMinMax(const FBox& Box);
+    void SetMinMax(const FBound& Bound);
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
 
     // 월드 좌표계에서의 AABB 반환
