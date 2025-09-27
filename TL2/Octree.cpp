@@ -41,8 +41,8 @@ FOctreeNode* UOctree::BuildRecursive(const TArray<AActor*>& InActors, const FBou
     if (Depth >= MaxDepth || Node->Actors.Num() <= MaxActorsPerNode) return Node;
 
     // 분할 로직
-    FVector Center = Node->Bounds.GetCenter();
-    FVector HalfExtent = Node->Bounds.GetExtent() * 0.5f;
+    FVector Center = Node->Bounds.GetCenter();             // 부모 노드 Bound 정중앙 
+    FVector HalfExtent = Node->Bounds.GetExtent() * 0.5f;  // 부모 노드 중심점에서 각 면까지 거리
 
     FBound ChildBounds[8];
     for (int32 i = 0; i < 8;++i)
@@ -106,10 +106,6 @@ FOctreeNode* UOctree::BuildRecursive(const TArray<AActor*>& InActors, const FBou
     //return Node;
 }
 
-void UOctree::Query(const FRay& Ray, TArray<AActor*>& OutActors) const
-{
-    QueryRecursive(Ray, Root, OutActors);
-}
 void UOctree::Render(FOctreeNode* ParentNode) {
     if (ParentNode) {
         ParentNode->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
@@ -123,22 +119,36 @@ void UOctree::Render(FOctreeNode* ParentNode) {
         }
     }
 }
+void UOctree::Query(const FRay& Ray, TArray<AActor*>& OutActors) const
+{
+    QueryRecursive(Ray, Root, OutActors);
+}
+// 수정 중
 void UOctree::QueryRecursive(const FRay& Ray, FOctreeNode* Node, TArray<AActor*>& OutActors) const
 {
     if (!Node) return;
 
     // 레이-박스 교차 검사
-  /*  if (!Ray.Intersects(Node->Bounds))
-        return;*/
-
-    // 노드 안의 Actor 검사
-    OutActors.Append(Node->Actors);
-
-    // 자식들 탐색
-    for (int i = 0; i < 8; i++)
+    // 충돌하지 않았으면 자식 노드를 살펴볼 필요 X
+    if (!IntersectRayBound(Ray, Node->Bounds))
     {
-        if (Node->Children[i])
-            QueryRecursive(Ray, Node->Children[i], OutActors);
+        return;
+    }
+
+    // Leaf Node일 경우에만 Actor 추가
+    if (Node->IsLeafNode())
+    {
+        OutActors.Append(Node->Actors);
+    }
+    else // 중간 노드일 경우 재귀
+    {
+        for (int i = 0; i < 8;++i)
+        {
+            if (Node->Children[i])
+            {
+                QueryRecursive(Ray, Node->Children[i], OutActors);
+            }
+        }
     }
 }
 
@@ -152,7 +162,7 @@ void UOctree::ReleaseRecursive(FOctreeNode* Node)
 {
     if (!Node) return;
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; ++i)
     {
         if (Node->Children[i])
             ReleaseRecursive(Node->Children[i]);

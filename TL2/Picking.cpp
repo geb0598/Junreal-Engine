@@ -18,7 +18,7 @@
 #include "UI/GlobalConsole.h"
 #include "ObjManager.h"
 #include"stdio.h"
-
+#include "AABoundingBoxComponent.h"
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
 {
@@ -220,6 +220,77 @@ bool IntersectRayTriangleMT(const FRay& InRay,
     }
     return false;
 }
+
+// slab method - check intersect between Ray and AABB
+bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
+{
+    float TMin = -FLT_MAX;
+    float TMax = FLT_MAX;
+
+    FVector p = InBound.GetCenter() - InRay.Origin;
+    // OBB 세 로컬 축(u,v,w)에 대해 test 수행
+    for (int i = 0;i < 3;++i)
+    {
+        //float e = InBound.
+    }
+
+    //// X축 슬랩(Slab)과의 교차 시간 계산
+    //if (abs(InRay.Direction.X) < KINDA_SMALL_NUMBER) // 레이가 X축과 평행한 경우
+    //{
+    //    if (InRay.Origin.X < InBound.Min.X || InRay.Origin.X > InBound.Max.X)
+    //        return false;
+    //}
+    //else
+    //{
+    //    float t1 = (InBox.Min.X - InRay.Origin.X) / InRay.Direction.X;
+    //    float t2 = (InBox.Max.X - InRay.Origin.X) / InRay.Direction.X;
+    //    if (t1 > t2) std::swap(t1, t2); // t1이 항상 작은 값이 되도록 보장
+    //    tmin = std::max(tmin, t1);
+    //    tmax = std::min(tmax, t2);
+    //}
+
+    //// Y축 슬랩과의 교차 시간 계산
+    //if (abs(InRay.Direction.Y) < KINDA_SMALL_NUMBER)
+    //{
+    //    if (InRay.Origin.Y < InBox.Min.Y || InRay.Origin.Y > InBox.Max.Y)
+    //        return false;
+    //}
+    //else
+    //{
+    //    float t1 = (InBox.Min.Y - InRay.Origin.Y) / InRay.Direction.Y;
+    //    float t2 = (InBox.Max.Y - InRay.Origin.Y) / InRay.Direction.Y;
+    //    if (t1 > t2) std::swap(t1, t2);
+    //    tmin = std::max(tmin, t1);
+    //    tmax = std::min(tmax, t2);
+    //}
+
+    //// Z축 슬랩과의 교차 시간 계산
+    //if (abs(InRay.Direction.Z) < KINDA_SMALL_NUMBER)
+    //{
+    //    if (InRay.Origin.Z < InBox.Min.Z || InRay.Origin.Z > InBox.Max.Z)
+    //        return false;
+    //}
+    //else
+    //{
+    //    float t1 = (InBox.Min.Z - InRay.Origin.Z) / InRay.Direction.Z;
+    //    float t2 = (InBox.Max.Z - InRay.Origin.Z) / InRay.Direction.Z;
+    //    if (t1 > t2) std::swap(t1, t2);
+    //    tmin = std::max(tmin, t1);
+    //    tmax = std::min(tmax, t2);
+    //}
+
+    //// 모든 축에서 겹치는 구간이 있어야 교차 성공
+    //bool bIntersects = tmax >= tmin && tmax >= 0.0f;
+
+    //if (bIntersects && OutT)
+    //{
+    //    *OutT = tmin > 0 ? tmin : tmax;
+    //}
+
+    //return bIntersects;
+}
+
+
 
 // PickingSystem 구현
 AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraActor* Camera)
