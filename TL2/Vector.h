@@ -147,6 +147,7 @@ struct FVector
     // 기본 연산
     FVector operator+(const FVector& V) const { return FVector(X + V.X, Y + V.Y, Z + V.Z); }
     FVector operator-(const FVector& V) const { return FVector(X - V.X, Y - V.Y, Z - V.Z); }
+    FVector operator*(const FVector& V) const { return FVector(X * V.X, Y * V.Y, Z * V.Z); }
     FVector operator*(float S)        const { return FVector(X * S, Y * S, Z * S); }
     FVector operator/(float S)        const { return FVector(X / S, Y / S, Z / S); }
     FVector operator+(float S)        const { return FVector(X + S, Y + S, Z + S); }
@@ -202,6 +203,7 @@ struct FVector
     FVector GetSafeNormal() const { return GetNormalized(); }
 
     // 내적/외적
+    float Dot(const FVector& V) const { return X * V.X + Y * V.Y + Z * V.Z; }
     static float   Dot(const FVector& A, const FVector& B) { return A.X * B.X + A.Y * B.Y + A.Z * B.Z; }
     static FVector Cross(const FVector& A, const FVector& B)
     {

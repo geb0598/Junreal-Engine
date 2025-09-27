@@ -405,7 +405,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                                                const FVector2D& ViewportMousePos,
                                                const FVector2D& ViewportSize,
                                                const FVector2D& ViewportOffset,
-                                               float ViewportAspectRatio, FViewport* Viewport)
+                                               float ViewportAspectRatio, FViewport*  Viewport)
 {
     if (!Camera) return nullptr;
 
@@ -883,6 +883,29 @@ bool CPickingSystem::CheckGizmoComponentPicking(const UStaticMeshComponent* Comp
 bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, float& OutDistance)
 {
     if (!Actor) return false;
+
+    // 스태틱 메시 액터인 경우 AABB 컬리전 검사 우선 수행
+    if (const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor))
+    {
+        // AABB 컴포넌트 찾기
+        for (auto Component : StaticMeshActor->GetComponents())
+        {
+            if (UAABoundingBoxComponent* AABBComponent = Cast<UAABoundingBoxComponent>(Component))
+            {
+                // AABB 검사
+                FBound WorldBound = AABBComponent->GetWorldBoundFromCube();
+                float distance;
+                if (WorldBound.RayIntersects(Ray.Origin, Ray.Direction, distance))
+                {
+                    OutDistance = distance;
+                    return true;
+                }
+                break; // AABB 컴포넌트를 찾았으면 더 이상 찾지 않음
+            }
+        }
+        // AABB 검사에서 히트되지 않으면 false 반환 (메시 검사는 하지 않음)
+        return false;
+    }
 
     // 액터의 모든 SceneComponent 순회
     for (auto SceneComponent : Actor->GetComponents())

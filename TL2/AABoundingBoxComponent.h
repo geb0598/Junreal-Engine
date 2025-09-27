@@ -32,6 +32,91 @@ struct FBound
             Min.Y <= Other.Max.Y && Max.Y >= Other.Min.Y &&
             Min.Z <= Other.Max.Z && Max.Z >= Other.Min.Z);
     }
+
+    bool RayIntersects(const FVector& Origin, const FVector& Direction, float& Distance) const
+    {
+        FVector invDir = FVector(1.0f / Direction.X, 1.0f / Direction.Y, 1.0f / Direction.Z);
+
+        FVector t1 = (Min - Origin) * invDir;
+        FVector t2 = (Max - Origin) * invDir;
+
+        FVector tMin = t1.ComponentMin(t2);
+        FVector tMax = t1.ComponentMax(t2);
+
+        float tNear = std::max({tMin.X, tMin.Y, tMin.Z});
+        float tFar = std::min({tMax.X, tMax.Y, tMax.Z});
+
+        if (tNear > tFar || tFar < 0.0f) return false;
+
+        Distance = tNear >= 0.0f ? tNear : tFar;
+        return true;
+    }
+};
+
+struct FOrientedBound
+{
+    FVector Center;
+    FVector Extents;
+    FMatrix Orientation;
+
+    FOrientedBound() : Center(FVector()), Extents(FVector()), Orientation(FMatrix::Identity()) {}
+    FOrientedBound(const FVector& InCenter, const FVector& InExtents, const FMatrix& InOrientation)
+        : Center(InCenter), Extents(InExtents), Orientation(InOrientation) {}
+
+    bool RayIntersects(const FVector& Origin, const FVector& Direction, float& Distance) const
+    {
+        const float Epsilon = 1e-6f;
+
+        FVector RelativeOrigin = Center - Origin;
+
+        FVector AxisX = FVector(Orientation.M[0][0], Orientation.M[1][0], Orientation.M[2][0]);
+        FVector AxisY = FVector(Orientation.M[0][1], Orientation.M[1][1], Orientation.M[2][1]);
+        FVector AxisZ = FVector(Orientation.M[0][2], Orientation.M[1][2], Orientation.M[2][2]);
+
+        float AxisDotOrigin[3] = {
+            AxisX.Dot(RelativeOrigin),
+            AxisY.Dot(RelativeOrigin),
+            AxisZ.Dot(RelativeOrigin)
+        };
+
+        float AxisDotDirection[3] = {
+            AxisX.Dot(Direction),
+            AxisY.Dot(Direction),
+            AxisZ.Dot(Direction)
+        };
+
+        float tMin = -FLT_MAX;
+        float tMax = FLT_MAX;
+
+        for (int i = 0; i < 3; ++i)
+        {
+            float extent = (i == 0) ? Extents.X : (i == 1) ? Extents.Y : Extents.Z;
+
+            if (std::abs(AxisDotDirection[i]) <= Epsilon)
+            {
+                if (std::abs(AxisDotOrigin[i]) > extent)
+                    return false;
+            }
+            else
+            {
+                float invAxisDotDirection = 1.0f / AxisDotDirection[i];
+                float t1 = (AxisDotOrigin[i] - extent) * invAxisDotDirection;
+                float t2 = (AxisDotOrigin[i] + extent) * invAxisDotDirection;
+
+                if (t1 > t2) std::swap(t1, t2);
+
+                tMin = std::max(tMin, t1);
+                tMax = std::min(tMax, t2);
+
+                if (tMin > tMax) return false;
+            }
+        }
+
+        if (tMax < 0.0f) return false;
+
+        Distance = tMin >= 0.0f ? tMin : tMax;
+        return true;
+    }
 };
 
 class ULine;
@@ -51,6 +136,10 @@ public:
     // 월드 좌표계에서의 AABB 반환
     FBound GetWorldBoundFromCube() const;
     FBound GetWorldBoundFromSphere() const;
+
+    // OBB 관련 함수들
+    FOrientedBound GetWorldOrientedBound() const;
+    bool RayIntersectsOBB(const FVector& Origin, const FVector& Direction, float& Distance) const;
 
     TArray<FVector4> GetLocalCorners() const;
 

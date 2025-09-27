@@ -107,6 +107,39 @@ FBound UAABoundingBoxComponent::GetWorldBoundFromSphere() const
     return FBound(Min, Max);
 }
 
+FOrientedBound UAABoundingBoxComponent::GetWorldOrientedBound() const
+{
+    FMatrix WorldMat = FMatrix::Identity();
+    if (GetOwner()) {
+        WorldMat = GetOwner()->GetWorldMatrix();
+    }
+
+    FVector LocalCenter = (LocalMin + LocalMax) * 0.5f;
+    FVector LocalExtents = (LocalMax - LocalMin) * 0.5f;
+
+    FVector4 WorldCenter4 = FVector4(LocalCenter.X, LocalCenter.Y, LocalCenter.Z, 1.0f) * WorldMat;
+    FVector WorldCenter = FVector(WorldCenter4.X, WorldCenter4.Y, WorldCenter4.Z);
+
+    FVector WorldExtents;
+    WorldExtents.X = std::abs(WorldMat.M[0][0] * LocalExtents.X) +
+                     std::abs(WorldMat.M[0][1] * LocalExtents.Y) +
+                     std::abs(WorldMat.M[0][2] * LocalExtents.Z);
+    WorldExtents.Y = std::abs(WorldMat.M[1][0] * LocalExtents.X) +
+                     std::abs(WorldMat.M[1][1] * LocalExtents.Y) +
+                     std::abs(WorldMat.M[1][2] * LocalExtents.Z);
+    WorldExtents.Z = std::abs(WorldMat.M[2][0] * LocalExtents.X) +
+                     std::abs(WorldMat.M[2][1] * LocalExtents.Y) +
+                     std::abs(WorldMat.M[2][2] * LocalExtents.Z);
+
+    return FOrientedBound(WorldCenter, WorldExtents, WorldMat);
+}
+
+bool UAABoundingBoxComponent::RayIntersectsOBB(const FVector& Origin, const FVector& Direction, float& Distance) const
+{
+    FOrientedBound WorldOBB = GetWorldOrientedBound();
+    return WorldOBB.RayIntersects(Origin, Direction, Distance);
+}
+
 TArray<FVector4> UAABoundingBoxComponent::GetLocalCorners() const
 {
     return 
