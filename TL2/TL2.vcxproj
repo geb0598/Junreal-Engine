@@ -190,6 +190,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="PickingTimer.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="RenderViewportSwitcherWidget.cpp" />
     <ClCompile Include="ResourceBase.cpp" />

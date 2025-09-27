@@ -19,6 +19,7 @@
 #include "ObjManager.h"
 #include"stdio.h"
 #include "AABoundingBoxComponent.h"
+#include "PickingTimer.h"
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
 {
@@ -296,6 +297,9 @@ bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
 // PickingSystem 구현
 AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraActor* Camera)
 {
+    TStatId PickingStatId;
+    FScopeCycleCounter PickingTimer(PickingStatId);
+
     if (!Camera) return nullptr;
 
     // 레이 생성 - 카메라 위치와 방향을 직접 전달
@@ -330,16 +334,21 @@ AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraAct
         }
     }
 
+    uint64_t CycleDiff = PickingTimer.Finish();
+    double PickingTimeMs = FPlatformTime::ToMilliseconds(CycleDiff);
+
     if (pickedIndex >= 0)
     {
-        char buf[160];
-        sprintf_s(buf, "[Pick] Hit primitive %d at t=%.3f (Speed=NORMAL)\n", pickedIndex, pickedT);
+        char buf[256];
+        sprintf_s(buf, "[Pick] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, PickingTimeMs);
         UE_LOG(buf);
         return Actors[pickedIndex];
     }
     else
     {
-        UE_LOG("[Pick] No hit (Speed=FAST)\n");
+        char buf[256];
+        sprintf_s(buf, "[Pick] No hit (Time: %.3fms)\n", PickingTimeMs);
+        UE_LOG(buf);
         return nullptr;
     }
 }
@@ -350,6 +359,8 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                                                const FVector2D& ViewportSize,
                                                const FVector2D& ViewportOffset)
 {
+
+
     if (!Camera) return nullptr;
 
     // 뷰포트별 레이 생성 - 각 뷰포트의 로컬 마우스 좌표와 크기, 오프셋 사용
@@ -365,7 +376,8 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
     int pickedIndex = -1;
     float pickedT = 1e9f;
-
+    TStatId ViewportPickingStatId;
+    FScopeCycleCounter ViewportPickingTimer(ViewportPickingStatId);
     // 모든 액터에 대해 피킹 테스트
     for (int i = 0; i < Actors.Num(); ++i)
     {
@@ -386,16 +398,21 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
         }
     }
 
+    uint64_t ViewportCycleDiff = ViewportPickingTimer.Finish();
+    double ViewportPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportCycleDiff);
+
     if (pickedIndex >= 0)
     {
-        char buf[160];
-        sprintf_s(buf, "[Viewport Pick] Hit primitive %d at t=%.3f\n", pickedIndex, pickedT);
+        char buf[256];
+        sprintf_s(buf, "[Viewport Pick] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportPickingTimeMs);
         UE_LOG(buf);
         return Actors[pickedIndex];
     }
     else
     {
-        UE_LOG("[Viewport Pick] No hit\n");
+        char buf[256];
+        sprintf_s(buf, "[Viewport Pick] No hit (Time: %.3fms)\n", ViewportPickingTimeMs);
+        UE_LOG(buf);
         return nullptr;
     }
 }
@@ -407,6 +424,9 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                                                const FVector2D& ViewportOffset,
                                                float ViewportAspectRatio, FViewport*  Viewport)
 {
+    TStatId ViewportAspectPickingStatId;
+    FScopeCycleCounter ViewportAspectPickingTimer(ViewportAspectPickingStatId);
+
     if (!Camera) return nullptr;
 
     // 뷰포트별 레이 생성 - 커스텀 aspect ratio 사용
@@ -443,16 +463,21 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
         }
     }
 
+    uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
+    double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
+
     if (pickedIndex >= 0)
     {
-        char buf[160];
-        sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f\n", pickedIndex, pickedT);
+        char buf[256];
+        sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
         UE_LOG(buf);
         return Actors[pickedIndex];
     }
     else
     {
-        UE_LOG("[Viewport Pick with AspectRatio] No hit\n");
+        char buf[256];
+        sprintf_s(buf, "[Viewport Pick with AspectRatio] No hit (Time: %.3fms)\n", ViewportAspectPickingTimeMs);
+        UE_LOG(buf);
         return nullptr;
     }
 }
