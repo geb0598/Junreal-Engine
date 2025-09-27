@@ -447,46 +447,67 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     int pickedIndex = -1;
     float pickedT = 1e9f;
 
-    // BVH를 우선 사용하고, 없으면 Octree, 둘 다 없으면 전체 검사
-    FBVH* BVH = UWorld::GetInstance().GetBVH();
-    if (BVH)
-    {
-        // BVH를 사용한 최적화된 피킹
-        float hitDistance;
-        AActor* HitActor = BVH->Intersect(ray.Origin, ray.Direction, hitDistance);
-
-        if (HitActor)
-        {
-            char buf[256];
-            sprintf_s(buf, "[BVH Pick] Hit actor at distance %.3f\n", hitDistance);
-            UE_LOG(buf);
-            return HitActor;
-        }
-        else
-        {
-            UE_LOG("[BVH Pick] No hit found\n");
-            return nullptr;
-        }
-    }
-
-    // BVH가 없으면 기존 Octree 방식 사용
-    TArray<AActor*> CandidateActors;
+    // 하이브리드 방식: Octree(Per-Leaf 마이크로 BVH) 우선 사용
     UOctree* Octree = UWorld::GetInstance().GetOctree();
     if (Octree)
     {
-        Octree->Query(ray, CandidateActors);
+        // Octree + Per-Leaf 마이크로 BVH를 통한 하이브리드 피킹
+        TArray<AActor*> HitActors;
+        Octree->Query(ray, HitActors);
 
-        if (CandidateActors.Num() == 0)
+        if (HitActors.Num() > 0)
         {
-            UE_LOG("[Optimized Pick] No Candidate found by Octree\n");
-            return nullptr;
+            // Octree Query에서 이미 마이크로 BVH를 통해 정밀 검사 완료
+            // 가장 가까운 액터 찾기
+            float closestDistance = 1e9f;
+            AActor* closestActor = nullptr;
+
+            for (AActor* HitActor : HitActors)
+            {
+                if (!HitActor || HitActor->GetActorHiddenInGame()) continue;
+
+                float hitDistance;
+                if (CheckActorPicking(HitActor, ray, hitDistance))
+                {
+                    if (hitDistance < closestDistance)
+                    {
+                        closestDistance = hitDistance;
+                        closestActor = HitActor;
+                    }
+                }
+            }
+
+            if (closestActor)
+            {
+                char buf[256];
+                sprintf_s(buf, "[Hybrid Pick] Hit actor at distance %.3f\n", closestDistance);
+                UE_LOG(buf);
+                return closestActor;
+            }
+        }
+
+        UE_LOG("[Hybrid Pick] No hit found\n");
+        return nullptr;
+    }
+
+    // 백업: 글로벌 BVH 사용
+    FBVH* BVH = UWorld::GetInstance().GetBVH();
+    if (BVH)
+    {
+        float hitDistance;
+        AActor* HitActor = BVH->Intersect(ray.Origin, ray.Direction, hitDistance);
+
+        if (HitActor && !HitActor->GetActorHiddenInGame())
+        {
+            char buf[256];
+            sprintf_s(buf, "[Fallback BVH Pick] Hit actor at distance %.3f\n", hitDistance);
+            UE_LOG(buf);
+            return HitActor;
         }
     }
-    else
-    {
-        // 옥트리가 없다면 모든 액터를 검사하게 됨
-        CandidateActors = Actors;
-    }
+
+    // 최후의 백업: 전체 액터 검사
+    TArray<AActor*> CandidateActors = Actors;
    
 
     // 후보군 액터에 대해 피킹 테스트

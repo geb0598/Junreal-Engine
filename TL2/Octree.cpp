@@ -43,7 +43,11 @@ void UOctree::BuildRecursive(FOctreeNode* ChildNode, const TArray<AActor*>& InAc
 
     // 리프 조건 (최대 깊이 or 최소 Actor 수)
     if (Depth >= MaxDepth || ChildNode->Actors.Num() <= MaxActorsPerNode)
+    {
+        // 리프 노드: 마이크로 BVH 생성 예약
+        ChildNode->MarkDirty();
         return;
+    }
 
     // 부모 노드 Bound 중심점 & 절반 크기
     FVector Center = Bounds.GetCenter();
@@ -90,6 +94,13 @@ void UOctree::BuildRecursive(FOctreeNode* ChildNode, const TArray<AActor*>& InAc
     }
     // 이 노드는 분할되었으므로 액터를 직접 소유하지 않음
     ChildNode->Actors.Empty();
+
+    // 분할된 내부 노드는 마이크로 BVH 불필요
+    if (ChildNode->MicroBVH)
+    {
+        delete ChildNode->MicroBVH;
+        ChildNode->MicroBVH = nullptr;
+    }
 }
 void UOctree::Render(FOctreeNode* ParentNode) {
     if (ParentNode) {
@@ -118,30 +129,68 @@ void UOctree::QueryRecursive(const FRay& Ray, FOctreeNode* Node, TArray<AActor*>
     if (!Node) return;
 
     // 레이-박스 교차 검사
-    // 충돌하지 않았으면 자식 노드를 살펴볼 필요 X
     float distance;
     if (!Node->Bounds.RayIntersects(Ray.Origin, Ray.Direction, distance))
     {
         return;
     }
-    /*if (!IntersectRayBound(Ray, Node->Bounds))
-    {
-        return;
-    }*/
 
-    // Leaf Node일 경우에만 Actor 추가
+    // Leaf Node일 경우 마이크로 BVH 사용
     if (Node->IsLeafNode())
     {
-        OutActors.Append(Node->Actors);
+        if (Node->Actors.Num() > 0)
+        {
+            // Lazy rebuild 체크
+            const_cast<FOctreeNode*>(Node)->EnsureMicroBVH();
+
+            // 마이크로 BVH를 통한 정밀 검사
+            if (Node->MicroBVH)
+            {
+                float hitDistance;
+                AActor* HitActor = Node->MicroBVH->Intersect(Ray.Origin, Ray.Direction, hitDistance);
+                if (HitActor)
+                {
+                    OutActors.Add(HitActor);
+                }
+            }
+            else
+            {
+                // 백업: BVH가 없으면 기존 방식
+                OutActors.Append(Node->Actors);
+            }
+        }
     }
-    else // 중간 노드일 경우 재귀
+    else // 중간 노드일 경우 근접순 재귀
     {
-        for (int i = 0; i < 8;++i)
+        // 자식 노드들을 거리순으로 정렬하여 처리
+        struct FChildDistance
+        {
+            FOctreeNode* Child;
+            float Distance;
+        };
+
+        TArray<FChildDistance> ChildDistances;
+        for (int i = 0; i < 8; ++i)
         {
             if (Node->Children[i])
             {
-                QueryRecursive(Ray, Node->Children[i], OutActors);
+                float childDistance;
+                if (Node->Children[i]->Bounds.RayIntersects(Ray.Origin, Ray.Direction, childDistance))
+                {
+                    ChildDistances.Add({Node->Children[i], childDistance});
+                }
             }
+        }
+
+        // 거리순 정렬 (가까운 순)
+        ChildDistances.Sort([](const FChildDistance& A, const FChildDistance& B) {
+            return A.Distance < B.Distance;
+        });
+
+        // 근접순으로 순회
+        for (const FChildDistance& Child : ChildDistances)
+        {
+            QueryRecursive(Ray, Child.Child, OutActors);
         }
     }
 }
@@ -170,5 +219,13 @@ void UOctree::ReleaseRecursive(FOctreeNode* Node)
         ObjectFactory::DeleteObject(Node->AABoundingBoxComponent);
         Node->AABoundingBoxComponent = nullptr;
     }
+
+    // 마이크로 BVH 정리 (Node의 소멸자에서도 처리되지만 명시적으로)
+    if (Node->MicroBVH)
+    {
+        delete Node->MicroBVH;
+        Node->MicroBVH = nullptr;
+    }
+
     delete Node;
 }

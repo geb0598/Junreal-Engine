@@ -2,14 +2,19 @@
 #include "Object.h"
 #include"OBoundingBoxComponent.h"
 #include"AABoundingBoxComponent.h"
+#include"BVH.h"
 
 struct FOctreeNode
 {
     FBound Bounds;                       // 이 노드의 공간 범위
     TArray<AActor*> Actors;            // 이 범위 안의 Actor들
     FOctreeNode* Children[8] = { nullptr }; // 자식 노드 (최대 8개)
-    
+
     UAABoundingBoxComponent* AABoundingBoxComponent;
+
+    // === Per-Leaf 마이크로 BVH ===
+    FBVH* MicroBVH = nullptr;          // 리프 노드에만 사용
+    bool bBVHDirty = true;             // BVH 재구축 필요 여부
 
     FOctreeNode(const FBound& InBounds)
         : Bounds(InBounds)
@@ -17,6 +22,16 @@ struct FOctreeNode
         AABoundingBoxComponent = NewObject<UAABoundingBoxComponent>();
         AABoundingBoxComponent->SetMinMax(Bounds);
     }
+
+    ~FOctreeNode()
+    {
+        if (MicroBVH)
+        {
+            delete MicroBVH;
+            MicroBVH = nullptr;
+        }
+    }
+
     bool IsLeafNode() const
     {
         for (int i = 0; i < 8; ++i)
@@ -25,6 +40,31 @@ struct FOctreeNode
                 return false;
         }
         return true;
+    }
+
+    // === 마이크로 BVH 관리 ===
+    void EnsureMicroBVH()
+    {
+        if (IsLeafNode() && Actors.Num() > 0)
+        {
+            if (!MicroBVH)
+            {
+                MicroBVH = new FBVH();
+                bBVHDirty = true;
+            }
+
+            if (bBVHDirty)
+            {
+                MicroBVH->Clear();
+                MicroBVH->Build(Actors);
+                bBVHDirty = false;
+            }
+        }
+    }
+
+    void MarkDirty()
+    {
+        bBVHDirty = true;
     }
 };
 

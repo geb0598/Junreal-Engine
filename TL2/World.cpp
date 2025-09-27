@@ -119,7 +119,7 @@ void UWorld::Initialize()
 	InitializeMainCamera();
 	InitializeGrid();
 	InitializeGizmo();
-	
+
 
 	// 액터 간 참조 설정
 	SetupActorReferences();
@@ -171,15 +171,12 @@ void UWorld::InitializeSceneGraph(TArray<AActor*> &Actors)
 	Octree->Build(Actors, FBound({ -100,-100,-100 }, { 100,100,100 }), 0);
 
 	// BVH 초기화 및 빌드
-	if (!BVH)
-	{
-		BVH = new FBVH();
-	}
+	BVH = new FBVH();
 	BVH->Build(Actors);
 }
 
 void UWorld::RenderSceneGraph() {
-	if (!Octree) 
+	if (!Octree)
 	{
 		return;
 	}
