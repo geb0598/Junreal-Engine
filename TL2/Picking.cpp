@@ -482,6 +482,10 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                 char buf[256];
                 sprintf_s(buf, "[Hybrid Pick] Hit actor at distance %.3f\n", closestDistance);
                 UE_LOG(buf);
+                uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
+                double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
+                sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
+                UE_LOG(buf);
                 return closestActor;
             }
         }
@@ -502,6 +506,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
             char buf[256];
             sprintf_s(buf, "[Fallback BVH Pick] Hit actor at distance %.3f\n", hitDistance);
             UE_LOG(buf);
+
             return HitActor;
         }
     }
