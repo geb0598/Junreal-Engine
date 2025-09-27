@@ -288,6 +288,7 @@ bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
     //}
 
     //return bIntersects;
+    return 0;
 }
 
 

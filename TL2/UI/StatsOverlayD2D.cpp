@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "StatsOverlayD2D.h"
 
 #include <d2d1_1.h>
@@ -6,7 +6,8 @@
 #include <dxgi1_2.h>
 #include "UI/UIManager.h"
 #include "MemoryManager.h"
-
+#include <psapi.h>    // GetProcessMemoryInfo 정의됨
+#pragma comment(lib, "psapi.lib")  // 링커에 추가
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "dwrite")
 
@@ -183,15 +184,35 @@ void UStatsOverlayD2D::Draw()
 
         nextY += panelHeight + 8.0f;
     }
-
     if (bShowMemory)
     {
+        // 1) 커스텀 메모리 매니저
         double mb = static_cast<double>(CMemoryManager::TotalAllocationBytes) / (1024.0 * 1024.0);
 
-        wchar_t buf[128];
-        swprintf_s(buf, L"Memory: %.1f MB\nAllocs: %u", mb, CMemoryManager::TotalAllocationCount);
+        // 2) 전체 시스템 메모리
+        MEMORYSTATUSEX memInfo;
+        memInfo.dwLength = sizeof(memInfo);
+        GlobalMemoryStatusEx(&memInfo);
+        double totalSysMB = static_cast<double>(memInfo.ullTotalPhys) / (1024.0 * 1024.0);
+        double availSysMB = static_cast<double>(memInfo.ullAvailPhys) / (1024.0 * 1024.0);
 
-        D2D1_RECT_F rc = D2D1::RectF(margin, nextY, margin + panelWidth, nextY + panelHeight);
+        // 3) 현재 프로세스 메모리
+        PROCESS_MEMORY_COUNTERS_EX pmc;
+        GetProcessMemoryInfo(GetCurrentProcess(),
+            reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc),
+            sizeof(pmc));
+        double workingSetMB = static_cast<double>(pmc.WorkingSetSize) / (1024.0 * 1024.0);
+        double privateMB = static_cast<double>(pmc.PrivateUsage) / (1024.0 * 1024.0);
+
+        // 버퍼 작성
+        wchar_t buf[256];
+        swprintf_s(buf,
+            L"Custom Alloc: %.1f MB\nAllocs: %u\nProcess WS: %.1f MB\nProcess Private: %.1f MB\nSystem: %.1f MB / Free: %.1f MB",
+            mb, CMemoryManager::TotalAllocationCount,
+            workingSetMB, privateMB,
+            totalSysMB, availSysMB);
+
+        D2D1_RECT_F rc = D2D1::RectF(margin, nextY, margin + panelWidth, nextY + panelHeight * 3);
         DrawTextBlock(
             d2dCtx, dwrite, buf, rc, 16.0f,
             D2D1::ColorF(0, 0, 0, 0.6f),

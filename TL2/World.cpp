@@ -110,7 +110,7 @@ void UWorld::Initialize()
 	InitializeMainCamera();
 	InitializeGrid();
 	InitializeGizmo();
-	InitializeSceneGraph();
+	
 
 	// 액터 간 참조 설정
 	SetupActorReferences();
@@ -154,13 +154,20 @@ void UWorld::InitializeGizmo()
 	UIManager.SetGizmoActor(GizmoActor);
 }
 
-void UWorld::InitializeSceneGraph()
+void UWorld::InitializeSceneGraph(TArray<AActor*> &Actors)
 {
 	Octree = NewObject<UOctree>();
-	Octree->Initialize(FBox({ 0,0,0 }, { 100,100,100 }));
+//	Octree->Initialize(FBound({ -100,-100,-100 }, { 100,100,100 }));
+	//const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
+	Octree->Build(Actors, FBound({ -100,-100,-100 }, { 100,100,100 }), 0);
+
 }
 
 void UWorld::RenderSceneGraph() {
+	if (!Octree) 
+	{
+		return;
+	}
 	Octree->Render(nullptr);
 }
 
@@ -505,9 +512,13 @@ void UWorld::CreateNewScene()
 		ObjectFactory::DeleteObject(Actor);
 	}
 	Actors.Empty();
-
+	if (Octree)
+	{
+		Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
+	}
 	// 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
 	ObjectTypeCounts.clear();
+
 }
 
 
@@ -751,6 +762,9 @@ void UWorld::LoadScene(const FString& SceneName)
 	const uint32 DuringLoadNext = UObject::PeekNextUUID();
 	const uint32 SafeNext = std::max({ DuringLoadNext, MaxAssignedUUID + 1, PreLoadNext });
 	UObject::SetNextUUID(SafeNext);
+
+
+	InitializeSceneGraph(Actors);
 }
 
 void UWorld::SaveScene(const FString& SceneName)

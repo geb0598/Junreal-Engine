@@ -41,7 +41,7 @@ public:
     void InitializeMainCamera();
     void InitializeGrid();
     void InitializeGizmo();
-    void InitializeSceneGraph();
+    void InitializeSceneGraph(TArray<AActor*> &Actors);
 
     void RenderSceneGraph();
     

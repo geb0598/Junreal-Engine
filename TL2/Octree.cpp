@@ -16,104 +16,93 @@ void UOctree::Initialize(const FBound& InBounds)
     Root = new FOctreeNode(InBounds);
 }
 
-void UOctree::Build(const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth)
+void UOctree::Build(const TArray<AActor*>& InActors, const FBound& WorldBounds, int32 Depth)
 {
     // 기존 트리가 있다면 정리
-    if (Root)
-    {
-        Release();
-    }
-    Root = BuildRecursive(InActors, WorldBounds, Depth); // Depth 기본값 0 
+    Release();
 
-    // 월드 전체 Bounds는 외부에서 넘겨준다고 가정
-    //Root = BuildRecursive(InActors, InActors.Num() > 0 ? InActors[0]->GetComponentsBoundingBox() : FBox(EForceInit::ForceInit), 0);
+    // 새로운 루트 노드 생성
+    Initialize(WorldBounds);
+
+    if (!Root || InActors.Num() == 0)
+    {
+        return;
+    }
+
+    BuildRecursive(Root, InActors, WorldBounds, Depth);
 }
 
-FOctreeNode* UOctree::BuildRecursive(const TArray<AActor*>& InActors, const FBound& Bounds, int32 Depth)
+void UOctree::BuildRecursive(FOctreeNode* ChildNode, const TArray<AActor*>& InActors, const FBound& Bounds, int32 Depth)
 {
     // 해당 Bound에 들어올 액터가 없으면 자식 노드 생성할 필요 없음
-    if (InActors.Num() == 0) return nullptr;
+    if (InActors.Num() == 0) return;
 
-    FOctreeNode* Node = new FOctreeNode(Bounds);
-    Node->Actors = InActors; // 일단 액터들을 현재 노드의 액터 배열에 할당
+    // 현재 노드 정보 설정
+    ChildNode->Bounds = Bounds;
+    ChildNode->Actors = InActors;
 
-    // 분할 종료 조건(해당 노드가 Leaf) = 최대 깊이 도달 or 액터 수가 최대치 이하면 잎 노드 확정
-    if (Depth >= MaxDepth || Node->Actors.Num() <= MaxActorsPerNode) return Node;
+    // 리프 조건 (최대 깊이 or 최소 Actor 수)
+    if (Depth >= MaxDepth || ChildNode->Actors.Num() <= MaxActorsPerNode)
+        return;
 
-    // 분할 로직
-    FVector Center = Node->Bounds.GetCenter();             // 부모 노드 Bound 정중앙 
-    FVector HalfExtent = Node->Bounds.GetExtent() * 0.5f;  // 부모 노드 중심점에서 각 면까지 거리
+    // 부모 노드 Bound 중심점 & 절반 크기
+    FVector Center = Bounds.GetCenter();
+    FVector HalfExtent = Bounds.GetExtent();
+    FVector QuarterExtent = HalfExtent * 0.5f;
 
+    // 8개 자식 Bound 생성
     FBound ChildBounds[8];
-    for (int32 i = 0; i < 8;++i)
+    for (int32 i = 0; i < 8; ++i)
     {
         FVector ChildCenter = Center;
-        ChildCenter.X += (i & 1 ? HalfExtent.X : -HalfExtent.X);
-        ChildCenter.Y += (i & 2 ? HalfExtent.Y : -HalfExtent.Y);
-        ChildCenter.Z += (i & 4 ? HalfExtent.Z : -HalfExtent.Z);
-        ChildBounds[i] = FBound(ChildCenter - HalfExtent, ChildCenter + HalfExtent);
+        ChildCenter.X += (i & 1) ? QuarterExtent.X : -QuarterExtent.X;
+        ChildCenter.Y += (i & 2) ? QuarterExtent.Y : -QuarterExtent.Y;
+        ChildCenter.Z += (i & 4) ? QuarterExtent.Z : -QuarterExtent.Z;
+
+        ChildBounds[i] = FBound(ChildCenter - QuarterExtent, ChildCenter + QuarterExtent);
     }
 
-    // 이 노드 안에 들어가는 Actor 모으기
+    // 자식별 Actor 분류
     TArray<AActor*> ChildActors[8];
-    for (AActor* Actor : Node->Actors)
+    for (AActor* Actor : InActors)
     {
         FVector ActorLocation = Actor->GetActorLocation();
+
+        // 각 자식 영역에 대해 검사하여 Actor가 포함되는지 확인
         for (int32 i = 0; i < 8; ++i)
         {
-            // i번째 자식 공간에 있으면
             if (ChildBounds[i].IsInside(ActorLocation))
             {
                 ChildActors[i].Add(Actor);
-                break;
+                break; // 하나의 영역에만 속하므로 break
             }
         }
-      /*  if (Bounds.IsInsideOrOn(Actor->GetActorLocation()))
-        {
-            Node->Actors.Add(Actor);
-        }*/
     }
 
-    // 분할 되었으므로, 현재 노드는 액터를 소유 X
-    Node->Actors.Empty();
-
+    // 자식 노드 재귀 생성
     for (int32 i = 0; i < 8; ++i)
     {
         if (ChildActors[i].Num() > 0)
         {
-            // 노드 자식들에 대해 재귀적으로 생성
-            Node->Children[i] = BuildRecursive(ChildActors[i], ChildBounds[i], Depth + 1);
+            ChildNode->Children[i] = new FOctreeNode(ChildBounds[i]);
+            BuildRecursive(ChildNode->Children[i], ChildActors[i], ChildBounds[i], Depth + 1);
         }
     }
-
-    return Node;
-
-    // 8개 자식 영역으로 분할
-   /* FVector Center = Bounds.GetCenter();
-    FVector Extent = Bounds.GetExtent() * 0.5f;*/
-
-    /*for (int i = 0; i < 8; i++)
-    {
-        FVector Offset(
-            (i & 1 ? +1 : -1) * Extent.X,
-            (i & 2 ? +1 : -1) * Extent.Y,
-            (i & 4 ? +1 : -1) * Extent.Z
-        );
-        FBox ChildBounds(Center + Offset - Extent, Center + Offset + Extent);
-        Node->Children[i] = BuildRecursive(Node->Actors, ChildBounds, Depth + 1);
-    }*/
-
-    //return Node;
+    // 이 노드는 분할되었으므로 액터를 직접 소유하지 않음
+    ChildNode->Actors.Empty();
 }
-
 void UOctree::Render(FOctreeNode* ParentNode) {
     if (ParentNode) {
         ParentNode->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
     }
     else {
+        if (!Root) {
+            return;
+        }
         Root->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
+        ParentNode = Root;
     }
-    for (auto ChildNode : Root->Children) {
+    for (auto ChildNode : ParentNode->Children) {
         if (ChildNode) {
             Render(ChildNode);
         }
@@ -154,6 +143,10 @@ void UOctree::QueryRecursive(const FRay& Ray, FOctreeNode* Node, TArray<AActor*>
 
 void UOctree::Release()
 {
+    if (!Root)
+    {
+        return;
+    }
     ReleaseRecursive(Root);
     Root = nullptr;
 }
@@ -166,6 +159,11 @@ void UOctree::ReleaseRecursive(FOctreeNode* Node)
     {
         if (Node->Children[i])
             ReleaseRecursive(Node->Children[i]);
+    }
+    if (Node->AABoundingBoxComponent)
+    {
+        ObjectFactory::DeleteObject(Node->AABoundingBoxComponent);
+        Node->AABoundingBoxComponent = nullptr;
     }
     delete Node;
 }

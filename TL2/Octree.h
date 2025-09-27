@@ -17,9 +17,14 @@ struct FOctreeNode
         AABoundingBoxComponent = NewObject<UAABoundingBoxComponent>();
         AABoundingBoxComponent->SetMinMax(Bounds);
     }
-    bool IsLeafNode()
+    bool IsLeafNode() const
     {
-        return Actors.size() > 0;
+        for (int i = 0; i < 8; ++i)
+        {
+            if (Children[i] != nullptr)
+                return false;
+        }
+        return true;
     }
 };
 
@@ -33,7 +38,7 @@ public:
     ~UOctree();
     void Initialize(const FBound& InBounds);
     // 옥트리 빌드
-    void Build(const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0);
+    void Build(const TArray<AActor*>& InActors, const FBound& WorldBounds, int32 Depth = 0);
 
     // 레이 기반 Actor 검색
     void Query(const FRay& Ray, TArray<AActor*>& OutActors) const;
@@ -55,7 +60,7 @@ private:
     * @param Bounds 해당 노드가 가진 범위
     * @param Depth 트리의 현재 깊이
     */
-    FOctreeNode* BuildRecursive(const TArray<AActor*>& InActors, const FBound& Bounds, int32 Depth);
+    void BuildRecursive(FOctreeNode* ChildNode, const TArray<AActor*>& InActors, const FBound& Bounds, int32 Depth);
     /**
     * @brief Ray와 Node의 Bound의 충돌 여부를 재귀적으로 검사해서 해당 공간의 Actors를 쿼리합니다.
     * @param Ray 발사할 Ray를 지정합니다.
