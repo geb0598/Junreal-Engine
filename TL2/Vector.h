@@ -479,7 +479,12 @@ inline FQuat operator*(float Scalar, const FQuat& Quat) { return FQuat(Quat.X * 
 // ─────────────────────────────
 struct alignas(16) FMatrix
 {
-    float M[4][4]{};
+    union // 같은 데이터를 다양한 방법으로 참조하기 위한 키워드
+    {
+        float M[4][4]{};
+        float FlatM[16]; // 1차원 배열로 접근
+        FVector4 Rows[4];  // FVector4 행으로 접근
+    };
 
     FMatrix() = default;
 

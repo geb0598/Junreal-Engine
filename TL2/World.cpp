@@ -14,6 +14,7 @@
 #include "StaticMesh.h"
 #include "ObjManager.h"
 #include "SceneRotationUtils.h"
+#include "Frustum.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -176,7 +177,7 @@ void UWorld::Render()
 	UIManager.EndFrame();
 	Renderer->EndFrame();
 }
-
+/*
 void UWorld::RenderSingleViewport()
 {
 	FMatrix ViewMatrix = MainCameraActor->GetViewMatrix();
@@ -278,7 +279,7 @@ void UWorld::RenderSingleViewport()
 	// === End Frame ===
 	Renderer->EndFrame();
 }
-
+*/
 void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 {
 	// 뷰포트의 실제 크기로 aspect ratio 계산
@@ -290,6 +291,17 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 	if (!Renderer) return;
 	FVector rgb(1.0f, 1.0f, 1.0f);
 
+
+	FFrustum ViewFrustum;
+	ViewFrustum.Update(ViewMatrix * ProjectionMatrix);
+
+
+
+	Renderer->BeginLineBatch();
+	Renderer->SetViewModeType(ViewModeIndex);
+
+
+
 	// === Begin Line Batch for all actors ===
 	Renderer->BeginLineBatch();
 
@@ -299,6 +311,9 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 	// 일반 액터들 렌더링
 	if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
 	{
+		int AllActorCount = 0;
+		int FrustumCullCount = 0;
+
 		for (AActor* Actor : Actors)
 		{
 			if (!Actor) continue;
@@ -306,6 +321,21 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
 			if (Cast<AStaticMeshActor>(Actor) && !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
 				continue;
+
+			AllActorCount++;
+
+			if (Actor->CollisionComponent)
+			{
+				FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
+
+				// 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
+				if (!ViewFrustum.IsVisible(Test))
+				{
+					FrustumCullCount++;
+
+					continue;
+				}
+			}
 
 			bool bIsSelected = SelectionManager.IsActorSelected(Actor);
 			/*if (bIsSelected)
