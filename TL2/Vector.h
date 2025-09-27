@@ -31,7 +31,8 @@ inline float RadianToDegree(float Radian) { return Radian * (180.0f / PI); }
 namespace FMath {
     template<typename T>
     static T Max(T A, T B) { return std::max(A, B); }
-
+    template<typename T>
+    static T Min(T A, T B) { return std::min(A, B); }
     template<typename T>
     static T Clamp(T Value, T Min, T Max) {
         return Value < Min ? Min : (Value > Max ? Max : Value);
@@ -168,6 +169,29 @@ struct FVector
             std::fabs(Z - V.Z) < KINDA_SMALL_NUMBER;
     }
     bool operator!=(const FVector& V) const { return !(*this == V); }
+
+    // 인덱스 접근자 (0=X, 1=Y, 2=Z)
+    float& operator[](int Index)
+    {
+        switch (Index)
+        {
+        case 0: return X;
+        case 1: return Y;
+        case 2: return Z;
+        default: return X; // 안전한 기본값
+        }
+    }
+
+    const float& operator[](int Index) const
+    {
+        switch (Index)
+        {
+        case 0: return X;
+        case 1: return Y;
+        case 2: return Z;
+        default: return X; // 안전한 기본값
+        }
+    }
     
     FVector ComponentMin(const FVector& B)
     {

@@ -21,6 +21,7 @@
 #include "AABoundingBoxComponent.h"
 #include "PickingTimer.h"
 #include "Octree.h"
+#include "BVH.h"
 
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
@@ -446,6 +447,29 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     int pickedIndex = -1;
     float pickedT = 1e9f;
 
+    // BVH를 우선 사용하고, 없으면 Octree, 둘 다 없으면 전체 검사
+    FBVH* BVH = UWorld::GetInstance().GetBVH();
+    if (BVH)
+    {
+        // BVH를 사용한 최적화된 피킹
+        float hitDistance;
+        AActor* HitActor = BVH->Intersect(ray.Origin, ray.Direction, hitDistance);
+
+        if (HitActor)
+        {
+            char buf[256];
+            sprintf_s(buf, "[BVH Pick] Hit actor at distance %.3f\n", hitDistance);
+            UE_LOG(buf);
+            return HitActor;
+        }
+        else
+        {
+            UE_LOG("[BVH Pick] No hit found\n");
+            return nullptr;
+        }
+    }
+
+    // BVH가 없으면 기존 Octree 방식 사용
     TArray<AActor*> CandidateActors;
     UOctree* Octree = UWorld::GetInstance().GetOctree();
     if (Octree)

@@ -20,6 +20,7 @@ struct FTransform;
 struct FPrimitiveData;
 class SViewportWindow;
 class UOctree;
+class FBVH;
 /**
  * UWorld
  * - 월드 단위의 액터/타임/매니저 관리 클래스
@@ -113,6 +114,7 @@ public:
     AGridActor* GetGridActor() { return GridActor; }
 
     UOctree* GetOctree() { return Octree; }
+    FBVH* GetBVH() { return BVH; }
     
 
     
@@ -162,6 +164,7 @@ private:
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 
     UOctree* Octree;
+    FBVH* BVH;
 };
 template<class T>
 inline T* UWorld::SpawnActor()

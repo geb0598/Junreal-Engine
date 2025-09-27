@@ -15,6 +15,7 @@
 #include "ObjManager.h"
 #include "SceneRotationUtils.h"
 #include "Octree.h"
+#include "BVH.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -23,6 +24,7 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 , UIManager(UUIManager::GetInstance())
 , InputManager(UInputManager::GetInstance())
 , SelectionManager(USelectionManager::GetInstance())
+, BVH(nullptr)
 {
 }
 UWorld& UWorld::GetInstance()
@@ -51,6 +53,13 @@ UWorld::~UWorld()
 	// Grid 정리 
 	ObjectFactory::DeleteObject(GridActor);
 	GridActor = nullptr;
+
+	// BVH 정리
+	if (BVH)
+	{
+		delete BVH;
+		BVH = nullptr;
+	}
 
 	// ObjManager 정리
 	FObjManager::Clear();
@@ -161,6 +170,12 @@ void UWorld::InitializeSceneGraph(TArray<AActor*> &Actors)
 	//const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
 	Octree->Build(Actors, FBound({ -100,-100,-100 }, { 100,100,100 }), 0);
 
+	// BVH 초기화 및 빌드
+	if (!BVH)
+	{
+		BVH = new FBVH();
+	}
+	BVH->Build(Actors);
 }
 
 void UWorld::RenderSceneGraph() {
@@ -515,6 +530,10 @@ void UWorld::CreateNewScene()
 	if (Octree)
 	{
 		Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
+	}
+	if (BVH)
+	{
+		BVH->Clear();//새로운 씬이 생기면 BVH를 지워준다.
 	}
 	// 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
 	ObjectTypeCounts.clear();
