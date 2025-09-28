@@ -228,71 +228,54 @@ bool IntersectRayTriangleMT(const FRay& InRay,
 // slab method - check intersect between Ray and AABB - 미완성
 bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
 {
-  
-    //float TMin = -FLT_MAX;
-    //float TMax = FLT_MAX;
+    float tmin = 0.0f;
+    float tmax = FLT_MAX;
 
-    //FVector p = InBound.GetCenter() - InRay.Origin;
-    //// OBB 세 로컬 축(u,v,w)에 대해 test 수행
-    //for (int i = 0;i < 3;++i)
-    //{
-    //    //float e = InBound.
-    //}
+    // 브랜치리스 최적화된 3축 테스트
+    const float* rayOrigin = &InRay.Origin.X;
+    const float* rayDir = &InRay.Direction.X;
+    const float* boxMin = &InBound.Min.X;
+    const float* boxMax = &InBound.Max.X;
 
-    //// X축 슬랩(Slab)과의 교차 시간 계산
-    //if (abs(InRay.Direction.X) < KINDA_SMALL_NUMBER) // 레이가 X축과 평행한 경우
-    //{
-    //    if (InRay.Origin.X < InBound.Min.X || InRay.Origin.X > InBound.Max.X)
-    //        return false;
-    //}
-    //else
-    //{
-    //    float t1 = (InBox.Min.X - InRay.Origin.X) / InRay.Direction.X;
-    //    float t2 = (InBox.Max.X - InRay.Origin.X) / InRay.Direction.X;
-    //    if (t1 > t2) std::swap(t1, t2); // t1이 항상 작은 값이 되도록 보장
-    //    tmin = std::max(tmin, t1);
-    //    tmax = std::min(tmax, t2);
-    //}
+    for (int i = 0; i < 3; ++i)
+    {
+        // 레이 방향이 0에 가까운지 체크
+        float absDir = std::abs(rayDir[i]);
+        bool nearZero = absDir < KINDA_SMALL_NUMBER;
 
-    //// Y축 슬랩과의 교차 시간 계산
-    //if (abs(InRay.Direction.Y) < KINDA_SMALL_NUMBER)
-    //{
-    //    if (InRay.Origin.Y < InBox.Min.Y || InRay.Origin.Y > InBox.Max.Y)
-    //        return false;
-    //}
-    //else
-    //{
-    //    float t1 = (InBox.Min.Y - InRay.Origin.Y) / InRay.Direction.Y;
-    //    float t2 = (InBox.Max.Y - InRay.Origin.Y) / InRay.Direction.Y;
-    //    if (t1 > t2) std::swap(t1, t2);
-    //    tmin = std::max(tmin, t1);
-    //    tmax = std::min(tmax, t2);
-    //}
+        if (nearZero)
+        {
+            // 평행한 경우: 레이가 슬랩 바깥에 있으면 교차 없음
+            if (rayOrigin[i] < boxMin[i] || rayOrigin[i] > boxMax[i])
+                return false;
+            continue;
+        }
 
-    //// Z축 슬랩과의 교차 시간 계산
-    //if (abs(InRay.Direction.Z) < KINDA_SMALL_NUMBER)
-    //{
-    //    if (InRay.Origin.Z < InBox.Min.Z || InRay.Origin.Z > InBox.Max.Z)
-    //        return false;
-    //}
-    //else
-    //{
-    //    float t1 = (InBox.Min.Z - InRay.Origin.Z) / InRay.Direction.Z;
-    //    float t2 = (InBox.Max.Z - InRay.Origin.Z) / InRay.Direction.Z;
-    //    if (t1 > t2) std::swap(t1, t2);
-    //    tmin = std::max(tmin, t1);
-    //    tmax = std::min(tmax, t2);
-    //}
+        // 브랜치리스 min/max 계산
+        float invDir = 1.0f / rayDir[i];
+        float t0 = (boxMin[i] - rayOrigin[i]) * invDir;
+        float t1 = (boxMax[i] - rayOrigin[i]) * invDir;
 
-    //// 모든 축에서 겹치는 구간이 있어야 교차 성공
-    //bool bIntersects = tmax >= tmin && tmax >= 0.0f;
+        // 브랜치리스 swap: fmin/fmax를 사용하여 분기 제거
+        float tNear = std::fmin(t0, t1);
+        float tFar = std::fmax(t0, t1);
 
-    //if (bIntersects && OutT)
-    //{
-    //    *OutT = tmin > 0 ? tmin : tmax;
-    //}
+        // 브랜치리스 update
+        tmin = std::fmax(tmin, tNear);
+        tmax = std::fmin(tmax, tFar);
 
-    //return bIntersects;
+        // 조기 종료 체크
+        if (tmin > tmax) return false;
+    }
+
+    // 최종 유효성 검사
+    if (tmax < 0.0f) return false;
+
+    if (OutT)
+    {
+        *OutT = (tmin > 0.0f) ? tmin : tmax;
+    }
+
     return true;
 }
 
@@ -446,6 +429,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
     int pickedIndex = -1;
     float pickedT = 1e9f;
+    constexpr float EARLY_TERMINATION_THRESHOLD = 0.01f;
 
     // 하이브리드 방식: Octree(Per-Leaf 마이크로 BVH) 우선 사용
     UOctree* Octree = UWorld::GetInstance().GetOctree();
@@ -469,6 +453,12 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                 {
                     closestDistance = hitDistance;
                     closestActor = HitActor;
+
+                    // 조기 종료: 매우 가까운 거리면 더 이상 검색하지 않음
+                    if (closestDistance < EARLY_TERMINATION_THRESHOLD)
+                    {
+                        break;
+                    }
 
                     if (closestActor)
                     {
@@ -527,6 +517,12 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
             {
                 pickedT = hitDistance;
                 pickedIndex = i;
+
+                // 조기 종료: 매우 가까운 거리면 더 이상 검색하지 않음
+                if (pickedT < EARLY_TERMINATION_THRESHOLD)
+                {
+                    break;
+                }
             }
         }
     }
@@ -991,13 +987,13 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
                 if (WorldBound.RayIntersects(Ray.Origin, Ray.Direction, distance))
                 {
                     OutDistance = distance;
-                    //return true;
+                    return true;
                 }
                 break; // AABB 컴포넌트를 찾았으면 더 이상 찾지 않음
             }
         }
         // AABB 검사에서 히트되지 않으면 false 반환 (메시 검사는 하지 않음)
-      //  return false;
+        return false;
     }
 
     // 액터의 모든 SceneComponent 순회
@@ -1091,4 +1087,212 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
     }
 
     return false;
+}
+
+float CPickingSystem::GetAdaptiveThreshold(float cameraDistance)
+{
+    // 거리 기반 적응형 임계값 - 가까운 거리일수록 정밀하게
+    if (cameraDistance < 1.0f)   return 0.001f;  // 1mm (매우 가까운 UI/도구)
+    if (cameraDistance < 10.0f)  return 0.01f;   // 1cm (가까운 객체)
+    if (cameraDistance < 100.0f) return 0.1f;    // 10cm (중간 거리)
+    if (cameraDistance < 1000.0f) return 1.0f;   // 1m (먼 거리)
+    return 10.0f;  // 10m (매우 먼 거리)
+}
+
+AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
+                                                  ACameraActor* Camera,
+                                                  const FVector2D& ViewportMousePos,
+                                                  const FVector2D& ViewportSize,
+                                                  const FVector2D& ViewportOffset,
+                                                  float ViewportAspectRatio, FViewport* Viewport)
+{
+    TStatId OctreePickingStatId;
+    FScopeCycleCounter OctreePickingTimer(OctreePickingStatId);
+
+    if (!Camera) return nullptr;
+
+    const FMatrix View = Camera->GetViewMatrix();
+    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+    const FVector CameraWorldPos = Camera->GetActorLocation();
+    const FVector CameraRight = Camera->GetRight();
+    const FVector CameraUp = Camera->GetUp();
+    const FVector CameraForward = Camera->GetForward();
+
+    FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                   ViewportMousePos, ViewportSize, ViewportOffset);
+
+    AActor* closestActor = nullptr;
+    float closestDistance = FLT_MAX;
+    constexpr float EARLY_TERMINATION_THRESHOLD = 0.01f;
+
+    // 적응형 임계값 계산
+    float cameraDistanceEstimate = (CameraWorldPos - FVector(0, 0, 0)).Size(); // 원점 기준 거리 추정
+    float adaptiveThreshold = GetAdaptiveThreshold(cameraDistanceEstimate);
+
+    // Octree 우선 사용
+    UOctree* Octree = UWorld::GetInstance().GetOctree();
+    if (Octree)
+    {
+        TArray<AActor*> HitActors;
+        Octree->Query(ray, HitActors);
+
+        if (HitActors.Num() > 0)
+        {
+            for (AActor* HitActor : HitActors)
+            {
+                if (!HitActor || HitActor->GetActorHiddenInGame()) continue;
+
+                float hitDistance;
+                if (CheckActorPicking(HitActor, ray, hitDistance) && hitDistance < closestDistance)
+                {
+                    closestDistance = hitDistance;
+                    closestActor = HitActor;
+
+                    if (closestDistance < adaptiveThreshold)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            uint64_t OctreeCycleDiff = OctreePickingTimer.Finish();
+            double OctreePickingTimeMs = FPlatformTime::ToMilliseconds(OctreeCycleDiff);
+
+            if (closestActor)
+            {
+                char buf[256];
+                sprintf_s(buf, "[Octree Pick] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, OctreePickingTimeMs);
+                UE_LOG(buf);
+                return closestActor;
+            }
+
+            char buf[256];
+            sprintf_s(buf, "[Octree Pick] No hit found (Time: %.3fms)\n", OctreePickingTimeMs);
+            UE_LOG(buf);
+            return nullptr;
+        }
+    }
+
+    // Octree 실패 시 브루트 포스 백업
+    for (int i = 0; i < Actors.Num(); ++i)
+    {
+        AActor* Actor = Actors[i];
+        if (!Actor || Actor->GetActorHiddenInGame()) continue;
+
+        float hitDistance;
+        if (CheckActorPicking(Actor, ray, hitDistance) && hitDistance < closestDistance)
+        {
+            closestDistance = hitDistance;
+            closestActor = Actor;
+
+            if (closestDistance < adaptiveThreshold)
+            {
+                break;
+            }
+        }
+    }
+
+    uint64_t OctreeCycleDiff = OctreePickingTimer.Finish();
+    double OctreePickingTimeMs = FPlatformTime::ToMilliseconds(OctreeCycleDiff);
+
+    if (closestActor)
+    {
+        char buf[256];
+        sprintf_s(buf, "[Octree Pick Fallback] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, OctreePickingTimeMs);
+        UE_LOG(buf);
+        return closestActor;
+    }
+    else
+    {
+        char buf[256];
+        sprintf_s(buf, "[Octree Pick] No hit (Time: %.3fms)\n", OctreePickingTimeMs);
+        UE_LOG(buf);
+        return nullptr;
+    }
+}
+
+AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
+                                               ACameraActor* Camera,
+                                               const FVector2D& ViewportMousePos,
+                                               const FVector2D& ViewportSize,
+                                               const FVector2D& ViewportOffset,
+                                               float ViewportAspectRatio, FViewport* Viewport)
+{
+    TStatId GlobalBVHPickingStatId;
+    FScopeCycleCounter GlobalBVHPickingTimer(GlobalBVHPickingStatId);
+
+    if (!Camera) return nullptr;
+
+    const FMatrix View = Camera->GetViewMatrix();
+    const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+    const FVector CameraWorldPos = Camera->GetActorLocation();
+    const FVector CameraRight = Camera->GetRight();
+    const FVector CameraUp = Camera->GetUp();
+    const FVector CameraForward = Camera->GetForward();
+
+    FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+                                   ViewportMousePos, ViewportSize, ViewportOffset);
+
+    AActor* closestActor = nullptr;
+    float closestDistance = FLT_MAX;
+
+    // 적응형 임계값 계산
+    float cameraDistanceEstimate = (CameraWorldPos - FVector(0, 0, 0)).Size();
+    float adaptiveThreshold = GetAdaptiveThreshold(cameraDistanceEstimate);
+
+    // Global BVH 우선 사용
+    FBVH* BVH = UWorld::GetInstance().GetBVH();
+    if (BVH)
+    {
+        float hitDistance;
+        AActor* HitActor = BVH->Intersect(ray.Origin, ray.Direction, hitDistance);
+
+        if (HitActor && !HitActor->GetActorHiddenInGame())
+        {
+            uint64_t GlobalBVHCycleDiff = GlobalBVHPickingTimer.Finish();
+            double GlobalBVHPickingTimeMs = FPlatformTime::ToMilliseconds(GlobalBVHCycleDiff);
+
+            char buf[256];
+            sprintf_s(buf, "[Global BVH Pick] Hit actor at distance %.3f (Time: %.3fms)\n", hitDistance, GlobalBVHPickingTimeMs);
+            UE_LOG(buf);
+            return HitActor;
+        }
+    }
+
+    // BVH 실패 시 브루트 포스 백업
+    for (int i = 0; i < Actors.Num(); ++i)
+    {
+        AActor* Actor = Actors[i];
+        if (!Actor || Actor->GetActorHiddenInGame()) continue;
+
+        float hitDistance;
+        if (CheckActorPicking(Actor, ray, hitDistance) && hitDistance < closestDistance)
+        {
+            closestDistance = hitDistance;
+            closestActor = Actor;
+
+            if (closestDistance < adaptiveThreshold)
+            {
+                break;
+            }
+        }
+    }
+
+    uint64_t GlobalBVHCycleDiff = GlobalBVHPickingTimer.Finish();
+    double GlobalBVHPickingTimeMs = FPlatformTime::ToMilliseconds(GlobalBVHCycleDiff);
+
+    if (closestActor)
+    {
+        char buf[256];
+        sprintf_s(buf, "[Global BVH Pick Fallback] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, GlobalBVHPickingTimeMs);
+        UE_LOG(buf);
+        return closestActor;
+    }
+    else
+    {
+        char buf[256];
+        sprintf_s(buf, "[Global BVH Pick] No hit (Time: %.3fms)\n", GlobalBVHPickingTimeMs);
+        UE_LOG(buf);
+        return nullptr;
+    }
 }
