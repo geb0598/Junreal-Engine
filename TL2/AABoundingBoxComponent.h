@@ -9,7 +9,23 @@ struct FBound
 
     FBound() : Min(FVector()), Max(FVector()) {}
     FBound(const FVector& InMin, const FVector& InMax) : Min(InMin), Max(InMax) {}
+    /**
+     * @brief 다른 FBound를 현재 FBound에 포함시키도록 확장하는 연산자
+     * @param Other 포함시킬 다른 FBound
+     * @return 확장된 자기 자신에 대한 참조
+     */
+    FBound& operator+=(const FBound& Other)
+    {
+        Min.X = std::min(Min.X, Other.Min.X);
+        Min.Y = std::min(Min.Y, Other.Min.Y);
+        Min.Z = std::min(Min.Z, Other.Min.Z);
 
+        Max.X = std::max(Max.X, Other.Max.X);
+        Max.Y = std::max(Max.Y, Other.Max.Y);
+        Max.Z = std::max(Max.Z, Other.Max.Z);
+
+        return *this;
+    }
     // 센터 반환
     FVector GetCenter() const
     {
