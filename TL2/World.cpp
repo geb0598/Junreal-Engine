@@ -174,8 +174,8 @@ void UWorld::InitializeSceneGraph(TArray<AActor*> &Actors)
 	Octree->PreBuildAllMicroBVH();
 
 	// BVH 초기화 및 빌드
-	BVH = new FBVH();
-	BVH->Build(Actors);
+	//BVH = new FBVH();
+	//BVH->Build(Actors);
 }
 
 void UWorld::RenderSceneGraph() {

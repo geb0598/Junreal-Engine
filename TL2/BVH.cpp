@@ -293,18 +293,26 @@ int FBVH::FindBestSplit(int FirstActor, int ActorCount, int& OutAxis, float& Out
     return BestSplit;
 }
 
-float FBVH::CalculateSAH(int FirstActor, int LeftCount, int RightCount, const FBound& ParentBounds) const
-{
-    // 단순화된 SAH: 노드 개수에 비례하는 비용
-    // 실제 구현에서는 표면적을 계산해야 하지만, 성능상 단순화
-    float ParentArea = 1.0f; // 정규화된 영역
-
-    float LeftCost = (float)LeftCount;
-    float RightCost = (float)RightCount;
-
-    return LeftCost + RightCost; // 단순화된 비용 함수
+static inline float SurfaceArea(const FBound& b) {
+    FVector s = b.Max - b.Min;
+    if (s.X <= 0 || s.Y <= 0 || s.Z <= 0) return 0.0f;
+    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
 }
 
+float FBVH::CalculateSAH(int FirstActor, int LeftCount, int RightCount, const FBound& Parent) const
+{
+    // 좌/우 AABB 계산 (간단하지만 O(N); 더 빠르게 하려면 prefix/suffix 누적 사용)
+    FBound LB = CalculateBounds(FirstActor, LeftCount);
+    FBound RB = CalculateBounds(FirstActor + LeftCount, RightCount);
+
+    float SA_P = SurfaceArea(Parent) + 1e-6f;
+    float SA_L = SurfaceArea(LB);
+    float SA_R = SurfaceArea(RB);
+
+    constexpr float Ct = 1.0f; // 트래버스 비용
+    constexpr float Ci = 1.0f; // 교차 비용
+    return Ct + Ci * ((SA_L / SA_P) * LeftCount + (SA_R / SA_P) * RightCount);
+}
 int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitPos)
 {
     int Left = FirstActor;
@@ -312,19 +320,33 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
 
     while (Left <= Right)
     {
-        int LeftActorIndex = ActorIndices[Left];
-        const FVector& LeftCenter = ActorBounds[LeftActorIndex].Center;
-
-        if (LeftCenter[Axis] < SplitPos)
+        // 왼쪽에서 SplitPos보다 큰 액터 찾기
+        while (Left <= Right)
         {
+            int LeftActorIndex = ActorIndices[Left];
+            const FVector& LeftCenter = ActorBounds[LeftActorIndex].Center;
+            if (LeftCenter[Axis] >= SplitPos)
+                break;
             Left++;
         }
-        else
+
+        // 오른쪽에서 SplitPos보다 작은 액터 찾기
+        while (Left <= Right)
         {
-            // 스왑
+            int RightActorIndex = ActorIndices[Right];
+            const FVector& RightCenter = ActorBounds[RightActorIndex].Center;
+            if (RightCenter[Axis] < SplitPos)
+                break;
+            Right--;
+        }
+
+        // 스왑이 필요한 경우에만 수행
+        if (Left < Right)
+        {
             int Temp = ActorIndices[Left];
             ActorIndices[Left] = ActorIndices[Right];
             ActorIndices[Right] = Temp;
+            Left++;
             Right--;
         }
     }
@@ -345,10 +367,10 @@ bool FBVH::IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector&
     }
 
     // TMin이 현재 최단 거리보다 멀면 건너뛰기
- /*   if (TMin >= InOutDistance)
+    if (TMin >= InOutDistance)
     {
         return false;
-    }*/
+    }
 
     if (Node.IsLeaf())
     {

@@ -123,4 +123,8 @@ private:
 
     // 재귀적으로 모든 리프 노드의 마이크로 BVH 생성
     void PreBuildMicroBVHRecursive(FOctreeNode* Node);
+
+    // 리프 노드 통계 로그
+    void LogLeafNodeStatistics();
+    void LogLeafNodeStatisticsRecursive(FOctreeNode* Node, int32& LeafCount, int32& TotalActors, int32& MinActors, int32& MaxActors, int32 Depth, int32& MaxDepthFound);
 };

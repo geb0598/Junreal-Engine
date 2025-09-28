@@ -13,23 +13,19 @@ struct FBVHNode
 
     // 리프 노드: FirstActor >= 0, ActorCount > 0
     // 내부 노드: LeftChild >= 0, RightChild >= 0
-    union
-    {
-        struct // 리프 노드용
-        {
-            int FirstActor;
-            int ActorCount;
-        };
-        struct // 내부 노드용
-        {
-            int LeftChild;
-            int RightChild;
-        };
-    };
+  
+        
+            int FirstActor=0;
+            int ActorCount=0;
+      
+            int LeftChild =-1;
+            int RightChild = -1;
+       
+   
 
-    bool IsLeaf() const { return FirstActor >= 0; }
+    bool IsLeaf() const { return LeftChild < 0 && RightChild < 0; }
 
-    FBVHNode() : FirstActor(-1), ActorCount(0) {}
+    FBVHNode() : FirstActor(0), ActorCount(0) {}
 };
 
 // 액터의 AABB와 포인터를 저장
@@ -99,7 +95,7 @@ private:
                         float& OutDistance) const;
 
     // 상수
-    static const int MaxActorsPerLeaf = 4;  // 리프당 최대 액터 수 (마이크로 BVH용)
+    static const int MaxActorsPerLeaf = 8;  // 리프당 최대 액터 수 (마이크로 BVH용)
     static const int MaxBVHDepth = 24;      // 최대 깊이
-    static const int SAHSamples = 16;       // SAH 샘플링 수
+    static const int SAHSamples = 10;       // SAH 샘플링 수
 };
