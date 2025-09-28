@@ -354,29 +354,28 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
     return Left;
 }
 
-bool FBVH::IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector& RayDirection,
-                         float& InOutDistance, AActor*& OutActor) const
+bool FBVH::IntersectNode(int NodeIndex,
+    const FVector& RayOrigin,
+    const FVector& RayDirection,
+    float& InOutDistance,
+    AActor*& OutActor) const
 {
     const FBVHNode& Node = Nodes[NodeIndex];
 
-    // 노드의 경계 박스와 레이 교차 검사
-    float TMin;
-    if (!Node.BoundingBox.RayIntersects(RayOrigin, RayDirection, TMin))
-    {
+    // ────── 1. 노드 AABB와 레이 교차 검사 ──────
+    float tNear;
+    if (!Node.BoundingBox.RayIntersects(RayOrigin, RayDirection, tNear))
         return false;
-    }
 
-    // TMin이 현재 최단 거리보다 멀면 건너뛰기
-    if (TMin >= InOutDistance)
-    {
+    // 이미 더 가까운 히트를 찾았으면 스킵
+    if (tNear >= InOutDistance)
         return false;
-    }
 
+    // ────── 2. 리프 노드 처리 ──────
     if (Node.IsLeaf())
     {
-        // 리프 노드: 모든 액터와 교차 검사
         bool bHit = false;
-        float ClosestDistance = InOutDistance;
+        float Closest = InOutDistance;
         AActor* ClosestActor = nullptr;
 
         for (int i = 0; i < Node.ActorCount; ++i)
@@ -384,12 +383,12 @@ bool FBVH::IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector&
             int ActorIndex = ActorIndices[Node.FirstActor + i];
             AActor* Actor = ActorBounds[ActorIndex].Actor;
 
-            float Distance;
-            if (IntersectActor(Actor, RayOrigin, RayDirection, Distance))
+            float Dist;
+            if (IntersectActor(Actor, RayOrigin, RayDirection, Dist))
             {
-                if (Distance < ClosestDistance)
+                if (Dist < Closest)
                 {
-                    ClosestDistance = Distance;
+                    Closest = Dist;
                     ClosestActor = Actor;
                     bHit = true;
                 }
@@ -398,38 +397,65 @@ bool FBVH::IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector&
 
         if (bHit)
         {
-            InOutDistance = ClosestDistance;
+            InOutDistance = Closest;
             OutActor = ClosestActor;
         }
 
         return bHit;
     }
-    else
+
+    // ────── 3. 내부 노드 near-first 방문 ──────
+    struct ChildHit
     {
-        // 내부 노드: 자식들과 교차 검사
-        bool bHit = false;
+        int Index;
+        float tNear;
+        bool bValid;
+    };
 
-        // 왼쪽 자식 검사
-        if (Node.LeftChild >= 0)
+    auto TestChild = [&](int ChildIdx) -> ChildHit
         {
-            if (IntersectNode(Node.LeftChild, RayOrigin, RayDirection, InOutDistance, OutActor))
-            {
-                bHit = true;
-            }
-        }
+            if (ChildIdx < 0) return { ChildIdx, FLT_MAX, false };
+            float tN;
+            if (Nodes[ChildIdx].BoundingBox.RayIntersects(RayOrigin, RayDirection, tN))
+                return { ChildIdx, tN, true };
+            return { ChildIdx, FLT_MAX, false };
+        };
 
-        // 오른쪽 자식 검사 (이미 더 가까운 교차점을 찾았을 수도 있음)
-        if (Node.RightChild >= 0)
+    ChildHit L = TestChild(Node.LeftChild);
+    ChildHit R = TestChild(Node.RightChild);
+
+    bool bHit = false;
+
+    if (L.bValid && R.bValid)
+    {
+        // 가까운 쪽 먼저
+        const ChildHit First = (L.tNear < R.tNear) ? L : R;
+        const ChildHit Second = (L.tNear < R.tNear) ? R : L;
+
+        if (IntersectNode(First.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+            bHit = true;
+
+        // 첫 번째에서 InOutDistance가 갱신되면 두 번째는 프루닝될 수 있음
+        if (InOutDistance > Second.tNear)
         {
-            if (IntersectNode(Node.RightChild, RayOrigin, RayDirection, InOutDistance, OutActor))
-            {
+            if (IntersectNode(Second.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
                 bHit = true;
-            }
         }
-
-        return bHit;
     }
+    else if (L.bValid)
+    {
+        if (IntersectNode(L.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+            bHit = true;
+    }
+    else if (R.bValid)
+    {
+        if (IntersectNode(R.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+            bHit = true;
+    }
+
+    return bHit;
 }
+
 
 bool FBVH::IntersectActor(const AActor* Actor, const FVector& RayOrigin, const FVector& RayDirection,
                           float& OutDistance) const

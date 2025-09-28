@@ -56,7 +56,7 @@ struct FBound
 
         if (tNear > tFar || tFar < 0.0f) return false;
 
-        Distance = tNear >= 0.0f ? tNear : tFar;
+        Distance = (tNear < 0.0f) ? 0.0f : tNear;
         return true;
     }
 };
