@@ -991,13 +991,13 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
                 if (WorldBound.RayIntersects(Ray.Origin, Ray.Direction, distance))
                 {
                     OutDistance = distance;
-                    return true;
+                    //return true;
                 }
                 break; // AABB 컴포넌트를 찾았으면 더 이상 찾지 않음
             }
         }
         // AABB 검사에서 히트되지 않으면 false 반환 (메시 검사는 하지 않음)
-        return false;
+      //  return false;
     }
 
     // 액터의 모든 SceneComponent 순회

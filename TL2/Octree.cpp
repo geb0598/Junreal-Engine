@@ -30,6 +30,9 @@ void UOctree::Build(const TArray<AActor*>& InActors, const FBound& WorldBounds, 
     }
 
     BuildRecursive(Root, InActors, WorldBounds, Depth);
+
+    // 옥트리 생성 완료 후 리프 노드 통계 로그
+    LogLeafNodeStatistics();
 }
 
 void UOctree::BuildRecursive(FOctreeNode* ChildNode, const TArray<AActor*>& InActors, const FBound& Bounds, int32 Depth)
@@ -324,6 +327,64 @@ void UOctree::RenderBVH(FBVH* BVH)
 
             // 메모리 정리
             ObjectFactory::DeleteObject(BVHBoundingBox);
+        }
+    }
+}
+
+void UOctree::LogLeafNodeStatistics()
+{
+    if (!Root)
+    {
+        UE_LOG("[Octree Stats] No octree root found\n");
+        return;
+    }
+
+    UE_LOG("[Octree] === Leaf Node Details ===\n");
+    int32 LeafCount = 0;
+    int32 TotalActors = 0;
+    int32 MinActors = INT_MAX;
+    int32 MaxActors = 0;
+    int32 MaxDepthFound = 0;
+
+    LogLeafNodeStatisticsRecursive(Root, LeafCount, TotalActors, MinActors, MaxActors, 0, MaxDepthFound);
+    UE_LOG("[Octree] =====================\n");
+}
+
+void UOctree::LogLeafNodeStatisticsRecursive(FOctreeNode* Node, int32& LeafCount, int32& TotalActors, int32& MinActors, int32& MaxActors, int32 Depth, int32& MaxDepthFound)
+{
+    if (!Node) return;
+
+    MaxDepthFound = FMath::Max(MaxDepthFound, Depth);
+
+    if (Node->IsLeafNode())
+    {
+        LeafCount++;
+        int32 ActorCount = Node->Actors.Num();
+        TotalActors += ActorCount;
+
+        if (ActorCount > 0)
+        {
+            MinActors = FMath::Min(MinActors, ActorCount);
+            MaxActors = FMath::Max(MaxActors, ActorCount);
+        }
+
+        // 개별 리프 노드 정보 로그
+        char buf[256];
+        sprintf_s(buf, "[Octree Leaf] Depth %d: %d actors in bounds (%.1f,%.1f,%.1f)-(%.1f,%.1f,%.1f)\n",
+                  Depth, ActorCount,
+                  Node->Bounds.Min.X, Node->Bounds.Min.Y, Node->Bounds.Min.Z,
+                  Node->Bounds.Max.X, Node->Bounds.Max.Y, Node->Bounds.Max.Z);
+        UE_LOG(buf);
+    }
+    else
+    {
+        // 내부 노드인 경우 자식들을 재귀적으로 처리
+        for (int i = 0; i < 8; ++i)
+        {
+            if (Node->Children[i])
+            {
+                LogLeafNodeStatisticsRecursive(Node->Children[i], LeafCount, TotalActors, MinActors, MaxActors, Depth + 1, MaxDepthFound);
+            }
         }
     }
 }
