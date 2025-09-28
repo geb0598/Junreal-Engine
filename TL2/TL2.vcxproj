@@ -161,6 +161,7 @@
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="AABoundingBoxComponent.cpp" />
     <ClCompile Include="BVH.cpp" />
+    <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
     <ClCompile Include="MenuBarWidget.cpp" />
     <ClCompile Include="ObjManager.cpp" />
@@ -193,6 +194,7 @@
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PickingTimer.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
+    <ClCompile Include="RenderingStats.cpp" />
     <ClCompile Include="RenderViewportSwitcherWidget.cpp" />
     <ClCompile Include="ResourceBase.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
@@ -329,6 +331,7 @@
     <ClInclude Include="AABoundingBoxComponent.h" />
     <ClInclude Include="Archive.h" />
     <ClInclude Include="BVH.h" />
+    <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
     <ClInclude Include="MenuBarWidget.h" />
     <ClInclude Include="ObjManager.h" />
@@ -357,6 +360,7 @@
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PrimitiveComponent.h" />
+    <ClInclude Include="RenderingStats.h" />
     <ClInclude Include="RenderViewportSwitcherWidget.h" />
     <ClInclude Include="ResourceBase.h" />
     <ClInclude Include="SceneComponent.h" />
