@@ -36,6 +36,14 @@ struct FBound
     {
         return (Max - Min) * 0.5f;
     }
+
+    // 표면적 계산 (SAH용)
+    float GetSurfaceArea() const
+    {
+        FVector size = Max - Min;
+        if (size.X <= 0.0f || size.Y <= 0.0f || size.Z <= 0.0f) return 0.0f;
+        return 2.0f * (size.X * size.Y + size.Y * size.Z + size.Z * size.X);
+    }
     bool IsInside(const FVector& Point) const
     {
         return (Point.X >= Min.X && Point.X <= Max.X &&
@@ -152,7 +160,7 @@ public:
     // 월드 좌표계에서의 AABB 반환
     FBound GetWorldBoundFromCube() const;
     FBound GetWorldBoundFromSphere() const;
-
+    const FBound* GetFBound() const;
     // OBB 관련 함수들
     FOrientedBound GetWorldOrientedBound() const;
     bool RayIntersectsOBB(const FVector& Origin, const FVector& Direction, float& Distance) const;
@@ -160,7 +168,7 @@ public:
     TArray<FVector4> GetLocalCorners() const;
 
     void SetPrimitiveType(EPrimitiveType InType) { PrimitiveType = InType; }
-
+    void SetLineColor(FVector4 InLineColor) { LineColor = InLineColor; };
 private:
     void CreateLineData(
         const FVector& Min, const FVector& Max,
@@ -168,9 +176,10 @@ private:
         OUT TArray<FVector>& End,
         OUT TArray<FVector4>& Color);
 
+    FBound Bound;
     FVector LocalMin;
     FVector LocalMax;
-
+    FVector4 LineColor;
     EPrimitiveType PrimitiveType = EPrimitiveType::Default;
 };
 

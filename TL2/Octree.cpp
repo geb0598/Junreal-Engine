@@ -104,13 +104,26 @@ void UOctree::BuildRecursive(FOctreeNode* ChildNode, const TArray<AActor*>& InAc
 }
 void UOctree::Render(FOctreeNode* ParentNode) {
     if (ParentNode) {
+        ParentNode->AABoundingBoxComponent->SetLineColor({ 1.0f, 1.0f, 0.0f, 1.0f }); // 노란색);
         ParentNode->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
+
+        //// BVH 렌더링 추가
+        //if (ParentNode->MicroBVH && ParentNode->IsLeafNode()) {
+        //    //ParentNode->MicroBVH->AABoundingBoxComponent->SetLineColor({ 1.0f, 0.0f, 0.0f, 1.0f }); // 노란색);
+        //    RenderBVH(ParentNode->MicroBVH);
+        //}
     }
     else {
         if (!Root) {
             return;
         }
         Root->AABoundingBoxComponent->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
+
+        // 루트 노드의 BVH 렌더링
+        if (Root->MicroBVH && Root->IsLeafNode()) {
+            RenderBVH(Root->MicroBVH);
+        }
+
         ParentNode = Root;
     }
     for (auto ChildNode : ParentNode->Children) {
@@ -140,22 +153,36 @@ void UOctree::QueryRecursive(const FRay& Ray, FOctreeNode* Node, TArray<AActor*>
     {
         if (Node->Actors.Num() > 0)
         {
-            // Lazy rebuild 체크
-            const_cast<FOctreeNode*>(Node)->EnsureMicroBVH();
-
-            // 마이크로 BVH를 통한 정밀 검사
+            // 빌드 타임에 미리 생성된 마이크로 BVH 사용
             if (Node->MicroBVH)
             {
+                char buf[256];
+                sprintf_s(buf, "[Micro BVH] Querying BVH with %d actors (Nodes: %d, Depth: %d)\n",
+                          Node->MicroBVH->GetActorCount(),
+                          Node->MicroBVH->GetNodeCount(),
+                          Node->MicroBVH->GetMaxDepth());
+                UE_LOG(buf);
+
                 float hitDistance;
                 AActor* HitActor = Node->MicroBVH->Intersect(Ray.Origin, Ray.Direction, hitDistance);
                 if (HitActor)
                 {
+                    sprintf_s(buf, "[Micro BVH] Hit found with actor at distance %.3f\n", hitDistance);
+                    UE_LOG(buf);
                     OutActors.Add(HitActor);
+                }
+                else
+                {
+                    sprintf_s(buf, "[Micro BVH] No hit found in this BVH\n");
+                    UE_LOG(buf);
                 }
             }
             else
             {
-                // 백업: BVH가 없으면 기존 방식
+                // 예외적 상황: 마이크로 BVH가 없는 경우 백업으로 모든 액터 반환
+                char buf[256];
+                sprintf_s(buf, "[Octree] Warning: No micro BVH found for leaf node with %d actors, falling back to brute force\n", Node->Actors.Num());
+                UE_LOG(buf);
                 OutActors.Append(Node->Actors);
             }
         }
@@ -228,4 +255,75 @@ void UOctree::ReleaseRecursive(FOctreeNode* Node)
     }
 
     delete Node;
+}
+
+void UOctree::PreBuildAllMicroBVH()
+{
+    if (!Root)
+    {
+        UE_LOG("[Octree] PreBuildAllMicroBVH: No root node to process\n");
+        return;
+    }
+
+    char buf[256];
+    sprintf_s(buf, "[Octree] Starting pre-build of all micro BVH structures...\n");
+    UE_LOG(buf);
+
+    PreBuildMicroBVHRecursive(Root);
+
+    sprintf_s(buf, "[Octree] Completed pre-build of all micro BVH structures\n");
+    UE_LOG(buf);
+}
+
+void UOctree::PreBuildMicroBVHRecursive(FOctreeNode* Node)
+{
+    if (!Node) return;
+
+    // 리프 노드인 경우 마이크로 BVH 생성
+    if (Node->IsLeafNode())
+    {
+        if (Node->Actors.Num() > 0)
+        {
+            char buf[256];
+            sprintf_s(buf, "[Octree] Pre-building micro BVH for leaf node with %d actors\n", Node->Actors.Num());
+            UE_LOG(buf);
+
+            // 마이크로 BVH 강제 생성
+            Node->EnsureMicroBVH();
+        }
+    }
+    else
+    {
+        // 중간 노드인 경우 자식들을 재귀적으로 처리
+        for (int i = 0; i < 8; ++i)
+        {
+            if (Node->Children[i])
+            {
+                PreBuildMicroBVHRecursive(Node->Children[i]);
+            }
+        }
+    }
+}
+
+void UOctree::RenderBVH(FBVH* BVH)
+{
+    if (!BVH) return;
+
+    const TArray<FBVHNode>& Nodes = BVH->GetNodes();
+
+    for (int i = 0; i < Nodes.Num(); ++i)
+    {
+        const FBVHNode& Node = Nodes[i];
+
+        // 각 BVH 노드의 바운딩 박스를 렌더링
+        if (Node.ActorCount > 0) {
+            UAABoundingBoxComponent* BVHBoundingBox = NewObject<UAABoundingBoxComponent>();
+            BVHBoundingBox->SetMinMax(Node.BoundingBox);
+            BVHBoundingBox->SetLineColor((1.0f, 0.0f, 0.0f, 1.0f));
+           // BVHBoundingBox->Render(UWorld::GetInstance().GetRenderer(), FMatrix::Identity(), FMatrix::Identity());
+
+            // 메모리 정리
+            ObjectFactory::DeleteObject(BVHBoundingBox);
+        }
+    }
 }

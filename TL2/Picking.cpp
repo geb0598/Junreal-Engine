@@ -457,33 +457,33 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
         if (HitActors.Num() > 0)
         {
-            // Octree Query에서 이미 마이크로 BVH를 통해 정밀 검사 완료
-            // 가장 가까운 액터 찾기
-            float closestDistance = 1e9f;
             AActor* closestActor = nullptr;
+            float closestDistance = FLT_MAX;
 
             for (AActor* HitActor : HitActors)
             {
                 if (!HitActor || HitActor->GetActorHiddenInGame()) continue;
 
                 float hitDistance;
-                if (CheckActorPicking(HitActor, ray, hitDistance))
+                if (CheckActorPicking(HitActor, ray, hitDistance) && hitDistance < closestDistance)
                 {
-                    if (hitDistance < closestDistance)
+                    closestDistance = hitDistance;
+                    closestActor = HitActor;
+
+                    if (closestActor)
                     {
-                        closestDistance = hitDistance;
-                        closestActor = HitActor;
+                        char buf[256];
+                        sprintf_s(buf, "[Hybrid Pick] Hit actor at distance %.3f\n", closestDistance);
+                        UE_LOG(buf);
+                        uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
+                        double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
+                        sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
+                        UE_LOG(buf);
+                        return closestActor;
                     }
                 }
             }
 
-            if (closestActor)
-            {
-                char buf[256];
-                sprintf_s(buf, "[Hybrid Pick] Hit actor at distance %.3f\n", closestDistance);
-                UE_LOG(buf);
-                return closestActor;
-            }
         }
 
         UE_LOG("[Hybrid Pick] No hit found\n");
@@ -502,6 +502,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
             char buf[256];
             sprintf_s(buf, "[Fallback BVH Pick] Hit actor at distance %.3f\n", hitDistance);
             UE_LOG(buf);
+
             return HitActor;
         }
     }

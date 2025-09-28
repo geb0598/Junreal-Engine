@@ -66,6 +66,9 @@ public:
     int GetActorCount() const { return ActorBounds.Num(); }
     int GetMaxDepth() const { return MaxDepth; }
 
+    // 렌더링을 위한 노드 접근
+    const TArray<FBVHNode>& GetNodes() const { return Nodes; }
+
 private:
     TArray<FBVHNode> Nodes;
     TArray<FActorBounds> ActorBounds;
@@ -96,7 +99,7 @@ private:
                         float& OutDistance) const;
 
     // 상수
-    static const int MaxActorsPerLeaf = 8;  // 리프당 최대 액터 수
+    static const int MaxActorsPerLeaf = 4;  // 리프당 최대 액터 수 (마이크로 BVH용)
     static const int MaxBVHDepth = 24;      // 최대 깊이
     static const int SAHSamples = 16;       // SAH 샘플링 수
 };

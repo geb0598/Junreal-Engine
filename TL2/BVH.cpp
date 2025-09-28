@@ -37,17 +37,17 @@ void FBVH::Build(const TArray<AActor*>& Actors)
             continue;
 
         // 액터의 AABB 가져오기 (기존 피킹 시스템과 동일한 방식)
-        FBound ActorBounds_Local;
+        const FBound* ActorBounds_Local=nullptr;
         bool bHasBounds = false;
 
         // StaticMeshActor의 경우 AABB 컴포넌트에서 바운드 가져오기
         if (const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor))
         {
-            for (auto Component : StaticMeshActor->GetComponents())
+            for (auto Component : StaticMeshActor->GetComponents())//최적화
             {
                 if (UAABoundingBoxComponent* AABBComponent = Cast<UAABoundingBoxComponent>(Component))
                 {
-                    ActorBounds_Local = AABBComponent->GetWorldBoundFromCube();
+                    ActorBounds_Local = AABBComponent->GetFBound();
                     bHasBounds = true;
                     break;
                 }
@@ -56,7 +56,7 @@ void FBVH::Build(const TArray<AActor*>& Actors)
 
         if (bHasBounds)
         {
-            FActorBounds AB(Actor, ActorBounds_Local);
+            FActorBounds AB(Actor, *ActorBounds_Local);
             ActorBounds.Add(AB);
             ActorIndices.Add(ActorBounds.Num() - 1);
         }
@@ -345,10 +345,10 @@ bool FBVH::IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector&
     }
 
     // TMin이 현재 최단 거리보다 멀면 건너뛰기
-    if (TMin >= InOutDistance)
+ /*   if (TMin >= InOutDistance)
     {
         return false;
-    }
+    }*/
 
     if (Node.IsLeaf())
     {
