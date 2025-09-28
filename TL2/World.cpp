@@ -170,6 +170,9 @@ void UWorld::InitializeSceneGraph(TArray<AActor*> &Actors)
 	//const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
 	Octree->Build(Actors, FBound({ -100,-100,-100 }, { 100,100,100 }), 0);
 
+	// 빌드 완료 후 모든 마이크로 BVH 미리 생성
+	Octree->PreBuildAllMicroBVH();
+
 	// BVH 초기화 및 빌드
 	BVH = new FBVH();
 	BVH->Build(Actors);

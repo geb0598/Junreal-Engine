@@ -5,7 +5,7 @@
 #include"OBoundingBoxComponent.h"
 
 UAABoundingBoxComponent::UAABoundingBoxComponent()
-    : LocalMin(FVector{}), LocalMax(FVector{})
+    : LocalMin(FVector{}), LocalMax(FVector{}), LineColor(0.0f, 0.0f, 0.0f, 1.0f) // 노란색
 {
 }
 
@@ -22,6 +22,7 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FVector>& Verts)
         LocalMin = LocalMin.ComponentMin(v);
         LocalMax = LocalMax.ComponentMax(v);
     }
+    Bound = GetWorldBoundFromCube();
 }
 
 void UAABoundingBoxComponent::SetFromVertices(const TArray<FNormalVertex>& Verts)
@@ -34,6 +35,7 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FNormalVertex>& Verts
         LocalMin = LocalMin.ComponentMin(v.pos);
         LocalMax = LocalMax.ComponentMax(v.pos);
     }
+    Bound = GetWorldBoundFromCube();
 }
 
 void UAABoundingBoxComponent::SetMinMax(const FBound& Bound)
@@ -50,8 +52,8 @@ void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMat
         TArray<FVector> End;
         TArray<FVector4> Color;
 
-        FBound WorldBound = GetWorldBoundFromCube();
-        CreateLineData(WorldBound.Min, WorldBound.Max, Start, End, Color);
+        Bound = GetWorldBoundFromCube();
+        CreateLineData(Bound.Min, Bound.Max, Start, End, Color);
         Renderer->AddLines(Start, End, Color);
     }
 }
@@ -105,6 +107,11 @@ FBound UAABoundingBoxComponent::GetWorldBoundFromSphere() const
     FVector Min = WorldCenter - WorldScaleExtents;
     FVector Max = WorldCenter + WorldScaleExtents;
     return FBound(Min, Max);
+}
+
+const FBound* UAABoundingBoxComponent::GetFBound() const
+{
+    return &Bound;
 }
 
 FOrientedBound UAABoundingBoxComponent::GetWorldOrientedBound() const
@@ -172,7 +179,7 @@ void UAABoundingBoxComponent::CreateLineData(
     const FVector v7(Min.X, Max.Y, Max.Z);
 
     // 선 색상 정의
-    const FVector4 LineColor(1.0f, 1.0f, 0.0f, 1.0f); // 노란색
+  
 
     // --- 아래쪽 면 ---
     Start.Add(v0); End.Add(v1); Color.Add(LineColor);

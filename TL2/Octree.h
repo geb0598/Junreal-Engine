@@ -83,15 +83,22 @@ public:
     // 레이 기반 Actor 검색
     void Query(const FRay& Ray, TArray<AActor*>& OutActors) const;
 
+    // 빌드 타임에 모든 리프 노드의 마이크로 BVH 미리 생성
+    void PreBuildAllMicroBVH();
+
     void Render(FOctreeNode* Root);
+
+    // BVH 렌더링
+    void RenderBVH(FBVH* BVH);
+
     // 전체 정리
     void Release();
 
 private:
     FOctreeNode* Root = nullptr;
-    int32 MaxDepth = 5;//최대 깊이 조절해봐야하고 
+    int32 MaxDepth = 5;//최대 깊이 조절해봐야하고
     // Leaf Node에 존재할 수 있는 최대 액터 수
-    int32 MaxActorsPerNode = 5;//노드당 최소 엑터수 이거 이하여야만 끝나는 거 
+    int32 MaxActorsPerNode = 8;//노드당 최소 엑터수 이거 이하여야만 끝나는 거 
 
     // 내부 함수들
     /**
@@ -113,4 +120,7 @@ private:
     * @param Node 해제할 현재 Node
     */
     void ReleaseRecursive(FOctreeNode* Node);
+
+    // 재귀적으로 모든 리프 노드의 마이크로 BVH 생성
+    void PreBuildMicroBVHRecursive(FOctreeNode* Node);
 };
