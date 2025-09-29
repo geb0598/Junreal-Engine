@@ -509,38 +509,36 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
     if (!Camera) return nullptr;
 
-    // 1. 월드 공간 광선 생성
+    // 1. 월드 공간 Ray 생성
     const FMatrix View = Camera->GetViewMatrix();
     const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
     FRay WorldRay = MakeRayFromViewport(View, Proj, Camera->GetActorLocation(), Camera->GetRight(),
         Camera->GetUp(), Camera->GetForward(),
         ViewportMousePos, ViewportSize, ViewportOffset);
 
-    // 최종적으로 선택될 액터와 그 거리를 저장할 변수들
+    // 2. 최종적으로 선택될 액터와 그 거리
     AActor* finalHitActor = nullptr;
     float finalClosestHitDistance = FLT_MAX;
 
-    // 2. 옥트리(TLAS)로 1차 후보군 필터링
-    UOctree* Octree = UWorld::GetInstance().GetOctree();
     FBVH* BVH = UWorld::GetInstance().GetBVH();
     if (BVH)
     {
-       /* TArray<AActor*> CandidateActors;
-        Octree->Query(WorldRay, CandidateActors);*/
+        // 3. BVH로 Ray와 가장 가까운 Actor 반환
         float hitDistance;
+        // Ray와 충돌하는 가장 가까운 액터를 정밀 검사까지 마쳐서 찾아줌.
         AActor* HitActor = BVH->Intersect(WorldRay.Origin, WorldRay.Direction, hitDistance);
-        // 3. 후보군 전체를 순회하며 가장 가까운 액터를 찾음
 
-            if (CheckActorPicking(HitActor, WorldRay, hitDistance))
+        //if (CheckActorPicking(HitActor, WorldRay, hitDistance))
+        if(HitActor)
+        {
+            // 충돌했고, 기존에 찾은 것보다 더 가깝다면 최종 후보를 교체
+            if (hitDistance < finalClosestHitDistance)
             {
-                // 충돌했고, 기존에 찾은 것보다 더 가깝다면 최종 후보를 교체
-                if (hitDistance < finalClosestHitDistance)
-                {
-                    finalClosestHitDistance = hitDistance;
-                    finalHitActor = HitActor;
-                   
-                }
+                finalClosestHitDistance = hitDistance;
+                finalHitActor = HitActor;
+               
             }
+        }
     }
     //else
     //{
