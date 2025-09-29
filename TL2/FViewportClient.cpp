@@ -196,7 +196,7 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         if (World->GetGizmoActor()->GetbIsHovering()) {
             return;
         }
-        PickedActor = CPickingSystem::PerformViewportPicking(AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio,  Viewport);
+        PickedActor = CPickingSystem::PerformGlobalBVHPicking(AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio,  Viewport);
 
 
         if (PickedActor)

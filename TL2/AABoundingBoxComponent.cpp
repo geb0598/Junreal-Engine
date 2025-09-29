@@ -22,6 +22,7 @@ void UAABoundingBoxComponent::SetFromVertices(const TArray<FVector>& Verts)
         LocalMin = LocalMin.ComponentMin(v);
         LocalMax = LocalMax.ComponentMax(v);
     }
+
     Bound = GetWorldBoundFromCube();
 }
 

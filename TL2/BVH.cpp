@@ -1,11 +1,12 @@
 ﻿#include "pch.h"
 #include "BVH.h"
-#include"StaticMeshActor.h"
+#include "StaticMeshActor.h"
 #include "Picking.h"
 #include "PickingTimer.h"
 #include "UI/GlobalConsole.h"
 #include <algorithm>
 #include <cfloat>
+
 
 FBVH::FBVH() : MaxDepth(0)
 {
@@ -36,14 +37,12 @@ void FBVH::Build(const TArray<AActor*>& Actors)
         if (!Actor || Actor->GetActorHiddenInGame())
             continue;
 
-        // 액터의 AABB 가져오기 (기존 피킹 시스템과 동일한 방식)
-        const FBound* ActorBounds_Local=nullptr;
+        const FBound* ActorBounds_Local = nullptr;
         bool bHasBounds = false;
 
-        // StaticMeshActor의 경우 AABB 컴포넌트에서 바운드 가져오기
         if (const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor))
         {
-            for (auto Component : StaticMeshActor->GetComponents())//최적화
+            for (auto Component : StaticMeshActor->GetComponents()) // 최적화: AABB 컴포넌트만 검색
             {
                 if (UAABoundingBoxComponent* AABBComponent = Cast<UAABoundingBoxComponent>(Component))
                 {
@@ -77,7 +76,7 @@ void FBVH::Build(const TArray<AActor*>& Actors)
 
     char buf[256];
     sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
-             ActorBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
+        ActorBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
     UE_LOG(buf);
 }
 
@@ -100,7 +99,9 @@ AActor* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, f
     OutDistance = FLT_MAX;
     AActor* HitActor = nullptr;
 
-    bool bHit = IntersectNode(0, RayOrigin, RayDirection, OutDistance, HitActor);
+    // 최적화된 Ray 생성 (InverseDirection과 Sign 미리 계산)
+    FOptimizedRay OptRay(RayOrigin, RayDirection);
+    bool bHit = IntersectNode(0, OptRay, OutDistance, HitActor);
 
     uint64_t IntersectCycles = BVHIntersectTimer.Finish();
     double IntersectTimeMs = FPlatformTime::ToMilliseconds(IntersectCycles);
@@ -109,7 +110,7 @@ AActor* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, f
     {
         char buf[256];
         sprintf_s(buf, "[BVH Pick] Hit actor at distance %.3f (Time: %.3fms)\n",
-                 OutDistance, IntersectTimeMs);
+            OutDistance, IntersectTimeMs);
         UE_LOG(buf);
         return HitActor;
     }
@@ -131,24 +132,19 @@ int FBVH::BuildRecursive(int FirstActor, int ActorCount, int Depth)
     Nodes.Add(NewNode);
     FBVHNode& Node = Nodes[NodeIndex];
 
-    // 노드의 경계 박스 계산
     Node.BoundingBox = CalculateBounds(FirstActor, ActorCount);
 
-    // 리프 노드 조건: 액터 수가 적거나 최대 깊이에 도달
     if (ActorCount <= MaxActorsPerLeaf || Depth >= MaxBVHDepth)
     {
-        // 리프 노드로 설정
         Node.FirstActor = FirstActor;
         Node.ActorCount = ActorCount;
         return NodeIndex;
     }
 
-    // 최적 분할 지점 찾기 (Surface Area Heuristic)
     int BestAxis;
     float BestSplitPos;
     int SplitIndex = FindBestSplit(FirstActor, ActorCount, BestAxis, BestSplitPos);
 
-    // 분할이 의미없는 경우 (모든 액터가 한쪽으로 몰림) 리프로 만들기
     if (SplitIndex == FirstActor || SplitIndex == FirstActor + ActorCount)
     {
         Node.FirstActor = FirstActor;
@@ -156,13 +152,11 @@ int FBVH::BuildRecursive(int FirstActor, int ActorCount, int Depth)
         return NodeIndex;
     }
 
-    // 실제 분할 수행
     int ActualSplit = PartitionActors(FirstActor, ActorCount, BestAxis, BestSplitPos);
 
     int LeftCount = ActualSplit - FirstActor;
     int RightCount = ActorCount - LeftCount;
 
-    // 분할 결과가 유효하지 않으면 리프로 만들기
     if (LeftCount == 0 || RightCount == 0)
     {
         Node.FirstActor = FirstActor;
@@ -170,11 +164,16 @@ int FBVH::BuildRecursive(int FirstActor, int ActorCount, int Depth)
         return NodeIndex;
     }
 
-    // 자식 노드들 재귀 생성
     Node.LeftChild = BuildRecursive(FirstActor, LeftCount, Depth + 1);
     Node.RightChild = BuildRecursive(ActualSplit, RightCount, Depth + 1);
 
     return NodeIndex;
+}
+// BVH.cpp
+float FBVH::SurfaceArea(const FBound& b) {
+    FVector s = b.Max - b.Min;
+    if (s.X <= 0 || s.Y <= 0 || s.Z <= 0) return 0.0f;
+    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
 }
 
 FBound FBVH::CalculateBounds(int FirstActor, int ActorCount) const
@@ -194,7 +193,6 @@ FBound FBVH::CalculateBounds(int FirstActor, int ActorCount) const
         }
         else
         {
-            // Min/Max 확장
             Bounds.Min.X = FMath::Min(Bounds.Min.X, ActorBound.Min.X);
             Bounds.Min.Y = FMath::Min(Bounds.Min.Y, ActorBound.Min.Y);
             Bounds.Min.Z = FMath::Min(Bounds.Min.Z, ActorBound.Min.Z);
@@ -238,70 +236,103 @@ FBound FBVH::CalculateCentroidBounds(int FirstActor, int ActorCount) const
     return Bounds;
 }
 
-int FBVH::FindBestSplit(int FirstActor, int ActorCount, int& OutAxis, float& OutSplitPos) const
+// 🔥 새로 추가: Bound 합치는 유틸리티
+static inline FBound Union(const FBound& A, const FBound& B)
+{
+    FBound Out;
+    Out.Min.X = FMath::Min(A.Min.X, B.Min.X);
+    Out.Min.Y = FMath::Min(A.Min.Y, B.Min.Y);
+    Out.Min.Z = FMath::Min(A.Min.Z, B.Min.Z);
+
+    Out.Max.X = FMath::Max(A.Max.X, B.Max.X);
+    Out.Max.Y = FMath::Max(A.Max.Y, B.Max.Y);
+    Out.Max.Z = FMath::Max(A.Max.Z, B.Max.Z);
+    return Out;
+}
+
+int FBVH::FindBestSplit(int FirstActor, int ActorCount, int& OutAxis, float& OutSplitPos)
 {
     FBound CentroidBounds = CalculateCentroidBounds(FirstActor, ActorCount);
     FBound ParentBounds = CalculateBounds(FirstActor, ActorCount);
 
-    // 가장 긴 축 선택
     FVector Extent = CentroidBounds.Max - CentroidBounds.Min;
     OutAxis = 0;
     if (Extent.Y > Extent.X) OutAxis = 1;
     if (Extent.Z > Extent[OutAxis]) OutAxis = 2;
 
-    // 모든 센터가 같은 위치에 있으면 중간으로 분할
     if (Extent[OutAxis] < KINDA_SMALL_NUMBER)
     {
         OutSplitPos = CentroidBounds.Min[OutAxis];
         return FirstActor + ActorCount / 2;
     }
 
-    // Surface Area Heuristic으로 최적 분할 찾기
+    // 1) 정렬 - TArray의 Sort 사용
+    // 임시 배열 생성 후 정렬
+    TArray<int> TempIndices;
+    TempIndices.Reserve(ActorCount);
+    for (int i = 0; i < ActorCount; ++i)
+    {
+        TempIndices.Add(ActorIndices[FirstActor + i]);
+    }
+
+    TempIndices.Sort([&](int A, int B)
+    {
+        return ActorBounds[A].Center[OutAxis] < ActorBounds[B].Center[OutAxis];
+    });
+
+    // 정렬된 결과를 다시 복사
+    for (int i = 0; i < ActorCount; ++i)
+    {
+        ActorIndices[FirstActor + i] = TempIndices[i];
+    }
+    // 2) Prefix/Suffix AABB 계산
+    TArray<FBound> Prefix;
+    TArray<FBound> Suffix;
+    Prefix.SetNum(ActorCount);
+    Suffix.SetNum(ActorCount);
+
+    Prefix[0] = ActorBounds[ActorIndices[FirstActor]].Bounds;
+    for (int i = 1; i < ActorCount; i++)
+        Prefix[i] = Union(Prefix[i - 1], ActorBounds[ActorIndices[FirstActor + i]].Bounds);
+
+    Suffix[ActorCount - 1] = ActorBounds[ActorIndices[FirstActor + ActorCount - 1]].Bounds;
+    for (int i = ActorCount - 2; i >= 0; i--)
+        Suffix[i] = Union(Suffix[i + 1], ActorBounds[ActorIndices[FirstActor + i]].Bounds);
+
+    // 3) SAH 비용 평가
     float BestCost = FLT_MAX;
     int BestSplit = FirstActor + ActorCount / 2;
-    OutSplitPos = (CentroidBounds.Min[OutAxis] + CentroidBounds.Max[OutAxis]) * 0.5f;
+    float SA_P = SurfaceArea(ParentBounds) + 1e-6f;
 
-    for (int i = 1; i < SAHSamples; ++i)
+    for (int i = 0; i < ActorCount - 1; i++)
     {
-        float t = (float)i / SAHSamples;
-        float SplitPos = CentroidBounds.Min[OutAxis] + t * Extent[OutAxis];
-
-        // 이 분할점에서의 왼쪽/오른쪽 개수 계산
-        int LeftCount = 0;
-        for (int j = 0; j < ActorCount; ++j)
-        {
-            int ActorIndex = ActorIndices[FirstActor + j];
-            if (ActorBounds[ActorIndex].Center[OutAxis] < SplitPos)
-                LeftCount++;
-        }
-
+        int LeftCount = i + 1;
         int RightCount = ActorCount - LeftCount;
 
-        // 유효하지 않은 분할은 건너뛰기
-        if (LeftCount == 0 || RightCount == 0)
-            continue;
+        float SA_L = SurfaceArea(Prefix[i]);
+        float SA_R = SurfaceArea(Suffix[i + 1]);
 
-        float Cost = CalculateSAH(FirstActor, LeftCount, RightCount, ParentBounds);
+        float Cost = 1.0f + (SA_L / SA_P) * LeftCount + (SA_R / SA_P) * RightCount;
+
         if (Cost < BestCost)
         {
             BestCost = Cost;
             BestSplit = FirstActor + LeftCount;
-            OutSplitPos = SplitPos;
+            OutSplitPos = ActorBounds[ActorIndices[BestSplit]].Center[OutAxis];
         }
     }
 
     return BestSplit;
 }
 
-static inline float SurfaceArea(const FBound& b) {
-    FVector s = b.Max - b.Min;
-    if (s.X <= 0 || s.Y <= 0 || s.Z <= 0) return 0.0f;
-    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
-}
+//static inline float SurfaceArea(const FBound& b) {
+//    FVector s = b.Max - b.Min;
+//    if (s.X <= 0 || s.Y <= 0 || s.Z <= 0) return 0.0f;
+//    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
+//}
 
 float FBVH::CalculateSAH(int FirstActor, int LeftCount, int RightCount, const FBound& Parent) const
 {
-    // 좌/우 AABB 계산 (간단하지만 O(N); 더 빠르게 하려면 prefix/suffix 누적 사용)
     FBound LB = CalculateBounds(FirstActor, LeftCount);
     FBound RB = CalculateBounds(FirstActor + LeftCount, RightCount);
 
@@ -309,10 +340,11 @@ float FBVH::CalculateSAH(int FirstActor, int LeftCount, int RightCount, const FB
     float SA_L = SurfaceArea(LB);
     float SA_R = SurfaceArea(RB);
 
-    constexpr float Ct = 1.0f; // 트래버스 비용
-    constexpr float Ci = 1.0f; // 교차 비용
+    constexpr float Ct = 1.0f;
+    constexpr float Ci = 1.0f;
     return Ct + Ci * ((SA_L / SA_P) * LeftCount + (SA_R / SA_P) * RightCount);
 }
+
 int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitPos)
 {
     int Left = FirstActor;
@@ -320,7 +352,6 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
 
     while (Left <= Right)
     {
-        // 왼쪽에서 SplitPos보다 큰 액터 찾기
         while (Left <= Right)
         {
             int LeftActorIndex = ActorIndices[Left];
@@ -330,7 +361,6 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
             Left++;
         }
 
-        // 오른쪽에서 SplitPos보다 작은 액터 찾기
         while (Left <= Right)
         {
             int RightActorIndex = ActorIndices[Right];
@@ -340,7 +370,6 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
             Right--;
         }
 
-        // 스왑이 필요한 경우에만 수행
         if (Left < Right)
         {
             int Temp = ActorIndices[Left];
@@ -355,23 +384,20 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
 }
 
 bool FBVH::IntersectNode(int NodeIndex,
-    const FVector& RayOrigin,
-    const FVector& RayDirection,
+    const FOptimizedRay& Ray,
     float& InOutDistance,
     AActor*& OutActor) const
 {
     const FBVHNode& Node = Nodes[NodeIndex];
 
-    // ────── 1. 노드 AABB와 레이 교차 검사 ──────
+    // 최적화된 Ray-AABB 교차 검사 사용
     float tNear;
-    if (!Node.BoundingBox.RayIntersects(RayOrigin, RayDirection, tNear))
+    if (!Ray.IntersectAABB(Node.BoundingBox, tNear))
         return false;
 
-    // 이미 더 가까운 히트를 찾았으면 스킵
     if (tNear >= InOutDistance)
         return false;
 
-    // ────── 2. 리프 노드 처리 ──────
     if (Node.IsLeaf())
     {
         bool bHit = false;
@@ -384,7 +410,7 @@ bool FBVH::IntersectNode(int NodeIndex,
             AActor* Actor = ActorBounds[ActorIndex].Actor;
 
             float Dist;
-            if (IntersectActor(Actor, RayOrigin, RayDirection, Dist))
+            if (IntersectActor(Actor, Ray.Origin, Ray.Direction, Dist))
             {
                 if (Dist < Closest)
                 {
@@ -404,7 +430,6 @@ bool FBVH::IntersectNode(int NodeIndex,
         return bHit;
     }
 
-    // ────── 3. 내부 노드 near-first 방문 ──────
     struct ChildHit
     {
         int Index;
@@ -416,7 +441,7 @@ bool FBVH::IntersectNode(int NodeIndex,
         {
             if (ChildIdx < 0) return { ChildIdx, FLT_MAX, false };
             float tN;
-            if (Nodes[ChildIdx].BoundingBox.RayIntersects(RayOrigin, RayDirection, tN))
+            if (Ray.IntersectAABB(Nodes[ChildIdx].BoundingBox, tN))
                 return { ChildIdx, tN, true };
             return { ChildIdx, FLT_MAX, false };
         };
@@ -428,39 +453,35 @@ bool FBVH::IntersectNode(int NodeIndex,
 
     if (L.bValid && R.bValid)
     {
-        // 가까운 쪽 먼저
         const ChildHit First = (L.tNear < R.tNear) ? L : R;
         const ChildHit Second = (L.tNear < R.tNear) ? R : L;
 
-        if (IntersectNode(First.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+        if (IntersectNode(First.Index, Ray, InOutDistance, OutActor))
             bHit = true;
 
-        // 첫 번째에서 InOutDistance가 갱신되면 두 번째는 프루닝될 수 있음
         if (InOutDistance > Second.tNear)
         {
-            if (IntersectNode(Second.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+            if (IntersectNode(Second.Index, Ray, InOutDistance, OutActor))
                 bHit = true;
         }
     }
     else if (L.bValid)
     {
-        if (IntersectNode(L.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+        if (IntersectNode(L.Index, Ray, InOutDistance, OutActor))
             bHit = true;
     }
     else if (R.bValid)
     {
-        if (IntersectNode(R.Index, RayOrigin, RayDirection, InOutDistance, OutActor))
+        if (IntersectNode(R.Index, Ray, InOutDistance, OutActor))
             bHit = true;
     }
 
     return bHit;
 }
 
-
 bool FBVH::IntersectActor(const AActor* Actor, const FVector& RayOrigin, const FVector& RayDirection,
-                          float& OutDistance) const
+    float& OutDistance) const
 {
-    // 기존 피킹 시스템의 CheckActorPicking과 동일한 로직 사용
     FRay Ray;
     Ray.Origin = RayOrigin;
     Ray.Direction = RayDirection;

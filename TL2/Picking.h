@@ -98,8 +98,28 @@ public:
     // 기즈모 드래그로 액터를 이동시키는 함수
     static void DragActorWithGizmo(AActor* Actor, AGizmoActor* GizmoActor, uint32 GizmoAxis, const FVector2D& MouseDelta, const ACameraActor* Camera, EGizmoMode InGizmoMode);
 
+    /** === 성능 비교용 특화 함수들 === */
+    // Octree 우선 사용하는 피킹 (하이브리드 방식)
+    static AActor* PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
+                                            ACameraActor* Camera,
+                                            const FVector2D& ViewportMousePos,
+                                            const FVector2D& ViewportSize,
+                                            const FVector2D& ViewportOffset,
+                                            float ViewportAspectRatio, FViewport* Viewport);
+
+    // Global BVH만 사용하는 피킹
+    static AActor* PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
+                                          ACameraActor* Camera,
+                                          const FVector2D& ViewportMousePos,
+                                          const FVector2D& ViewportSize,
+                                          const FVector2D& ViewportOffset,
+                                          float ViewportAspectRatio, FViewport* Viewport);
+
     /** === 헬퍼 함수들 === */
     static bool CheckActorPicking(const AActor* Actor, const FRay& Ray, float& OutDistance);
+
+    // 거리 기반 적응형 조기 종료 임계값
+    static float GetAdaptiveThreshold(float cameraDistance);
 
 private:
     /** === 내부 헬퍼 함수들 === */
