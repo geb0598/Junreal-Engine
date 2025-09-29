@@ -426,7 +426,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 		Renderer->OMSetBlendState(false);
 
 	}
-	RenderSceneGraph();
+	//RenderSceneGraph();
 
 	Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
@@ -806,6 +806,25 @@ void UWorld::LoadScene(const FString& SceneName)
 			StaticMeshActor->SetName(GenerateUniqueActorName(BaseName));
 		}
 	}
+
+	// std::sort 호출, 임시로 정렬 구현
+	std::sort(Actors.begin(), Actors.end(), [](const AActor* A, const AActor* B)
+		{
+			// 안전을 위해 항상 nullptr을 먼저 확인하는 것이 좋습니다.
+			// B는 유효한데 A만 nullptr이면 A가 뒤로 가도록 합니다 (true 반환 시 A가 앞으로 옴).
+			if (!A)
+			{
+				return false;
+			}
+			if (!B)
+			{
+				return true;
+			}
+
+			// A의 이름이 B의 이름보다 사전 순으로 앞서는지 비교하여 반환합니다.
+			// FName 클래스에 operator< 가 구현되어 있어야 합니다. (일반적으로 문자열 클래스는 구현되어 있음)
+			return (A->GetName().ToString() < B->GetName().ToString());
+		});
 
 	// 3) 최종 보정: 전역 카운터는 절대 하향 금지 + 현재 사용된 최대값 이후로 설정
 	const uint32 DuringLoadNext = UObject::PeekNextUUID();

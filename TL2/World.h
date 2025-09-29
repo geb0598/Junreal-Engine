@@ -69,11 +69,6 @@ public:
     template<class T>
     T* SpawnActor(const FTransform& Transform);
 
-    void AddActor(AActor* Actor)
-    {
-        Actors.Add(Actor);
-    }
-
     bool DestroyActor(AActor* Actor);
 
     void CreateNewScene();
@@ -153,7 +148,7 @@ private:
     TArray<AActor*> Actors;
     
     // Object naming system
-    std::map<FString, int32> ObjectTypeCounts;
+    TMap<FString, int32> ObjectTypeCounts;
     
     /** == 기즈모 == */
     AGizmoActor* GizmoActor;

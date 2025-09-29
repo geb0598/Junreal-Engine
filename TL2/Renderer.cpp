@@ -110,12 +110,13 @@ void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
     RHIDevice->UpdateUVScrollConstantBuffers(Speed, TimeSec);
 }
 
+// URenderer.cpp
+
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
 {
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();
-    
-    // 디버그: StaticMesh 렌더링 통계
-    
+    ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
+
     UINT stride = 0;
     switch (InMesh->GetVertexType())
     {
@@ -129,26 +130,33 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
         stride = sizeof(FBillboardVertexInfo_GPU);
         break;
     default:
-        // Handle unknown or unsupported vertex types
         assert(false && "Unknown vertex type!");
-        return; // or log an error
+        return;
     }
     UINT offset = 0;
 
     ID3D11Buffer* VertexBuffer = InMesh->GetVertexBuffer();
+    if (LastVertexBuffer != VertexBuffer)
+    {
+        DeviceContext->IASetVertexBuffers(0, 1, &VertexBuffer, &stride, &offset);
+        LastVertexBuffer = VertexBuffer;
+    }
+
     ID3D11Buffer* IndexBuffer = InMesh->GetIndexBuffer();
-    uint32 VertexCount = InMesh->GetVertexCount();
-    uint32 IndexCount = InMesh->GetIndexCount();
+    if (LastIndexBuffer != IndexBuffer)
+    {
+        DeviceContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        LastIndexBuffer = IndexBuffer;
+    }
 
-    RHIDevice->GetDeviceContext()->IASetVertexBuffers(
-        0, 1, &VertexBuffer, &stride, &offset
-    );
+    if (LastPrimitiveTopology != InTopology)
+    {
+        DeviceContext->IASetPrimitiveTopology(InTopology);
+        LastPrimitiveTopology = InTopology;
+    }
 
-    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
-        IndexBuffer, DXGI_FORMAT_R32_UINT, 0
-    );
-
-    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(InTopology);
+    // 샘플러는 보통 프레임 초기에 한 번 설정하고 바꾸지 않는 경우가 많으므로,
+    // 필요에 따라 이 부분도 상태 캐싱을 적용할 수 있습니다.
     RHIDevice->PSSetDefaultSampler(0);
 
     if (InMesh->HasMaterial())
@@ -157,45 +165,56 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
         const uint32 NumMeshGroupInfos = static_cast<uint32>(MeshGroupInfos.size());
         for (uint32 i = 0; i < NumMeshGroupInfos; ++i)
         {
-            const UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
-            const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();
-            bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName == FName::None());
-            
-            // 재료 변경 추적
+            UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
+
             if (LastMaterial != Material)
             {
-                StatsCollector.IncrementMaterialChanges();
-                LastMaterial = const_cast<UMaterial*>(Material);
-            }
-            
-            FTextureData* TextureData = nullptr;
-            if (bHasTexture)
-            {
-                TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(MaterialInfo.DiffuseTextureFileName);
-                
-                // 텍스처 변경 추적 (임시로 FTextureData*를 UTexture*로 캠스트)
-                UTexture* CurrentTexture = reinterpret_cast<UTexture*>(TextureData);
-                if (LastTexture != CurrentTexture)
+                const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();
+                bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName == FName::None());
+
+                RHIDevice->UpdatePixelConstantBuffers(MaterialInfo, true, bHasTexture);
+
+                ID3D11ShaderResourceView* CurrentTextureSRV = nullptr;
+                if (bHasTexture)
                 {
-                    StatsCollector.IncrementTextureChanges();
-                    LastTexture = CurrentTexture;
+                    FTextureData* TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(MaterialInfo.DiffuseTextureFileName);
+                    CurrentTextureSRV = TextureData->TextureSRV;
                 }
-                
-                RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
+
+                if (LastTextureSRV != CurrentTextureSRV)
+                {
+                    DeviceContext->PSSetShaderResources(0, 1, &CurrentTextureSRV);
+                    LastTextureSRV = CurrentTextureSRV;
+                    StatsCollector.IncrementTextureChanges();
+                }
+
+                StatsCollector.IncrementMaterialChanges();
+                LastMaterial = Material;
             }
-            
-            RHIDevice->UpdatePixelConstantBuffers(MaterialInfo, true, bHasTexture); // PSSet도 해줌
-            
-            // DrawCall 수실행 및 통계 추가
-            RHIDevice->GetDeviceContext()->DrawIndexed(MeshGroupInfos[i].IndexCount, MeshGroupInfos[i].StartIndex, 0);
+
+            DeviceContext->DrawIndexed(MeshGroupInfos[i].IndexCount, MeshGroupInfos[i].StartIndex, 0);
             StatsCollector.IncrementDrawCalls();
         }
     }
     else
     {
-        FObjMaterialInfo ObjMaterialInfo;
-        RHIDevice->UpdatePixelConstantBuffers(ObjMaterialInfo, false, false); // PSSet도 해줌
-        RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
+        // 머티리얼이 없는 경우, 기본 머티리얼/텍스처 상태로 설정합니다.
+        if (LastMaterial != nullptr) // 이전에 유효한 머티리얼이 설정되었다면
+        {
+            FObjMaterialInfo ObjMaterialInfo; // 기본값 머티리얼 정보
+            RHIDevice->UpdatePixelConstantBuffers(ObjMaterialInfo, false, false);
+            LastMaterial = nullptr;
+            StatsCollector.IncrementMaterialChanges();
+        }
+        if (LastTextureSRV != nullptr) // 이전에 유효한 텍스처가 설정되었다면
+        {
+            ID3D11ShaderResourceView* NullSRV = nullptr;
+            DeviceContext->PSSetShaderResources(0, 1, &NullSRV);
+            LastTextureSRV = nullptr;
+            StatsCollector.IncrementTextureChanges();
+        }
+
+        DeviceContext->DrawIndexed(InMesh->GetIndexCount(), 0, 0);
         StatsCollector.IncrementDrawCalls();
     }
 }
