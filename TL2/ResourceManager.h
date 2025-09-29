@@ -41,7 +41,7 @@ public:
     void CreateTextBillboardTexture();
 
     void UpdateDynamicVertexBuffer(const FString& name, TArray<FBillboardVertexInfo_GPU>& vertices);
-    FTextureData* CreateOrGetTextureData(const FWideString& FilePath);
+    FTextureData* CreateOrGetTextureData(const FName& FileName);
 
     // 전체 해제
     void Clear();
@@ -90,7 +90,7 @@ protected:
     TMap<FString, FResourceData*> ResourceMap;
 
     //Deprecated
-    TMap<FWideString, FTextureData*> TextureMap;
+    TMap<FName, FTextureData*> TextureMap;
     // TMap<FString, UStaticMesh*> StaticMeshMap;
 
     //Resource Type의 개수만큼 Array 생성 및 저장

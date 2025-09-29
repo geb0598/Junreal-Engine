@@ -455,13 +455,21 @@ void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBi
     Context->Unmap(Mesh->GetVertexBuffer(), 0);
 }
 
-FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePath)
+FTextureData* UResourceManager::CreateOrGetTextureData(const FName& FileName)
 {
-    auto it = TextureMap.find(FilePath);
-    if (it!=TextureMap.end())
+    if (TextureMap.count(FileName))
     {
-        return it->second;
+        return TextureMap[FileName];
     }
+    
+    const int RequiredSize = MultiByteToWideChar(CP_UTF8, 0, FileName.ToString().c_str(), -1, NULL, 0);
+
+    FWideString OutWstring;
+    OutWstring.resize(RequiredSize);
+    MultiByteToWideChar(CP_UTF8, 0, FileName.ToString().c_str(), -1, &OutWstring[0], RequiredSize);
+
+    OutWstring.resize(RequiredSize - 1);
+    FWideString FilePath = OutWstring;
 
     FTextureData* Data = new FTextureData();
 
@@ -493,6 +501,6 @@ FTextureData* UResourceManager::CreateOrGetTextureData(const FWideString& FilePa
     {
 
     }
-    TextureMap[FilePath] = Data;
-    return TextureMap[FilePath];
+    TextureMap[FileName] = Data;
+    return TextureMap[FileName];
 }
