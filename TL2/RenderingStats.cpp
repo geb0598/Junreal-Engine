@@ -49,6 +49,28 @@ void URenderingStatsCollector::EndFrame()
     CurrentFrameStats.TotalRenderTime = Duration.count() / 1000.0f; // ms로 변환
 }
 
+void URenderingStatsCollector::UpdatePickingStats(double InPickingTimeMs)
+{
+    LastPickingTimeMs = InPickingTimeMs;
+    NumPickingAttempts++;
+    AccumulatedPickingTimeMs += InPickingTimeMs;
+}
+
+double URenderingStatsCollector::GetLastPickingTime() const
+{
+    return LastPickingTimeMs;
+}
+
+uint64_t URenderingStatsCollector::GetNumPickingAttempts() const
+{
+    return NumPickingAttempts;
+}
+
+double URenderingStatsCollector::GetAccumulatedPickingTime() const
+{
+    return AccumulatedPickingTimeMs;
+}
+
 void URenderingStatsCollector::ResetStats()
 {
     CurrentFrameStats.Reset();
