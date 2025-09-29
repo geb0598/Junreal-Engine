@@ -534,6 +534,17 @@ struct alignas(16) FMatrix
             0, 0, 0, 1
         );
     }
+
+    static FMatrix Zero()
+    {
+        return FMatrix(
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
+        );
+    }
+
     // 행렬 == 행렬
     bool operator==(const FMatrix& B) const noexcept
     {

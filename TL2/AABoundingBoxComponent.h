@@ -158,7 +158,7 @@ public:
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
 
     // 월드 좌표계에서의 AABB 반환
-    FBound GetWorldBoundFromCube() const;
+    FBound GetWorldBoundFromCube();
     FBound GetWorldBoundFromSphere() const;
     const FBound* GetFBound() const;
     // OBB 관련 함수들
@@ -181,5 +181,9 @@ private:
     FVector LocalMax;
     FVector4 LineColor;
     EPrimitiveType PrimitiveType = EPrimitiveType::Default;
+
+    // AABB 계산 캐싱용
+    FMatrix LastWorldMat = FMatrix::Zero();
+    FBound WorldBound;
 };
 
