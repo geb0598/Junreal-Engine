@@ -77,6 +77,7 @@ private:
      */
     ID3D11Buffer* LastVertexBuffer = nullptr;
     ID3D11Buffer* LastIndexBuffer = nullptr;
+    D3D11_PRIMITIVE_TOPOLOGY LastPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     ID3D11ShaderResourceView* LastTextureSRV = nullptr;
 
     void InitializeLineBatch();
