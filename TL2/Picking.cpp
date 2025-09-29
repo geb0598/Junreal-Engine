@@ -522,47 +522,45 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
     // 2. 옥트리(TLAS)로 1차 후보군 필터링
     UOctree* Octree = UWorld::GetInstance().GetOctree();
-    if (Octree)
+    FBVH* BVH = UWorld::GetInstance().GetBVH();
+    if (BVH)
     {
-        TArray<AActor*> CandidateActors;
-        Octree->Query(WorldRay, CandidateActors);
-
+       /* TArray<AActor*> CandidateActors;
+        Octree->Query(WorldRay, CandidateActors);*/
+        float hitDistance;
+        AActor* HitActor = BVH->Intersect(WorldRay.Origin, WorldRay.Direction, hitDistance);
         // 3. 후보군 전체를 순회하며 가장 가까운 액터를 찾음
-        for (AActor* Candidate : CandidateActors)
-        {
-            float hitDistance;
-            // 우리가 완성한 CheckActorPicking 함수를 호출 (내부적으로 BLAS 사용)
-            if (CheckActorPicking(Candidate, WorldRay, hitDistance))
+
+            if (CheckActorPicking(HitActor, WorldRay, hitDistance))
             {
                 // 충돌했고, 기존에 찾은 것보다 더 가깝다면 최종 후보를 교체
                 if (hitDistance < finalClosestHitDistance)
                 {
                     finalClosestHitDistance = hitDistance;
-                    finalHitActor = Candidate;
+                    finalHitActor = HitActor;
                    
                 }
             }
-        }
     }
-    else
-    {
-        // 옥트리가 없을 경우를 대비한 Fallback 로직 (예: 전역 BVH 또는 전체 순회)
-        UE_LOG("[Picking] Octree is not available. Falling back to legacy picking.\n");
+    //else
+    //{
+    //    // 옥트리가 없을 경우를 대비한 Fallback 로직 (예: 전역 BVH 또는 전체 순회)
+    //    UE_LOG("[Picking] Octree is not available. Falling back to legacy picking.\n");
 
-        // (여기에 기존의 FBVH나 전체 액터 순회 로직을 둘 수 있습니다)
-        for (const auto& Actor : Actors)
-        {
-            float hitDistance;
-            if (CheckActorPicking(Actor, WorldRay, hitDistance))
-            {
-                if (hitDistance < finalClosestHitDistance)
-                {
-                    finalClosestHitDistance = hitDistance;
-                    finalHitActor = Actor;
-                }
-            }
-        }
-    }
+    //    // (여기에 기존의 FBVH나 전체 액터 순회 로직을 둘 수 있습니다)
+    //    for (const auto& Actor : Actors)
+    //    {
+    //        float hitDistance;
+    //        if (CheckActorPicking(Actor, WorldRay, hitDistance))
+    //        {
+    //            if (hitDistance < finalClosestHitDistance)
+    //            {
+    //                finalClosestHitDistance = hitDistance;
+    //                finalHitActor = Actor;
+    //            }
+    //        }
+    //    }
+    //}
     uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
     double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
     // 4. 모든 후보 검사가 끝난 후, 최종 결과를 반환
