@@ -149,11 +149,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
         LastIndexBuffer = IndexBuffer;
     }
 
-    if (LastPrimitiveTopology != InTopology)
-    {
-        DeviceContext->IASetPrimitiveTopology(InTopology);
-        LastPrimitiveTopology = InTopology;
-    }
+    DeviceContext->IASetPrimitiveTopology(InTopology);
 
     // 샘플러는 보통 프레임 초기에 한 번 설정하고 바꾸지 않는 경우가 많으므로,
     // 필요에 따라 이 부분도 상태 캐싱을 적용할 수 있습니다.
