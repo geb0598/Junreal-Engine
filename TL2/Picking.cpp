@@ -22,6 +22,11 @@
 #include "PickingTimer.h"
 #include "Octree.h"
 #include "BVH.h"
+#include "BoundingVolumeHierarchy.h"
+#include "StaticMeshActor.h"
+#include "StaticMeshComponent.h"
+#include "StaticMesh.h"
+#include "Triangle.h" 
 
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
@@ -296,7 +301,77 @@ bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
     return true;
 }
 
-
+/**
+  * @brief 메시의 BVH(Bounding Volume Hierarchy)를 재귀적으로 순회하며, 주어진 광선과 가장 가까운 삼각형의 교차점을 찾는 헬퍼 함수
+   *        '분할 정복' 전략을 사용하여 불필요한 삼각형 검사를 건너뛰어 성능을 크게 향상시킨다.
+   *
+   * @param LocalRay          메시의 로컬 공간(모델 원점 기준)으로 변환된 광선. BVH는 로컬 공간 기준으로 만들어짐
+   * @param Node              현재 탐색하고 있는 BVH 트리의 노드.
+   * @param MeshAsset         삼각형의 원본 정점/인덱스 데이터를 담고 있는 FStaticMesh 객체. 리프 노드에서 실제 정점 위치를 참조할 때 필요
+   * @param OutClosestHitDistance 현재까지 찾은 가장 가까운 충돌 거리를 저장하는 변수. 재귀 호출을 거치며 계속 갱신 가능
+   * @return bool             노드 or 자식들 중에서 유효한 충돌 발생 시 true
+*/
+bool IntersectTriangleBVH(const FRay& LocalRay, FNarrowPhaseBVHNode* Node, const FStaticMesh* MeshAsset, float& OutClosestHitDistance)
+{
+    if (!Node) return false;
+    
+    // 광선이 현재 노드를 감싸는 거대한 Bounding box와 충돌하는지 확인
+    // 광선이 box와 충돌하지 않거나, 충돌거리가 이미 찾은 가장 가까운 삼각형보다 멀리 있으면 
+    // 이 노드 내부에 있는 삼각형들은 검사할 필요 없으므로 탐색 종료
+    float nodeHitDist;
+    if (!Node->Bounds.RayIntersects(LocalRay.Origin, LocalRay.Direction, nodeHitDist) 
+        || nodeHitDist >= OutClosestHitDistance)
+    {
+        return false;
+    }
+    // 현재 노드 or 자식 노드에서 충돌이 발생했는지 추적위한 플래그
+    bool bHit = false;
+    
+    // mesh BVH의 리프 노드에 도달했는지 확인
+    if (Node->IsLeaf())
+    {
+        // 리프 노드에 포함된 소수의 삼각형들에 대해서만 충돌 검사
+        for (const auto& Primitive : Node->Primitives)
+        {
+            // 리프 노드 삼각형의 Primitive 
+            const uint32 i0 = MeshAsset->Indices[Primitive.TriangleIndex * 3 + 0];
+            const uint32 i1 = MeshAsset->Indices[Primitive.TriangleIndex * 3 + 1];
+            const uint32 i2 = MeshAsset->Indices[Primitive.TriangleIndex * 3 + 2];
+    
+            const FVector& v0 = MeshAsset->Vertices[i0].pos;
+            const FVector& v1 = MeshAsset->Vertices[i1].pos;
+            const FVector& v2 = MeshAsset->Vertices[i2].pos;
+    
+            
+            // 가져온 정점으로 묄러트럼보어 실행 -> 실제 광선과 삼각형의 교차 검사
+            float triangleHitDist;
+            if (IntersectRayTriangleMT(LocalRay, v0, v1, v2, triangleHitDist))
+            {
+                if (triangleHitDist < OutClosestHitDistance)
+                {
+                    OutClosestHitDistance = triangleHitDist;
+                    bHit = true;
+                }
+            }
+        }
+        return bHit;
+    }
+    
+    // 리프노드가 아닌 경우 재귀
+    if (IntersectTriangleBVH(LocalRay, Node->Left, MeshAsset, OutClosestHitDistance))
+    {
+        // 왼쪽 자식 노드에서 충돌 발생했다면 플래그 설정
+        // 더 가까운 삼각형을 찾아 OutClosestHitDistance가 갱신되었다면, 오른쪽 노드 탐색은 더 엄격한 거리 조건으로 탐색하게됨 -> 효율 상승
+        bHit = true;
+    } 
+    if (IntersectTriangleBVH(LocalRay, Node->Right, MeshAsset, OutClosestHitDistance))
+    {
+        bHit = true;
+    }
+    
+    return bHit;
+    
+}
 
 // PickingSystem 구현
 AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraActor* Camera)
@@ -433,121 +508,195 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
     if (!Camera) return nullptr;
 
-    // 뷰포트별 레이 생성 - 커스텀 aspect ratio 사용
+    // 1. 월드 공간 광선 생성
     const FMatrix View = Camera->GetViewMatrix();
     const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
-    const FVector CameraWorldPos = Camera->GetActorLocation();
-    const FVector CameraRight = Camera->GetRight();
-    const FVector CameraUp = Camera->GetUp();
-    const FVector CameraForward = Camera->GetForward();
+    FRay WorldRay = MakeRayFromViewport(View, Proj, Camera->GetActorLocation(), Camera->GetRight(),
+        Camera->GetUp(), Camera->GetForward(),
+        ViewportMousePos, ViewportSize, ViewportOffset);
 
-    FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
-                                   ViewportMousePos, ViewportSize, ViewportOffset);
+    // 최종적으로 선택될 액터와 그 거리를 저장할 변수들
+    AActor* finalHitActor = nullptr;
+    float finalClosestHitDistance = FLT_MAX;
 
-    int pickedIndex = -1;
-    float pickedT = 1e9f;
-
-    // 하이브리드 방식: Octree(Per-Leaf 마이크로 BVH) 우선 사용
+    // 2. 옥트리(TLAS)로 1차 후보군 필터링
     UOctree* Octree = UWorld::GetInstance().GetOctree();
     if (Octree)
     {
-        // Octree + Per-Leaf 마이크로 BVH를 통한 하이브리드 피킹
-        TArray<AActor*> HitActors;
-        Octree->Query(ray, HitActors);
+        TArray<AActor*> CandidateActors;
+        Octree->Query(WorldRay, CandidateActors);
 
-        if (HitActors.Num() > 0)
+        // 3. 후보군 전체를 순회하며 가장 가까운 액터를 찾음
+        for (AActor* Candidate : CandidateActors)
         {
-            AActor* closestActor = nullptr;
-            float closestDistance = FLT_MAX;
-
-            for (AActor* HitActor : HitActors)
+            float hitDistance;
+            // 우리가 완성한 CheckActorPicking 함수를 호출 (내부적으로 BLAS 사용)
+            if (CheckActorPicking(Candidate, WorldRay, hitDistance))
             {
-                if (!HitActor || HitActor->GetActorHiddenInGame()) continue;
-
-                float hitDistance;
-                if (CheckActorPicking(HitActor, ray, hitDistance) && hitDistance < closestDistance)
+                // 충돌했고, 기존에 찾은 것보다 더 가깝다면 최종 후보를 교체
+                if (hitDistance < finalClosestHitDistance)
                 {
-                    closestDistance = hitDistance;
-                    closestActor = HitActor;
-
-                    if (closestActor)
-                    {
-                        char buf[256];
-                        sprintf_s(buf, "[Hybrid Pick] Hit actor at distance %.3f\n", closestDistance);
-                        UE_LOG(buf);
-                        uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
-                        double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
-                        sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
-                        UE_LOG(buf);
-                        return closestActor;
-                    }
+                    finalClosestHitDistance = hitDistance;
+                    finalHitActor = Candidate;
                 }
             }
-
         }
-
-        UE_LOG("[Hybrid Pick] No hit found\n");
-        return nullptr;
-    }
-
-    // 백업: 글로벌 BVH 사용
-    FBVH* BVH = UWorld::GetInstance().GetBVH();
-    if (BVH)
-    {
-        float hitDistance;
-        AActor* HitActor = BVH->Intersect(ray.Origin, ray.Direction, hitDistance);
-
-        if (HitActor && !HitActor->GetActorHiddenInGame())
-        {
-            char buf[256];
-            sprintf_s(buf, "[Fallback BVH Pick] Hit actor at distance %.3f\n", hitDistance);
-            UE_LOG(buf);
-
-            return HitActor;
-        }
-    }
-
-    // 최후의 백업: 전체 액터 검사
-    TArray<AActor*> CandidateActors = Actors;
-   
-
-    // 후보군 액터에 대해 피킹 테스트
-    for (int i = 0; i < CandidateActors.Num(); ++i)
-    {
-        AActor* Actor = CandidateActors[i];
-        if (!Actor) continue;
-
-        // Skip hidden actors for picking
-        if (Actor->GetActorHiddenInGame()) continue;
-
-        float hitDistance;
-        if (CheckActorPicking(Actor, ray, hitDistance))
-        {
-            if (hitDistance < pickedT)
-            {
-                pickedT = hitDistance;
-                pickedIndex = i;
-            }
-        }
-    }
-
-    uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
-    double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
-
-    if (pickedIndex >= 0)
-    {
-        char buf[256];
-        sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
-        UE_LOG(buf);
-        return CandidateActors[pickedIndex];
     }
     else
     {
-        char buf[256];
-        sprintf_s(buf, "[Viewport Pick with AspectRatio] No hit (Time: %.3fms)\n", ViewportAspectPickingTimeMs);
-        UE_LOG(buf);
-        return nullptr;
+        // 옥트리가 없을 경우를 대비한 Fallback 로직 (예: 전역 BVH 또는 전체 순회)
+        UE_LOG("[Picking] Octree is not available. Falling back to legacy picking.\n");
+
+        // (여기에 기존의 FBVH나 전체 액터 순회 로직을 둘 수 있습니다)
+        for (const auto& Actor : Actors)
+        {
+            float hitDistance;
+            if (CheckActorPicking(Actor, WorldRay, hitDistance))
+            {
+                if (hitDistance < finalClosestHitDistance)
+                {
+                    finalClosestHitDistance = hitDistance;
+                    finalHitActor = Actor;
+                }
+            }
+        }
     }
+
+    // 4. 모든 후보 검사가 끝난 후, 최종 결과를 반환
+    if (finalHitActor)
+    {
+        char buf[256];
+        sprintf_s(buf, "[Precision Pick] Hit actor '%s' at distance %.3f\n",
+            finalHitActor->GetName().ToString(), finalClosestHitDistance);
+        UE_LOG(buf);
+    }
+    else
+    {
+        UE_LOG("[Precision Pick] No hit found\n");
+    }
+
+    return finalHitActor;
+    //TStatId ViewportAspectPickingStatId;
+    //FScopeCycleCounter ViewportAspectPickingTimer(ViewportAspectPickingStatId);
+
+    //if (!Camera) return nullptr;
+
+    //// 뷰포트별 레이 생성 - 커스텀 aspect ratio 사용
+    //const FMatrix View = Camera->GetViewMatrix();
+    //const FMatrix Proj = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+    //const FVector CameraWorldPos = Camera->GetActorLocation();
+    //const FVector CameraRight = Camera->GetRight();
+    //const FVector CameraUp = Camera->GetUp();
+    //const FVector CameraForward = Camera->GetForward();
+
+    //// 월드 공간 광선 생성
+    //FRay ray = MakeRayFromViewport(View, Proj, CameraWorldPos, CameraRight, CameraUp, CameraForward,
+    //                               ViewportMousePos, ViewportSize, ViewportOffset);
+
+    //int pickedIndex = -1;
+    //float pickedT = 1e9f;
+
+    //// 하이브리드 방식: Octree(Per-Leaf 마이크로 BVH) 우선 사용
+    //UOctree* Octree = UWorld::GetInstance().GetOctree();
+    //if (Octree)
+    //{
+    //    // Octree + Per-Leaf 마이크로 BVH를 통한 하이브리드 피킹
+    //    TArray<AActor*> HitActors;
+    //    Octree->Query(ray, HitActors);
+
+    //    if (HitActors.Num() > 0)
+    //    {
+    //        AActor* closestActor = nullptr;
+    //        float closestDistance = FLT_MAX;
+
+    //        // 후보군 액터에 대해 피킹여부 확인
+    //        for (AActor* HitActor : HitActors)
+    //        {
+    //            if (!HitActor || HitActor->GetActorHiddenInGame()) continue;
+
+    //            float hitDistance;
+    //            if (CheckActorPicking(HitActor, ray, hitDistance) && hitDistance < closestDistance)
+    //            {
+    //                closestDistance = hitDistance;
+    //                closestActor = HitActor;
+
+    //                if (closestActor)
+    //                {
+    //                    char buf[256];
+    //                    sprintf_s(buf, "[Hybrid Pick] Hit actor at distance %.3f\n", closestDistance);
+    //                    UE_LOG(buf);
+    //                    uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
+    //                    double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
+    //                    sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
+    //                    UE_LOG(buf);
+    //                    return closestActor;
+    //                }
+    //            }
+    //        }
+
+    //    }
+
+    //    UE_LOG("[Hybrid Pick] No hit found\n");
+    //    return nullptr;
+
+    //// 백업: 글로벌 BVH 사용
+    //FBVH* BVH = UWorld::GetInstance().GetBVH();
+    //if (BVH)
+    //{
+    //    float hitDistance;
+    //    AActor* HitActor = BVH->Intersect(ray.Origin, ray.Direction, hitDistance);
+
+    //    if (HitActor && !HitActor->GetActorHiddenInGame())
+    //    {
+    //        char buf[256];
+    //        sprintf_s(buf, "[Fallback BVH Pick] Hit actor at distance %.3f\n", hitDistance);
+    //        UE_LOG(buf);
+
+    //        return HitActor;
+    //    }
+    //}
+
+    //// 최후의 백업: 전체 액터 검사
+    //TArray<AActor*> CandidateActors = Actors;
+   
+
+    //// 후보군 액터에 대해 피킹 테스트
+    //for (int i = 0; i < CandidateActors.Num(); ++i)
+    //{
+    //    AActor* Actor = CandidateActors[i];
+    //    if (!Actor) continue;
+
+    //    // Skip hidden actors for picking
+    //    if (Actor->GetActorHiddenInGame()) continue;
+
+    //    float hitDistance;
+    //    if (CheckActorPicking(Actor, ray, hitDistance))
+    //    {
+    //        if (hitDistance < pickedT)
+    //        {
+    //            pickedT = hitDistance;
+    //            pickedIndex = i;
+    //        }
+    //    }
+    //}
+
+    //uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
+    //double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
+
+    //if (pickedIndex >= 0)
+    //{
+    //    char buf[256];
+    //    sprintf_s(buf, "[Viewport Pick with AspectRatio] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportAspectPickingTimeMs);
+    //    UE_LOG(buf);
+    //    return CandidateActors[pickedIndex];
+    //}
+    //else
+    //{
+    //    char buf[256];
+    //    sprintf_s(buf, "[Viewport Pick with AspectRatio] No hit (Time: %.3fms)\n", ViewportAspectPickingTimeMs);
+    //    UE_LOG(buf);
+    //    return nullptr;
+    //}
 }
 
 uint32 CPickingSystem::IsHoveringGizmo(AGizmoActor* GizmoTransActor, const ACameraActor* Camera)
@@ -977,118 +1126,167 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
 {
     if (!Actor) return false;
 
-    // 스태틱 메시 액터인 경우 AABB 컬리전 검사 우선 수행
-    if (const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor))
+    // 스태틱 메시 액터인지 확인
+    const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor);
+    if (StaticMeshActor)
     {
-        // AABB 컴포넌트 찾기
-        for (auto Component : StaticMeshActor->GetComponents())
+        // UStaticMesh 가져오기
+        const UStaticMeshComponent* StaticMeshComponent = StaticMeshActor->GetStaticMeshComponent();
+        const UStaticMesh* StaticMesh = StaticMeshComponent ? StaticMeshComponent->GetStaticMesh() : nullptr;
+        if (StaticMesh)
         {
-            if (UAABoundingBoxComponent* AABBComponent = Cast<UAABoundingBoxComponent>(Component))
+            FNarrowPhaseBVHNode* MeshBVH = StaticMesh->GetMeshBVH();
+            if (MeshBVH)
             {
-                // AABB 검사
-                FBound WorldBound = AABBComponent->GetWorldBoundFromCube();
-                float distance;
-                if (WorldBound.RayIntersects(Ray.Origin, Ray.Direction, distance))
+                // 월드 공간 광선을 액터의 로컬 공간으로 변환
+                FMatrix InvWorldMatrix = Actor->GetWorldMatrix().InverseAffine();
+
+                FRay LocalRay;
+                // Origin은 위치이므로 w=1.0f로 변환
+                FVector4 Origin4(Ray.Origin.X, Ray.Origin.Y, Ray.Origin.Z, 1.0f);
+                FVector4 TransformedOrigin4 = Origin4 * InvWorldMatrix;
+                LocalRay.Origin = FVector(TransformedOrigin4.X, TransformedOrigin4.Y,
+                    TransformedOrigin4.Z);
+
+                // Direction은 방향이므로 w=0.0f로 변환
+                FVector4 Direction4(Ray.Direction.X, Ray.Direction.Y, Ray.Direction.Z,
+                    0.0f);
+                FVector4 TransformedDirection4 = Direction4 * InvWorldMatrix;
+                LocalRay.Direction = FVector(TransformedDirection4.X, TransformedDirection4.Y,
+                    TransformedDirection4.Z);
+                LocalRay.Direction.Normalize();
+
+                float ClosestLocalHitDist = FLT_MAX; // 가장 가까운 거리를 무한대로 초기화
+
+                // 6. 헬퍼 함수를 호출하여 BVH와 정밀 충돌 검사 수행
+                if (IntersectTriangleBVH(LocalRay, MeshBVH, StaticMesh->GetStaticMeshAsset(),
+                    ClosestLocalHitDist))
                 {
-                    OutDistance = distance;
-                    //return true;
+                    // 7. 충돌했다면, 로컬 공간 거리를 월드 공간 거리로 변환하여 최종 결과로 반환
+                    // (주의: 액터의 스케일에 따라 거리가 달라지므로, 스케일 값을 곱해 보정)
+                    OutDistance = ClosestLocalHitDist * Actor->GetActorScale().X; // 균일 스케일 가정
+                    return true;
                 }
-                break; // AABB 컴포넌트를 찾았으면 더 이상 찾지 않음
+
+                // BVH가 있지만 충돌하지 않았다면, 더 검사할 필요 없이 실패 처리
+                return false;
             }
         }
-        // AABB 검사에서 히트되지 않으면 false 반환 (메시 검사는 하지 않음)
-      //  return false;
+        
     }
 
-    // 액터의 모든 SceneComponent 순회
-    for (auto SceneComponent : Actor->GetComponents())
-    {
-        if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(SceneComponent))
-        {
-            // Cooked FStaticMesh 사용 (MeshData 대체)
-            FStaticMesh* StaticMesh = FObjManager::LoadObjStaticMeshAsset(
-                StaticMeshComponent->GetStaticMesh()->GetFilePath()
-            );
+    //// 스태틱 메시 액터인 경우 AABB 컬리전 검사 우선 수행
+    //if (const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor))
+    //{
+    //    // AABB 컴포넌트 찾기
+    //    for (auto Component : StaticMeshActor->GetComponents())
+    //    {
+    //        if (UAABoundingBoxComponent* AABBComponent = Cast<UAABoundingBoxComponent>(Component))
+    //        {
+    //            // AABB 검사
+    //            FBound WorldBound = AABBComponent->GetWorldBoundFromCube();
+    //            float distance;
+    //            if (WorldBound.RayIntersects(Ray.Origin, Ray.Direction, distance))
+    //            {
+    //                OutDistance = distance;
+    //                //return true;
+    //            }
+    //            break; // AABB 컴포넌트를 찾았으면 더 이상 찾지 않음
+    //        }
+    //    }
+    //    // AABB 검사에서 히트되지 않으면 false 반환 (메시 검사는 하지 않음)
+    //  //  return false;
+    //}
 
-            if (!StaticMesh) return false;
+    //// 액터의 모든 SceneComponent 순회
+    //for (auto SceneComponent : Actor->GetComponents())
+    //{
+    //    if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(SceneComponent))
+    //    {
+    //        // Cooked FStaticMesh 사용 (MeshData 대체)
+    //        FStaticMesh* StaticMesh = FObjManager::LoadObjStaticMeshAsset(
+    //            StaticMeshComponent->GetStaticMesh()->GetFilePath()
+    //        );
 
-            // 피킹 계산에는 컴포넌트의 월드 변환 행렬 사용
-            FMatrix WorldMatrix = StaticMeshComponent->GetWorldMatrix();
+    //        if (!StaticMesh) return false;
 
-            auto TransformPoint = [&](float X, float Y, float Z) -> FVector
-                {
-                    // row-vector (v^T) * M 방식으로 월드 변환 (translation 반영)
-                    FVector4 V4(X, Y, Z, 1.0f);
-                    FVector4 OutV4;
-                    OutV4.X = V4.X * WorldMatrix.M[0][0] + V4.Y * WorldMatrix.M[1][0] + V4.Z * WorldMatrix.M[2][0] + V4.W * WorldMatrix.M[3][0];
-                    OutV4.Y = V4.X * WorldMatrix.M[0][1] + V4.Y * WorldMatrix.M[1][1] + V4.Z * WorldMatrix.M[2][1] + V4.W * WorldMatrix.M[3][1];
-                    OutV4.Z = V4.X * WorldMatrix.M[0][2] + V4.Y * WorldMatrix.M[1][2] + V4.Z * WorldMatrix.M[2][2] + V4.W * WorldMatrix.M[3][2];
-                    OutV4.W = V4.X * WorldMatrix.M[0][3] + V4.Y * WorldMatrix.M[1][3] + V4.Z * WorldMatrix.M[2][3] + V4.W * WorldMatrix.M[3][3];
-                    return FVector(OutV4.X, OutV4.Y, OutV4.Z);
-                };
+    //        // 피킹 계산에는 컴포넌트의 월드 변환 행렬 사용
+    //        FMatrix WorldMatrix = StaticMeshComponent->GetWorldMatrix();
 
-            float ClosestT = 1e9f;
-            bool bHasHit = false;
+    //        auto TransformPoint = [&](float X, float Y, float Z) -> FVector
+    //            {
+    //                // row-vector (v^T) * M 방식으로 월드 변환 (translation 반영)
+    //                FVector4 V4(X, Y, Z, 1.0f);
+    //                FVector4 OutV4;
+    //                OutV4.X = V4.X * WorldMatrix.M[0][0] + V4.Y * WorldMatrix.M[1][0] + V4.Z * WorldMatrix.M[2][0] + V4.W * WorldMatrix.M[3][0];
+    //                OutV4.Y = V4.X * WorldMatrix.M[0][1] + V4.Y * WorldMatrix.M[1][1] + V4.Z * WorldMatrix.M[2][1] + V4.W * WorldMatrix.M[3][1];
+    //                OutV4.Z = V4.X * WorldMatrix.M[0][2] + V4.Y * WorldMatrix.M[1][2] + V4.Z * WorldMatrix.M[2][2] + V4.W * WorldMatrix.M[3][2];
+    //                OutV4.W = V4.X * WorldMatrix.M[0][3] + V4.Y * WorldMatrix.M[1][3] + V4.Z * WorldMatrix.M[2][3] + V4.W * WorldMatrix.M[3][3];
+    //                return FVector(OutV4.X, OutV4.Y, OutV4.Z);
+    //            };
 
-            // 인덱스가 있는 경우: 인덱스 삼각형 집합 검사
-            if (StaticMesh->Indices.Num() >= 3)
-            {
-                uint32 IndexNum = StaticMesh->Indices.Num();
-                for (uint32 Idx = 0; Idx + 2 < IndexNum; Idx += 3)
-                {
-                    const FNormalVertex& V0N = StaticMesh->Vertices[StaticMesh->Indices[Idx + 0]];
-                    const FNormalVertex& V1N = StaticMesh->Vertices[StaticMesh->Indices[Idx + 1]];
-                    const FNormalVertex& V2N = StaticMesh->Vertices[StaticMesh->Indices[Idx + 2]];
+    //        float ClosestT = 1e9f;
+    //        bool bHasHit = false;
 
-                    FVector A = TransformPoint(V0N.pos.X, V0N.pos.Y, V0N.pos.Z);
-                    FVector B = TransformPoint(V1N.pos.X, V1N.pos.Y, V1N.pos.Z);
-                    FVector C = TransformPoint(V2N.pos.X, V2N.pos.Y, V2N.pos.Z);
+    //        // 인덱스가 있는 경우: 인덱스 삼각형 집합 검사
+    //        if (StaticMesh->Indices.Num() >= 3)
+    //        {
+    //            uint32 IndexNum = StaticMesh->Indices.Num();
+    //            for (uint32 Idx = 0; Idx + 2 < IndexNum; Idx += 3)
+    //            {
+    //                const FNormalVertex& V0N = StaticMesh->Vertices[StaticMesh->Indices[Idx + 0]];
+    //                const FNormalVertex& V1N = StaticMesh->Vertices[StaticMesh->Indices[Idx + 1]];
+    //                const FNormalVertex& V2N = StaticMesh->Vertices[StaticMesh->Indices[Idx + 2]];
 
-                    float THit;
-                    if (IntersectRayTriangleMT(Ray, A, B, C, THit))
-                    {
-                        if (THit < ClosestT)
-                        {
-                            ClosestT = THit;
-                            bHasHit = true;
-                        }
-                    }
-                }
-            }
-            // 인덱스가 없는 경우: 정점 배열을 순차적 삼각형으로 간주
-            else if (StaticMesh->Vertices.Num() >= 3)
-            {
-                uint32 VertexNum = StaticMesh->Vertices.Num();
-                for (uint32 Idx = 0; Idx + 2 < VertexNum; Idx += 3)
-                {
-                    const FNormalVertex& V0N = StaticMesh->Vertices[Idx + 0];
-                    const FNormalVertex& V1N = StaticMesh->Vertices[Idx + 1];
-                    const FNormalVertex& V2N = StaticMesh->Vertices[Idx + 2];
+    //                FVector A = TransformPoint(V0N.pos.X, V0N.pos.Y, V0N.pos.Z);
+    //                FVector B = TransformPoint(V1N.pos.X, V1N.pos.Y, V1N.pos.Z);
+    //                FVector C = TransformPoint(V2N.pos.X, V2N.pos.Y, V2N.pos.Z);
 
-                    FVector A = TransformPoint(V0N.pos.X, V0N.pos.Y, V0N.pos.Z);
-                    FVector B = TransformPoint(V1N.pos.X, V1N.pos.Y, V1N.pos.Z);
-                    FVector C = TransformPoint(V2N.pos.X, V2N.pos.Y, V2N.pos.Z);
+    //                float THit;
+    //                if (IntersectRayTriangleMT(Ray, A, B, C, THit))
+    //                {
+    //                    if (THit < ClosestT)
+    //                    {
+    //                        ClosestT = THit;
+    //                        bHasHit = true;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //        // 인덱스가 없는 경우: 정점 배열을 순차적 삼각형으로 간주
+    //        else if (StaticMesh->Vertices.Num() >= 3)
+    //        {
+    //            uint32 VertexNum = StaticMesh->Vertices.Num();
+    //            for (uint32 Idx = 0; Idx + 2 < VertexNum; Idx += 3)
+    //            {
+    //                const FNormalVertex& V0N = StaticMesh->Vertices[Idx + 0];
+    //                const FNormalVertex& V1N = StaticMesh->Vertices[Idx + 1];
+    //                const FNormalVertex& V2N = StaticMesh->Vertices[Idx + 2];
 
-                    float THit;
-                    if (IntersectRayTriangleMT(Ray, A, B, C, THit))
-                    {
-                        if (THit < ClosestT)
-                        {
-                            ClosestT = THit;
-                            bHasHit = true;
-                        }
-                    }
-                }
-            }
+    //                FVector A = TransformPoint(V0N.pos.X, V0N.pos.Y, V0N.pos.Z);
+    //                FVector B = TransformPoint(V1N.pos.X, V1N.pos.Y, V1N.pos.Z);
+    //                FVector C = TransformPoint(V2N.pos.X, V2N.pos.Y, V2N.pos.Z);
 
-            // 가장 가까운 교차가 있으면 거리 반환
-            if (bHasHit)
-            {
-                OutDistance = ClosestT;
-                return true;
-            }
-        }
-    }
+    //                float THit;
+    //                if (IntersectRayTriangleMT(Ray, A, B, C, THit))
+    //                {
+    //                    if (THit < ClosestT)
+    //                    {
+    //                        ClosestT = THit;
+    //                        bHasHit = true;
+    //                    }
+    //                }
+    //            }
+    //        }
 
-    return false;
+    //        // 가장 가까운 교차가 있으면 거리 반환
+    //        if (bHasHit)
+    //        {
+    //            OutDistance = ClosestT;
+    //            return true;
+    //        }
+    //    }
+    //}
+
+    //return false;
 }

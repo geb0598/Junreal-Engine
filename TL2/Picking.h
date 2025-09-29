@@ -3,6 +3,8 @@
 #include "InputManager.h"
 #include "UEContainer.h"
 #include "Enums.h"
+#include "BoundingVolumeHierarchy.h"
+#include "FViewport.h"
 
 class UStaticMeshComponent;
 class AGizmoActor;
@@ -56,6 +58,7 @@ bool IntersectRayTriangleMT(const FRay& InRay,
                             float& OutT);
 
 bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT = nullptr);
+
 /**
  * PickingSystem
  * - 액터 피킹 관련 로직을 담당하는 클래스

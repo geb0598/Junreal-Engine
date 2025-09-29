@@ -32,6 +32,7 @@ struct FNarrowPhaseBVHNode
 	FNarrowPhaseBVHNode* Left;
 	FNarrowPhaseBVHNode* Right;
 
+	// It's meaningful when this node is leaf
 	TArray<FNarrowPhaseBVHPrimitive> Primitives;
 	
 	FNarrowPhaseBVHNode() = default;
@@ -49,7 +50,7 @@ public:
 		{
 			return nullptr;
 		}
-		return RecursiveBuild(Primitives);
+		return RecursiveBuild<TNode, TPrimitive>(Primitives);
 	}
 	template<typename TNode>
 	void Cleanup(TNode* Node)
@@ -68,7 +69,7 @@ private:
 		// 종료 조건: 프리미티브 수가 임계값 이하면 리프노드 생성
 		if (Primitives.Num() <= 4)
 		{
-			TNode& LeafNode = new TNode();
+			TNode* LeafNode = new TNode();
 			LeafNode->Primitives = Primitives;
 			LeafNode->Bounds = CalculateBounds(Primitives);
 			return LeafNode;
@@ -122,7 +123,6 @@ private:
 	{
 		if (Primitives.IsEmpty())
 		{
-
 			return FBound(FVector(0, 0, 0), FVector(0, 0, 0));
 		}
 		FBound TotalBound(FVector(FLT_MAX, FLT_MAX, FLT_MAX), FVector(-FLT_MAX, -FLT_MAX, -FLT_MAX));
