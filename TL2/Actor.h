@@ -67,7 +67,7 @@ public:
     const TArray<USceneComponent*>& GetComponents() const;
 
     void SetName(const FString& InName) { Name = InName; }
-    const FName& GetName() { return Name; }
+    const FName& GetName() const { return Name; }
 
     template<typename T>
     T* CreateDefaultSubobject(const FName& SubobjectName)

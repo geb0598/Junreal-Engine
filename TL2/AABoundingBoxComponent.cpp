@@ -59,13 +59,19 @@ void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMat
     }
 }
 
-FBound UAABoundingBoxComponent::GetWorldBoundFromCube() const
+FBound UAABoundingBoxComponent::GetWorldBoundFromCube()
 {
     auto corners = GetLocalCorners();
 
     FMatrix WorldMat=FMatrix::Identity();
     if (GetOwner()) {
         WorldMat = GetOwner()->GetWorldMatrix();
+        // 마지막으로 AABB를 계산했을 때의 월드 행렬과 현재 월드 행렬을 비교합니다.
+        // 행렬에 변화가 있을 경우에만 AABB를 다시 계산하여 성능을 최적화합니다. (캐싱)
+        if (WorldMat == LastWorldMat)
+        {
+            return WorldBound;
+        }
     }
     FVector4 MinW = corners[0] * WorldMat;
     FVector4 MaxW = MinW;
@@ -77,7 +83,10 @@ FBound UAABoundingBoxComponent::GetWorldBoundFromCube() const
         MaxW = MaxW.ComponentMax(wc);
     }
 
-    return FBound({ MinW.X, MinW.Y, MinW.Z }, { MaxW.X, MaxW.Y, MaxW.Z});
+    LastWorldMat = WorldMat;
+    WorldBound = FBound({ MinW.X, MinW.Y, MinW.Z }, { MaxW.X, MaxW.Y, MaxW.Z});
+
+    return WorldBound;
 }
 
 FBound UAABoundingBoxComponent::GetWorldBoundFromSphere() const

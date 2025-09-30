@@ -38,6 +38,11 @@ struct FName
     FName(const char* InStr) { Init(FString(InStr)); }
     FName(const FString& InStr) { Init(InStr); }
 
+    static FName None()
+    {
+        return FName("");
+    }
+
     void Init(const FString& InStr)
     {
         int32_t Index = FNamePool::Add(InStr);
@@ -63,3 +68,18 @@ struct FName
         return FName(A + B.ToString());
     }
 };
+
+namespace std
+{
+    template<>
+    struct hash<FName>
+    {
+        // TMap이 FName 객체를 받으면 이 함수를 호출하여 해시 값을 얻습니다.
+        size_t operator()(const FName& Key) const
+        {
+            // operator==가 ComparisonIndex를 사용하므로 해시 값도 동일하게
+            // ComparisonIndex를 기반으로 생성하는 것이 올바릅니다.
+            return hash<uint32>()(Key.ComparisonIndex);
+        }
+    };
+}

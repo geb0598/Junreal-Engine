@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <immintrin.h> // SSE, AVX, AVX2, FMA 등 모든 내장 함수 포함
+
 #include <cmath>        // ← 추가 (std::sin, std::cos, std::atan2, std::copysign 등)
 #include <algorithm>
 #include <string>
@@ -534,6 +536,17 @@ struct alignas(16) FMatrix
             0, 0, 0, 1
         );
     }
+
+    static FMatrix Zero()
+    {
+        return FMatrix(
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
+        );
+    }
+
     // 행렬 == 행렬
     bool operator==(const FMatrix& B) const noexcept
     {
@@ -554,22 +567,39 @@ struct alignas(16) FMatrix
     {
         return !(*this == B);
     }
-    // 행렬 * 행렬
+
     FMatrix operator*(const FMatrix& B) const
     {
         const FMatrix& A = *this;
-        FMatrix C;
-        for (uint8 I = 0; I < 4; ++I)
+        FMatrix Result;
+
+        // B의 각 행을 __m128 레지스터로 미리 로드
+        __m128 BRow0 = _mm_load_ps(&B.Rows[0].X);
+        __m128 BRow1 = _mm_load_ps(&B.Rows[1].X);
+        __m128 BRow2 = _mm_load_ps(&B.Rows[2].X);
+        __m128 BRow3 = _mm_load_ps(&B.Rows[3].X);
+
+        // A의 각 행에 대해 반복
+        for (int i = 0; i < 4; ++i)
         {
-            for (uint8 J = 0; J < 4; ++J)
-            {
-                C.M[I][J] = A.M[I][0] * B.M[0][J]
-                    + A.M[I][1] * B.M[1][J]
-                    + A.M[I][2] * B.M[2][J]
-                    + A.M[I][3] * B.M[3][J];
-            }
+            // A의 i번째 행에서 X, Y, Z, W 값을 각각 모든 레인에 복사(Broadcast)
+            __m128 ARow = _mm_load_ps(&A.Rows[i].X);
+            __m128 AX = _mm_shuffle_ps(ARow, ARow, _MM_SHUFFLE(0, 0, 0, 0)); // A.X, A.X, A.X, A.X
+            __m128 AY = _mm_shuffle_ps(ARow, ARow, _MM_SHUFFLE(1, 1, 1, 1)); // A.Y, A.Y, A.Y, A.Y
+            __m128 AZ = _mm_shuffle_ps(ARow, ARow, _MM_SHUFFLE(2, 2, 2, 2)); // A.Z, A.Z, A.Z, A.Z
+            __m128 AW = _mm_shuffle_ps(ARow, ARow, _MM_SHUFFLE(3, 3, 3, 3)); // A.W, A.W, A.W, A.W
+
+            // FMA (Fused Multiply-Add)를 사용하여 곱셈과 덧셈을 한 번에 처리
+            // ResultRow = (AX * BRow0) + (AY * BRow1) + (AZ * BRow2) + (AW * BRow3)
+            __m128 ResultRow = _mm_mul_ps(AX, BRow0);
+            ResultRow = _mm_fmadd_ps(AY, BRow1, ResultRow); // ResultRow = (AY * BRow1) + ResultRow
+            ResultRow = _mm_fmadd_ps(AZ, BRow2, ResultRow); // ResultRow = (AZ * BRow2) + ResultRow
+            ResultRow = _mm_fmadd_ps(AW, BRow3, ResultRow); // ResultRow = (AW * BRow3) + ResultRow
+
+            // 계산된 행을 결과 행렬에 저장
+            _mm_store_ps(&Result.Rows[i].X, ResultRow);
         }
-        return C;
+        return Result;
     }
 
     // 전치

@@ -5,6 +5,7 @@
 //#include "Enums.h"
 #include "Archive.h"
 #include <d3d11.h>
+#include "Name.h"
 
 struct FObjMaterialInfo
 {
@@ -20,7 +21,7 @@ struct FObjMaterialInfo
     FVector SpecularColor = FVector::One(); // Ks
     FVector EmissiveColor = FVector::One(); // Ke
 
-    FString DiffuseTextureFileName;
+    FName DiffuseTextureFileName;
     FString AmbientTextureFileName;
     FString SpecularTextureFileName;
     FString EmissiveTextureFileName;
@@ -45,7 +46,7 @@ struct FObjMaterialInfo
 
         if (Ar.IsSaving())
         {
-            Serialization::WriteString(Ar, Info.DiffuseTextureFileName);
+            Serialization::WriteString(Ar, Info.DiffuseTextureFileName.ToString());
             Serialization::WriteString(Ar, Info.AmbientTextureFileName);
             Serialization::WriteString(Ar, Info.SpecularTextureFileName);
             Serialization::WriteString(Ar, Info.EmissiveTextureFileName);
@@ -54,7 +55,9 @@ struct FObjMaterialInfo
         }
         else if (Ar.IsLoading())
         {
-            Serialization::ReadString(Ar, Info.DiffuseTextureFileName);
+            FString DiffuseTextureFileString;
+            Serialization::ReadString(Ar, DiffuseTextureFileString);
+            Info.DiffuseTextureFileName = FName(DiffuseTextureFileString);
             Serialization::ReadString(Ar, Info.AmbientTextureFileName);
             Serialization::ReadString(Ar, Info.SpecularTextureFileName);
             Serialization::ReadString(Ar, Info.EmissiveTextureFileName);

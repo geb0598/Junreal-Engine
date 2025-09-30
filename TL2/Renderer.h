@@ -72,6 +72,14 @@ private:
     UShader* LastShader = nullptr;
     UTexture* LastTexture = nullptr;
 
+    /**
+     * @brief 불필요한 API 호출을 막기 위해 마지막으로 바인딩된 상태를 캐싱합니다.
+     */
+    ID3D11Buffer* LastVertexBuffer = nullptr;
+    ID3D11Buffer* LastIndexBuffer = nullptr;
+    D3D11_PRIMITIVE_TOPOLOGY LastPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    ID3D11ShaderResourceView* LastTextureSRV = nullptr;
+
     void InitializeLineBatch();
     void ResetRenderStateTracking();
 };

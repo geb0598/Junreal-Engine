@@ -54,15 +54,6 @@ void UTargetActorTransformWidget::Initialize()
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
 	
-	// GizmoActor 참조 획득
-	GizmoActor = UIManager->GetGizmoActor();
-	
-	// 초기 기즈모 스페이스 모드 설정
-	if (GizmoActor)
-	{
-		CurrentGizmoSpace = GizmoActor->GetSpace();
-	}
-
 	// Transform 위젯을 UIManager에 등록하여 선택 해제 브로드캐스트를 받을 수 있게 함
 	if (UIManager)
 	{
@@ -104,12 +95,6 @@ void UTargetActorTransformWidget::Update()
 		}
 	}
 
-	// GizmoActor 참조 업데이트
-	if (!GizmoActor && UIManager)
-	{
-		GizmoActor = UIManager->GetGizmoActor();
-	}
-
 	if (SelectedActor)
 	{
 		// 액터가 선택되어 있으면 항상 트랜스폼 정보를 업데이트하여
@@ -117,55 +102,10 @@ void UTargetActorTransformWidget::Update()
 		UpdateTransformFromActor();
 	}
 	
-	// 월드 정보 업데이트 (옵션)
-	if (UIManager && UIManager->GetWorld())
-	{
-		UWorld* World = UIManager->GetWorld();
-		WorldActorCount = static_cast<uint32>(World->GetActors().size());
-	}
 }
 
 void UTargetActorTransformWidget::RenderWidget()
 {
-	// 월드 정보 표시
-	ImGui::Text("World Information");
-	ImGui::Text("Actor Count: %u", WorldActorCount);
-	ImGui::Separator();
-
-	AGridActor* gridActor = UIManager->GetWorld()->GetGridActor();
-	if (gridActor)
-	{
-		float currentLineSize = gridActor->GetLineSize();
-		if (ImGui::DragFloat("Grid Spacing", &currentLineSize, 0.1f, 0.1f, 1000.0f))
-		{
-			gridActor->SetLineSize(currentLineSize);
-			EditorINI["GridSpacing"] = std::to_string(currentLineSize);
-		}
-	}
-	else
-	{
-		ImGui::Text("GridActor not found in the world.");
-	}
-
-	ImGui::Text("Transform Editor");
-
-	SelectedActor = GetCurrentSelectedActor();
-	
-	// 기즈모 스페이스 모드 선택
-	if (GizmoActor)
-	{
-		const char* spaceItems[] = { "World", "Local" };
-		int currentSpaceIndex = static_cast<int>(CurrentGizmoSpace);
-		
-		if (ImGui::Combo("Gizmo Space", &currentSpaceIndex, spaceItems, IM_ARRAYSIZE(spaceItems)))
-		{
-			CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
-			
-			GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
-		}
-		ImGui::Separator();
-	}
-	
 	if (SelectedActor)
 	{
 		// 액터 이름 표시 (캐시된 이름 사용)
@@ -220,28 +160,6 @@ void UTargetActorTransformWidget::RenderWidget()
 		{
 			UpdateTransformFromActor();
 			ResetChangeFlags();
-		}
-		
-		// 기즈모 스페이스 빠른 전환 버튼
-		if (GizmoActor)
-		{
-			ImGui::Separator();
-			const char* buttonText = CurrentGizmoSpace == EGizmoSpace::World ? 
-				"Switch to Local" : "Switch to World";
-			
-			if (ImGui::Button(buttonText))
-			{
-				// 스페이스 모드 전환
-				CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ? 
-					EGizmoSpace::Local : EGizmoSpace::World;
-				
-				// 기즈모 액터에 스페이스 설정 적용
-				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
-			}
-			
-			ImGui::SameLine();
-			ImGui::Text("Current: %s", 
-				CurrentGizmoSpace == EGizmoSpace::World ? "World" : "Local");
 		}
 		
 		ImGui::Spacing();
@@ -352,7 +270,6 @@ void UTargetActorTransformWidget::RenderWidget()
 					}
 
 					// Material 설정
-					ImGui::Separator();
 
 					const TArray<FString> MaterialNames = UResourceManager::GetInstance().GetAllFilePaths<UMaterial>();
 					// ImGui 콤보 아이템 배열
@@ -364,6 +281,11 @@ void UTargetActorTransformWidget::RenderWidget()
 					if (CurMesh)
 					{
 						const uint64 MeshGroupCount = CurMesh->GetMeshGroupCount();
+
+						if (0 < MeshGroupCount)
+						{
+							ImGui::Separator();
+						}
 
 						static TArray<int32> SelectedMaterialIdxAt; // i번 째 Material Slot이 가지고 있는 MaterialName이 MaterialNames의 몇번쩨 값인지.
 						if (SelectedMaterialIdxAt.size() < MeshGroupCount)

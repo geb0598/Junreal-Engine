@@ -159,7 +159,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
         {
             const UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
             const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();
-            bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName.empty());
+            bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName == FName::None());
             
             // 재료 변경 추적
             if (LastMaterial != Material)
@@ -171,8 +171,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
             FTextureData* TextureData = nullptr;
             if (bHasTexture)
             {
-                FWideString WTextureFileName(MaterialInfo.DiffuseTextureFileName.begin(), MaterialInfo.DiffuseTextureFileName.end()); // 단순 ascii라고 가정
-                TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(WTextureFileName);
+                TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(MaterialInfo.DiffuseTextureFileName);
                 
                 // 텍스처 변경 추적 (임시로 FTextureData*를 UTexture*로 캠스트)
                 UTexture* CurrentTexture = reinterpret_cast<UTexture*>(TextureData);
