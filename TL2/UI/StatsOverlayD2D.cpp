@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "StatsOverlayD2D.h"
+#include "RenderingStats.h"
 
 #include <d2d1_1.h>
 #include <dwrite.h>
@@ -189,8 +190,10 @@ void UStatsOverlayD2D::Draw()
         float fps = dt > 0.0f ? (1.0f / dt) : 0.0f;
         float ms = dt * 1000.0f;
 
-        wchar_t buf[128];
-        swprintf_s(buf, L"FPS: %.1f\nFrame time: %.2f ms", fps, ms);
+        
+
+        wchar_t buf[256];
+        swprintf_s(buf, L"FPS: %.1f\nFrame time: %.2f ms",fps,ms);
 
         D2D1_RECT_F rc = D2D1::RectF(margin, nextY, margin + panelWidth, nextY + panelHeight);
         DrawTextBlock(
@@ -199,6 +202,28 @@ void UStatsOverlayD2D::Draw()
             D2D1::ColorF(D2D1::ColorF::Yellow));
 
         nextY += panelHeight + 8.0f;
+    }
+    {
+        wchar_t buf[256];
+        const URenderingStatsCollector& Instance = URenderingStatsCollector::GetInstance();
+        double LastPickingTime = Instance.GetLastPickingTime();
+        uint64 NumAttempts = Instance.GetNumPickingAttempts();
+        double AccumulatedTime = Instance.GetAccumulatedPickingTime();
+
+        swprintf_s(buf, L"Picking Time %f ms : Num Attempts %llu : Accumulated Time %f ms",
+            LastPickingTime,
+            NumAttempts,
+            AccumulatedTime);
+
+        D2D1_RECT_F rc = D2D1::RectF(margin, nextY, margin + panelWidth * 3.0f, nextY + panelHeight / 2.0f);
+
+        // 4. 헬퍼 함수를 사용해 텍스트를 그립니다.
+        DrawTextBlock(
+            d2dCtx, dwrite, buf, rc, 16.0f,
+            D2D1::ColorF(0, 0, 0, 0.6f),
+            D2D1::ColorF(D2D1::ColorF::Green)
+        );
+        nextY += panelHeight + 4.0f;
     }
     if (bShowMemory)
     {
@@ -234,7 +259,7 @@ void UStatsOverlayD2D::Draw()
             D2D1::ColorF(0, 0, 0, 0.6f),
             D2D1::ColorF(D2D1::ColorF::LightGreen));
             
-        nextY += panelHeight + 8.0f;
+        nextY += panelHeight + 100.0f;
     }
     
     if (bShowRenderStats)
@@ -263,6 +288,8 @@ void UStatsOverlayD2D::Draw()
             D2D1::ColorF(0, 0, 0, 0.6f),
             D2D1::ColorF(D2D1::ColorF::Cyan));
     }
+
+   
 
     d2dCtx->EndDraw();
     d2dCtx->SetTarget(nullptr);

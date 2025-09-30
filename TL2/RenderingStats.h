@@ -22,6 +22,10 @@ struct FRenderingStats
     // float BasePassTime = 0.0f;         // ms (미사용 - RenderPass 시스템 미구현)
     // float SortTime = 0.0f;             // ms (미사용 - DrawCall 정렬 미구현)
 
+    // 피킹 시간 통계
+    float PickingTime = 0.0f;
+
+
     void Reset()
     {
         TotalDrawCalls = 0;
@@ -33,6 +37,7 @@ struct FRenderingStats
         TranslucentPassDrawCalls = 0;
         DebugPassDrawCalls = 0;
         TotalRenderTime = 0.0f;
+        PickingTime = 0.0f;
         // BasePassTime = 0.0f;
         // SortTime = 0.0f;
     }
@@ -77,6 +82,12 @@ public:
     // 통계 접근
     const FRenderingStats& GetCurrentFrameStats() const { return CurrentFrameStats; }
     const FRenderingStats& GetAverageStats() const { return AverageStats; }
+    
+    // 피킹 타임 접근
+    void UpdatePickingStats(double InPickingTimeMs);
+    double GetLastPickingTime() const;
+    uint64_t GetNumPickingAttempts() const;
+    double GetAccumulatedPickingTime() const;
 
     // 설정
     void SetEnabled(bool bInEnabled) { bEnabled = bInEnabled; }
@@ -106,6 +117,12 @@ private:
     FRenderingStats FrameHistory[AVERAGE_FRAME_COUNT];
     uint32 FrameHistoryIndex = 0;
     uint32 ValidFrameCount = 0;
+
+    // 피킹 타임
+    //double CurrentPickingTime = 0.0f;
+    double   LastPickingTimeMs;        // 가장 마지막 피킹 시간
+    uint64 NumPickingAttempts;       // 누적 피킹 시도 횟수
+    double   AccumulatedPickingTimeMs; // 누적 피킹 시간
 
     // 타이머 시스템
     std::chrono::high_resolution_clock::time_point FrameStartTime;

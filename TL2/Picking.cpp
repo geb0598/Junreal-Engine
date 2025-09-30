@@ -27,6 +27,7 @@
 #include "StaticMeshComponent.h"
 #include "StaticMesh.h"
 #include "Triangle.h" 
+#include "RenderingStats.h"
 
 FRay MakeRayFromMouse(const FMatrix& InView,
                       const FMatrix& InProj)
@@ -544,6 +545,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     //}
     uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
     double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
+    URenderingStatsCollector::GetInstance().UpdatePickingStats(ViewportAspectPickingTimeMs);
     // 4. 모든 후보 검사가 끝난 후, 최종 결과를 반환
     if (finalHitActor)
     {
@@ -1478,7 +1480,7 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
         {
             uint64_t GlobalBVHCycleDiff = GlobalBVHPickingTimer.Finish();
             double GlobalBVHPickingTimeMs = FPlatformTime::ToMilliseconds(GlobalBVHCycleDiff);
-
+            URenderingStatsCollector::GetInstance().UpdatePickingStats(GlobalBVHPickingTimeMs);
             char buf[256];
             sprintf_s(buf, "[Global BVH Pick] Hit actor at distance %.3f (Time: %.3fms)\n", hitDistance, GlobalBVHPickingTimeMs);
             UE_LOG(buf);
