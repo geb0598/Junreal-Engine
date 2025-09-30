@@ -24,6 +24,7 @@ struct FWorldContext
         CurrentWorld = InWorld;
         WorldType = InType;
     }
+};
 class UEngine :
     public UObject
 {

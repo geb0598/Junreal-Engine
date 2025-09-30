@@ -406,7 +406,16 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Engine.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorEngine.h">
+      <Filter>소스 파일\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorEngine.cpp">
+      <Filter>소스 파일\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine.cpp">
+      <Filter>소스 파일\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -743,7 +752,10 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Engine.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine.h">
+      <Filter>소스 파일\Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

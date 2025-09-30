@@ -44,6 +44,7 @@
 #include"RenderViewportSwitcherWidget.h"
 #include "MenuBarWidget.h"
 #include"Octree.h"
+#include"Engine.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -112,4 +113,12 @@ IMPLEMENT_CLASS(UTexture)
 IMPLEMENT_CLASS(UDynamicMesh)
 IMPLEMENT_CLASS(ULineDynamicMesh)
 IMPLEMENT_CLASS(UTextQuad)
+IMPLEMENT_CLASS(UOctree)
+
+
+
+
+/*================Editor====================*/
+IMPLEMENT_CLASS(Engine)
+IMPLEMENT_CLASS(UOctree)
 IMPLEMENT_CLASS(UOctree)
