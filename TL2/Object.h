@@ -45,6 +45,10 @@ public:
 
     FString GetName();    // 원문
     FString GetComparisonName(); // lower-case
+
+    UObject* GetOuter() const;
+    virtual UWorld* GetWorld() const;
+
 public:
     uint32_t UUID;
     uint32_t InternalIndex;

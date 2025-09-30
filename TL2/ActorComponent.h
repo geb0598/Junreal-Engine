@@ -1,5 +1,7 @@
 ﻿#pragma once
+#include "Enums.h"
 #include "Object.h"
+
 class AActor;
 
 class UActorComponent : public UObject
@@ -17,8 +19,8 @@ public:
     // ───────────────
     virtual void InitializeComponent();   // 액터에 붙을 때
     virtual void BeginPlay();             // 월드 시작 시
-    virtual void TickComponent(float DeltaTime); // 매 프레임
-    virtual void EndPlay();               // 파괴/종료 시
+    virtual void TickComponent(float DeltaSeconds); // 매 프레임
+    virtual void EndPlay(EEndPlayReason::Type EndPlayReason); // 파괴/종료 시
 
     // ───────────────
     // 활성화/비활성

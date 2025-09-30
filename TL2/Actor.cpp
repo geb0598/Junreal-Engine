@@ -6,35 +6,23 @@
 #include "AABoundingBoxComponent.h"   
 #include "MeshComponent.h"
 #include "TextRenderComponent.h"
+
 AActor::AActor()
 {
     Name = "DefaultActor";
     RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
-    //CollisionComponent = CreateDefaultSubobject<UAABoundingBoxComponent>(FName("CollisionBox"));
-    //UTextRenderComponent* TextComp = NewObject<UTextRenderComponent>();
-    //TextComp->SetOwner(this);
-   // AddComponent(TextComp);    
 }
 
 AActor::~AActor()
 {
-    //// 1) Delete root: cascades to attached children
-    //if (RootComponent)
-    //{
-    //    ObjectFactory::DeleteObject(RootComponent);
-    //    RootComponent = nullptr;
-    //}
-    // 2) Delete any remaining components not under the root tree (safe: DeleteObject checks GUObjectArray)
-    for (USceneComponent*& Comp : Components)
+    for (USceneComponent* Comp : OwnedComponents)
     {
         if (Comp)
         {
             ObjectFactory::DeleteObject(Comp);
-            Comp = nullptr;
         }
     }
-    Components.Empty();
-    //TextComp->SetupAttachment(GetRootComponent());
+    OwnedComponents.Empty();
 }
 
 void AActor::BeginPlay()
@@ -43,16 +31,36 @@ void AActor::BeginPlay()
 
 void AActor::Tick(float DeltaSeconds)
 {
+    // 소유한 모든 컴포넌트의 Tick 처리
+    for (UActorComponent* Component : OwnedComponents)
+    {
+        if (Component && Component->CanEverTick())
+        {
+            Component->TickComponent(DeltaSeconds);
+        }
+    }
+}
+
+/**
+ * @brief Endplay 전파 함수
+ * @param EndPlayReason Endplay 이유, Type에 따른 다른 설정이 가능함
+ */
+void AActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    for (USceneComponent* Component : OwnedComponents)
+    {
+        Component->EndPlay(EndPlayReason);
+    }
 }
 
 void AActor::Destroy()
 {
     if (!bCanEverTick) return;
     // Prefer world-managed destruction to remove from world actor list
-    if (World)
+    if (GetWorld())
     {
         // Avoid using 'this' after the call
-        World->DestroyActor(this);
+        GetWorld()->DestroyActor(this);
         return;
     }
     // Fallback: directly delete the actor via factory
@@ -62,11 +70,11 @@ void AActor::Destroy()
 // ───────────────
 // Transform API
 // ───────────────
-void AActor::SetActorTransform(const FTransform& NewTransform)
+void AActor::SetActorTransform(const FTransform& InNewTransform) const
 {
     if (RootComponent)
     {
-        RootComponent->SetWorldTransform(NewTransform);
+        RootComponent->SetWorldTransform(InNewTransform);
     }
 }
 
@@ -76,11 +84,11 @@ FTransform AActor::GetActorTransform() const
     return RootComponent ? RootComponent->GetWorldTransform() : FTransform();
 }
 
-void AActor::SetActorLocation(const FVector& NewLocation)
+void AActor::SetActorLocation(const FVector& InNewLocation)
 {
     if (RootComponent)
     {
-        RootComponent->SetWorldLocation(NewLocation);
+        RootComponent->SetWorldLocation(InNewLocation);
     }
 }
 
@@ -89,15 +97,15 @@ FVector AActor::GetActorLocation() const
     return RootComponent ? RootComponent->GetWorldLocation() : FVector();
 }
 
-void AActor::SetActorRotation(const FVector& EulerDegree)
+void AActor::SetActorRotation(const FVector& InEulerDegree) const
 {
     if (RootComponent)
     {
-        RootComponent->SetWorldRotation(FQuat::MakeFromEuler(EulerDegree));
+        RootComponent->SetWorldRotation(FQuat::MakeFromEuler(InEulerDegree));
     }
 }
 
-void AActor::SetActorRotation(const FQuat& InQuat)
+void AActor::SetActorRotation(const FQuat& InQuat) const
 {
     if (RootComponent)
     {
@@ -110,11 +118,11 @@ FQuat AActor::GetActorRotation() const
     return RootComponent ? RootComponent->GetWorldRotation() : FQuat();
 }
 
-void AActor::SetActorScale(const FVector& NewScale)
+void AActor::SetActorScale(const FVector& InNewScale) const
 {
     if (RootComponent)
     {
-        RootComponent->SetWorldScale(NewScale);
+        RootComponent->SetWorldScale(InNewScale);
     }
 }
 
@@ -128,72 +136,67 @@ FMatrix AActor::GetWorldMatrix() const
     return RootComponent ? RootComponent->GetWorldMatrix() : FMatrix::Identity();
 }
 
-void AActor::AddActorWorldRotation(const FQuat& DeltaRotation)
+void AActor::AddActorWorldRotation(const FQuat& InDeltaRotation) const
 {
     if (RootComponent)
     {
-        RootComponent->AddWorldRotation(DeltaRotation);
+        RootComponent->AddWorldRotation(InDeltaRotation);
     }
 }
 
-void AActor::AddActorWorldRotation(const FVector& DeltaEuler)
-{
-    /* if (RootComponent)
-     {
-         FQuat DeltaQuat = FQuat::FromEuler(DeltaEuler.X, DeltaEuler.Y, DeltaEuler.Z);
-         RootComponent->AddWorldRotation(DeltaQuat);
-     }*/
-}
-
-void AActor::AddActorWorldLocation(const FVector& DeltaLocation)
+void AActor::AddActorWorldLocation(const FVector& InDeltaLocation) const
 {
     if (RootComponent)
     {
-        RootComponent->AddWorldOffset(DeltaLocation);
+        RootComponent->AddWorldOffset(InDeltaLocation);
     }
 }
 
-void AActor::AddActorLocalRotation(const FVector& DeltaEuler)
-{
-    /*  if (RootComponent)
-      {
-          FQuat DeltaQuat = FQuat::FromEuler(DeltaEuler.X, DeltaEuler.Y, DeltaEuler.Z);
-          RootComponent->AddLocalRotation(DeltaQuat);
-      }*/
-}
-
-void AActor::AddActorLocalRotation(const FQuat& DeltaRotation)
+void AActor::AddActorLocalRotation(const FQuat& InDeltaRotation) const
 {
     if (RootComponent)
     {
-        RootComponent->AddLocalRotation(DeltaRotation);
+        RootComponent->AddLocalRotation(InDeltaRotation);
     }
 }
 
-void AActor::AddActorLocalLocation(const FVector& DeltaLocation)
+void AActor::AddActorLocalLocation(const FVector& InDeltaLocation) const
 {
     if (RootComponent)
     {
-        RootComponent->AddLocalOffset(DeltaLocation);
+        RootComponent->AddLocalOffset(InDeltaLocation);
     }
 }
 
-const TArray<USceneComponent*>& AActor::GetComponents() const
+const TSet<USceneComponent*>& AActor::GetComponents() const
 {
-    return Components;
+    return OwnedComponents;
 }
 
-void AActor::AddComponent(USceneComponent* Component)
+void AActor::AddComponent(USceneComponent* InComponent)
 {
-    if (!Component)
+    if (!InComponent)
     {
         return;
     }
 
-    Components.push_back(Component);
+    OwnedComponents.Add(InComponent);
     if (!RootComponent)
     {
-        RootComponent = Component;
-        //Component->SetupAttachment(RootComponent);
+        RootComponent = InComponent;
     }
+}
+
+UWorld* AActor::GetWorld() const
+{
+    // TODO(KHJ): Level 생기면 붙일 것
+    // ULevel* Level = GetOuter();
+    // if (Level)
+    // {
+    //     return Level->GetWorld();
+    // }
+
+    // return nullptr;
+
+    return World;
 }

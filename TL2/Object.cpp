@@ -10,4 +10,17 @@ FString UObject::GetComparisonName()
     return FString();
 }
 
+UObject* UObject::GetOuter() const
+{
+	return nullptr;
+}
 
+UWorld* UObject::GetWorld() const
+{
+	if (UObject* Outer = GetOuter())
+	{
+		return Outer->GetWorld();
+	}
+
+	return nullptr;
+}
