@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "BillboardComponent.h"
 #include "ResourceManager.h"
 #include "VertexData.h"
@@ -95,8 +95,8 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     FVector CamRight = CameraActor->GetActorRight();
     FVector CamUp = CameraActor->GetActorUp();
 
-    // 빌보드 위치 설정 (액터 위치 + Z 오프셋)
-    FVector BillboardPos = Owner->GetActorLocation() + GetRelativeLocation();
+    // 빌보드 위치 설정
+    FVector BillboardPos = GetWorldLocation();
 
     // 상수 버퍼 업데이트
     Renderer->UpdateBillboardConstantBuffers(BillboardPos, View, Proj, CamRight, CamUp);
