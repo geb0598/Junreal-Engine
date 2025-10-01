@@ -1,8 +1,13 @@
 ﻿#pragma once
 #include "Object.h"
 class UWorld;
+class UEngine;
 
 extern UWorld* GWorld;
+extern UEngine* GEngine;
+
+// 전역 엔진 접근 함수
+inline UEngine* GetEngine() { return GEngine; }
 
 enum class EWorldType
 {

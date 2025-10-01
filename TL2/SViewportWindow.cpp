@@ -249,7 +249,7 @@ void SViewportWindow::RenderToolbar()
 
 		if (ImGui::Button("Switch##ToThis", btnSize))
 		{
-			if (auto* MVP = UWorld::GetInstance().GetMultiViewportWindow())
+			if (auto* MVP = GetEngine()->GetWorld()->GetMultiViewportWindow())
 				MVP->SwitchPanel(this);
 		}
 

@@ -28,16 +28,6 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
 , BVH(nullptr)
 {
 }
-UWorld& UWorld::GetInstance()
-{
-	static UWorld* Instance = nullptr;
-	if (Instance == nullptr)
-	{
-		Instance = NewObject<UWorld>();
-	}
-	return *Instance;
-}
-
 
 UWorld::~UWorld()
 {

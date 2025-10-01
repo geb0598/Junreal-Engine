@@ -4,6 +4,7 @@
 #include "World.h"
 
 UWorld* GWorld = nullptr;
+UEngine* GEngine = nullptr;
 
 UEngine::UEngine()
 {

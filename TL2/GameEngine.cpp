@@ -13,6 +13,12 @@ void UGameEngine::Tick(float DeltaSeconds)
         GameWorld->Tick(DeltaSeconds);
 }
 
+void UGameEngine::Render()
+{
+    if (GameWorld)
+        GameWorld->Render();
+}
+
 void UGameEngine::StartGame(UWorld* World)
 {
  /*   GameWorld = World;

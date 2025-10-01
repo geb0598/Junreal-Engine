@@ -504,7 +504,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     AActor* finalHitActor = nullptr;
     float finalClosestHitDistance = FLT_MAX;
 
-    FBVH* BVH = UWorld::GetInstance().GetBVH();
+    FBVH* BVH = GetEngine()->GetWorld()->GetBVH();
     if (BVH)
     {
         // 3. BVH로 Ray와 가장 가까운 Actor 반환
@@ -583,7 +583,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     //float pickedT = 1e9f;
 
     //// 하이브리드 방식: Octree(Per-Leaf 마이크로 BVH) 우선 사용
-    //UOctree* Octree = UWorld::GetInstance().GetOctree();
+    //UOctree* Octree = GetEngine()->GetWorld().GetOctree();
     //if (Octree)
     //{
     //    // Octree + Per-Leaf 마이크로 BVH를 통한 하이브리드 피킹
@@ -626,7 +626,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     //    return nullptr;
 
     //// 백업: 글로벌 BVH 사용
-    //FBVH* BVH = UWorld::GetInstance().GetBVH();
+    //FBVH* BVH = GetEngine()->GetWorld().GetBVH();
     //if (BVH)
     //{
     //    float hitDistance;
@@ -1359,7 +1359,7 @@ AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
     float adaptiveThreshold = GetAdaptiveThreshold(cameraDistanceEstimate);
 
     // Octree 우선 사용
-    UOctree* Octree = UWorld::GetInstance().GetOctree();
+    UOctree* Octree = GetEngine()->GetWorld()->GetOctree();
     if (Octree)
     {
         TArray<AActor*> HitActors;
@@ -1470,7 +1470,7 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
     float adaptiveThreshold = GetAdaptiveThreshold(cameraDistanceEstimate);
 
     // Global BVH 우선 사용
-    FBVH* BVH = UWorld::GetInstance().GetBVH();
+    FBVH* BVH = GetEngine()->GetWorld()->GetBVH();
     if (BVH)
     {
         float hitDistance;

@@ -11,6 +11,7 @@ public:
     UWorld* GameWorld = nullptr;
 
     virtual void Tick(float DeltaSeconds) override;
+    virtual void Render() override;
 
     void StartGame(UWorld* World);
     void EndGame();

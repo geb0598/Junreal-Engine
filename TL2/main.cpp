@@ -11,7 +11,6 @@
 float CLIENTWIDTH = 1024.0f;
 float CLIENTHEIGHT = 1024.0f;
 
-UEditorEngine* GEngine = nullptr;
 void LoadIniFile()
 {
 	std::ifstream infile("editor.ini");
@@ -214,13 +213,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		
 		//======================================================================================================================
 		//월드 생성
-		UWorld* EditorWorld = &UWorld::GetInstance();
-		GEngine->SetWorld(EditorWorld, EWorldType::Editor);
+		UWorld* EditorWorld = NewObject<UWorld>();
+		GetEngine()->SetWorld(EditorWorld, EWorldType::Editor);
 
 		EditorWorld->SetRenderer(&renderer);//렌더러 설정
 		EditorWorld->Initialize();
 
-		UWorld* ActiveWorld = GEngine->GetWorld();//활성화 된 월드 입니다.
+		UWorld* ActiveWorld = GetEngine()->GetWorld();//활성화 된 월드 입니다.
 
 
 
@@ -273,8 +272,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
 			// 이제 Tick 호출
-			GEngine->Tick(DeltaSeconds);
-			GEngine->Render();
+			GetEngine()->Tick(DeltaSeconds);
+			GetEngine()->Render();
 	
 			// 처리할 메시지가 더 이상 없을때 까지 수행
 			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
