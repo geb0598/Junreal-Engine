@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-class FBound;
+struct FBound;
 
 // 절두체를 구성하는 6개의 평면
 struct FPlane

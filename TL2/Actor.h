@@ -92,7 +92,7 @@ public:
 
     // TODO(KHJ): Level->GetWorld();
     UWorld* World = nullptr;
-    bool bTickInEditor = false;
+
     // Visibility properties
     void SetActorHiddenInGame(bool bNewHidden) { bHiddenInGame = bNewHidden; }
     bool GetActorHiddenInGame() const { return bHiddenInGame; }

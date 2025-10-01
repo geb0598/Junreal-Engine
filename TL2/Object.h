@@ -56,11 +56,6 @@ public:
     virtual void DuplicateSubObjects() {}
 
 public:
-    // 서브 오브젝트 복제 (can be ovveridden)
-    virtual void DuplicateSubObjects();
-    // 현재 오브젝트를 복제
-    virtual UObject* Duplicate();
-public:
     uint32_t UUID;
     uint32_t InternalIndex;
     FName    ObjectName;   // ← 객체 개별 이름 추가

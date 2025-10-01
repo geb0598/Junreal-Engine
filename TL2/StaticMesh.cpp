@@ -68,7 +68,7 @@ void UStaticMesh::BuildMeshBVH()
     }
 
     TArray<FNarrowPhaseBVHPrimitive> Primitives;
-    const int32 TriangleCount = StaticMeshAsset->Indices.size() / 3;
+    const int32 TriangleCount = static_cast<int32>(StaticMeshAsset->Indices.size()) / 3;
     Primitives.Reserve(TriangleCount);
 
     for (int32 i = 0;i < TriangleCount;++i)
