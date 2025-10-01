@@ -161,7 +161,19 @@ void UTargetActorTransformWidget::RenderWidget()
 
 			if (ImGui::Button("-삭제"))
 			{
-				SelectedActor->DeleteComponent(SelectedComponent);
+				// 컴포넌트 삭제 시 상위 컴포넌트로 선택되도록 설정
+				USceneComponent* ParentComponent = SelectedComponent->GetAttachParent();
+				if (SelectedActor->DeleteComponent(SelectedComponent))
+				{
+					if (ParentComponent)
+					{
+						SelectedComponent = ParentComponent;
+					}
+					else
+					{
+						SelectedComponent = SelectedActor->GetRootComponent();
+					}
+				}
 			}
 
 			// "Add Component" 버튼에 대한 팝업 메뉴 정의
