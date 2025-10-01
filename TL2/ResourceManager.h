@@ -50,6 +50,7 @@ public:
 
     void CreateAxisMesh(float Length, const FString& FilePath);
     void CreateTextBillboardMesh();
+    void CreateBillboardMesh();
     void CreateGridMesh(int N, const FString& FilePath);
     void CreateBoxWireframeMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
     //FMeshData* CreateWireBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);

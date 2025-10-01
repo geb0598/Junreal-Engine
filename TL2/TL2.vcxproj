@@ -455,6 +455,11 @@
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Editor\Icon\Pawn_64x.dds" />
+    <Content Include="Editor\Icon\PointLight_64x.dds" />
+    <Content Include="Editor\Icon\SpotLight_64x.dds" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
