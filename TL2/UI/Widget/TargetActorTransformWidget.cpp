@@ -549,14 +549,14 @@ void UTargetActorTransformWidget::RenderWidget()
 				ImGui::Spacing();
 				
 				// Screen Size Scaled 체크박스
-				bool bIsScreenSizeScaled = BBC->IsScreenSizeScaled();
-				if (ImGui::Checkbox("Is Screen Size Scaled", &bIsScreenSizeScaled))
-				{
-					BBC->SetScreenSizeScaled(bIsScreenSizeScaled);
-				}
+				// bool bIsScreenSizeScaled = BBC->IsScreenSizeScaled();
+				// if (ImGui::Checkbox("Is Screen Size Scaled", &bIsScreenSizeScaled))
+				// {
+				// 	BBC->SetScreenSizeScaled(bIsScreenSizeScaled);
+				// }
 				
 				// Screen Size (Is Screen Size Scaled가 true일 때만 활성화)
-				if (bIsScreenSizeScaled)
+				if (false) // (bIsScreenSizeScaled)
 				{
 					float screenSize = BBC->GetScreenSize();
 					if (ImGui::DragFloat("Screen Size", &screenSize, 0.0001f, 0.0001f, 0.1f, "%.4f"))
