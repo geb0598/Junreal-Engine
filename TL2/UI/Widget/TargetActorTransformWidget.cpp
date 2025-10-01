@@ -10,6 +10,7 @@
 #include "StaticMeshActor.h"    
 #include "StaticMeshComponent.h"
 #include "ResourceManager.h"    
+#include "SceneComponent.h"    
 
 using namespace std;
 
@@ -81,17 +82,22 @@ void UTargetActorTransformWidget::Update()
 		{
 			try
 			{
+				// 새로운 액터가 선택되면, 선택된 컴포넌트를 해당 액터의 루트 컴포넌트로 초기화합니다.
+				SelectedComponent = SelectedActor->GetRootComponent();
+
 				CachedActorName = SelectedActor->GetName().ToString();
 			}
 			catch (...)
 			{
 				CachedActorName = "[Invalid Actor]";
 				SelectedActor = nullptr;
+				SelectedComponent = nullptr;
 			}
 		}
 		else
 		{
 			CachedActorName = "";
+			SelectedComponent = nullptr;
 		}
 	}
 
@@ -109,12 +115,42 @@ void UTargetActorTransformWidget::RenderWidget()
 	if (SelectedActor)
 	{
 		// 액터 이름 표시 (캐시된 이름 사용)
-		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", 
-		                   CachedActorName.c_str());
+		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", CachedActorName.c_str());
 		// 선택된 액터 UUID 표시(전역 고유 ID)
 		ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));
 		ImGui::Spacing();
-		
+
+		// Component 계층 구조 표시
+		ImGui::BeginChild("ComponentHierarchy", ImVec2(0, 240), true);
+		if (SelectedActor)
+		{
+			const FName ActorName = SelectedActor->GetName();
+
+			// 1. 최상위 액터 노드는 클릭해도 접을 수 없습니다.
+			ImGui::TreeNodeEx(
+				ActorName.ToString().c_str(),
+				ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen
+			);
+
+			// 2. 수동으로 들여쓰기를 추가합니다.
+			ImGui::Indent();
+
+			// 3. 하위 컴포넌트를 조건 없이 항상 그립니다.
+			USceneComponent* RootComponent = SelectedActor->GetRootComponent();
+			if (RootComponent)
+			{
+				RenderComponentHierarchy(RootComponent);
+			}
+
+			// 4. 들여쓰기를 해제합니다.
+			ImGui::Unindent();
+		}
+		else
+		{
+			ImGui::Text("No actor selected.");
+		}
+		ImGui::EndChild();
+
 		// Location 편집
 		if (ImGui::DragFloat3("Location", &EditLocation.X, 0.1f))
 		{
@@ -332,6 +368,58 @@ void UTargetActorTransformWidget::RenderWidget()
 	}
 	
 	ImGui::Separator();
+}
+
+// 재귀적으로 모든 하위 컴포넌트를 트리 형태로 렌더링
+void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* SceneComponent)
+{
+	if (!SceneComponent)
+	{
+		return;
+	}
+
+	const FString ComponentName = SceneComponent->GetName();
+	const TArray<USceneComponent*>& AttachedChildren = SceneComponent->GetAttachChildren();
+	const bool bHasChildren = AttachedChildren.Num() > 0;
+
+	ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
+		| ImGuiTreeNodeFlags_SpanAvailWidth
+		| ImGuiTreeNodeFlags_DefaultOpen;
+
+	// 현재 그리고 있는 SceneComponent가 SelectedComponent와 일치하는지 확인
+	const bool bIsSelected = (SelectedComponent == SceneComponent);
+	if (bIsSelected)
+	{
+		// 일치하면 Selected 플래그를 추가하여 하이라이트 효과를 줍니다.
+		NodeFlags |= ImGuiTreeNodeFlags_Selected;
+	}
+	if (!bHasChildren)
+	{
+		NodeFlags |= ImGuiTreeNodeFlags_Leaf;
+	}
+
+	const bool bNodeIsOpen = ImGui::TreeNodeEx(
+		(void*)SceneComponent,
+		NodeFlags,
+		"%s",
+		ComponentName.c_str()
+	);
+
+	// 방금 그린 TreeNode가 클릭되었는지 확인합니다.
+	if (ImGui::IsItemClicked())
+	{
+		// 클릭되었다면, 멤버 변수인 SelectedComponent를 현재 컴포넌트로 업데이트합니다.
+		SelectedComponent = SceneComponent;
+	}
+
+	if (bNodeIsOpen)
+	{
+		for (USceneComponent* ChildComponent : AttachedChildren)
+		{
+			RenderComponentHierarchy(ChildComponent);
+		}
+		ImGui::TreePop();
+	}
 }
 
 void UTargetActorTransformWidget::PostProcess()
