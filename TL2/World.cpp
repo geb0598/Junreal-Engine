@@ -913,7 +913,7 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
 	// 3. 카메라 복제
 	if (EditorWorld->MainCameraActor)
 	{
-		UObject* DupCam = EditorWorld->MainCameraActor->Duplicate();
+		UObject* DupCam = EditorWorld->MainCameraActor->Duplicate<ACameraActor>();
 		PIEWorld->MainCameraActor = Cast<ACameraActor>(DupCam);
 		if (PIEWorld->MainCameraActor)
 		{
@@ -928,7 +928,7 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
 		if (!EditorActor) continue;
 
 		// 액터 복제
-		UObject* DuplicatedObj = EditorActor->Duplicate();
+		UObject* DuplicatedObj = EditorActor->Duplicate<AActor>();
 		AActor* PIEActor = Cast<AActor>(DuplicatedObj);
 
 		if (PIEActor)
@@ -1012,4 +1012,14 @@ void UWorld::CleanupWorld()
 	{
 		Octree->Release();
 	}
+}
+
+/**
+ * @brief 이미 생성한 Actor를 spawn하기 위한 shortcut 함수
+ * @param InActor World에 생성할 Actor
+ */
+void UWorld::SpawnActor(AActor* InActor)
+{
+	InActor->SetWorld(this);
+	Actors.Add(InActor);
 }

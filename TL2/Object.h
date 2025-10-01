@@ -1,11 +1,12 @@
-﻿#pragma once
+#pragma once
 #include "UEContainer.h"
 #include "ObjectFactory.h"
 #include "MemoryManager.h"
 #include "Name.h"
+#include "Enums.h"
+#include "PropertyFlag.h"
 
 // 전방 선언/외부 심볼 (네 프로젝트 환경 유지)
-enum class EPropertyFlag : uint64;
 class UObject;
 class UWorld;
 // ── UClass: 간단한 타입 디스크립터 ─────────────────────────────
@@ -52,14 +53,15 @@ public:
     virtual UWorld* GetWorld() const;
 
     // Duplicate for PIE
-    virtual UObject* Duplicate();
+    template<typename T>
+    T* Duplicate();
+    
     virtual void DuplicateSubObjects() {}
 
 public:
     uint32_t UUID;
     uint32_t InternalIndex;
     FName    ObjectName;   // ← 객체 개별 이름 추가
-    EPropertyFlag PropertyFlag;
 
     // 정적: 타입 메타 반환 (이름을 StaticClass로!)
     static UClass* StaticClass()
@@ -83,6 +85,8 @@ public:
 
     // UUID 발급기: 현재 카운터를 반환하고 1 증가
     static uint32 GenerateUUID() { return GUUIDCounter++; }
+    
+    static EPropertyFlag GetPropertyFlag() { return EPropertyFlag::CPF_Instanced; }
 
 private:
     // 전역 UUID 카운터(초기값 1)
@@ -112,3 +116,38 @@ public:                                                                       \
         return &Cls;                                                          \
     }                                                                         \
     virtual UClass* GetClass() const override { return ThisClass::StaticClass(); }
+
+template<typename T>
+T* UObject::Duplicate()
+{
+    T* NewObject;
+    
+    EPropertyFlag EffectiveFlags = T::GetPropertyFlag();
+    
+    if ((EffectiveFlags & EPropertyFlag::CPF_DuplicateTransient) != EPropertyFlag::CPF_None)
+    {
+        // New Instance: 기본 생성자로 새 객체 생성
+        NewObject = new T();
+    }
+    else if ((EffectiveFlags & EPropertyFlag::CPF_EditAnywhere) != EPropertyFlag::CPF_None)
+    {
+        // Shallow Copy: 에디터에서 편집 가능한 얕은 복사
+        NewObject = new T(*static_cast<T*>(this));
+    }
+    else if ((EffectiveFlags & EPropertyFlag::CPF_Instanced) != EPropertyFlag::CPF_None)
+    {
+        // Deep Copy: 참조된 객체도 Deep Copy
+        NewObject = new T(*static_cast<T*>(this));
+        NewObject->DuplicateSubObjects();
+    }
+    else // 기본값: Deep Copy
+    {
+        NewObject = new T(*static_cast<T*>(this));
+        NewObject->DuplicateSubObjects();
+    }
+    
+    // UUID 갱신 (새로운 객체는 고유 ID 필요)
+    NewObject->UUID = GenerateUUID();
+    
+    return NewObject;
+}

@@ -24,11 +24,3 @@ UWorld* UObject::GetWorld() const
 
 	return nullptr;
 }
-
-UObject* UObject::Duplicate()
-{
-	UObject* NewObject = new UObject(*this);
-	NewObject->DuplicateSubObjects();
-
-	return NewObject;
-}

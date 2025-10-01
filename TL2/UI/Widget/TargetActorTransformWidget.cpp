@@ -109,6 +109,25 @@ void UTargetActorTransformWidget::Update()
 	}
 }
 
+/**
+ * @brief Actor 복제 테스트 함수
+ */
+void UTargetActorTransformWidget::DuplicateTarget() const
+{
+	if (SelectedActor)
+	{
+		AActor* NewActor = SelectedActor->Duplicate<AActor>();
+		
+		// 초기 트랜스폼 적용
+		NewActor->SetActorTransform(SelectedActor->GetActorTransform());
+
+		// TODO(KHJ): World 접근?
+		UWorld* World = SelectedActor->GetWorld();
+		
+		World->SpawnActor(NewActor);
+	}
+}
+
 void UTargetActorTransformWidget::RenderWidget()
 {
 	if (SelectedActor)
@@ -239,7 +258,13 @@ void UTargetActorTransformWidget::RenderWidget()
 			UpdateTransformFromActor();
 			ResetChangeFlags();
 		}
-
+		
+		// TODO(KHJ): 테스트용, 완료 후 지울 것
+		if (ImGui::Button("Duplicate Test Button"))
+		{
+			DuplicateTarget();
+		}
+		
 		ImGui::Spacing();
 		ImGui::Separator();
 

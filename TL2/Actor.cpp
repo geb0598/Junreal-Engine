@@ -273,18 +273,6 @@ bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
 }
 
 /**
- * Actor의 복사 함수
- * @return 기본적으로 UObject의 복사함수랑 동일하나, 내부 함수를 템플릿 메서드 패턴에 따라 처리했음
- */
-UObject* AActor::Duplicate()
-{
-    AActor* NewActor = new AActor(*this);
-    NewActor->DuplicateSubObjects();
-
-    return NewActor;
-}
-
-/**
  * @brief Actor의 Internal 복사 함수
  * 원본이 들고 있던 Component를 각 Component의 복사함수를 호출하여 받아온 후 새로 담아서 처리함
  */
@@ -292,10 +280,28 @@ void AActor::DuplicateSubObjects()
 {
     TSet<UActorComponent*> DuplicatedComponents = OwnedComponents;
     OwnedComponents.Empty();
+    
+    USceneComponent* NewRootComponent = nullptr;
 
     for (UActorComponent* Component : DuplicatedComponents)
     {
-        UActorComponent* NewComponent = static_cast<UActorComponent*>(Component->Duplicate());
+        USceneComponent* NewComponent = Component->Duplicate<USceneComponent>();
+        
+        // 복제된 컴포넌트의 Owner를 현재 액터로 설정
+        if (NewComponent)
+        {
+            NewComponent->SetOwner(this);
+        }
+        
         OwnedComponents.Add(NewComponent);
+        
+        if (Component == RootComponent)
+        {
+            NewRootComponent = NewComponent;
+        }
     }
+    
+    // RootComponent 업데이트
+    RootComponent = NewRootComponent;
 }
+
