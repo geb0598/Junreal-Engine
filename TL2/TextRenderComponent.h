@@ -12,18 +12,17 @@ protected:
 public:
 	void InitCharInfoMap();
 	TArray<FBillboardVertexInfo_GPU> CreateVerticesForString(const FString& text,const FVector& StartPos);
-	//FResourceData* GetResourceData() { return ResourceData; }
-	//FTextureData* GetTextureData() { return TextureData; }
 	virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
-	// void SetText(FString Txt);
+	
+	void SetText(FString InText);
 
 	UTextQuad* GetStaticMesh() const { return TextQuad; }
 
 private:
 	FString Text;
 	TMap<char, FBillboardVertexInfo> CharInfoMap;
-	FString TextureFilePath;
 
-	// TODO: UStaticMesh는 UStaticMeshComponent만 사용하도록 바꿔야 한다
 	UTextQuad* TextQuad = nullptr;
+
+	bool bIsDirty = true;	// Text 가 변경된 경우 true 후 TextQuad 업데이트
 };

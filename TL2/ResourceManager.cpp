@@ -379,6 +379,7 @@ void UResourceManager::CreateDefaultShader()
     Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
     Load<UShader>("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
+    Load<UShader>("TextShader.hlsl");
 }
 
 void UResourceManager::InitShaderILMap()
@@ -402,6 +403,13 @@ void UResourceManager::InitShaderILMap()
     layout.Add({ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     layout.Add({ "UVRECT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     ShaderToInputLayoutMap["TextBillboard.hlsl"] = layout;
+    layout.clear();
+
+    layout.Add({ "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "UVRECT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    ShaderToInputLayoutMap["TextShader.hlsl"] = layout;
+    layout.clear();
 }
 
 TArray<D3D11_INPUT_ELEMENT_DESC>& UResourceManager::GetProperInputLayout(const FString& InShaderName)
@@ -430,7 +438,7 @@ FString& UResourceManager::GetProperShader(const FString& InTextureName)
 
 void UResourceManager::InitTexToShaderMap()
 {
-    TextureToShaderMap["TextBillboard.dds"] = "TextBillboard.hlsl";
+    TextureToShaderMap["TextBillboard.dds"] = "TextShader.hlsl";
 }
 
 
@@ -446,13 +454,18 @@ void UResourceManager::UpdateDynamicVertexBuffer(const FString& Name, TArray<FBi
 {
     UTextQuad* Mesh = Get<UTextQuad>(Name);
 
-    const uint32_t quadCount = static_cast<uint32_t>(vertices.size() / 4);
-    Mesh->SetIndexCount(quadCount * 6);
+    UpdateDynamicVertexBuffer(Mesh, vertices);
+}
+
+void UResourceManager::UpdateDynamicVertexBuffer(UTextQuad* InMesh, TArray<FBillboardVertexInfo_GPU>& InVertices)
+{
+    const uint32_t quadCount = static_cast<uint32_t>(InVertices.size() / 4);
+    InMesh->SetIndexCount(quadCount * 6);
 
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    Context->Map(Mesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-    memcpy(mappedResource.pData, vertices.data(), sizeof(FBillboardVertexInfo_GPU) * vertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라
-    Context->Unmap(Mesh->GetVertexBuffer(), 0);
+    Context->Map(InMesh->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    memcpy(mappedResource.pData, InVertices.data(), sizeof(FBillboardVertexInfo_GPU) * InVertices.size()); //vertices.size()만큼의 Character info를 vertices에서 pData로 복사해가라
+    Context->Unmap(InMesh->GetVertexBuffer(), 0);
 }
 
 FTextureData* UResourceManager::CreateOrGetTextureData(const FName& FileName)

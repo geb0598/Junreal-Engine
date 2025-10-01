@@ -97,6 +97,11 @@ void URenderer::UpdateBillboardConstantBuffers(const FVector& pos,const FMatrix&
     RHIDevice->UpdateBillboardConstantBuffers(pos,ViewMatrix, ProjMatrix, CameraRight, CameraUp);
 }
 
+//void URenderer::UpdateTextConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
+//{
+//    RHIDevice->UpdateTextConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
+//}
+
 void URenderer::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
 {
     RHIDevice->UpdatePixelConstantBuffers(InMaterialInfo, bHasMaterial, bHasTexture);

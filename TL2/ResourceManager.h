@@ -41,6 +41,8 @@ public:
     void CreateTextBillboardTexture();
 
     void UpdateDynamicVertexBuffer(const FString& name, TArray<FBillboardVertexInfo_GPU>& vertices);
+    void UpdateDynamicVertexBuffer(UTextQuad* InMesh, TArray<FBillboardVertexInfo_GPU>& InVertices);
+
     FTextureData* CreateOrGetTextureData(const FName& FileName);
 
     // 전체 해제
