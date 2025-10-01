@@ -10,22 +10,25 @@ FString UObject::GetComparisonName()
     return FString();
 }
 
-void UObject::DuplicateSubObjects()
+UObject* UObject::GetOuter() const
 {
-    // Base class has no sub objects to deep copy
-    // This is intended to be ovveridden by derived class   
+	return nullptr;
 }
 
-// After shallow copy, call DuplicateSubObjects (virtual function)
+UWorld* UObject::GetWorld() const
+{
+	if (UObject* Outer = GetOuter())
+	{
+		return Outer->GetWorld();
+	}
+
+	return nullptr;
+}
+
 UObject* UObject::Duplicate()
 {
-    // shallow copy
-    UObject* NewObject = new UObject(*this); 
+	UObject* NewObject = new UObject(*this);
+	NewObject->DuplicateSubObjects();
 
-    // deep copy if object has sub objects
-    NewObject->DuplicateSubObjects();
-
-    return NewObject;
+	return NewObject;
 }
-
-

@@ -22,7 +22,7 @@ void UActorComponent::BeginPlay()
     // 필요하다면 Override
 }
 
-void UActorComponent::TickComponent(float DeltaTime)
+void UActorComponent::TickComponent(float DeltaSeconds)
 {
     if (!bIsActive || !bCanEverTick)
         return;
@@ -31,8 +31,10 @@ void UActorComponent::TickComponent(float DeltaTime)
     // 자식 클래스에서 Override
 }
 
-void UActorComponent::EndPlay()
+void UActorComponent::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-    // 파괴 시
-    // 필요하다면 Override
+    if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
+    {
+        // End Replication
+    }
 }

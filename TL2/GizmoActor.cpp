@@ -154,7 +154,7 @@ TArray<USceneComponent*>* Components = GetGizmoComponents();
 	float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
 	if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
 
-	EViewModeIndex ViewModeIndex = World->GetViewModeIndex();
+	EViewModeIndex ViewModeIndex = GetWorld()->GetViewModeIndex();
 	URenderer* Renderer = GetWorld()->GetRenderer();
 	if (!USelectionManager::GetInstance().HasSelection()) return;
 	FMatrix ViewMatrix = Camera->GetViewMatrix();

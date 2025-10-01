@@ -379,4 +379,18 @@ inline bool HasShowFlag(EEngineShowFlags flags, EEngineShowFlags flag)
     return (flags & flag) != EEngineShowFlags::None;
 }
 
+// enum class를 쓰기 전부터 사용해오던 영향으로 namespace 사용
+// 여기선 고증에 맞게 작성함
+namespace EEndPlayReason
+{
+    enum Type
+    {
+        EndPlayInEditor,
+        RemovedFromWorld,
+        Destroyed,
+        LevelTransition,
+        Quit,
+    };
+}
+
 //#endif /** UE_ENUMS_H */

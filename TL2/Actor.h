@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Enums.h"
 #include "Object.h"
 #include "Vector.h"
 
@@ -19,22 +20,24 @@ protected:
 public:
     virtual void BeginPlay();
     virtual void Tick(float DeltaSeconds);
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
+
     virtual void Destroy();
 
     // ───────────────
     // Transform API
     // ───────────────
-    void SetActorTransform(const FTransform& NewTransform);
-    FTransform GetActorTransform() const;
+    void SetActorTransform(const FTransform& InNewTransform) const;
+    FTransform GetActorTransform() const;   
 
-    void SetActorLocation(const FVector& NewLocation);
+    void SetActorLocation(const FVector& InNewLocation);
     FVector GetActorLocation() const;
 
-    void SetActorRotation(const FVector& EulerDegree);
-    void SetActorRotation(const FQuat& InQuat);
+    void SetActorRotation(const FVector& InEulerDegree) const;
+    void SetActorRotation(const FQuat& InQuat) const;
     FQuat GetActorRotation() const;
 
-    void SetActorScale(const FVector& NewScale);
+    void SetActorScale(const FVector& InNewScale) const;
     FVector GetActorScale() const;
 
     FMatrix GetWorldMatrix() const;
@@ -43,17 +46,14 @@ public:
     FVector GetActorRight()   const { return GetActorRotation().RotateVector(FVector(1, 0, 0)); }
     FVector GetActorUp()      const { return GetActorRotation().RotateVector(FVector(0, 0, 1)); }
 
-    void AddActorWorldRotation(const FQuat& DeltaRotation);
+    void AddActorWorldRotation(const FQuat& InDeltaRotation) const;
     void AddActorWorldRotation(const FVector& DeltaEuler);
-    void AddActorWorldLocation(const FVector& DeltaRot);
+    void AddActorWorldLocation(const FVector& DeltaRot) const;
 
     void AddActorLocalRotation(const FVector& DeltaEuler);
 
-    void AddActorLocalRotation(const FQuat& DeltaRotation);
-    void AddActorLocalLocation(const FVector& DeltaRot);
-
-    void SetWorld(UWorld* InWorld) { World = InWorld; }
-    UWorld* GetWorld() const { return World; }
+    void AddActorLocalRotation(const FQuat& InDeltaRotation) const;
+    void AddActorLocalLocation(const FVector& DeltaRot) const;
 
     USceneComponent* GetRootComponent() { return RootComponent; }
 
@@ -64,7 +64,7 @@ public:
 
     //-----------------------------
     //----------Getter------------
-    const TArray<USceneComponent*>& GetComponents() const;
+    const TSet<USceneComponent*>& GetComponents() const;
 
     void SetName(const FString& InName) { Name = InName; }
     const FName& GetName() const { return Name; }
@@ -80,21 +80,33 @@ public:
         return Comp;
     }
 
+    // Duplicate function
+    UObject* Duplicate() override;
+    void DuplicateSubObjects() override;
+
 public:
     FName Name;
     USceneComponent* RootComponent = nullptr;
+    
     UAABoundingBoxComponent* CollisionComponent = nullptr;
 
+    // TODO(KHJ): Level->GetWorld();
     UWorld* World = nullptr;
     bool bTickInEditor = false;
     // Visibility properties
     void SetActorHiddenInGame(bool bNewHidden) { bHiddenInGame = bNewHidden; }
     bool GetActorHiddenInGame() const { return bHiddenInGame; }
     bool IsActorVisible() const { return !bHiddenInGame; }
-    void AddComponent(USceneComponent* Component);
+    void AddComponent(USceneComponent* InComponent);
+
+    UWorld* GetWorld() const override final;
+    // TODO(KHJ): 제거 필요
+    void SetWorld(UWorld* InWorld) { World = InWorld; }
+    
 protected:
-    TArray<USceneComponent*> Components;
+    TSet<USceneComponent*> OwnedComponents;
     bool bIsPicked = false;
     bool bCanEverTick = true;
     bool bHiddenInGame = false;
+    bool bTickInEditor = false;
 };
