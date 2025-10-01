@@ -7,6 +7,8 @@
 #include "Vector.h"
 #include "GizmoActor.h"
 #include <string>
+
+#include "BillboardComponent.h"
 #include "StaticMeshActor.h"    
 #include "StaticMeshComponent.h"
 #include "ResourceManager.h"    
@@ -141,7 +143,8 @@ void UTargetActorTransformWidget::RenderWidget()
 		// 추가 가능한 컴포넌트 타입 목록 (임시 하드코딩)
 		static const TArray<TPair<FString, UClass*>> AddableComponentTypes = {
 			{ "StaticMesh Component", UStaticMeshComponent::StaticClass() },
-			{ "Scene Component", USceneComponent::StaticClass() }
+			{ "Scene Component", USceneComponent::StaticClass() },
+			{ "Billboard Component", UBillboardComponent::StaticClass() }
 		};
 
 		// 컴포넌트 추가 메뉴

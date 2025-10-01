@@ -164,6 +164,7 @@
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="AABoundingBoxComponent.cpp" />
+    <ClCompile Include="BillboardComponent.cpp" />
     <ClCompile Include="BoundingVolumeHierarchy.cpp" />
     <ClCompile Include="BVH.cpp" />
     <ClCompile Include="EditorEngine.cpp" />
@@ -339,6 +340,7 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
     <ClInclude Include="Archive.h" />
+    <ClInclude Include="BillboardComponent.h" />
     <ClInclude Include="BoundingVolumeHierarchy.h" />
     <ClInclude Include="BVH.h" />
     <ClInclude Include="EditorEngine.h" />

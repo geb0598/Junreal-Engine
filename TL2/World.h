@@ -165,7 +165,8 @@ private:
     AGizmoActor* GizmoActor;
 
     /** === Show Flag 시스템 === */
-    EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled;
+    EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled
+                                    | EEngineShowFlags::SF_BillboardText;
     
     EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 

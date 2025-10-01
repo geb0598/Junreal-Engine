@@ -71,6 +71,7 @@ IMPLEMENT_CLASS(UGizmoRotateComponent)
 IMPLEMENT_CLASS(ULineComponent)
 IMPLEMENT_CLASS(ULine)
 IMPLEMENT_CLASS(UTextRenderComponent)
+IMPLEMENT_CLASS(UBillboardComponent)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)
