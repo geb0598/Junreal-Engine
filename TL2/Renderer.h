@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "BillboardComponent.h"
 #include "RHIDevice.h"
 #include "LineDynamicMesh.h"
 
@@ -43,6 +44,8 @@ public:
     void UpdateUVScroll(const FVector2D& Speed, float TimeSec);
 
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
+    void DrawIndexedPrimitiveComponent(UBillboardComponent* Comp,
+                                       D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
     void SetViewModeType(EViewModeIndex ViewModeIndex);
     // Batch Line Rendering System

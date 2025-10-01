@@ -146,8 +146,5 @@ T* UObject::Duplicate()
         NewObject->DuplicateSubObjects();
     }
     
-    // UUID 갱신 (새로운 객체는 고유 ID 필요)
-    NewObject->UUID = GenerateUUID();
-    
     return NewObject;
 }

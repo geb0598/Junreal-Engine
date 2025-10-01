@@ -225,6 +225,7 @@ USceneComponent* AActor::CreateAndAttachComponent(USceneComponent* ParentCompone
             this->AddComponent(NewComponent); // 액터의 관리 목록에 추가
 
             NewComponent->SetupAttachment(ParentComponent);
+            NewComponent->SetOwner(this);
         }
     }
 
