@@ -20,6 +20,7 @@ public:
 
 	void Initialize() override;
 	void Update() override;
+	void DuplicateTarget() const;
 	void RenderWidget() override;
 	void PostProcess() override;
 

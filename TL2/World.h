@@ -70,6 +70,8 @@ public:
     template<class T>
     T* SpawnActor(const FTransform& Transform);
 
+    void SpawnActor(AActor* InActor);
+
     bool DestroyActor(AActor* Actor);
 
     void CreateNewScene();
