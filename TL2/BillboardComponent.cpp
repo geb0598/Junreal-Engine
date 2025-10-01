@@ -32,6 +32,14 @@ void UBillboardComponent::SetTexture(const FString& InTexturePath)
     TexturePath = InTexturePath;
 }
 
+void UBillboardComponent::SetUVCoords(float U, float V, float UL, float VL)
+{
+    UCoord = U;
+    VCoord = V;
+    ULength = UL;
+    VLength = VL;
+}
+
 void UBillboardComponent::CreateBillboardVertices()
 {
     TArray<FBillboardVertexInfo_GPU> vertices;
@@ -49,10 +57,10 @@ void UBillboardComponent::CreateBillboardVertices()
     Info.Position[2] = 0.0f;
     Info.CharSize[0] = BillboardWidth;
     Info.CharSize[1] = BillboardHeight;
-    Info.UVRect[0] = 0.0f;  // u
-    Info.UVRect[1] = 0.0f;  // v
-    Info.UVRect[2] = 1.0f;  // width
-    Info.UVRect[3] = 1.0f;  // height
+    Info.UVRect[0] = UCoord;   // u start
+    Info.UVRect[1] = VCoord;   // v start
+    Info.UVRect[2] = ULength;  // u length (UL)
+    Info.UVRect[3] = VLength;  // v length (VL)
     vertices.push_back(Info);
 
     // 정점 1: 우상단 (+halfW, +halfH)
@@ -88,7 +96,7 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     FVector CamUp = CameraActor->GetActorUp();
 
     // 빌보드 위치 설정 (액터 위치 + Z 오프셋)
-    FVector BillboardPos = Owner->GetActorLocation() + FVector(0.f, 0.f, 1.f) * Owner->GetActorScale().Z;
+    FVector BillboardPos = Owner->GetActorLocation() + GetRelativeLocation();
 
     // 상수 버퍼 업데이트
     Renderer->UpdateBillboardConstantBuffers(BillboardPos, View, Proj, CamRight, CamUp);

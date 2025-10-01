@@ -14,8 +14,11 @@
 #include "ResourceManager.h"    
 #include "SceneComponent.h"    
 #include "TextRenderComponent.h"    
+#include <filesystem>
+#include <vector>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 //// UE_LOG 대체 매크로
 //#define UE_LOG(fmt, ...)
@@ -34,6 +37,41 @@ static inline FString GetBaseNameNoExt(const FString& Path)
 	}
 	if (start <= end) return Path.substr(start, end - start);
 	return Path;
+}
+
+// Editor/Icon 폴더에서 모든 .dds 파일을 동적으로 찾아서 반환
+static TArray<FString> GetIconFiles()
+{
+	TArray<FString> iconFiles;
+	try
+	{
+		fs::path iconPath = "Editor/Icon";
+		if (fs::exists(iconPath) && fs::is_directory(iconPath))
+		{
+			for (const auto& entry : fs::directory_iterator(iconPath))
+			{
+				if (entry.is_regular_file())
+				{
+					auto filename = entry.path().filename().string();
+					// .dds 확장자만 포함
+					if (filename.ends_with(".dds"))
+					{
+						// 상대경로 포맷으로 저장 (Editor/Icon/filename.dds)
+						FString relativePath = "Editor/Icon/" + filename;
+						iconFiles.push_back(relativePath);
+					}
+				}
+			}
+		}
+	}
+	catch (const std::exception&)
+	{
+		// 파일 시스템 오류 발생 시 기본값으로 폴백
+		iconFiles.push_back("Editor/Icon/Pawn_64x.dds");
+		iconFiles.push_back("Editor/Icon/PointLight_64x.dds");
+		iconFiles.push_back("Editor/Icon/SpotLight_64x.dds");
+	}
+	return iconFiles;
 }
 
 UTargetActorTransformWidget::UTargetActorTransformWidget()
@@ -439,12 +477,143 @@ void UTargetActorTransformWidget::RenderWidget()
 							ImGui::PopID();
 						}
 					}
+			}
+		}
+			// Billboard Component가 선택된 경우 Sprite UI
+			else if (UBillboardComponent* BBC = Cast<UBillboardComponent>(SelectedComponent))
+			{
+				ImGui::Separator();
+				ImGui::Text("Billboard Component Settings");
+				
+				// Sprite 텍스처 경로 표시 및 변경
+				FString CurrentTexture = BBC->GetTexturePath();
+				ImGui::Text("Current Sprite: %s", CurrentTexture.c_str());
+				
+				// Editor/Icon 폴더에서 동적으로 스프라이트 옵션 로드
+				static TArray<FString> SpriteOptions;
+				static bool bSpriteOptionsLoaded = false;
+				static int currentSpriteIndex = 0; // 현재 선택된 스프라이트 인덱스
+				
+				if (!bSpriteOptionsLoaded)
+				{
+					// Editor/Icon 폴더에서 .dds 파일들을 찾아서 추가
+					SpriteOptions = GetIconFiles();
+					bSpriteOptionsLoaded = true;
+					
+					// 현재 텍스처와 일치하는 인덱스 찾기
+					FString currentTexturePath = BBC->GetTexturePath();
+					for (int i = 0; i < SpriteOptions.size(); ++i)
+					{
+						if (SpriteOptions[i] == currentTexturePath)
+						{
+							currentSpriteIndex = i;
+							break;
+						}
+					}
+				}
+				
+				// 스프라이트 선택 드롭다운 메뉴
+				ImGui::Text("Sprite Texture:");
+				FString currentDisplayName = (currentSpriteIndex >= 0 && currentSpriteIndex < SpriteOptions.size()) 
+					? GetBaseNameNoExt(SpriteOptions[currentSpriteIndex]) 
+					: "Select Sprite";
+				
+				if (ImGui::BeginCombo("##SpriteCombo", currentDisplayName.c_str()))
+				{
+					for (int i = 0; i < SpriteOptions.size(); ++i)
+					{
+						FString displayName = GetBaseNameNoExt(SpriteOptions[i]);
+						bool isSelected = (currentSpriteIndex == i);
+						
+						if (ImGui::Selectable(displayName.c_str(), isSelected))
+						{
+							currentSpriteIndex = i;
+							BBC->SetTexture(SpriteOptions[i]);
+						}
+						
+						// 현재 선택된 항목에 포커스 설정
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+				
+				// 새로고침 버튼 (같은 줄에)
+				ImGui::SameLine();
+				if (ImGui::Button("Refresh"))
+				{
+					bSpriteOptionsLoaded = false; // 다음에 다시 로드하도록
+					currentSpriteIndex = 0; // 인덱스 리셋
+				}
+				
+				ImGui::Spacing();
+				
+				// Screen Size Scaled 체크박스
+				bool bIsScreenSizeScaled = BBC->IsScreenSizeScaled();
+				if (ImGui::Checkbox("Is Screen Size Scaled", &bIsScreenSizeScaled))
+				{
+					BBC->SetScreenSizeScaled(bIsScreenSizeScaled);
+				}
+				
+				// Screen Size (Is Screen Size Scaled가 true일 때만 활성화)
+				if (bIsScreenSizeScaled)
+				{
+					float screenSize = BBC->GetScreenSize();
+					if (ImGui::DragFloat("Screen Size", &screenSize, 0.0001f, 0.0001f, 0.1f, "%.4f"))
+					{
+						BBC->SetScreenSize(screenSize);
+					}
+				}
+				else
+				{
+					// Billboard Size (Is Screen Size Scaled가 false일 때)
+					float billboardWidth = BBC->GetBillboardWidth();
+					float billboardHeight = BBC->GetBillboardHeight();
+					
+					if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
+					{
+						BBC->SetBillboardSize(billboardWidth, billboardHeight);
+					}
+					
+					if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
+					{
+						BBC->SetBillboardSize(billboardWidth, billboardHeight);
+					}
+				}
+				
+				ImGui::Spacing();
+				
+				// UV 좌표 설정
+				ImGui::Text("UV Coordinates");
+				
+				float u = BBC->GetU();
+				float v = BBC->GetV();
+				float ul = BBC->GetUL();
+				float vl = BBC->GetVL();
+				
+				bool uvChanged = false;
+				
+				if (ImGui::DragFloat("U", &u, 0.01f))
+					uvChanged = true;
+					
+				if (ImGui::DragFloat("V", &v, 0.01f))
+					uvChanged = true;
+					
+				if (ImGui::DragFloat("UL", &ul, 0.01f))
+					uvChanged = true;
+					
+				if (ImGui::DragFloat("VL", &vl, 0.01f))
+					uvChanged = true;
+				
+				if (uvChanged)
+				{
+					BBC->SetUVCoords(u, v, ul, vl);
 				}
 			}
-			else
-			{
-				ImGui::Text("Selected actor is not a StaticMeshActor.");
-			}
+		else
+		{
+			ImGui::Text("Selected component is not a supported type.");
+		}
 		}
 	}
 	else
