@@ -38,6 +38,7 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     InitTexToShaderMap();
 
     CreateTextBillboardMesh();//"TextBillboard"
+    CreateBillboardMesh();//"Billboard"
 
     CreateTextBillboardTexture();
 
@@ -226,6 +227,34 @@ void UResourceManager::CreateTextBillboardMesh()
     UMeshLoader::GetInstance().AddMeshData("TextBillboard", BillboardData);
 }
 
+void UResourceManager::CreateBillboardMesh()
+{
+    TArray<uint32> Indices;
+    for (uint32 i = 0; i < 100; i++)
+    {
+        Indices.push_back(i * 4 + 0);
+        Indices.push_back(i * 4 + 1);
+        Indices.push_back(i * 4 + 2);
+
+        Indices.push_back(i * 4 + 2);
+        Indices.push_back(i * 4 + 1);
+        Indices.push_back(i * 4 + 3);
+    }
+
+    const uint32 MaxQuads = 100; // capacity
+    FMeshData* BillboardData = new FMeshData;
+    BillboardData->Indices = Indices;
+    // Reserve capacity for MaxQuads (4 vertices per quad)
+    BillboardData->Vertices.resize(MaxQuads * 4);
+    BillboardData->Color.resize(MaxQuads * 4);
+    BillboardData->UV.resize(MaxQuads * 4);
+
+    UTextQuad* Mesh = NewObject<UTextQuad>();
+    Mesh->Load(BillboardData, Device);
+    Add<UTextQuad>("Billboard", Mesh);
+    UMeshLoader::GetInstance().AddMeshData("Billboard", BillboardData);
+}
+
 void UResourceManager::CreateGridMesh(int N, const FString& FilePath)
 {
     if (ResourceMap[FilePath])
@@ -379,6 +408,7 @@ void UResourceManager::CreateDefaultShader()
     Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
     Load<UShader>("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
+    Load<UShader>("Billboard.hlsl", EVertexLayoutType::PositionBillBoard);
 }
 
 void UResourceManager::InitShaderILMap()
@@ -402,6 +432,7 @@ void UResourceManager::InitShaderILMap()
     layout.Add({ "SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     layout.Add({ "UVRECT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     ShaderToInputLayoutMap["TextBillboard.hlsl"] = layout;
+    ShaderToInputLayoutMap["Billboard.hlsl"] = layout;
 }
 
 TArray<D3D11_INPUT_ELEMENT_DESC>& UResourceManager::GetProperInputLayout(const FString& InShaderName)
@@ -431,6 +462,9 @@ FString& UResourceManager::GetProperShader(const FString& InTextureName)
 void UResourceManager::InitTexToShaderMap()
 {
     TextureToShaderMap["TextBillboard.dds"] = "TextBillboard.hlsl";
+    TextureToShaderMap[R"(Editor/Icon/Pawn_64x.dds)"] = "Billboard.hlsl";
+    TextureToShaderMap[R"(Editor/Icon/PointLight_64x.dds)"] = "Billboard.hlsl";
+    TextureToShaderMap[R"(Editor/Icon/SpotLight_64x.dds)"] = "Billboard.hlsl";
 }
 
 

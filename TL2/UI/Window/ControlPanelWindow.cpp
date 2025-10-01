@@ -7,6 +7,7 @@
 #include "../Widget/PrimitiveSpawnWidget.h"
 #include "../Widget/SceneIOWidget.h"
 #include "../Widget/SceneManagerWidget.h"
+#include "UI/Widget/ShowFlagWidget.h"
 
 //// UE_LOG 대체 매크로
 //#define UE_LOG(fmt, ...)
@@ -54,6 +55,10 @@ UControlPanelWindow::UControlPanelWindow()
 	UCameraControlWidget* CameraControlWidget = NewObject<UCameraControlWidget>();
 	CameraControlWidget->Initialize();
 	AddWidget(CameraControlWidget);
+
+	UShowFlagWidget* ShowFlagWidget = NewObject<UShowFlagWidget>();
+	ShowFlagWidget->Initialize();
+	AddWidget(ShowFlagWidget);
 }
 
 /**

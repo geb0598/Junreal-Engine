@@ -1,7 +1,6 @@
 #pragma once
-
-#pragma once
 #include "MeshComponent.h"
+
 class UBillboardComponent : public UMeshComponent
 {
 public:
@@ -12,17 +11,18 @@ protected:
     ~UBillboardComponent() override;
 
 public:
-    void InitCharInfoMap();
-    TArray<FBillboardVertexInfo_GPU> CreateVerticesForString(const FString& text,const FVector& StartPos);
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
+    void SetBillboardSize(float Width, float Height) { BillboardWidth = Width; BillboardHeight = Height; }
+    void SetTexture(const FString& TexturePath);
 
-    UTextQuad* GetStaticMesh() const { return TextQuad; }
+    UTextQuad* GetStaticMesh() const { return BillboardQuad; }
 
 private:
-    FString Text;
-    TMap<char, FBillboardVertexInfo> CharInfoMap;
-    FString TextureFilePath;
+    void CreateBillboardVertices();
 
-    // TODO: UStaticMesh는 UStaticMeshComponent만 사용하도록 바꿔야 한다
-    UTextQuad* TextQuad = nullptr;
+private:
+    UTextQuad* BillboardQuad = nullptr;
+    float BillboardWidth = 1.0f;
+    float BillboardHeight = 1.0f;
+    FString TexturePath = "Editor/Icon/Pawn_64x.dds";
 };

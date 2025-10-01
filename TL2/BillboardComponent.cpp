@@ -1,166 +1,107 @@
 #include "pch.h"
-#include "Enums.h"
 #include "BillboardComponent.h"
-#include "d3dtk/DDSTextureLoader.h"
 #include "ResourceManager.h"
 #include "VertexData.h"
 #include "CameraActor.h"
 
 UBillboardComponent::UBillboardComponent()
 {
-    TArray<uint32> Indices;
-    for (uint32 i = 0;i < 100;i++)
-    {
-        Indices.push_back(i * 4 + 0);
-        Indices.push_back(i * 4 + 1);
-        Indices.push_back(i * 4 + 2);
-
-        Indices.push_back(i * 4 + 2);
-        Indices.push_back(i * 4 + 1);
-        Indices.push_back(i * 4 + 3);
-    }
-	
-
-    //if(UResourceManager::GetInstance().Get<UMaterial>())
     auto& RM = UResourceManager::GetInstance();
-    TextQuad = RM.Get<UTextQuad>("TextBillboard");
-    if (auto* M = RM.Get<UMaterial>("TextBillboard"))
+
+    // 빌보드용 메시 가져오기 (단일 쿼드)
+    BillboardQuad = RM.Get<UTextQuad>("Billboard");
+
+    // 머티리얼 생성 또는 가져오기
+    if (auto* M = RM.Get<UMaterial>("Billboard"))
     {
         Material = M;
     }
     else
     {
         Material = NewObject<UMaterial>();
-        RM.Add<UMaterial>("TextBillboard", Material);
+        RM.Add<UMaterial>("Billboard", Material);
     }
-
-    InitCharInfoMap();
 }
 
 UBillboardComponent::~UBillboardComponent()
 {
-    CharInfoMap.clear();
 }
 
-
-
-void UBillboardComponent::InitCharInfoMap()
+void UBillboardComponent::SetTexture(const FString& InTexturePath)
 {
-    const float TEXTURE_WH = 512.f;
-    const float SUBTEX_WH = 32.f;
-    const int COLROW = 16;
-
-    //FTextureData* Data = new FTextureData();
-    for (char c = 32; c <= 126;++c)
-    {
-        int key = c - 32;
-        int col = key % COLROW;
-        int row = key / COLROW;
-
-        float pixelX = col * SUBTEX_WH;
-        float pixelY = row * SUBTEX_WH;
-
-        FBillboardVertexInfo CharInfo;
-        CharInfo.UVRect.X = pixelX / TEXTURE_WH;
-        CharInfo.UVRect.Y = pixelY / TEXTURE_WH;
-        CharInfo.UVRect.Z = SUBTEX_WH / TEXTURE_WH;
-        CharInfo.UVRect.W = CharInfo.UVRect.Z;
-
-        CharInfoMap[c] = CharInfo;
-    }
+    TexturePath = InTexturePath;
 }
 
-TArray<FBillboardVertexInfo_GPU> UBillboardComponent::CreateVerticesForString(const FString& text, const FVector& StartPos) {
+void UBillboardComponent::CreateBillboardVertices()
+{
     TArray<FBillboardVertexInfo_GPU> vertices;
-    auto* CharUVInfo = CharInfoMap.Find('A');
-    float charWidth = (CharUVInfo->UVRect.Z) / (CharUVInfo->UVRect.W); //
-    float CharHeight = 1.f;
-    float CursorX = -charWidth*(text.size()/2);
-    int vertexBaseIndex = 0;
-    for (char c : text)
-    {
-        auto* CharUVInfo = CharInfoMap.Find(c);
-        if (!CharUVInfo) continue;
 
-        float u = CharUVInfo->UVRect.X;
-        float v = CharUVInfo->UVRect.Y;
-        float w = CharUVInfo->UVRect.Z; //32 / 512
-        float h = CharUVInfo->UVRect.W; //32 / 512
+    // 단일 쿼드의 4개 정점 생성 (카메라를 향하는 평면)
+    // 중심이 (0,0,0)이고 크기가 BillboardWidth x BillboardHeight인 사각형
+    float halfW = BillboardWidth * 0.5f;
+    float halfH = BillboardHeight * 0.5f;
 
-        //float charWidth = (w / h);
+    FBillboardVertexInfo_GPU Info;
 
-        FBillboardVertexInfo_GPU Info;
-        //1
-        Info.Position[0] = CursorX;
-        Info.Position[1] = CharHeight;
-        Info.Position[2] = 0.f;
+    // 정점 0: 좌상단 (-halfW, +halfH)
+    Info.Position[0] = -halfW;
+    Info.Position[1] = halfH;
+    Info.Position[2] = 0.0f;
+    Info.CharSize[0] = BillboardWidth;
+    Info.CharSize[1] = BillboardHeight;
+    Info.UVRect[0] = 0.0f;  // u
+    Info.UVRect[1] = 0.0f;  // v
+    Info.UVRect[2] = 1.0f;  // width
+    Info.UVRect[3] = 1.0f;  // height
+    vertices.push_back(Info);
 
-        Info.CharSize[0] = 1.f;
-        Info.CharSize[1] = 1.f;
+    // 정점 1: 우상단 (+halfW, +halfH)
+    Info.Position[0] = halfW;
+    Info.Position[1] = halfH;
+    Info.Position[2] = 0.0f;
+    vertices.push_back(Info);
 
-        Info.UVRect[0] = u;
-        Info.UVRect[1] = v;
-        vertices.push_back(Info);
-        //2
-        Info.Position[0] = CursorX+charWidth;
-        Info.Position[1] = CharHeight;
-        Info.Position[2] = 0.f;
+    // 정점 2: 좌하단 (-halfW, -halfH)
+    Info.Position[0] = -halfW;
+    Info.Position[1] = -halfH;
+    Info.Position[2] = 0.0f;
+    vertices.push_back(Info);
 
-        Info.CharSize[0] = 1.f;
-        Info.CharSize[1] = 1.f;
+    // 정점 3: 우하단 (+halfW, -halfH)
+    Info.Position[0] = halfW;
+    Info.Position[1] = -halfH;
+    Info.Position[2] = 0.0f;
+    vertices.push_back(Info);
 
-        Info.UVRect[0] = u+w;
-        Info.UVRect[1] = v;
-        vertices.push_back(Info);
-        //3
-        Info.Position[0] = CursorX;
-        Info.Position[1] = 0.f;
-        Info.Position[2] = 0.f;
-
-        Info.CharSize[0] = 1.f;
-        Info.CharSize[1] = 1.f;
-
-        Info.UVRect[0] = u;
-        Info.UVRect[1] = v+h;
-        vertices.push_back(Info);
-        //4
-        Info.Position[0] = CursorX+charWidth;
-        Info.Position[1] = 0.f;
-        Info.Position[2] = 0.f;
-
-        Info.CharSize[0] = 1.f;
-        Info.CharSize[1] = 1.f;
-
-        Info.UVRect[0] = u+w;
-        Info.UVRect[1] = v+h;
-        vertices.push_back(Info);
-
-        CursorX += charWidth;
-        vertexBaseIndex += 4;
-    }
-    return vertices;
+    // 동적 버텍스 버퍼 업데이트
+    UResourceManager::GetInstance().UpdateDynamicVertexBuffer("Billboard", vertices);
 }
 
 void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj)
 {
-    if (Owner && Owner->GetIsPicked() == true)
-    {
-        Material->Load("TextBillboard.dds", Renderer->GetRHIDevice()->GetDevice());//texture 불러오기 초기화는 ResourceManager Initialize() -> CreateTextBillboardTexture();
-        ACameraActor* CameraActor = GetOwner()->GetWorld()->GetCameraActor();
-        FVector CamRight = CameraActor->GetActorRight();
-        FVector CamUp = CameraActor->GetActorUp();
+    // 텍스처 로드
+    Material->Load(TexturePath, Renderer->GetRHIDevice()->GetDevice());
 
+    // 카메라 정보 가져오기
+    ACameraActor* CameraActor = GetOwner()->GetWorld()->GetCameraActor();
+    FVector CamRight = CameraActor->GetActorRight();
+    FVector CamUp = CameraActor->GetActorUp();
 
-        FVector cameraPosition = CameraActor->GetActorLocation();
-        Renderer->UpdateBillboardConstantBuffers(Owner->GetActorLocation() + FVector(0.f, 0.f, 1.f) * Owner->GetActorScale().Z, View, Proj, CamRight, CamUp);
+    // 빌보드 위치 설정 (액터 위치 + Z 오프셋)
+    FVector BillboardPos = Owner->GetActorLocation() + FVector(0.f, 0.f, 1.f) * Owner->GetActorScale().Z;
 
+    // 상수 버퍼 업데이트
+    Renderer->UpdateBillboardConstantBuffers(BillboardPos, View, Proj, CamRight, CamUp);
 
-        Renderer->PrepareShader(Material->GetShader());
-        TArray<FBillboardVertexInfo_GPU> vertices = CreateVerticesForString(FString("UUID : ") + FString(std::to_string(Owner->UUID)), Owner->GetActorLocation());//TODO : HELLOWORLD를 멤버변수 TEXT로바꾸기
-        UResourceManager::GetInstance().UpdateDynamicVertexBuffer("TextBillboard", vertices);
-        Renderer->OMSetBlendState(true);
-        Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
-        Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        Renderer->OMSetBlendState(false);
-    }
+    // 셰이더 준비
+    Renderer->PrepareShader(Material->GetShader());
+
+    // 빌보드 정점 생성 및 버퍼 업데이트
+    CreateBillboardVertices();
+
+    // 렌더링
+    Renderer->OMSetBlendState(true);
+    Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
+    Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Renderer->OMSetBlendState(false);
 }

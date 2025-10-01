@@ -70,14 +70,16 @@ void SViewportWindow::OnRender()
 		return;
 
 	Viewport->BeginRenderFrame();
-	RenderToolbar();
-	if (ViewportClient)
-		ViewportClient->Draw(Viewport);
+
 	// 툴바 렌더링
+	RenderToolbar();
+	
+	if (ViewportClient)
+	{
+		ViewportClient->Draw(Viewport);
+	}
 	
 	Viewport->EndRenderFrame();
-
-
 }
 
 void SViewportWindow::OnUpdate(float DeltaSeconds)

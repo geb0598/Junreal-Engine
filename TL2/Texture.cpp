@@ -29,7 +29,7 @@ void UTexture::Load(const FString& InFilePath, ID3D11Device* InDevice)
 	);
 	if (FAILED(hr))
 	{
-		UE_LOG("!!!LOAD TEXTIRE FAILED!!!");
+		UE_LOG("!!!LOAD TEXTURE FAILED!!!");
 	}
 
 	if (Texture2D)
