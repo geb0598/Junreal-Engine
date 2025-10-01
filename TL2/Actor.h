@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Enums.h"
 #include "Object.h"
 #include "Vector.h"
@@ -47,10 +47,7 @@ public:
     FVector GetActorUp()      const { return GetActorRotation().RotateVector(FVector(0, 0, 1)); }
 
     void AddActorWorldRotation(const FQuat& InDeltaRotation) const;
-    void AddActorWorldRotation(const FVector& DeltaEuler);
     void AddActorWorldLocation(const FVector& DeltaRot) const;
-
-    void AddActorLocalRotation(const FVector& DeltaEuler);
 
     void AddActorLocalRotation(const FQuat& InDeltaRotation) const;
     void AddActorLocalLocation(const FVector& DeltaRot) const;
@@ -81,7 +78,6 @@ public:
     }
 
     // Duplicate function
-    UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
 public:

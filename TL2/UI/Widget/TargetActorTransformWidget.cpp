@@ -122,7 +122,8 @@ void UTargetActorTransformWidget::DuplicateTarget() const
 		// 초기 트랜스폼 적용
 		NewActor->SetActorTransform(SelectedActor->GetActorTransform());
 
-		UWorld* World = GetWorld();
+		// TODO(KHJ): World 접근?
+		UWorld* World = SelectedActor->GetWorld();
 		
 		World->SpawnActor(NewActor);
 	}

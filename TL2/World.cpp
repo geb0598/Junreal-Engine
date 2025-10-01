@@ -898,7 +898,7 @@ AGizmoActor* UWorld::GetGizmoActor()
  * @brief 이미 생성한 Actor를 spawn하기 위한 shortcut 함수
  * @param InActor World에 생성할 Actor
  */
-inline void UWorld::SpawnActor(AActor* InActor)
+void UWorld::SpawnActor(AActor* InActor)
 {
 	InActor->SetWorld(this);
 	Actors.Add(InActor);
