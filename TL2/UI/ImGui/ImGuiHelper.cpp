@@ -50,12 +50,15 @@ void UImGuiHelper::Initialize(HWND InWindowHandle, ID3D11Device* InDevice, ID3D1
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui_ImplWin32_Init(InWindowHandle);
+	
+	try
+	{
+		ImGuiIO& IO = ImGui::GetIO();
+		std::filesystem::path FontFilePath = u8"Data/Fonts/Pretendard-Regular.otf";
+		IO.Fonts->AddFontFromFileTTF((char*)FontFilePath.u8string().c_str(), 16.0f, nullptr, IO.Fonts->GetGlyphRangesKorean());
+	}
+	catch (const std::exception&) {}
 
-	ImGuiIO& IO = ImGui::GetIO();
-	// Use default ImGui font
-	// IO.Fonts->AddFontDefault();
-
-	// Initialize ImGui DirectX11 backend with provided device and context
 	ImGui_ImplDX11_Init(InDevice, InDeviceContext);
 
 	bIsInitialized = true;
