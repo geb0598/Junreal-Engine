@@ -167,6 +167,7 @@
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
+    <ClCompile Include="Level.cpp" />
     <ClCompile Include="MenuBarWidget.cpp" />
     <ClCompile Include="ObjManager.cpp" />
     <ClCompile Include="OBoundingBoxComponent.cpp" />
@@ -341,6 +342,7 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
     <ClInclude Include="GameEngine.h" />
+    <ClInclude Include="Level.h" />
     <ClInclude Include="MenuBarWidget.h" />
     <ClInclude Include="ObjManager.h" />
     <ClInclude Include="OBoundingBoxComponent.h" />

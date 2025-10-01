@@ -29,7 +29,14 @@ private:
 	float UiNearZ = 0.1f;
 	float UiFarZ = 1000.f;
 	int   CameraModeIndex = 0;
-	
+
+	// 기즈모 설정
+	EGizmoSpace CurrentGizmoSpace = EGizmoSpace::World;
+	AGizmoActor* GizmoActor = nullptr;
+
+	// 월드 정보 (옵션)
+	uint32 WorldActorCount = 0;
+
 	// 카메라 제어 상태
 	float CameraMoveSpeed = 5.0f;
 	bool bSyncedOnce = false;

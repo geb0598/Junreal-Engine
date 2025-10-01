@@ -30,6 +30,15 @@ void UCameraControlWidget::Initialize()
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
 
+	// GizmoActor 참조 획득
+	GizmoActor = UIManager->GetGizmoActor();
+
+	// 초기 기즈모 스페이스 모드 설정
+	if (GizmoActor)
+	{
+		CurrentGizmoSpace = GizmoActor->GetSpace();
+	}
+
 	// UIManager에 자신 등록(씬 로드시 UI 재동기화 호출 받을 수 있게)
 	if (UIManager)
 	{
@@ -39,7 +48,18 @@ void UCameraControlWidget::Initialize()
 
 void UCameraControlWidget::Update()
 {
-	// 필요시 카메라 상태 업데이트 로직 추가
+	// GizmoActor 참조 업데이트
+	if (!GizmoActor && UIManager)
+	{
+		GizmoActor = UIManager->GetGizmoActor();
+	}
+
+	// 월드 정보 업데이트 (옵션)
+	if (UIManager && UIManager->GetWorld())
+	{
+		UWorld* World = UIManager->GetWorld();
+		WorldActorCount = static_cast<uint32>(World->GetActors().size());
+	}
 }
 
 ACameraActor* UCameraControlWidget::GetCurrentCamera() const
@@ -154,6 +174,65 @@ void UCameraControlWidget::RenderWidget()
 	ImGui::Text("Camera Info:");
 	ImGui::Text("  Position: (%.2f, %.2f, %.2f)", Location.X, Location.Y, Location.Z);
 	ImGui::Text("  Rotation: (%.1f, %.1f, %.1f)", Rotation.X, Rotation.Y, Rotation.Z);
+
+	// 월드 정보 표시
+	ImGui::Text("World Information");
+	ImGui::Text("Actor Count: %u", WorldActorCount);
+	ImGui::Separator();
+
+	AGridActor* gridActor = UIManager->GetWorld()->GetGridActor();
+	if (gridActor)
+	{
+		float currentLineSize = gridActor->GetLineSize();
+		if (ImGui::DragFloat("Grid Spacing", &currentLineSize, 0.1f, 0.1f, 1000.0f))
+		{
+			gridActor->SetLineSize(currentLineSize);
+			EditorINI["GridSpacing"] = std::to_string(currentLineSize);
+		}
+	}
+	else
+	{
+		ImGui::Text("GridActor not found in the world.");
+	}
+
+	ImGui::Text("Transform Editor");
+
+	// 기즈모 스페이스 모드 선택
+	if (GizmoActor)
+	{
+		const char* spaceItems[] = { "World", "Local" };
+		int currentSpaceIndex = static_cast<int>(CurrentGizmoSpace);
+
+		if (ImGui::Combo("Gizmo Space", &currentSpaceIndex, spaceItems, IM_ARRAYSIZE(spaceItems)))
+		{
+			if (UIManager)
+			{
+				CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
+				AActor* SelectedActor = UIManager->GetSelectedActor();
+				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
+			}
+		}
+
+		const char* buttonText = CurrentGizmoSpace == EGizmoSpace::World ?
+			"Switch to Local" : "Switch to World";
+
+		if (ImGui::Button(buttonText))
+		{
+			if (UIManager)
+			{
+				// 스페이스 모드 전환
+				CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ?
+				EGizmoSpace::Local : EGizmoSpace::World;
+				AActor* SelectedActor = UIManager->GetSelectedActor();
+				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
+			}
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("Current: %s",
+			CurrentGizmoSpace == EGizmoSpace::World ? "World" : "Local");
+	}
+
 }
 
 void UCameraControlWidget::SyncFromCamera()
