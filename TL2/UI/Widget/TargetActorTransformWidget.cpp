@@ -225,7 +225,9 @@ void UTargetActorTransformWidget::RenderWidget()
 					if (ImGui::Selectable(Item.first.c_str()))
 					{
 						// 컴포넌트를 누르면 생성 함수를 호출합니다.
-						SelectedActor->CreateAndAttachComponent(SelectedComponent, Item.second);
+						USceneComponent* NewSceneComponent = SelectedActor->CreateAndAttachComponent(SelectedComponent, Item.second);
+						// SelectedComponent를 생성된 컴포넌트로 교체합니다
+						SelectedComponent = NewSceneComponent;
 						ImGui::CloseCurrentPopup();
 					}
 				}
