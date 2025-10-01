@@ -125,6 +125,8 @@ public:
 
     /** === PIE 관련 === */
     static UWorld* DuplicateWorldForPIE(UWorld* EditorWorld);
+    void InitializeActorsForPlay();
+    void CleanupWorld();
 
 
 private:

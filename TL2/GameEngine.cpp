@@ -24,19 +24,19 @@ void UGameEngine::StartGame(UWorld* World)
     GameWorld = World;
     if (GameWorld)
     {
-        // 모든 액터에 BeginPlay 같은 초기화 호출
-      //  GameWorld->InitializeActorsForPlay();
+        // 모든 액터에 BeginPlay 초기화 호출
+        GameWorld->InitializeActorsForPlay();
     }
 }
 
 void UGameEngine::EndGame()
 {
-  /*  if (GameWorld)
+    if (GameWorld)
     {
         GameWorld->CleanupWorld();
-        delete GameWorld;
+        // PIE 월드는 EditorEngine::EndPIE에서 삭제하므로 여기서는 nullptr만 설정
         GameWorld = nullptr;
-    }*/
+    }
 }
 
 UGameEngine::~UGameEngine()

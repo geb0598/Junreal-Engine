@@ -371,7 +371,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
 			Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
 
-			for (USceneComponent* Component : Actor->GetComponents())
+			for (UActorComponent* Component : Actor->GetComponents())
 			{
 				if (!Component) continue;
 				if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
@@ -403,7 +403,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 		if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
 			continue;
 
-		for (USceneComponent* Component : EngineActor->GetComponents())
+		for (UActorComponent* Component : EngineActor->GetComponents())
 		{
 			if (!Component) continue;
 			if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
@@ -944,4 +944,72 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
 	PIEWorld->ViewModeIndex = EditorWorld->ViewModeIndex;
 
 	return PIEWorld;
+}
+
+void UWorld::InitializeActorsForPlay()
+{
+	// 모든 액터의 BeginPlay 호출
+	for (AActor* Actor : Actors)
+	{
+		if (Actor && !Actor->GetActorHiddenInGame())
+		{
+			Actor->BeginPlay();
+		}
+	}
+
+	// 엔진 액터도 BeginPlay 호출 (카메라 등)
+	for (AActor* EngineActor : EngineActors)
+	{
+		if (EngineActor && !EngineActor->GetActorHiddenInGame())
+		{
+			EngineActor->BeginPlay();
+		}
+	}
+}
+
+void UWorld::CleanupWorld()
+{
+	// 모든 액터의 EndPlay 호출
+	for (AActor* Actor : Actors)
+	{
+		if (Actor)
+		{
+			Actor->EndPlay(EEndPlayReason::EndPlayInEditor);
+		}
+	}
+
+	// 엔진 액터도 EndPlay 호출
+	for (AActor* EngineActor : EngineActors)
+	{
+		if (EngineActor)
+		{
+			EngineActor->EndPlay(EEndPlayReason::EndPlayInEditor);
+		}
+	}
+
+	// 액터 삭제
+	for (AActor* Actor : Actors)
+	{
+		ObjectFactory::DeleteObject(Actor);
+	}
+	Actors.Empty();
+
+	// 엔진 액터 삭제
+	for (AActor* EngineActor : EngineActors)
+	{
+		ObjectFactory::DeleteObject(EngineActor);
+	}
+	EngineActors.Empty();
+
+	// BVH 정리
+	if (BVH)
+	{
+		BVH->Clear();
+	}
+
+	// Octree 정리
+	if (Octree)
+	{
+		Octree->Release();
+	}
 }

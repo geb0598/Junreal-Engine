@@ -68,14 +68,33 @@ void UEditorEngine::StartPIE()
 
 void UEditorEngine::EndPIE()
 {
+    UWorld* PIEWorld = nullptr;
+
+    // PIE 월드 찾기
+    for (auto& Context : WorldContexts)
+    {
+        if (Context.WorldType == EWorldType::PIE)
+        {
+            PIEWorld = Context.World();
+            break;
+        }
+    }
+
+    // GameEngine 정리
     if (GameEngine)
     {
-        GameEngine->EndGame();
+        GameEngine->EndGame();  // CleanupWorld 호출
         delete GameEngine;
         GameEngine = nullptr;
     }
 
-    // PIEWorld 컨텍스트 제거
+    // PIE 월드 삭제
+    if (PIEWorld)
+    {
+        ObjectFactory::DeleteObject(PIEWorld);
+    }
+
+    // PIE WorldContext 제거
     for (int i = (int)WorldContexts.size() - 1; i >= 0; --i)
     {
         if (WorldContexts[i].WorldType == EWorldType::PIE)

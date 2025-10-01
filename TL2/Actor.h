@@ -64,7 +64,7 @@ public:
 
     //-----------------------------
     //----------Getter------------
-    const TSet<USceneComponent*>& GetComponents() const;
+    const TSet<UActorComponent*>& GetComponents() const;
 
     void SetName(const FString& InName) { Name = InName; }
     const FName& GetName() const { return Name; }
@@ -109,7 +109,7 @@ public:
     void SetWorld(UWorld* InWorld) { World = InWorld; }
     
 protected:
-    TSet<USceneComponent*> OwnedComponents;
+    TSet<UActorComponent*> OwnedComponents;
     bool bIsPicked = false;
     bool bCanEverTick = true;
     bool bHiddenInGame = false;

@@ -15,7 +15,7 @@ AActor::AActor()
 
 AActor::~AActor()
 {
-    for (USceneComponent* Comp : OwnedComponents)
+    for (UActorComponent* Comp : OwnedComponents)
     {
         if (Comp)
         {
@@ -47,7 +47,7 @@ void AActor::Tick(float DeltaSeconds)
  */
 void AActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    for (USceneComponent* Component : OwnedComponents)
+    for (UActorComponent* Component : OwnedComponents)
     {
         Component->EndPlay(EndPlayReason);
     }
@@ -168,7 +168,7 @@ void AActor::AddActorLocalLocation(const FVector& InDeltaLocation) const
     }
 }
 
-const TSet<USceneComponent*>& AActor::GetComponents() const
+const TSet<UActorComponent*>& AActor::GetComponents() const
 {
     return OwnedComponents;
 }
@@ -290,12 +290,12 @@ UObject* AActor::Duplicate()
  */
 void AActor::DuplicateSubObjects()
 {
-    TSet<USceneComponent*> DuplicatedComponents = OwnedComponents;
+    TSet<UActorComponent*> DuplicatedComponents = OwnedComponents;
     OwnedComponents.Empty();
 
-    for (USceneComponent* Component : DuplicatedComponents)
+    for (UActorComponent* Component : DuplicatedComponents)
     {
-        USceneComponent* NewComponent = static_cast<USceneComponent*>(Component->Duplicate());
+        UActorComponent* NewComponent = static_cast<UActorComponent*>(Component->Duplicate());
         OwnedComponents.Add(NewComponent);
     }
 }
