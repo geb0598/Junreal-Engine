@@ -45,6 +45,8 @@
 #include "MenuBarWidget.h"
 #include"Octree.h"
 #include"Engine.h"
+#include"EditorEngine.h"
+#include"GameEngine.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -119,6 +121,6 @@ IMPLEMENT_CLASS(UOctree)
 
 
 /*================Editor====================*/
-IMPLEMENT_CLASS(Engine)
-IMPLEMENT_CLASS(UOctree)
-IMPLEMENT_CLASS(UOctree)
+IMPLEMENT_CLASS(UEngine)
+IMPLEMENT_CLASS(UGameEngine)
+IMPLEMENT_CLASS(UEditorEngine)

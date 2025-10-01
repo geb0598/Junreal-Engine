@@ -86,7 +86,7 @@ public:
     UAABoundingBoxComponent* CollisionComponent = nullptr;
 
     UWorld* World = nullptr;
-    
+    bool bTickInEditor = false;
     // Visibility properties
     void SetActorHiddenInGame(bool bNewHidden) { bHiddenInGame = bNewHidden; }
     bool GetActorHiddenInGame() const { return bHiddenInGame; }

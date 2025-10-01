@@ -4,6 +4,8 @@
 #include "GridActor.h"
 #include "GizmoActor.h"
 #include "Enums.h"
+#include"Engine.h"
+
 
 // Forward Declarations
 class UResourceManager;
@@ -119,6 +121,10 @@ public:
     /** === 플레이어 / 컨트롤러 === */
     // APlayerController* GetFirstPlayerController() const;
     // TArray<APlayerController*> GetPlayerControllerIterator() const;
+    
+    /** === 에디터 월드 타입 === */
+    EWorldType WorldType= EWorldType::Editor;//기본 설정은 에디터로 진행합니다.
+
 
 private:
     // 싱글톤 매니저 참조
