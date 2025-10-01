@@ -54,7 +54,7 @@ void UTargetActorTransformWidget::Initialize()
 {
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
-	
+
 	// Transform 위젯을 UIManager에 등록하여 선택 해제 브로드캐스트를 받을 수 있게 함
 	if (UIManager)
 	{
@@ -66,7 +66,7 @@ AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
 {
 	if (!UIManager)
 		return nullptr;
-		
+
 	return UIManager->GetSelectedActor();
 }
 
@@ -107,7 +107,6 @@ void UTargetActorTransformWidget::Update()
 		// 기즈모 조작을 실시간으로 UI에 반영합니다.
 		UpdateTransformFromActor();
 	}
-	
 }
 
 void UTargetActorTransformWidget::RenderWidget()
@@ -120,7 +119,50 @@ void UTargetActorTransformWidget::RenderWidget()
 		ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));
 		ImGui::Spacing();
 
-		// Component 계층 구조 표시
+		// 추가 가능한 컴포넌트 타입 목록 (임시 하드코딩)
+		static const TArray<TPair<FString, UClass*>> AddableComponentTypes = {
+			{ "StaticMesh Component", UStaticMeshComponent::StaticClass() },
+			{ "Scene Component", USceneComponent::StaticClass() }
+		};
+
+		// 컴포넌트 추가 메뉴
+		if (SelectedComponent)
+		{
+			if (ImGui::Button("+추가"))
+			{
+				ImGui::OpenPopup("AddComponentPopup");
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("-삭제"))
+			{
+				SelectedActor->DeleteComponent(SelectedComponent);
+			}
+
+			// "Add Component" 버튼에 대한 팝업 메뉴 정의
+			if (ImGui::BeginPopup("AddComponentPopup"))
+			{
+				ImGui::BeginChild("ComponentListScroll", ImVec2(200.0f, 150.0f), true);
+
+				// 추가 가능한 컴포넌트 타입 목록 메뉴 표시
+				for (const TPair<FString, UClass*>& Item : AddableComponentTypes)
+				{
+					if (ImGui::Selectable(Item.first.c_str()))
+					{
+						// 컴포넌트를 누르면 생성 함수를 호출합니다.
+						SelectedActor->CreateAndAttachComponent(SelectedComponent, Item.second);
+						ImGui::CloseCurrentPopup();
+					}
+				}
+
+				ImGui::EndChild();
+
+				ImGui::EndPopup();
+			}
+		}
+
+		// 컴포넌트 계층 구조 표시
 		ImGui::BeginChild("ComponentHierarchy", ImVec2(0, 240), true);
 		if (SelectedActor)
 		{
@@ -156,16 +198,16 @@ void UTargetActorTransformWidget::RenderWidget()
 		{
 			bPositionChanged = true;
 		}
-		
+
 		// Rotation 편집 (Euler angles)
 		if (ImGui::DragFloat3("Rotation", &EditRotation.X, 0.5f))
 		{
 			bRotationChanged = true;
 		}
-		
+
 		// Scale 편집
 		ImGui::Checkbox("Uniform Scale", &bUniformScale);
-		
+
 		if (bUniformScale)
 		{
 			float UniformScale = EditScale.X;
@@ -182,22 +224,22 @@ void UTargetActorTransformWidget::RenderWidget()
 				bScaleChanged = true;
 			}
 		}
-		
+
 		ImGui::Spacing();
-		
+
 		// 실시간 적용 버튼
 		if (ImGui::Button("Apply Transform"))
 		{
 			ApplyTransformToActor();
 		}
-		
+
 		ImGui::SameLine();
 		if (ImGui::Button("Reset Transform"))
 		{
 			UpdateTransformFromActor();
 			ResetChangeFlags();
 		}
-		
+
 		ImGui::Spacing();
 		ImGui::Separator();
 
@@ -366,7 +408,7 @@ void UTargetActorTransformWidget::RenderWidget()
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No Actor Selected");
 		ImGui::TextUnformatted("Select an actor to edit its transform.");
 	}
-	
+
 	ImGui::Separator();
 }
 
@@ -436,16 +478,16 @@ void UTargetActorTransformWidget::UpdateTransformFromActor()
 {
 	if (!SelectedActor)
 		return;
-		
+
 	// 액터의 현재 트랜스폼을 UI 변수로 복사
 	EditLocation = SelectedActor->GetActorLocation();
 	EditRotation = SelectedActor->GetActorRotation().ToEuler();
 	EditScale = SelectedActor->GetActorScale();
-	
+
 	// 균등 스케일 여부 판단
-	bUniformScale = (abs(EditScale.X - EditScale.Y) < 0.01f && 
-	                abs(EditScale.Y - EditScale.Z) < 0.01f);
-	
+	bUniformScale = (abs(EditScale.X - EditScale.Y) < 0.01f &&
+		abs(EditScale.Y - EditScale.Z) < 0.01f);
+
 	ResetChangeFlags();
 }
 
@@ -453,30 +495,30 @@ void UTargetActorTransformWidget::ApplyTransformToActor() const
 {
 	if (!SelectedActor)
 		return;
-		
+
 	// 변경사항이 있는 경우에만 적용
 	if (bPositionChanged)
 	{
 		SelectedActor->SetActorLocation(EditLocation);
-		UE_LOG("Transform: Applied location (%.2f, %.2f, %.2f)", 
-		       EditLocation.X, EditLocation.Y, EditLocation.Z);
+		UE_LOG("Transform: Applied location (%.2f, %.2f, %.2f)",
+			EditLocation.X, EditLocation.Y, EditLocation.Z);
 	}
-	
+
 	if (bRotationChanged)
 	{
 		FQuat NewRotation = FQuat::MakeFromEuler(EditRotation);
 		SelectedActor->SetActorRotation(NewRotation);
-		UE_LOG("Transform: Applied rotation (%.1f, %.1f, %.1f)", 
-		       EditRotation.X, EditRotation.Y, EditRotation.Z);
+		UE_LOG("Transform: Applied rotation (%.1f, %.1f, %.1f)",
+			EditRotation.X, EditRotation.Y, EditRotation.Z);
 	}
-	
+
 	if (bScaleChanged)
 	{
 		SelectedActor->SetActorScale(EditScale);
-		UE_LOG("Transform: Applied scale (%.2f, %.2f, %.2f)", 
-		       EditScale.X, EditScale.Y, EditScale.Z);
+		UE_LOG("Transform: Applied scale (%.2f, %.2f, %.2f)",
+			EditScale.X, EditScale.Y, EditScale.Z);
 	}
-	
+
 	// 플래그 리셋은 const 메서드에서 할 수 없으므로 PostProcess에서 처리
 }
 

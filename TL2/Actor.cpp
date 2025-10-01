@@ -201,6 +201,77 @@ UWorld* AActor::GetWorld() const
     return World;
 }
 
+// ParentComponent 하위에 새로운 컴포넌트를 추가합니다
+USceneComponent* AActor::CreateAndAttachComponent(USceneComponent* ParentComponent, UClass* ComponentClass)
+{
+    // 부모가 지정되지 않았다면 루트 컴포넌트를 부모로 삼습니다.
+    if (!ParentComponent)
+    {
+        ParentComponent = GetRootComponent();
+    }
+
+    if (!ComponentClass || !ParentComponent)
+    {
+        return nullptr;
+    }
+
+    // 생성, 등록, 부착 로직을 액터가 직접 책임지고 수행합니다.
+    USceneComponent* NewComponent = nullptr;
+
+    if (UObject* NewComponentObject = NewObject(ComponentClass))
+    {
+        if (NewComponent = Cast<USceneComponent>(NewComponentObject))
+        {
+            this->AddComponent(NewComponent); // 액터의 관리 목록에 추가
+
+            NewComponent->SetupAttachment(ParentComponent);
+        }
+    }
+
+    return NewComponent;
+}
+
+bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
+{
+    // 1. [유효성 검사] nullptr이거나 이 액터가 소유한 컴포넌트가 아니면 실패 처리합니다.
+    if (!ComponentToDelete || !OwnedComponents.Contains(ComponentToDelete))
+    {
+        return false;
+    }
+
+    // 2. [루트 컴포넌트 보호] 루트 컴포넌트는 액터의 기준점이므로, 직접 삭제하는 것을 막습니다.
+    // 루트를 바꾸려면 다른 컴포넌트를 루트로 지정하는 방식을 사용해야 합니다.
+    if (ComponentToDelete == RootComponent)
+    {
+        UE_LOG("루트 컴포넌트는 직접 삭제할 수 없습니다.");
+        return false;
+    }
+
+    // 3. [자식 컴포넌트 처리] 삭제될 컴포넌트의 자식들을 조부모에게 재연결합니다.
+    if (USceneComponent* ParentOfDoomedComponent = ComponentToDelete->GetAttachParent())
+    {
+        // 자식 목록의 복사본을 만들어 순회합니다. (원본을 수정하면서 순회하면 문제가 발생)
+        TArray<USceneComponent*> ChildrenToReAttach = ComponentToDelete->GetAttachChildren();
+        for (USceneComponent* Child : ChildrenToReAttach)
+        {
+            // 자식을 조부모에게 다시 붙입니다.
+            Child->SetupAttachment(ParentOfDoomedComponent);
+        }
+    }
+
+    // 4. [부모로부터 분리] 이제 삭제될 컴포넌트를 부모로부터 분리합니다.
+    ComponentToDelete->DetachFromParent();
+
+    // 5. [소유 목록에서 제거] 액터의 관리 목록에서 포인터를 제거합니다.
+    //    이걸 하지 않으면 액터 소멸자에서 이미 삭제된 메모리에 접근하여 충돌합니다.
+    OwnedComponents.Remove(ComponentToDelete);
+
+    // 6. [메모리 해제] 모든 연결이 정리되었으므로, 마지막으로 객체를 삭제합니다.
+    ObjectFactory::DeleteObject(ComponentToDelete);
+
+    return true;
+}
+
 /**
  * Actor의 복사 함수
  * @return 기본적으로 UObject의 복사함수랑 동일하나, 내부 함수를 템플릿 메서드 패턴에 따라 처리했음
