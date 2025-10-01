@@ -441,7 +441,7 @@ void UWorld::Tick(float DeltaSeconds)
 	{
 		if (EngineActor) EngineActor->Tick(DeltaSeconds);
 	}
-	GizmoActor->Tick(DeltaSeconds);
+	//GizmoActor->Tick(DeltaSeconds);
 
 	//ProcessActorSelection();
 	ProcessViewportInput();
@@ -895,4 +895,53 @@ void UWorld::SaveScene(const FString& SceneName)
 AGizmoActor* UWorld::GetGizmoActor()
 {
 	return GizmoActor;
+}
+
+UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
+{
+	if (!EditorWorld) return nullptr;
+
+	// 1. 새로운 월드 생성
+	UWorld* PIEWorld = NewObject<UWorld>();
+	PIEWorld->WorldType = EWorldType::PIE;
+
+	// 2. 렌더링 인프라 공유 (에디터 월드와 같은 Renderer, Viewport 사용)
+	PIEWorld->Renderer = EditorWorld->Renderer;
+	PIEWorld->MainViewport = EditorWorld->MainViewport;
+	PIEWorld->MultiViewport = EditorWorld->MultiViewport;
+
+	// 3. 카메라 복제
+	if (EditorWorld->MainCameraActor)
+	{
+		UObject* DupCam = EditorWorld->MainCameraActor->Duplicate();
+		PIEWorld->MainCameraActor = Cast<ACameraActor>(DupCam);
+		if (PIEWorld->MainCameraActor)
+		{
+			PIEWorld->MainCameraActor->SetWorld(PIEWorld);
+			PIEWorld->EngineActors.Add(PIEWorld->MainCameraActor);
+		}
+	}
+
+	// 4. 에디터 월드의 액터들을 복제
+	for (AActor* EditorActor : EditorWorld->GetActors())
+	{
+		if (!EditorActor) continue;
+
+		// 액터 복제
+		UObject* DuplicatedObj = EditorActor->Duplicate();
+		AActor* PIEActor = Cast<AActor>(DuplicatedObj);
+
+		if (PIEActor)
+		{
+			// PIE 월드에 액터 등록
+			PIEActor->SetWorld(PIEWorld);
+			PIEWorld->Actors.Add(PIEActor);
+		}
+	}
+
+	// 5. ShowFlags와 ViewMode 복사
+	PIEWorld->ShowFlags = EditorWorld->ShowFlags;
+	PIEWorld->ViewModeIndex = EditorWorld->ViewModeIndex;
+
+	return PIEWorld;
 }

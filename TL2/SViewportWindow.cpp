@@ -2,7 +2,8 @@
 #include "SViewportWindow.h"
 #include "World.h"
 #include "ImGui/imgui.h"
-#include"SMultiViewportWindow.h"
+#include "SMultiViewportWindow.h"
+#include "EditorEngine.h"
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
 SViewportWindow::SViewportWindow()
@@ -237,7 +238,51 @@ void SViewportWindow::RenderToolbar()
 			case 2: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Wireframe); break;
 			}
 		}
-		// 🔘 여기 ‘한 번 클릭’ 버튼 추가
+		// PIE Play/Stop 버튼
+		ImGui::SameLine();
+		UEngine* Engine = GetEngine();
+		if (Engine && Engine->IsA<UEditorEngine>())
+		{
+			UEditorEngine* EditorEngine = static_cast<UEditorEngine*>(Engine);
+			bool bIsPIERunning = (EditorEngine->GameEngine != nullptr);
+
+			if (bIsPIERunning)
+			{
+				// PIE가 실행 중이면 Stop 버튼 표시
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.15f, 0.15f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.85f, 0.25f, 0.25f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12, 6));
+
+				if (ImGui::Button("Stop"))
+				{
+					EditorEngine->EndPIE();
+				}
+
+				ImGui::PopStyleVar(2);
+				ImGui::PopStyleColor(3);
+			}
+			else
+			{
+				// PIE가 실행 중이 아니면 Play 버튼 표시
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.65f, 0.15f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.8f, 0.25f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.55f, 0.1f, 1.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12, 6));
+
+				if (ImGui::Button("Play"))
+				{
+					EditorEngine->StartPIE();
+				}
+
+				ImGui::PopStyleVar(2);
+				ImGui::PopStyleColor(3);
+			}
+		}
+
+		// 🔘 여기 '한 번 클릭' 버튼 추가
 		const float btnW = 60.0f;
 		const ImVec2 btnSize(btnW, 0.0f);
 

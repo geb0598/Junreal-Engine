@@ -99,7 +99,6 @@ public:
 
     /** === 렌더 === */
     void Render();
-    void RenderSingleViewport();
     void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
     //void GameRender(ACameraActor* Camera, FViewport* Viewport);
 
@@ -123,6 +122,9 @@ public:
     
     /** === 에디터 월드 타입 === */
     EWorldType WorldType= EWorldType::Editor;//기본 설정은 에디터로 진행합니다.
+
+    /** === PIE 관련 === */
+    static UWorld* DuplicateWorldForPIE(UWorld* EditorWorld);
 
 
 private:

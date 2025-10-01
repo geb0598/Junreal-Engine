@@ -10,12 +10,13 @@ UEditorEngine::UEditorEngine()
 
 void UEditorEngine::Tick(float DeltaSeconds)
 {
-    for (auto& Context : WorldContexts)
+    // 인덱스 기반 루프로 iterator 무효화 방지
+    for (size_t i = 0; i < WorldContexts.size(); ++i)
     {
-        UWorld* World = Context.World();
+        UWorld* World = WorldContexts[i].World();
         if (!World) continue;
 
-        if (Context.WorldType == EWorldType::Editor)
+        if (WorldContexts[i].WorldType == EWorldType::Editor)
         {
             World->Tick(DeltaSeconds);
         }
@@ -28,37 +29,41 @@ void UEditorEngine::Tick(float DeltaSeconds)
 
 void UEditorEngine::Render()
 {
-    for (auto& Context : WorldContexts)
+    // PIE 실행 중이면 PIE 월드만 렌더링
+    if (GameEngine && GameEngine->GameWorld)
     {
-        UWorld* World = Context.World();
-        if (!World) continue;
-
-        if (Context.WorldType == EWorldType::Editor)
+        GameEngine->Render();
+    }
+    else
+    {
+        // 에디터 모드일 때만 에디터 월드 렌더링
+        for (size_t i = 0; i < WorldContexts.size(); ++i)
         {
-            World->Render();
+            UWorld* World = WorldContexts[i].World();
+            if (!World) continue;
+
+            if (WorldContexts[i].WorldType == EWorldType::Editor)
+            {
+                World->Render();
+            }
         }
     }
-
-    // PIE가 돌고 있으면 같이 Tick
-    if (GameEngine)
-        GameEngine->Render();
 }
 
 void UEditorEngine::StartPIE()
 {
-    /*UWorld* EditorWorld = GetWorld(EWorldType::Editor);
+    UWorld* EditorWorld = GetWorld(EWorldType::Editor);
     if (!EditorWorld) return;
 
-
-    UWorld* PIEWorld = UWorld::DuplicateWorldForPIE(EditorWorld, ...);
+    UWorld* PIEWorld = UWorld::DuplicateWorldForPIE(EditorWorld);
     if (!PIEWorld) return;
 
     FWorldContext PieCtx;
     PieCtx.SetWorld(PIEWorld, EWorldType::PIE);
     WorldContexts.push_back(PieCtx);
 
-    GameEngine = new UGameEngine();
-    GameEngine->StartGame(PIEWorld);*/
+    GameEngine = NewObject<UGameEngine>();
+    GameEngine->StartGame(PIEWorld);
 }
 
 void UEditorEngine::EndPIE()

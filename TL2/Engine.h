@@ -40,8 +40,9 @@ public:
     DECLARE_CLASS(UEngine,UObject)
     
     TArray<FWorldContext> WorldContexts;
-    //활성화된 월드 가져오기 
+    //활성화된 월드 가져오기
     UWorld* GetWorld();
+    UWorld* GetWorld(EWorldType InWorldType);
 
     // 현재 활성 월드 반환
     UWorld* GetActiveWorld();

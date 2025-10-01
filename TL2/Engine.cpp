@@ -17,6 +17,18 @@ UWorld* UEngine::GetWorld()
     return GWorld;
 }
 
+UWorld* UEngine::GetWorld(EWorldType InWorldType)
+{
+    for (auto& Context : WorldContexts)
+    {
+        if (Context.WorldType == InWorldType)
+        {
+            return Context.World();
+        }
+    }
+    return nullptr;
+}
+
 UWorld* UEngine::GetActiveWorld()
 {
     if (!WorldContexts.empty())

@@ -21,9 +21,12 @@ void UGameEngine::Render()
 
 void UGameEngine::StartGame(UWorld* World)
 {
- /*   GameWorld = World;
+    GameWorld = World;
     if (GameWorld)
-        GameWorld->InitializeActorsForPlay();*/
+    {
+        // 모든 액터에 BeginPlay 같은 초기화 호출
+      //  GameWorld->InitializeActorsForPlay();
+    }
 }
 
 void UGameEngine::EndGame()
