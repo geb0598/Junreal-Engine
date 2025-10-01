@@ -3,7 +3,9 @@
 #include "ObjectFactory.h"
 #include "MemoryManager.h"
 #include "Name.h"
+
 // 전방 선언/외부 심볼 (네 프로젝트 환경 유지)
+enum class EPropertyFlag : uint64;
 class UObject;
 class UWorld;
 // ── UClass: 간단한 타입 디스크립터 ─────────────────────────────
@@ -49,10 +51,15 @@ public:
     UObject* GetOuter() const;
     virtual UWorld* GetWorld() const;
 
+    // Duplicate for PIE
+    virtual UObject* Duplicate();
+    virtual void DuplicateSubObjects() {}
+
 public:
     uint32_t UUID;
     uint32_t InternalIndex;
     FName    ObjectName;   // ← 객체 개별 이름 추가
+    EPropertyFlag PropertyFlag;
 
     // 정적: 타입 메타 반환 (이름을 StaticClass로!)
     static UClass* StaticClass()

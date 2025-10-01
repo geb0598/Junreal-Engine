@@ -3,14 +3,14 @@
 #include "SceneComponent.h"
 #include "ObjectFactory.h"
 #include "ShapeComponent.h"
-#include "AABoundingBoxComponent.h"   
+#include "AABoundingBoxComponent.h"
 #include "MeshComponent.h"
 #include "TextRenderComponent.h"
 
 AActor::AActor()
 {
     Name = "DefaultActor";
-    RootComponent= CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
+    RootComponent = CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
 }
 
 AActor::~AActor()
@@ -199,4 +199,32 @@ UWorld* AActor::GetWorld() const
     // return nullptr;
 
     return World;
+}
+
+/**
+ * Actor의 복사 함수
+ * @return 기본적으로 UObject의 복사함수랑 동일하나, 내부 함수를 템플릿 메서드 패턴에 따라 처리했음
+ */
+UObject* AActor::Duplicate()
+{
+    AActor* NewActor = new AActor(*this);
+    NewActor->DuplicateSubObjects();
+
+    return NewActor;
+}
+
+/**
+ * @brief Actor의 Internal 복사 함수
+ * 원본이 들고 있던 Component를 각 Component의 복사함수를 호출하여 받아온 후 새로 담아서 처리함
+ */
+void AActor::DuplicateSubObjects()
+{
+    TSet<USceneComponent*> DuplicatedComponents = OwnedComponents;
+    OwnedComponents.Empty();
+
+    for (USceneComponent* Component : DuplicatedComponents)
+    {
+        USceneComponent* NewComponent = static_cast<USceneComponent*>(Component->Duplicate());
+        OwnedComponents.Add(NewComponent);
+    }
 }

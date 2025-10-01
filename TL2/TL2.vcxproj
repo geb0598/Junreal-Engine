@@ -362,6 +362,7 @@
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PrimitiveComponent.h" />
+    <ClInclude Include="PropertyFlag.h" />
     <ClInclude Include="RenderingStats.h" />
     <ClInclude Include="RenderViewportSwitcherWidget.h" />
     <ClInclude Include="ResourceBase.h" />

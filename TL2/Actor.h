@@ -80,6 +80,10 @@ public:
         return Comp;
     }
 
+    // Duplicate function
+    UObject* Duplicate() override;
+    void DuplicateSubObjects() override;
+
 public:
     FName Name;
     USceneComponent* RootComponent = nullptr;
