@@ -6,6 +6,8 @@
 
 UBillboardComponent::UBillboardComponent()
 {
+    SetRelativeLocation({ 0, 0, 1 });
+
     auto& RM = UResourceManager::GetInstance();
 
     // 빌보드용 메시 가져오기 (단일 쿼드)

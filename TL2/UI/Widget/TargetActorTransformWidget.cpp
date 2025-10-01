@@ -323,6 +323,7 @@ void UTargetActorTransformWidget::RenderWidget()
 		ImGui::Spacing();
 		ImGui::Separator();
 
+		// NOTE: 추후 컴포넌트별 위젯 따로 추가
 		// Actor가 AStaticMeshActor인 경우 StaticMesh 변경 UI
 		if (SelectedComponent)
 		{
@@ -609,6 +610,40 @@ void UTargetActorTransformWidget::RenderWidget()
 				{
 					BBC->SetUVCoords(u, v, ul, vl);
 				}
+			}
+			else if (UTextRenderComponent* TextRenderComponent = Cast<UTextRenderComponent>(SelectedComponent))
+			{
+				ImGui::Separator();
+				ImGui::Text("TextRender Component Settings");
+
+				static char textBuffer[256];
+				static UTextRenderComponent* lastSelected = nullptr;
+				if (lastSelected != TextRenderComponent)
+				{
+					strncpy_s(textBuffer, sizeof(textBuffer), TextRenderComponent->GetText().c_str(), sizeof(textBuffer) - 1);
+					lastSelected = TextRenderComponent;
+				}
+
+				ImGui::Text("Text Content");
+
+				if (ImGui::InputText("##TextContent", textBuffer, sizeof(textBuffer)))
+				{
+					// 실시간으로 SetText 함수 호출
+					TextRenderComponent->SetText(FString(textBuffer));
+				}
+
+				ImGui::Spacing();
+
+				//// 4. 텍스트 색상을 편집하는 Color Picker를 추가합니다.
+				//FLinearColor currentColor = TextRenderComponent->GetTextColor();
+				//float color[3] = { currentColor.R, currentColor.G, currentColor.B }; // ImGui는 float 배열 사용
+
+				//ImGui::Text("Text Color");
+				//if (ImGui::ColorEdit3("##TextColor", color))
+				//{
+				//	// 색상이 변경되면 컴포넌트의 SetTextColor 함수를 호출
+				//	TextRenderComponent->SetTextColor(FLinearColor(color[0], color[1], color[2]));
+				//}
 			}
 		else
 		{

@@ -257,18 +257,20 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
             AllActorCount++;
 
-            if (Actor->CollisionComponent)
-            {
-                FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
+            // NOTE: GetWorldBoundFromCube 를 자식 전체를 감싸는 AABB로 교체해야 프로스텀 컬링이 정상 작동할듯
+            // 또는 컴포넌트를 기준으 로프로스텀 컬링을 하도록 수정
+            //if (Actor->CollisionComponent)
+            //{
+            //    FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
 
-                // 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
-                if (!ViewFrustum.IsVisible(Test))
-                {
-                    FrustumCullCount++;
+            //    // 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
+            //    if (!ViewFrustum.IsVisible(Test))
+            //    {
+            //        FrustumCullCount++;
 
-                    continue;
-                }
-            }
+            //        continue;
+            //    }
+            //}
 
             bool bIsSelected = SelectionManager.IsActorSelected(Actor);
             /*if (bIsSelected)

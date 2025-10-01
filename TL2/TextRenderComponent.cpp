@@ -8,10 +8,11 @@
 
 UTextRenderComponent::UTextRenderComponent()
 {
+	SetRelativeLocation({ 0, 0, 1 });
+
 	UResourceManager& ResourceManager = UResourceManager::GetInstance();
 
 	// 미리 최대 글자 수만큼 인덱스를 생성한다 (최대 글자 100)
-	const uint32 MaxQuads = 100; // capacity
 	TArray<uint32> Indices;
 	for (uint32 i = 0; i < MaxQuads; i++)
 	{
@@ -95,6 +96,12 @@ void UTextRenderComponent::InitCharInfoMap()
 
 void UTextRenderComponent::SetText(FString InText)
 {
+	if (MaxQuads < InText.size())
+	{
+		UE_LOG("%d 글자 이상 작성할 수 없습니다.", MaxQuads);
+		return;
+	}
+
 	bIsDirty = true;    // 버텍스 버퍼 새로 생성 예정
 	Text = InText;
 }
