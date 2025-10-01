@@ -11,6 +11,7 @@
 #include "StaticMeshComponent.h"
 #include "ResourceManager.h"    
 #include "SceneComponent.h"    
+#include "TextRenderComponent.h"    
 
 using namespace std;
 
@@ -141,6 +142,7 @@ void UTargetActorTransformWidget::RenderWidget()
 		// 추가 가능한 컴포넌트 타입 목록 (임시 하드코딩)
 		static const TArray<TPair<FString, UClass*>> AddableComponentTypes = {
 			{ "StaticMesh Component", UStaticMeshComponent::StaticClass() },
+			{ "Text Component", UTextRenderComponent::StaticClass() },
 			{ "Scene Component", USceneComponent::StaticClass() }
 		};
 
@@ -269,11 +271,10 @@ void UTargetActorTransformWidget::RenderWidget()
 		ImGui::Separator();
 
 		// Actor가 AStaticMeshActor인 경우 StaticMesh 변경 UI
+		if (SelectedComponent)
 		{
-			if (AStaticMeshActor* SMActor = Cast<AStaticMeshActor>(SelectedActor))
+			if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(SelectedComponent))
 			{
-				UStaticMeshComponent* SMC = SMActor->GetStaticMeshComponent();
-
 				ImGui::Text("Static Mesh Override");
 				if (!SMC)
 				{
@@ -343,10 +344,13 @@ void UTargetActorTransformWidget::RenderWidget()
 								SMC->SetStaticMesh(NewPath);
 
 								// Sphere 충돌 특례
-								if (GetBaseNameNoExt(NewPath) == "Sphere")
-									SMActor->SetCollisionComponent(EPrimitiveType::Sphere);
-								else
-									SMActor->SetCollisionComponent();
+								if (AStaticMeshActor* SMActor = Cast<AStaticMeshActor>(SelectedActor))
+								{
+									if (GetBaseNameNoExt(NewPath) == "Sphere")
+										SMActor->SetCollisionComponent(EPrimitiveType::Sphere);
+									else
+										SMActor->SetCollisionComponent();
+								}
 
 								UE_LOG("Applied StaticMesh: %s", NewPath.c_str());
 							}
@@ -445,7 +449,13 @@ void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* Scen
 		return;
 	}
 
-	const FString ComponentName = SceneComponent->GetName();
+	if (!SelectedActor || !SelectedComponent)
+	{
+		return;
+	}
+
+	const bool bIsRootComponent = SelectedActor->GetRootComponent() == SceneComponent;
+	const FString ComponentName = SceneComponent->GetName() + (bIsRootComponent ? " (Root)" : "");
 	const TArray<USceneComponent*>& AttachedChildren = SceneComponent->GetAttachChildren();
 	const bool bHasChildren = AttachedChildren.Num() > 0;
 
@@ -504,10 +514,13 @@ void UTargetActorTransformWidget::UpdateTransformFromActor()
 	if (!SelectedActor)
 		return;
 
-	// 액터의 현재 트랜스폼을 UI 변수로 복사
-	EditLocation = SelectedActor->GetActorLocation();
-	EditRotation = SelectedActor->GetActorRotation().ToEuler();
-	EditScale = SelectedActor->GetActorScale();
+	if (SelectedComponent)
+	{
+		// 액터의 현재 트랜스폼을 UI 변수로 복사
+		EditLocation = SelectedComponent->GetRelativeLocation();
+		EditRotation = SelectedComponent->GetRelativeRotation().ToEuler();
+		EditScale = SelectedComponent->GetRelativeScale();
+	}
 
 	// 균등 스케일 여부 판단
 	bUniformScale = (abs(EditScale.X - EditScale.Y) < 0.01f &&
@@ -518,13 +531,13 @@ void UTargetActorTransformWidget::UpdateTransformFromActor()
 
 void UTargetActorTransformWidget::ApplyTransformToActor() const
 {
-	if (!SelectedActor)
+	if (!SelectedActor || !SelectedComponent)
 		return;
 
 	// 변경사항이 있는 경우에만 적용
 	if (bPositionChanged)
 	{
-		SelectedActor->SetActorLocation(EditLocation);
+		SelectedComponent->SetRelativeLocation(EditLocation);
 		UE_LOG("Transform: Applied location (%.2f, %.2f, %.2f)",
 			EditLocation.X, EditLocation.Y, EditLocation.Z);
 	}
@@ -532,14 +545,14 @@ void UTargetActorTransformWidget::ApplyTransformToActor() const
 	if (bRotationChanged)
 	{
 		FQuat NewRotation = FQuat::MakeFromEuler(EditRotation);
-		SelectedActor->SetActorRotation(NewRotation);
+		SelectedComponent->SetRelativeRotation(NewRotation);
 		UE_LOG("Transform: Applied rotation (%.1f, %.1f, %.1f)",
 			EditRotation.X, EditRotation.Y, EditRotation.Z);
 	}
 
 	if (bScaleChanged)
 	{
-		SelectedActor->SetActorScale(EditScale);
+		SelectedComponent->SetRelativeScale(EditScale);
 		UE_LOG("Transform: Applied scale (%.2f, %.2f, %.2f)",
 			EditScale.X, EditScale.Y, EditScale.Z);
 	}
