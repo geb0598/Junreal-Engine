@@ -11,7 +11,9 @@ AStaticMeshActor::AStaticMeshActor()
     // 현재는 생성 직후 소멸로 이어지기 때문에 GUObectArray를 계속 counting 처리하는 방향이라 좋지 않음
     if (RootComponent)
     {
-        DeleteComponent(RootComponent);
+        USceneComponent* TempRootComponent = RootComponent;
+        RootComponent = nullptr;
+        DeleteComponent(TempRootComponent);
     }
 
     Name = "Static Mesh Actor";
