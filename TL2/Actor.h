@@ -83,6 +83,7 @@ public:
     virtual bool DeleteComponent(USceneComponent* ComponentToDelete);
     void AddComponent(USceneComponent* InComponent);
     // Duplicate function
+    UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
 public:

@@ -78,6 +78,7 @@ public:
     UWorld* GetWorld() { return AttachParent->GetWorld(); }
 
     // Duplicate function
+    UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
 protected:

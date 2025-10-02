@@ -157,7 +157,7 @@ void UTargetActorTransformWidget::DuplicateTarget() const
 {
 	if (SelectedActor)
 	{
-		AActor* NewActor = SelectedActor->Duplicate<AActor>();
+		AActor* NewActor = Cast<AActor>(SelectedActor->Duplicate());
 		
 		// 초기 트랜스폼 적용
 		NewActor->SetActorTransform(SelectedActor->GetActorTransform());

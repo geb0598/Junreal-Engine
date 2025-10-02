@@ -259,6 +259,11 @@ void USceneComponent::UpdateRelativeTransform()
 
 // Duplicate function
 
+UObject* USceneComponent::Duplicate()
+{
+    return nullptr;
+}
+
 /**
  * @brief USceneComponent의 Internal 복사 함수
  * 원본이 들고 있던 Component를 각 Component의 복사함수를 호출하여 받아온 후 새로 담아서 처리함
