@@ -25,6 +25,9 @@ AStaticMeshActor::AStaticMeshActor()
 
 void AStaticMeshActor::Tick(float DeltaTime)
 {
+    if (World->WorldType == EWorldType::PIE) {
+        RootComponent->AddLocalOffset({ 0.1f, 0.1f,0.1f });
+    }
     if(bIsPicked&& CollisionComponent)
     CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
 }
@@ -50,6 +53,29 @@ void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
     }
     CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
     CollisionComponent->SetPrimitiveType(InType);
+}
+
+UObject* AStaticMeshActor::Duplicate()
+{
+    AStaticMeshActor* DuplicatedComponent = new AStaticMeshActor(*this);
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
+}
+
+void AStaticMeshActor::DuplicateSubObjects()
+{
+    Super_t::DuplicateSubObjects();
+    if (!RootComponent)
+    {
+        UE_LOG("AStaticMeshActor: DuplicateSubObjects 실패\n");
+        return;
+    }
+
+    if (UStaticMeshComponent* Component = Cast<UStaticMeshComponent>(RootComponent))
+    {
+        StaticMeshComponent = Component;
+    }
 }
 
 // 특화된 멤버 컴포넌트 CollisionComponent, StaticMeshComponent 는 삭제 시 포인터를 초기화합니다.
