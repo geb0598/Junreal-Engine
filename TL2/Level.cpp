@@ -7,15 +7,7 @@ ULevel::ULevel()
 
 ULevel::~ULevel()
 {
-	for (int i = Actors.Num() - 1; i >= 0; --i)
-	{
-		if (Actors[i] != nullptr)
-		{
-			//delete Actors[i]; 
-			Actors[i] = nullptr;
-		}
-	}
-	Actors.Empty();
+	Actors.clear();
 }
 
 void ULevel::AddActor(AActor* InActor)

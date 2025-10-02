@@ -307,7 +307,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		delete MultiViewportWindow;
-		Cast<UEditorEngine>(GetEngine())->GameEngine->EndGame();
+		
+		if (UEditorEngine* EditorEngine = Cast<UEditorEngine>(GetEngine()))
+		{
+			if (EditorEngine->GameEngine) {
+				EditorEngine->GameEngine->EndGame();
+			}
+		}
 		UUIManager::GetInstance().Release();
 		ObjectFactory::DeleteAll(true);
 	}

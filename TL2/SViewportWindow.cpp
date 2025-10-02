@@ -296,8 +296,11 @@ void SViewportWindow::RenderToolbar()
 
 		if (ImGui::Button("Switch##ToThis", btnSize))
 		{
-			if (auto* MVP = GetEngine()->GetWorld()->GetMultiViewportWindow())
-				MVP->SwitchPanel(this);
+			if (GetEngine()->GetWorld(EWorldType::Editor)) {
+				if (auto* MVP = GetEngine()->GetWorld(EWorldType::Editor)->GetMultiViewportWindow())
+					MVP->SwitchPanel(this);
+			}
+		
 		}
 
 		//ImGui::PopStyleVar();
