@@ -27,8 +27,11 @@ AStaticMeshActor::AStaticMeshActor()
 
 void AStaticMeshActor::Tick(float DeltaTime)
 {
+    static float times;
+    times += DeltaTime;
     if (World->WorldType == EWorldType::PIE) {
-        RootComponent->AddLocalOffset({ 0.1f, 0.1f,0.1f });
+        RootComponent->AddLocalRotation({ 0.01f, 0.0f,0.0f });
+        RootComponent->AddLocalOffset({ sin(times)/100, sin(times)/100,sin(times)/100 });
     }
     if(bIsPicked&& CollisionComponent)
     CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
