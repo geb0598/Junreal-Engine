@@ -56,7 +56,13 @@ void FViewportClient::Draw(FViewport* Viewport)
             {
                 World->SetViewModeIndex(ViewModeIndex);
                 World->RenderViewports(Camera, Viewport);
-                World->GetGizmoActor()->Render(Camera, Viewport);
+                AGizmoActor* GizmoActor = World->GetGizmoActor();
+
+                if (GizmoActor)
+                {
+                    GizmoActor->Render(Camera, Viewport);
+                        
+                }
             }
             break;
         }
@@ -76,8 +82,12 @@ void FViewportClient::Draw(FViewport* Viewport)
             {
                 World->SetViewModeIndex(ViewModeIndex);
                 World->RenderViewports(Camera, Viewport);
+                
 
-                World->GetGizmoActor()->Render(Camera, Viewport);
+                if (World->GetGizmoActor())
+                {
+                    World->GetGizmoActor()->Render(Camera, Viewport);
+                }
             }
             break;
         }
@@ -134,11 +144,15 @@ void FViewportClient::SetupCameraMode()
 
 void FViewportClient::MouseMove(FViewport* Viewport, int32 X, int32 Y)
 {
-    World->GetGizmoActor()->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X),
-                                                    static_cast<float>(Y));
+    AGizmoActor* GizmoActor = World->GetGizmoActor();
 
-    if (!bIsMouseButtonDown && !World->GetGizmoActor()->GetbIsHovering() && bIsMouseRightButtonDown)
-    // 직교투영이고 마우스 버튼이 눌려있을 때
+    if (GizmoActor)
+    {
+        GizmoActor->ProcessGizmoInteraction(Camera, Viewport, static_cast<float>(X), static_cast<float>(Y));
+    }
+
+    bool bCanOrthographicCameraMove = !bIsMouseButtonDown && bIsMouseRightButtonDown && (World->IsPIEWorld() || !GizmoActor->GetbIsHovering());
+    if (bCanOrthographicCameraMove) // 직교투영이고 마우스 버튼이 눌려있을 때
     {
         if (ViewportType != EViewportType::Perspective)
         {
@@ -192,13 +206,14 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
                                static_cast<float>(Y) + ViewportOffset.Y);
     AActor* PickedActor = nullptr;
     TArray<AActor*> AllActors = World->GetActors();
+    AGizmoActor* GizmoActor = World->GetGizmoActor();
     if (Button == 0)
     {
         bIsMouseButtonDown = true;
         // 뷰포트의 실제 aspect ratio 계산
         float PickingAspectRatio = ViewportSize.X / ViewportSize.Y;
         if (ViewportSize.Y == 0) PickingAspectRatio = 1.0f; // 0으로 나누기 방지
-        if (World->GetGizmoActor()->GetbIsHovering())
+        if (GizmoActor&&GizmoActor->GetbIsHovering())
         {
             return;
         }
@@ -211,10 +226,11 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         {
             USelectionManager::GetInstance().SelectActor(PickedActor);
             UUIManager::GetInstance().SetPickedActor(PickedActor);
-            if (World->GetGizmoActor())
+            AGizmoActor* GizmoActor = World->GetGizmoActor();
+            if (GizmoActor)
             {
-                World->GetGizmoActor()->SetTargetActor(PickedActor);
-                World->GetGizmoActor()->SetActorLocation(PickedActor->GetActorLocation());
+                GizmoActor->SetTargetActor(PickedActor);
+                GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
             }
         }
         else

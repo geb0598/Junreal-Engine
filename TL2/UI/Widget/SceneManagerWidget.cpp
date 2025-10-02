@@ -10,6 +10,8 @@
 #include "../../SelectionManager.h"
 #include <algorithm>
 #include <string>
+#include"EditorEngine.h"
+
 
 //// UE_LOG 대체 매크로
 //#define UE_LOG(fmt, ...)
@@ -34,6 +36,7 @@ void USceneManagerWidget::Initialize()
 
 void USceneManagerWidget::Update()
 {
+    if(!Cast<UEditorEngine>(GetEngine())->GetPIEShutdownRequested())
     // 지연된 새로고침 처리 (렌더링 중 iterator invalidation 방지)
     if (bNeedRefreshNextFrame)
     {

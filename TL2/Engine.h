@@ -52,6 +52,7 @@ public:
     virtual void Tick(float DeltaSeconds);
     virtual void Render();
 protected:
+    bool bPendingEndPIE = false;
     ~UEngine() override;
 };
 

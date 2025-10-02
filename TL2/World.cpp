@@ -876,12 +876,14 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
     {
         return nullptr;
     }
-
+    PIEWorld->Renderer = EditorWorld->Renderer;
+    PIEWorld->MainViewport = EditorWorld->MainViewport;
+    PIEWorld->MultiViewport = EditorWorld->MultiViewport;
     // WorldType을 PIE로 설정
     PIEWorld->WorldType=(EWorldType::PIE);
 
-    // Renderer 공유 (얕은 복사)
-    PIEWorld->Renderer = EditorWorld->Renderer;
+    //// Renderer 공유 (얕은 복사)
+    //PIEWorld->Renderer = EditorWorld->Renderer;
 
     // MainCameraActor 공유 (PIE는 일단 Editor 카메라 사용)
     PIEWorld->MainCameraActor = EditorWorld->MainCameraActor;
