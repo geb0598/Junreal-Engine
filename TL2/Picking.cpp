@@ -1015,7 +1015,9 @@ void CPickingSystem::DragActorWithGizmo(AActor* Actor, AGizmoActor*  GizmoActor,
     
     if (!Actor || !Camera || GizmoAxis == 0) 
         return;
-    GizmoActor->OnDrag(Actor, GizmoAxis, MouseDelta.X, MouseDelta.Y, Camera,nullptr);
+    if (GizmoActor) {
+        GizmoActor->OnDrag(Actor, GizmoAxis, MouseDelta.X, MouseDelta.Y, Camera, nullptr);
+    }
 }
 
 
@@ -1496,7 +1498,7 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
     float adaptiveThreshold = GetAdaptiveThreshold(cameraDistanceEstimate);
 
     // Global BVH 우선 사용
-    FBVH* BVH = GetEngine()->GetWorld()->GetBVH();
+   /* FBVH* BVH = GetEngine()->GetWorld()->GetBVH();
     if (BVH)
     {
         float hitDistance;
@@ -1512,7 +1514,7 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
             UE_LOG(buf);
             return HitActor;
         }
-    }
+    }*/
 
     // BVH 실패 시 브루트 포스 백업
     for (int i = 0; i < Actors.Num(); ++i)

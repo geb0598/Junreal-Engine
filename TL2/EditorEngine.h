@@ -13,9 +13,14 @@ public:
     virtual void Render() override;
     void StartPIE();
     void EndPIE();
+    bool GetPIEShutdownRequested() { return bPIEShutdownRequested; };
 protected:
     ~UEditorEngine();
 private:
+    // 지연 삭제용
+    UGameEngine* PendingDeleteGameEngine = nullptr;
+    UWorld* PendingDeletePIEWorld = nullptr;
+    bool bPIEShutdownRequested = false;
 
 
 
