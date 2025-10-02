@@ -5,6 +5,7 @@
 #include "GizmoActor.h"
 #include "Enums.h"
 #include"Engine.h"
+#include"Level.h"
 
 
 // Forward Declarations
@@ -23,6 +24,7 @@ struct FPrimitiveData;
 class SViewportWindow;
 class UOctree;
 class FBVH;
+class ULevel;
 /**
  * UWorld
  * - 월드 단위의 액터/타임/매니저 관리 클래스
@@ -30,171 +32,173 @@ class FBVH;
 class UWorld final : public UObject
 {
 public:
-    DECLARE_CLASS(UWorld, UObject)
-    UWorld();
-    ~UWorld() override;
-    
+	DECLARE_CLASS(UWorld, UObject)
+	UWorld();
+	~UWorld() override;
+
 protected:
 
 
 public:
-    /** 초기화 */
-    void Initialize();
-    void InitializeMainCamera();
-    void InitializeGrid();
-    void InitializeGizmo();
-    void InitializeSceneGraph(TArray<AActor*> &Actors);
+	/** 초기화 */
+	void Initialize();
+	void InitializeMainCamera();
+	void InitializeGrid();
+	void InitializeGizmo();
+	void InitializeSceneGraph(TArray<AActor*>& Actors);
 
-    void RenderSceneGraph();
-    
-    // 액터 인터페이스 관리
-    void SetupActorReferences();
-    
-    // 선택 및 피킹 처리
-    void ProcessActorSelection();
+	void RenderSceneGraph();
 
-    void ProcessViewportInput();
+	// 액터 인터페이스 관리
+	void SetupActorReferences();
 
-    void SetRenderer(URenderer* InRenderer);
-    URenderer* GetRenderer() { return Renderer; }
+	// 선택 및 피킹 처리
+	void ProcessActorSelection();
 
-    void SetMainViewport(SViewportWindow* InViewport) { MainViewport = InViewport; }
-    SViewportWindow* GetMainViewport() const { return MainViewport; }
+	void ProcessViewportInput();
 
-    void SetMultiViewportWindow(SMultiViewportWindow* InMultiViewport) { MultiViewport = InMultiViewport; }
-    SMultiViewportWindow* GetMultiViewportWindow() const { return MultiViewport; }
+	void SetRenderer(URenderer* InRenderer);
+	URenderer* GetRenderer() { return Renderer; }
 
-    template<class T>
-    T* SpawnActor();
+	void SetMainViewport(SViewportWindow* InViewport) { MainViewport = InViewport; }
+	SViewportWindow* GetMainViewport() const { return MainViewport; }
 
-    template<class T>
-    T* SpawnActor(const FTransform& Transform);
+	void SetMultiViewportWindow(SMultiViewportWindow* InMultiViewport) { MultiViewport = InMultiViewport; }
+	SMultiViewportWindow* GetMultiViewportWindow() const { return MultiViewport; }
 
-    void SpawnActor(AActor* InActor);
+	template<class T>
+	T* SpawnActor();
 
-    bool DestroyActor(AActor* Actor);
+	template<class T>
+	T* SpawnActor(const FTransform& Transform);
 
-    void CreateNewScene();
-    void LoadScene(const FString& SceneName);
-    void SaveScene(const FString& SceneName);
-    ACameraActor* GetCameraActor() { return MainCameraActor; }
+	void SpawnActor(AActor* InActor);
 
-    EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }
-    void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
+	bool DestroyActor(AActor* Actor);
 
-    /** === Show Flag 시스템 === */
-    EEngineShowFlags GetShowFlags() const { return ShowFlags; }
-    void SetShowFlags(EEngineShowFlags InShowFlags) { ShowFlags = InShowFlags; }
-    void EnableShowFlag(EEngineShowFlags Flag) { ShowFlags |= Flag; }
-    void DisableShowFlag(EEngineShowFlags Flag) { ShowFlags &= ~Flag; }
-    void ToggleShowFlag(EEngineShowFlags Flag) { ShowFlags = HasShowFlag(ShowFlags, Flag) ? (ShowFlags & ~Flag) : (ShowFlags | Flag); }
-    bool IsShowFlagEnabled(EEngineShowFlags Flag) const { return HasShowFlag(ShowFlags, Flag); }
+	void CreateNewScene();
+	void LoadScene(const FString& SceneName);
+	void SaveScene(const FString& SceneName);
+	ACameraActor* GetCameraActor() { return MainCameraActor; }
 
-  
-    
-    /** Generate unique name for actor based on type */
-    FString GenerateUniqueActorName(const FString& ActorType);
+	EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }
+	void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
-    /** === 타임 / 틱 === */
-    virtual void Tick(float DeltaSeconds);
-    float GetTimeSeconds() const;
-
-    /** === 렌더 === */
-    void Render();
-    void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
-    //void GameRender(ACameraActor* Camera, FViewport* Viewport);
+	/** === Show Flag 시스템 === */
+	EEngineShowFlags GetShowFlags() const { return ShowFlags; }
+	void SetShowFlags(EEngineShowFlags InShowFlags) { ShowFlags = InShowFlags; }
+	void EnableShowFlag(EEngineShowFlags Flag) { ShowFlags |= Flag; }
+	void DisableShowFlag(EEngineShowFlags Flag) { ShowFlags &= ~Flag; }
+	void ToggleShowFlag(EEngineShowFlags Flag) { ShowFlags = HasShowFlag(ShowFlags, Flag) ? (ShowFlags & ~Flag) : (ShowFlags | Flag); }
+	bool IsShowFlagEnabled(EEngineShowFlags Flag) const { return HasShowFlag(ShowFlags, Flag); }
 
 
-    /** === 필요한 엑터 게터 === */
-    const TArray<AActor*>& GetActors() { return Actors; }
-    AGizmoActor* GetGizmoActor();
-    AGridActor* GetGridActor() { return GridActor; }
 
-    UOctree* GetOctree() { return Octree; }
-    FBVH* GetBVH() { return BVH; }
-    
+	/** Generate unique name for actor based on type */
+	FString GenerateUniqueActorName(const FString& ActorType);
 
-    
-    /** === 레벨 / 월드 구성 === */
-    // TArray<ULevel*> Levels;
+	/** === 타임 / 틱 === */
+	virtual void Tick(float DeltaSeconds);
+	float GetTimeSeconds() const;
 
-    /** === 플레이어 / 컨트롤러 === */
-    // APlayerController* GetFirstPlayerController() const;
-    // TArray<APlayerController*> GetPlayerControllerIterator() const;
-    
-    /** === 에디터 월드 타입 === */
-    EWorldType WorldType= EWorldType::Editor;//기본 설정은 에디터로 진행합니다.
+	/** === 렌더 === */
+	void Render();
+	void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
+	//void GameRender(ACameraActor* Camera, FViewport* Viewport);
 
-    /** === PIE 관련 === */
-    static UWorld* DuplicateWorldForPIE(UWorld* EditorWorld);
-    void InitializeActorsForPlay();
-    void CleanupWorld();
+	  /** === 필요한 엑터 게터 === */
+	const TArray<AActor*>& GetActors() { return Level ? Level->GetActors() : Actors; }
+	const TArray<AActor*>& GetEngineActors() const { return EngineActors; }
+	AGizmoActor* GetGizmoActor();
+	AGridActor* GetGridActor() { return GridActor; }
+
+	UOctree* GetOctree() { return Octree; }
+	FBVH* GetBVH() { return BVH; }
+
+	ULevel* GetLevel() { return Level; };
+
+	/** === 레벨 / 월드 구성 === */
+	 //TArray<ULevel*> Levels;
+	ULevel* Level;
+	/** === 플레이어 / 컨트롤러 === */
+	// APlayerController* GetFirstPlayerController() const;
+	// TArray<APlayerController*> GetPlayerControllerIterator() const;
+
+	/** === 에디터 월드 타입 === */
+	EWorldType WorldType = EWorldType::Editor;//기본 설정은 에디터로 진행합니다.
+
+	/** === PIE 관련 === */
+	static UWorld* DuplicateWorldForPIE(UWorld* EditorWorld);
+	void InitializeActorsForPlay();
+	void CleanupWorld();
 
 
 private:
-    // 싱글톤 매니저 참조
-    UResourceManager& ResourceManager;
-    UUIManager& UIManager;
-    UInputManager& InputManager;
-    USelectionManager& SelectionManager;
+	// 싱글톤 매니저 참조
+	UResourceManager& ResourceManager;
+	UUIManager& UIManager;
+	UInputManager& InputManager;
+	USelectionManager& SelectionManager;
 
-   
-    // 메인 카메라
-    ACameraActor* MainCameraActor = nullptr;
 
-    AGridActor* GridActor = nullptr;
-    // 렌더러 (월드가 소유)
-    URenderer* Renderer;
+	// 메인 카메라
+	ACameraActor* MainCameraActor = nullptr;
 
-    // 메인 뷰포트
-    SViewportWindow* MainViewport = nullptr;
-    // 멀티 뷰포트 윈도우
-    SMultiViewportWindow* MultiViewport = nullptr;
+	AGridActor* GridActor = nullptr;
+	// 렌더러 (월드가 소유)
+	URenderer* Renderer;
 
-    TArray<FPrimitiveData> Primitives;
+	// 메인 뷰포트
+	SViewportWindow* MainViewport = nullptr;
+	// 멀티 뷰포트 윈도우
+	SMultiViewportWindow* MultiViewport = nullptr;
 
-    /** === 액터 관리 === */
-    TArray<AActor*> EngineActors;
-    /** === 액터 관리 === */
-    TArray<AActor*> Actors;
-    
-    // Object naming system
-    TMap<FString, int32> ObjectTypeCounts;
-    
-    /** == 기즈모 == */
-    AGizmoActor* GizmoActor;
+	TArray<FPrimitiveData> Primitives;
 
-    /** === Show Flag 시스템 === */
-    EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled
-                                    | EEngineShowFlags::SF_BillboardText;
-    
-    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
+	/** === 액터 관리 === */
+	TArray<AActor*> EngineActors;
+	/** === 액터 관리 === */
+	TArray<AActor*> Actors;
 
-    UOctree* Octree;
-    FBVH* BVH;
+	// Object naming system
+	TMap<FString, int32> ObjectTypeCounts;
+
+	/** == 기즈모 == */
+	AGizmoActor* GizmoActor;
+
+	/** === Show Flag 시스템 === */
+	EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled
+		| EEngineShowFlags::SF_BillboardText;
+
+	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
+
+	UOctree* Octree;
+	FBVH* BVH;
 };
 template<class T>
 inline T* UWorld::SpawnActor()
 {
-    return SpawnActor<T>(FTransform());
+	return SpawnActor<T>(FTransform());
 }
 
 template<class T>
 inline T* UWorld::SpawnActor(const FTransform& Transform)
 {
-    static_assert(std::is_base_of<AActor, T>::value, "T must be derived from AActor");
+	static_assert(std::is_base_of<AActor, T>::value, "T must be derived from AActor");
 
-    // 새 액터 생성
-    T* NewActor = NewObject<T>();
+	// 새 액터 생성
+	T* NewActor = NewObject<T>();
 
-    // 초기 트랜스폼 적용
-    NewActor->SetActorTransform(Transform);
+	// 초기 트랜스폼 적용
+	NewActor->SetActorTransform(Transform);
 
-    //  월드 등록
-    NewActor->SetWorld(this);
+	//  월드 등록
+	NewActor->SetWorld(this);
 
-    // 월드에 등록
-    Actors.Add(NewActor);
+	if (Level)
+	{
+		Level->AddActor(NewActor);
+	}
 
-    return NewActor;
+	return NewActor;
 }

@@ -39,3 +39,8 @@ const TArray<AActor*>& ULevel::GetActors() const
 {
 	return Actors;
 }
+
+TArray<AActor*>& ULevel::GetActors() 
+{
+	return Actors;
+}

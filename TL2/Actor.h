@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Enums.h"
 #include "Object.h"
 #include "Vector.h"
@@ -57,7 +57,7 @@ public:
     void SetIsPicked(bool picked) { bIsPicked = picked; }
     bool GetIsPicked() { return bIsPicked; }
 
-
+    
 
     //-----------------------------
     //----------Getter------------
@@ -81,7 +81,7 @@ public:
     USceneComponent* CreateAndAttachComponent(USceneComponent* ParentComponent, UClass* ComponentClass);
     // 이 액터가 소유한 씬 컴포넌트를 안전하게 제거하고 삭제합니다.
     virtual bool DeleteComponent(USceneComponent* ComponentToDelete);
-
+    void AddComponent(USceneComponent* InComponent);
     // Duplicate function
     void DuplicateSubObjects() override;
 
@@ -98,12 +98,22 @@ public:
     void SetActorHiddenInGame(bool bNewHidden) { bHiddenInGame = bNewHidden; }
     bool GetActorHiddenInGame() const { return bHiddenInGame; }
     bool IsActorVisible() const { return !bHiddenInGame; }
-    void AddComponent(USceneComponent* InComponent);
+    
+    
+    // Tick Enabled Check
+    bool IsActorTickEnabled() const { return bCanEverTick; }
+
+    // Tick 조건 헬퍼 함수들
+    bool ShouldTickInEditor() const { return bTickInEditor; }
+    bool CanTickInPlayMode() const { return bCanEverTick && !bHiddenInGame; }
+
+    
+
 
     UWorld* GetWorld() const override final;
     // TODO(KHJ): 제거 필요
     void SetWorld(UWorld* InWorld) { World = InWorld; }
-    
+   
 protected:
     TSet<UActorComponent*> OwnedComponents;
     bool bIsPicked = false;
