@@ -81,17 +81,21 @@ public:
     void DuplicateSubObjects() override;
 
 protected:
+    void UpdateRelativeTransform();
+
+protected:
+    // [PIE] 값 복사
     FVector RelativeLocation{ 0,0,0 };
     FQuat   RelativeRotation;
     FVector RelativeScale{ 1,1,1 };
 
-    
     // Hierarchy
+    // [PIE] 외부에서 초기화
     USceneComponent* AttachParent = nullptr;
+    // [PIE] 직접 순회를 돌면서 Duplicate 복사
     TArray<USceneComponent*> AttachChildren;
 
     // 로컬(부모 기준) 트랜스폼
+    // [PIE] 값 복사
     FTransform RelativeTransform;
-
-    void UpdateRelativeTransform();
 };

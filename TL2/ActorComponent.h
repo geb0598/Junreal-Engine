@@ -40,7 +40,10 @@ public:
     AActor* GetOwner() const { return Owner; }
 
 protected:
+    // [PIE] 외부에서 초기화 필요
     AActor* Owner = nullptr;  // 자신을 보유한 액터
+
+    // [PIE] 값 복사
     bool bIsActive = true;    // 활성 상태
     bool bCanEverTick = false; // 매 프레임 Tick 가능 여부
 };

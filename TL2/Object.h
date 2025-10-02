@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "UEContainer.h"
 #include "ObjectFactory.h"
 #include "MemoryManager.h"
@@ -59,10 +59,14 @@ public:
     virtual void DuplicateSubObjects() {}
 
 public:
+
+    // [PIE] ???
     uint32_t UUID;
     uint32_t InternalIndex;
+    // [PIE] 값 복사
     FName    ObjectName;   // ← 객체 개별 이름 추가
 
+public:
     // 정적: 타입 메타 반환 (이름을 StaticClass로!)
     static UClass* StaticClass()
     {

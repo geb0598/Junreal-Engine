@@ -20,6 +20,7 @@ public:
 	void SetCollisionComponent(EPrimitiveType InType = EPrimitiveType::Default);
 
 protected:
+    // [PIE] 부모 Duplicate 호출하고 Root를 StaticMeshComponent 에 넣어주면 될듯
     UStaticMeshComponent* StaticMeshComponent;
 };
 

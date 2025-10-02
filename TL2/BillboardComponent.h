@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "MeshComponent.h"
 
 class UBillboardComponent : public UMeshComponent
@@ -41,22 +41,27 @@ private:
     void CreateBillboardVertices();
 
 private:
+    // [PIE] 주소 복사
     UTextQuad* BillboardQuad = nullptr;
     
     // Size properties
+    // [PIE] 값 복사
     float BillboardWidth = 1.0f;
     float BillboardHeight = 1.0f;
     
     // Texture properties
+    // [PIE] 값 복사
     FString TexturePath = "Editor/Icon/Pawn_64x.dds";
     
     // UV coordinate properties
+    // [PIE] 값 복사
     float UCoord = 0.0f;    // U start coordinate
     float VCoord = 0.0f;    // V start coordinate
     float ULength = 1.0f;   // U length (UL)
     float VLength = 1.0f;   // V length (VL)
     
     // Screen scaling properties
+    // [PIE] 값 복사
     bool bIsScreenSizeScaled = false;
     float ScreenSize = 0.0025f;
 };

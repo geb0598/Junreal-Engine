@@ -6,6 +6,8 @@
 #include "VertexData.h"
 #include "CameraActor.h"
 
+TMap<char, FBillboardVertexInfo> UTextRenderComponent::CharInfoMap;
+
 UTextRenderComponent::UTextRenderComponent()
 {
 	SetRelativeLocation({ 0, 0, 1 });
@@ -63,12 +65,17 @@ UTextRenderComponent::~UTextRenderComponent()
 	//    delete TextQuad;
 	//    TextQuad = nullptr;
 	//}
-
-	CharInfoMap.clear();
 }
 
+// ASCII 문자 코드를 UVRect로 변환하는 Map을 생성
 void UTextRenderComponent::InitCharInfoMap()
 {
+	// 최초 1번만 초기화 한다
+	if (CharInfoMap.size() != 0)
+	{
+		return;
+	}
+
 	const float TEXTURE_WH = 512.f;
 	const float SUBTEX_WH = 32.f;
 	const int COLROW = 16;
