@@ -1,9 +1,10 @@
 ﻿#pragma once
 #include "MeshComponent.h"
+
 class UTextRenderComponent : public UPrimitiveComponent
 {
 public:
-	DECLARE_CLASS(UTextRenderComponent, UMeshComponent)
+	DECLARE_CLASS(UTextRenderComponent, UPrimitiveComponent)
 	UTextRenderComponent();
 
 protected:
@@ -18,6 +19,9 @@ public:
 	void SetText(FString InText);
 
 	UTextQuad* GetStaticMesh() const { return TextQuad; }
+
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
 
 private:
 	static const uint32 MaxQuads = 100; // capacity

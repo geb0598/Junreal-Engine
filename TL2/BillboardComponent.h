@@ -37,6 +37,9 @@ public:
 
     UTextQuad* GetStaticMesh() const { return BillboardQuad; }
 
+    UObject* Duplicate() override;
+    void DuplicateSubObjects() override;
+
 private:
     void CreateBillboardVertices();
 

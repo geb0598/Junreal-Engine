@@ -99,3 +99,18 @@ void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, c
 
     assert(MaterailSlots[InMaterialSlotIndex].bChangedByUser == true);
 }
+
+UObject* UStaticMeshComponent::Duplicate()
+{
+    UStaticMeshComponent* DuplicatedComponent = new UStaticMeshComponent(*this);
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
+}
+
+void UStaticMeshComponent::DuplicateSubObjects()
+{
+    // 부모의 깊은 복사 수행
+    Super_t::DuplicateSubObjects();
+
+}

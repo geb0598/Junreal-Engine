@@ -39,6 +39,9 @@ public:
     }
     AActor* GetOwner() const { return Owner; }
 
+    UObject* Duplicate() override;
+    void DuplicateSubObjects() override;
+
 protected:
     // [PIE] 외부에서 초기화 필요
     AActor* Owner = nullptr;  // 자신을 보유한 액터

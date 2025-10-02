@@ -113,6 +113,19 @@ void UTextRenderComponent::SetText(FString InText)
 	Text = InText;
 }
 
+UObject* UTextRenderComponent::Duplicate()
+{
+	UTextRenderComponent* DuplicatedComponent = new UTextRenderComponent(*this);
+	DuplicatedComponent->DuplicateSubObjects();
+
+	return DuplicatedComponent;
+}
+
+void UTextRenderComponent::DuplicateSubObjects()
+{
+	Super_t::DuplicateSubObjects();
+}
+
 void UTextRenderComponent::Render(URenderer* InRenderer, const FMatrix& InView, const FMatrix& InProj)
 {
 	// Text가 변경되었다면 버퍼를 업데이트

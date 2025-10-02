@@ -904,21 +904,19 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
             for (AActor* EditorActor : EditorLevel->GetActors())
             {
                 if (EditorActor)
-                {/*
-                    AActor* PIEActor = Cast<AActor>(EditorActor->Duplicate());//체크!
-
+                {
+                    AActor* PIEActor = Cast<AActor>(EditorActor->Duplicate());
                     if (PIEActor)
                     {
-                        PIELevel->AddActor(PIEActor);
-                        PIEActor->SetWorld(PIEWorld);
-                    }*/
+                        PIEActor->SetWorld(PIEWorld); // 외부에서 초기화 해주는 것
+                        PIELevel->AddActor(PIEActor); 
+                    }
                 }
             }
 
             PIEWorld->Level = PIELevel;
         }
     }
-
     return PIEWorld;
 }
 

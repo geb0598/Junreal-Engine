@@ -38,3 +38,18 @@ void UActorComponent::EndPlay(EEndPlayReason::Type EndPlayReason)
         // End Replication
     }
 }
+
+UObject* UActorComponent::Duplicate()
+{
+    UActorComponent* DuplicatedComponent = new UActorComponent(*this);
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
+}
+
+void UActorComponent::DuplicateSubObjects()
+{
+    Super_t::DuplicateSubObjects();
+
+
+}

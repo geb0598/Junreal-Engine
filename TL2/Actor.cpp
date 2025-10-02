@@ -275,7 +275,10 @@ bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
 
 UObject* AActor::Duplicate()
 {
-    return nullptr;
+    AActor* DuplicatedComponent = new AActor(*this);
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
 }
 
 /**
@@ -284,31 +287,54 @@ UObject* AActor::Duplicate()
  */
 void AActor::DuplicateSubObjects()
 {
-    TSet<UActorComponent*> DuplicatedComponents = OwnedComponents;
-    OwnedComponents.Empty();
-    
-    USceneComponent* NewRootComponent = nullptr;
+    Super_t::DuplicateSubObjects();
 
-    for (UActorComponent* Component : DuplicatedComponents)
+    if (RootComponent)
     {
-        //USceneComponent* NewComponent = Component->Duplicate<USceneComponent>();
-        USceneComponent* NewComponent = Cast<USceneComponent>(Component->Duplicate());
-        
-        // 복제된 컴포넌트의 Owner를 현재 액터로 설정
-        if (NewComponent)
+        RootComponent = Cast<USceneComponent>(RootComponent->Duplicate());
+    }
+    OwnedComponents.clear();
+
+    TQueue<USceneComponent*> Queue;
+    Queue.Enqueue(RootComponent);
+    while (Queue.size() > 0)
+    {
+        USceneComponent* Component = Queue.back();
+        Queue.pop();
+        Component->SetOwner(this); // 복사된 Actor를 수동 설정
+        OwnedComponents.Add(Component);
+
+        for (USceneComponent* Child : Component->GetAttachChildren())
         {
-            NewComponent->SetOwner(this);
-        }
-        
-        OwnedComponents.Add(NewComponent);
-        
-        if (Component == RootComponent)
-        {
-            NewRootComponent = NewComponent;
+            Queue.Enqueue(Child);
         }
     }
-    
-    // RootComponent 업데이트
-    RootComponent = NewRootComponent;
+
+    //TSet<UActorComponent*> DuplicatedComponents = OwnedComponents;
+    //OwnedComponents.Empty();
+    //
+    //USceneComponent* NewRootComponent = nullptr;
+
+    //for (UActorComponent* Component : DuplicatedComponents)
+    //{
+    //    //USceneComponent* NewComponent = Component->Duplicate<USceneComponent>();
+    //    USceneComponent* NewComponent = Cast<USceneComponent>(Component->Duplicate());
+    //    
+    //    // 복제된 컴포넌트의 Owner를 현재 액터로 설정
+    //    if (NewComponent)
+    //    {
+    //        NewComponent->SetOwner(this);
+    //    }
+    //    
+    //    OwnedComponents.Add(NewComponent);
+    //    
+    //    if (Component == RootComponent)
+    //    {
+    //        NewRootComponent = NewComponent;
+    //    }
+    //}
+    //
+    //// RootComponent 업데이트
+    //RootComponent = NewRootComponent;
 }
 

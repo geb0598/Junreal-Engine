@@ -42,6 +42,20 @@ void UBillboardComponent::SetUVCoords(float U, float V, float UL, float VL)
     VLength = VL;
 }
 
+UObject* UBillboardComponent::Duplicate()
+{
+    UBillboardComponent* DuplicatedComponent = new UBillboardComponent(*this);
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
+}
+
+void UBillboardComponent::DuplicateSubObjects()
+{
+    Super_t::DuplicateSubObjects();
+
+}
+
 void UBillboardComponent::CreateBillboardVertices()
 {
     TArray<FBillboardVertexInfo_GPU> vertices;

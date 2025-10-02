@@ -25,7 +25,7 @@ UWorld* UObject::GetWorld() const
 	return nullptr;
 }
 
-// 이 함수 구현에 따라 본인 멤버를 얕은 복사 할건지, 깊은 복사 할건지 결정 가능
+// 얕은 복사가 필요하면 얕은 복사만 하고, 깊은 복사가 필요하면 깊은 복사까지 처리한 객체 반환 
 UObject* UObject::Duplicate()
 {
 	// 1.복사 생성자를 이용해 '얕은 복사'를 수행 (포인터 없는 클래스면 이게 곧 깊은 복사)
@@ -41,6 +41,8 @@ UObject* UObject::Duplicate()
 // 자신이 가진 멤버에 대해 Duplicate할 거면 override 필요
 void UObject::DuplicateSubObjects()
 {
+	// override 시 부모의 Duplicate 먼저 호출하도록 설정
+
 	// 1. 서브 오브젝트에 대해 Duplicate 호출 (위임하는 역할)
 	//    이를 통해 서브 오브젝트 클래스로 가서 Duplicate가 수행될 거고
 	//    - 서브 오브젝트에서 별도의 DuplicatedSubObjects를 override하지 않으면 

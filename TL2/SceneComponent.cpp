@@ -261,7 +261,10 @@ void USceneComponent::UpdateRelativeTransform()
 
 UObject* USceneComponent::Duplicate()
 {
-    return nullptr;
+    USceneComponent* DuplicatedComponent = new USceneComponent(*this);
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
 }
 
 /**
@@ -270,5 +273,14 @@ UObject* USceneComponent::Duplicate()
  */
 void USceneComponent::DuplicateSubObjects()
 {
-    // TBD
+    Super_t::DuplicateSubObjects();
+    
+    TArray<USceneComponent*> DuplicatedChildren;
+    for (USceneComponent* Component : AttachChildren)
+    {
+        USceneComponent* Child = Cast<USceneComponent>(Component->Duplicate());
+        Child->AttachParent = this;
+        DuplicatedChildren.push_back(Child);
+    }
+    AttachChildren = DuplicatedChildren;
 }
