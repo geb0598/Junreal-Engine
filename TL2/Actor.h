@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Enums.h"
 #include "Object.h"
 #include "Vector.h"
@@ -83,6 +83,7 @@ public:
     virtual bool DeleteComponent(USceneComponent* ComponentToDelete);
 
     // Duplicate function
+    UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
 public:

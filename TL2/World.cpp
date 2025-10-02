@@ -868,7 +868,8 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
         if (!EditorActor) continue;
 
         // 액터 복제
-        UObject* DuplicatedObj = EditorActor->Duplicate<AActor>();
+        //UObject* DuplicatedObj = EditorActor->Duplicate<AActor>();
+        UObject* DuplicatedObj = EditorActor->Duplicate();
         AActor* PIEActor = Cast<AActor>(DuplicatedObj);
 
         if (PIEActor)

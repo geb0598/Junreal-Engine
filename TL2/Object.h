@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "UEContainer.h"
 #include "ObjectFactory.h"
 #include "MemoryManager.h"
@@ -56,7 +56,8 @@ public:
     template<typename T>
     T* Duplicate();
     
-    virtual void DuplicateSubObjects() {}
+    virtual UObject* Duplicate();
+    virtual void DuplicateSubObjects();
 
 public:
     uint32_t UUID;
@@ -86,7 +87,7 @@ public:
     // UUID 발급기: 현재 카운터를 반환하고 1 증가
     static uint32 GenerateUUID() { return GUUIDCounter++; }
     
-    static EPropertyFlag GetPropertyFlag() { return EPropertyFlag::CPF_Instanced; }
+    //static EPropertyFlag GetPropertyFlag() { return EPropertyFlag::CPF_Instanced; }
 
 private:
     // 전역 UUID 카운터(초기값 1)
@@ -117,34 +118,34 @@ public:                                                                       \
     }                                                                         \
     virtual UClass* GetClass() const override { return ThisClass::StaticClass(); }
 
-template<typename T>
-T* UObject::Duplicate()
-{
-    T* NewObject;
-    
-    EPropertyFlag EffectiveFlags = T::GetPropertyFlag();
-    
-    if ((EffectiveFlags & EPropertyFlag::CPF_DuplicateTransient) != EPropertyFlag::CPF_None)
-    {
-        // New Instance: 기본 생성자로 새 객체 생성
-        NewObject = new T();
-    }
-    else if ((EffectiveFlags & EPropertyFlag::CPF_EditAnywhere) != EPropertyFlag::CPF_None)
-    {
-        // Shallow Copy: 에디터에서 편집 가능한 얕은 복사
-        NewObject = new T(*static_cast<T*>(this));
-    }
-    else if ((EffectiveFlags & EPropertyFlag::CPF_Instanced) != EPropertyFlag::CPF_None)
-    {
-        // Deep Copy: 참조된 객체도 Deep Copy
-        NewObject = new T(*static_cast<T*>(this));
-        NewObject->DuplicateSubObjects();
-    }
-    else // 기본값: Deep Copy
-    {
-        NewObject = new T(*static_cast<T*>(this));
-        NewObject->DuplicateSubObjects();
-    }
-    
-    return NewObject;
-}
+//template<typename T>
+//T* UObject::Duplicate()
+//{
+//    T* NewObject;
+//    
+//    EPropertyFlag EffectiveFlags = T::GetPropertyFlag();
+//    
+//    if ((EffectiveFlags & EPropertyFlag::CPF_DuplicateTransient) != EPropertyFlag::CPF_None)
+//    {
+//        // New Instance: 기본 생성자로 새 객체 생성
+//        NewObject = new T();
+//    }
+//    else if ((EffectiveFlags & EPropertyFlag::CPF_EditAnywhere) != EPropertyFlag::CPF_None)
+//    {
+//        // Shallow Copy: 에디터에서 편집 가능한 얕은 복사
+//        NewObject = new T(*static_cast<T*>(this));
+//    }
+//    else if ((EffectiveFlags & EPropertyFlag::CPF_Instanced) != EPropertyFlag::CPF_None)
+//    {
+//        // Deep Copy: 참조된 객체도 Deep Copy
+//        NewObject = new T(*static_cast<T*>(this));
+//        NewObject->DuplicateSubObjects();
+//    }
+//    else // 기본값: Deep Copy
+//    {
+//        NewObject = new T(*static_cast<T*>(this));
+//        NewObject->DuplicateSubObjects();
+//    }
+//    
+//    return NewObject;
+//}
