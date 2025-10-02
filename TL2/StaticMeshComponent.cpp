@@ -103,6 +103,20 @@ void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, c
 UObject* UStaticMeshComponent::Duplicate()
 {
     UStaticMeshComponent* DuplicatedComponent = NewObject<UStaticMeshComponent>(*this);
+
+    // Transform 속성 복사 (USceneComponent)
+    DuplicatedComponent->RelativeLocation = this->RelativeLocation;
+    DuplicatedComponent->RelativeRotation = this->RelativeRotation;
+    DuplicatedComponent->RelativeScale = this->RelativeScale;
+    DuplicatedComponent->UpdateRelativeTransform();
+
+    // Material 속성 복사 (UPrimitiveComponent)
+    DuplicatedComponent->Material = this->Material;
+
+    // StaticMeshComponent 속성 복사
+    DuplicatedComponent->StaticMesh = this->StaticMesh;
+    DuplicatedComponent->MaterailSlots = this->MaterailSlots;
+
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

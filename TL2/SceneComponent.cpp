@@ -262,6 +262,13 @@ void USceneComponent::UpdateRelativeTransform()
 UObject* USceneComponent::Duplicate()
 {
     USceneComponent* DuplicatedComponent = NewObject<USceneComponent>(*this);
+
+    // Transform 속성 복사
+    DuplicatedComponent->RelativeLocation = this->RelativeLocation;
+    DuplicatedComponent->RelativeRotation = this->RelativeRotation;
+    DuplicatedComponent->RelativeScale = this->RelativeScale;
+    DuplicatedComponent->UpdateRelativeTransform();
+
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

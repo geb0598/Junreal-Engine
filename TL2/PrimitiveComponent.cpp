@@ -33,6 +33,16 @@ void UPrimitiveComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
 UObject* UPrimitiveComponent::Duplicate()
 {
     UPrimitiveComponent* DuplicatedComponent = NewObject<UPrimitiveComponent>(*this);
+
+    // Transform 속성 복사 (부모 속성)
+    DuplicatedComponent->RelativeLocation = this->RelativeLocation;
+    DuplicatedComponent->RelativeRotation = this->RelativeRotation;
+    DuplicatedComponent->RelativeScale = this->RelativeScale;
+    DuplicatedComponent->UpdateRelativeTransform();
+
+    // PrimitiveComponent 속성 복사
+    DuplicatedComponent->Material = this->Material;
+
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

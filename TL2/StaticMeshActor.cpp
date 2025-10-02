@@ -59,10 +59,29 @@ void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
 
 UObject* AStaticMeshActor::Duplicate()
 {
-    AStaticMeshActor* DuplicatedComponent = NewObject<AStaticMeshActor>(*this);
-    DuplicatedComponent->DuplicateSubObjects();
+    AStaticMeshActor* DuplicatedActor = NewObject<AStaticMeshActor>(*this);
 
-    return DuplicatedComponent;
+    // 생성자가 빈 컴포넌트를 만들었으므로, 원본의 속성을 복사
+    if (this->StaticMeshComponent && DuplicatedActor->StaticMeshComponent)
+    {
+        UStaticMeshComponent* SrcComp = this->StaticMeshComponent;
+        UStaticMeshComponent* DstComp = DuplicatedActor->StaticMeshComponent;
+
+        // Transform 복사
+        DstComp->SetRelativeLocation(SrcComp->GetRelativeLocation());
+        DstComp->SetRelativeRotation(SrcComp->GetRelativeRotation());
+        DstComp->SetRelativeScale(SrcComp->GetRelativeScale());
+
+        // StaticMesh 복사 (SetStaticMesh는 내부적으로 Material도 설정)
+        if (SrcComp->GetStaticMesh())
+        {
+            DstComp->SetStaticMesh(SrcComp->GetStaticMesh()->GetAssetPathFileName());
+        }
+    }
+
+    DuplicatedActor->DuplicateSubObjects();
+
+    return DuplicatedActor;
 }
 
 void AStaticMeshActor::DuplicateSubObjects()
