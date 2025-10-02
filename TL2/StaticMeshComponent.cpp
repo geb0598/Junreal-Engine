@@ -102,7 +102,7 @@ void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, c
 
 UObject* UStaticMeshComponent::Duplicate()
 {
-    UStaticMeshComponent* DuplicatedComponent = new UStaticMeshComponent(*this);
+    UStaticMeshComponent* DuplicatedComponent = NewObject<UStaticMeshComponent>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

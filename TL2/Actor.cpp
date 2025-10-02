@@ -275,7 +275,7 @@ bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
 
 UObject* AActor::Duplicate()
 {
-    AActor* DuplicatedComponent = new AActor(*this);
+    AActor* DuplicatedComponent = NewObject<AActor>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

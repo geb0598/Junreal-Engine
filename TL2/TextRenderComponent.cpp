@@ -115,7 +115,7 @@ void UTextRenderComponent::SetText(FString InText)
 
 UObject* UTextRenderComponent::Duplicate()
 {
-	UTextRenderComponent* DuplicatedComponent = new UTextRenderComponent(*this);
+	UTextRenderComponent* DuplicatedComponent = NewObject<UTextRenderComponent>(*this);
 	DuplicatedComponent->DuplicateSubObjects();
 
 	return DuplicatedComponent;

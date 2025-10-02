@@ -261,7 +261,7 @@ void USceneComponent::UpdateRelativeTransform()
 
 UObject* USceneComponent::Duplicate()
 {
-    USceneComponent* DuplicatedComponent = new USceneComponent(*this);
+    USceneComponent* DuplicatedComponent = NewObject<USceneComponent>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

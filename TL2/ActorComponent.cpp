@@ -41,7 +41,7 @@ void UActorComponent::EndPlay(EEndPlayReason::Type EndPlayReason)
 
 UObject* UActorComponent::Duplicate()
 {
-    UActorComponent* DuplicatedComponent = new UActorComponent(*this);
+    UActorComponent* DuplicatedComponent = NewObject<UActorComponent>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

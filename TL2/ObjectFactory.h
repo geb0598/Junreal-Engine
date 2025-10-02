@@ -23,12 +23,19 @@ namespace ObjectFactory
 
     // 2) 생성 + GUObjectArray 자동 등록
     UObject* NewObject(UClass* Class);
+    UObject* NewObject(UObject* Outer, UClass* Class);
 
     // 3) 템플릿 버전 (타입 안전)
     template<class T>
     inline T* NewObject()
     {
         return static_cast<T*>(NewObject(T::StaticClass()));
+    }
+
+    template<class T>
+    inline T* NewObject(UObject& Outer)
+    {
+        return static_cast<T*>(NewObject(&Outer, T::StaticClass()));
     }
     // 개별 삭제(단일 소유자: Factory)
     void DeleteObject(UObject* Obj);

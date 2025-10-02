@@ -66,6 +66,7 @@ public:
     uint32_t InternalIndex;
     // [PIE] 값 복사
     FName    ObjectName;   // ← 객체 개별 이름 추가
+    UObject* Outer = nullptr;  // ← Outer 객체 참조
 
 public:
     // 정적: 타입 메타 반환 (이름을 StaticClass로!)

@@ -32,7 +32,7 @@ void UPrimitiveComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
 
 UObject* UPrimitiveComponent::Duplicate()
 {
-    UPrimitiveComponent* DuplicatedComponent = new UPrimitiveComponent(*this);
+    UPrimitiveComponent* DuplicatedComponent = NewObject<UPrimitiveComponent>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

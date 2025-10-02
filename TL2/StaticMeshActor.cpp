@@ -57,7 +57,7 @@ void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
 
 UObject* AStaticMeshActor::Duplicate()
 {
-    AStaticMeshActor* DuplicatedComponent = new AStaticMeshActor(*this);
+    AStaticMeshActor* DuplicatedComponent = NewObject<AStaticMeshActor>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;
