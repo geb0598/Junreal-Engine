@@ -6,6 +6,7 @@
 #include "SSplitterV.h"
 #include "SMultiViewportWindow.h"
 #include "EditorEngine.h"
+#include"GameEngine.h"
 // TODO: Delete it, just Test
 
 float CLIENTWIDTH = 1024.0f;
@@ -306,7 +307,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		delete MultiViewportWindow;
-
+		Cast<UEditorEngine>(GetEngine())->GameEngine->EndGame();
 		UUIManager::GetInstance().Release();
 		ObjectFactory::DeleteAll(true);
 	}

@@ -35,6 +35,7 @@ void UGameEngine::EndGame()
     {
         GameWorld->CleanupWorld();
         // PIE 월드는 EditorEngine::EndPIE에서 삭제하므로 여기서는 nullptr만 설정
+        DeleteObject(GameWorld);
         GameWorld = nullptr;
     }
 }

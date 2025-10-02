@@ -907,11 +907,12 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
             {
                 if (EditorActor)
                 {
-                    AActor* PIEActor = Cast<AActor>(EditorActor->Duplicate());
+                    AActor* PIEActor = Cast<AActor>(EditorActor->Duplicate());//체크!
+
                     if (PIEActor)
                     {
-                        PIEActor->SetWorld(PIEWorld); // 외부에서 초기화 해주는 것
-                        PIELevel->AddActor(PIEActor); 
+                        PIELevel->AddActor(PIEActor);
+                        PIEActor->SetWorld(PIEWorld);
                     }
                 }
             }

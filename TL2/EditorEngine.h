@@ -9,6 +9,7 @@ public:
     DECLARE_CLASS(UEditorEngine, UEngine)
     UEditorEngine();
     UGameEngine* GameEngine = nullptr; // PIE 실행용
+    
     virtual void Tick(float DeltaSeconds) override;
     virtual void Render() override;
     void StartPIE();
