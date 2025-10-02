@@ -47,6 +47,7 @@
 #include"Engine.h"
 #include"EditorEngine.h"
 #include"GameEngine.h"
+#include"Level.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -125,3 +126,5 @@ IMPLEMENT_CLASS(UOctree)
 IMPLEMENT_CLASS(UEngine)
 IMPLEMENT_CLASS(UGameEngine)
 IMPLEMENT_CLASS(UEditorEngine)
+
+IMPLEMENT_CLASS(ULevel)

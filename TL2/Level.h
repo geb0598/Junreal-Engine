@@ -13,7 +13,7 @@ public:
 	void AddActor(AActor* InActor);
 	void RemoveActor(AActor* InActor);
 	const TArray<AActor*>& GetActors() const;
-
+	TArray<AActor*>& GetActors();
 private:
 	TArray<AActor*> Actors;
 };

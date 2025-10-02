@@ -27,33 +27,60 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
                    , SelectionManager(USelectionManager::GetInstance())
                    , BVH(nullptr)
 {
+    Level = NewObject<ULevel>();
 }
 
 UWorld::~UWorld()
 {
-    for (AActor* Actor : Actors)
+    // Level의 Actors 정리 (PIE는 복제된 액터들만 삭제)
+    if (Level)
     {
-        ObjectFactory::DeleteObject(Actor);
+        for (AActor* Actor : Level->GetActors())
+        {
+            ObjectFactory::DeleteObject(Actor);
+        }
+
+        // Level 자체 정리
+        ObjectFactory::DeleteObject(Level);
+        Level = nullptr;
     }
-    Actors.clear();
 
-    // 카메라 정리
-    ObjectFactory::DeleteObject(MainCameraActor);
-    MainCameraActor = nullptr;
-
-    // Grid 정리 
-    ObjectFactory::DeleteObject(GridActor);
-    GridActor = nullptr;
-
-    // BVH 정리
-    if (BVH)
+    // PIE 월드가 아닐 때만 공유 리소스 삭제
+    if (WorldType == EWorldType::Editor)
     {
-        delete BVH;
+        // 카메라 정리
+        ObjectFactory::DeleteObject(MainCameraActor);
+        MainCameraActor = nullptr;
+
+        // Grid 정리
+        ObjectFactory::DeleteObject(GridActor);
+        GridActor = nullptr;
+
+        // GizmoActor 정리
+        ObjectFactory::DeleteObject(GizmoActor);
+        GizmoActor = nullptr;
+
+        // BVH 정리
+        if (BVH)
+        {
+            delete BVH;
+            BVH = nullptr;
+        }
+
+        // ObjManager 정리
+        FObjManager::Clear();
+    }
+    else if (WorldType == EWorldType::PIE)
+    {
+        // PIE 월드는 공유 포인터만 nullptr로 설정 (삭제하지 않음)
+        MainCameraActor = nullptr;
+        GridActor = nullptr;
+        GizmoActor = nullptr;
         BVH = nullptr;
+        Renderer = nullptr;
+        MainViewport = nullptr;
+        MultiViewport = nullptr;
     }
-
-    // ObjManager 정리
-    FObjManager::Clear();
 }
 
 static void DebugRTTI_UObject(UObject* Obj, const char* Title)
@@ -237,7 +264,8 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
         int AllActorCount = 0;
         int FrustumCullCount = 0;
 
-        for (AActor* Actor : Actors)
+        const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
+        for (AActor* Actor : LevelActors)
         {
             if (!Actor)
             {
@@ -368,23 +396,31 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
 void UWorld::Tick(float DeltaSeconds)
 {
-    //순서 바꾸면 안댐
-    for (AActor* Actor : Actors)
+    // Level의 Actors Tick
+    if (Level)
     {
-        if (Actor)
+        for (AActor* Actor : Level->GetActors())
         {
-            Actor->Tick(DeltaSeconds);
+            if (Actor && Actor->IsActorTickEnabled())
+            {
+                Actor->Tick(DeltaSeconds);
+            }
         }
     }
 
+    // Engine Actors Tick
     for (AActor* EngineActor : EngineActors)
     {
-        if (EngineActor)
+        if (EngineActor && EngineActor->IsActorTickEnabled())
         {
             EngineActor->Tick(DeltaSeconds);
         }
     }
-    //GizmoActor->Tick(DeltaSeconds);
+
+    if (GizmoActor)
+    {
+        GizmoActor->Tick(DeltaSeconds);
+    }
 
     //ProcessActorSelection();
     ProcessViewportInput();
@@ -434,14 +470,13 @@ bool UWorld::DestroyActor(AActor* Actor)
     }
 
     // 배열에서 제거 시도
-    auto it = std::find(Actors.begin(), Actors.end(), Actor);
-    if (it != Actors.end())
+   // Level에서 제거 시도
+    if (Level)
     {
-        Actors.erase(it);
+        Level->RemoveActor(Actor);
 
         // 메모리 해제
         ObjectFactory::DeleteObject(Actor);
-
         // 삭제된 액터 정리
         USelectionManager::GetInstance().CleanupInvalidActors();
 
@@ -487,19 +522,23 @@ void UWorld::CreateNewScene()
     // Safety: clear interactions that may hold stale pointers
     SelectionManager.ClearSelection();
     UIManager.ResetPickedActor();
-
-    for (AActor* Actor : Actors)
+    // Level의 Actors 정리
+    if (Level)
     {
-        ObjectFactory::DeleteObject(Actor);
+        for (AActor* Actor : Level->GetActors())
+        {
+            ObjectFactory::DeleteObject(Actor);
+        }
+        Level->GetActors().clear();
     }
-    Actors.Empty();
+
     if (Octree)
     {
-        Octree->Release(); //새로운 씬이 생기면 Octree를 지워준다.
+        Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
     }
     if (BVH)
     {
-        BVH->Clear(); //새로운 씬이 생기면 BVH를 지워준다.
+        BVH->Clear();//새로운 씬이 생기면 BVH를 지워준다.
     }
     // 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
     ObjectTypeCounts.clear();
@@ -740,24 +779,7 @@ void UWorld::LoadScene(const FString& SceneName)
         }
     }
 
-    // std::sort 호출, 임시로 정렬 구현
-    std::sort(Actors.begin(), Actors.end(), [](const AActor* A, const AActor* B)
-    {
-        // 안전을 위해 항상 nullptr을 먼저 확인하는 것이 좋습니다.
-        // B는 유효한데 A만 nullptr이면 A가 뒤로 가도록 합니다 (true 반환 시 A가 앞으로 옴).
-        if (!A)
-        {
-            return false;
-        }
-        if (!B)
-        {
-            return true;
-        }
-
-        // A의 이름이 B의 이름보다 사전 순으로 앞서는지 비교하여 반환합니다.
-        // FName 클래스에 operator< 가 구현되어 있어야 합니다. (일반적으로 문자열 클래스는 구현되어 있음)
-        return (A->GetName().ToString() < B->GetName().ToString());
-    });
+ 
 
     // 3) 최종 보정: 전역 카운터는 절대 하향 금지 + 현재 사용된 최대값 이후로 설정
     const uint32 DuringLoadNext = UObject::PeekNextUUID();
@@ -765,14 +787,18 @@ void UWorld::LoadScene(const FString& SceneName)
     UObject::SetNextUUID(SafeNext);
 
 
-    InitializeSceneGraph(Actors);
+
+    if (Level)
+    {
+        InitializeSceneGraph(Level->GetActors());
+    }
 }
 
 void UWorld::SaveScene(const FString& SceneName)
 {
     TArray<FPrimitiveData> Primitives;
 
-    for (AActor* Actor : Actors)
+    for (AActor* Actor :Level->GetActors())
     {
         if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor))
         {
@@ -839,50 +865,59 @@ AGizmoActor* UWorld::GetGizmoActor()
 
 UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
 {
-    if (!EditorWorld) return nullptr;
+    if (!EditorWorld)
+    {
+        return nullptr;
+    }
 
-    // 1. 새로운 월드 생성
+    // 새로운 PIE 월드 생성
     UWorld* PIEWorld = NewObject<UWorld>();
-    PIEWorld->WorldType = EWorldType::PIE;
+    if (!PIEWorld)
+    {
+        return nullptr;
+    }
 
-    // 2. 렌더링 인프라 공유 (에디터 월드와 같은 Renderer, Viewport 사용)
+    // WorldType을 PIE로 설정
+    PIEWorld->WorldType=(EWorldType::PIE);
+
+    // Renderer 공유 (얕은 복사)
     PIEWorld->Renderer = EditorWorld->Renderer;
-    PIEWorld->MainViewport = EditorWorld->MainViewport;
-    PIEWorld->MultiViewport = EditorWorld->MultiViewport;
 
-    // 3. 카메라 복제
-    if (EditorWorld->MainCameraActor)
+    // MainCameraActor 공유 (PIE는 일단 Editor 카메라 사용)
+    PIEWorld->MainCameraActor = EditorWorld->MainCameraActor;
+
+    // GizmoActor는 PIE에서 사용하지 않음
+    PIEWorld->GizmoActor = nullptr;
+
+    // GridActor 공유 (선택적)
+    PIEWorld->GridActor = nullptr;
+
+    // Level 복제
+    if (EditorWorld->GetLevel())
     {
-        UObject* DupCam = EditorWorld->MainCameraActor->Duplicate<ACameraActor>();
-        PIEWorld->MainCameraActor = Cast<ACameraActor>(DupCam);
-        if (PIEWorld->MainCameraActor)
+        ULevel* EditorLevel = EditorWorld->GetLevel();
+        ULevel* PIELevel = NewObject<ULevel>();
+
+        if (PIELevel)
         {
-            PIEWorld->MainCameraActor->SetWorld(PIEWorld);
-            PIEWorld->EngineActors.Add(PIEWorld->MainCameraActor);
+            // Level의 Actors를 복제
+            for (AActor* EditorActor : EditorLevel->GetActors())
+            {
+                if (EditorActor)
+                {/*
+                    AActor* PIEActor = Cast<AActor>(EditorActor->Duplicate());//체크!
+
+                    if (PIEActor)
+                    {
+                        PIELevel->AddActor(PIEActor);
+                        PIEActor->SetWorld(PIEWorld);
+                    }*/
+                }
+            }
+
+            PIEWorld->Level = PIELevel;
         }
     }
-
-    // 4. 에디터 월드의 액터들을 복제
-    for (AActor* EditorActor : EditorWorld->GetActors())
-    {
-        if (!EditorActor) continue;
-
-        // 액터 복제
-        //UObject* DuplicatedObj = EditorActor->Duplicate<AActor>();
-        UObject* DuplicatedObj = EditorActor->Duplicate();
-        AActor* PIEActor = Cast<AActor>(DuplicatedObj);
-
-        if (PIEActor)
-        {
-            // PIE 월드에 액터 등록
-            PIEActor->SetWorld(PIEWorld);
-            PIEWorld->Actors.Add(PIEActor);
-        }
-    }
-
-    // 5. ShowFlags와 ViewMode 복사
-    PIEWorld->ShowFlags = EditorWorld->ShowFlags;
-    PIEWorld->ViewModeIndex = EditorWorld->ViewModeIndex;
 
     return PIEWorld;
 }
@@ -890,68 +925,29 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
 void UWorld::InitializeActorsForPlay()
 {
     // 모든 액터의 BeginPlay 호출
-    for (AActor* Actor : Actors)
+    if (Level)
     {
-        if (Actor && !Actor->GetActorHiddenInGame())
+        for (AActor* Actor : Level->GetActors())
         {
-            Actor->BeginPlay();
-        }
-    }
-
-    // 엔진 액터도 BeginPlay 호출 (카메라 등)
-    for (AActor* EngineActor : EngineActors)
-    {
-        if (EngineActor && !EngineActor->GetActorHiddenInGame())
-        {
-            EngineActor->BeginPlay();
+            if (Actor)
+            {
+                Actor->BeginPlay();
+            }
         }
     }
 }
 
 void UWorld::CleanupWorld()
 {
-    // 모든 액터의 EndPlay 호출
-    for (AActor* Actor : Actors)
+    if (Level)
     {
-        if (Actor)
+        for (AActor* Actor : Level->GetActors())
         {
-            Actor->EndPlay(EEndPlayReason::EndPlayInEditor);
+            if (Actor)
+            {
+                Actor->EndPlay(EEndPlayReason::Quit);
+            }
         }
-    }
-
-    // 엔진 액터도 EndPlay 호출
-    for (AActor* EngineActor : EngineActors)
-    {
-        if (EngineActor)
-        {
-            EngineActor->EndPlay(EEndPlayReason::EndPlayInEditor);
-        }
-    }
-
-    // 액터 삭제
-    for (AActor* Actor : Actors)
-    {
-        ObjectFactory::DeleteObject(Actor);
-    }
-    Actors.Empty();
-
-    // 엔진 액터 삭제
-    for (AActor* EngineActor : EngineActors)
-    {
-        ObjectFactory::DeleteObject(EngineActor);
-    }
-    EngineActors.Empty();
-
-    // BVH 정리
-    if (BVH)
-    {
-        BVH->Clear();
-    }
-
-    // Octree 정리
-    if (Octree)
-    {
-        Octree->Release();
     }
 }
 
@@ -962,5 +958,5 @@ void UWorld::CleanupWorld()
 void UWorld::SpawnActor(AActor* InActor)
 {
     InActor->SetWorld(this);
-    Actors.Add(InActor);
+    Level->GetActors().Add(InActor);
 }
