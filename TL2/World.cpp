@@ -898,7 +898,7 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
     if (EditorWorld->GetLevel())
     {
         ULevel* EditorLevel = EditorWorld->GetLevel();
-        ULevel* PIELevel = NewObject<ULevel>();
+        ULevel* PIELevel = PIEWorld->GetLevel();
 
         if (PIELevel)
         {
