@@ -5,6 +5,7 @@
 
 // Forward declarations
 class UWorld;
+class FViewport;
 
 /**
  * ShowFlagWidget
@@ -26,19 +27,19 @@ public:
     void RenderWidget() override;
     
     /** Show Flag 상태 동기화 */
-    void SyncWithWorld(UWorld* World);
+    void SyncWithViewport(FViewport* Viewport);
 
 private:
     /** 개별 Show Flag 체크박스 렌더링 */
-    void RenderShowFlagCheckbox(const char* Label, EEngineShowFlags Flag, UWorld* World);
-    
+    void RenderShowFlagCheckbox(const char* Label, EEngineShowFlags Flag, FViewport* Viewport);
+
     /** Show Flag 카테고리별 섹션 렌더링 */
-    void RenderPrimitiveSection(UWorld* World);
-    void RenderDebugSection(UWorld* World);
-    void RenderLightingSection(UWorld* World);
-    
+    void RenderPrimitiveSection(FViewport* Viewport);
+    void RenderDebugSection(FViewport* Viewport);
+    void RenderLightingSection(FViewport* Viewport);
+
     /** 전체 제어 버튼들 */
-    void RenderControlButtons(UWorld* World);
+    void RenderControlButtons(FViewport* Viewport);
     
     /** World 참조 가져오기 */
     UWorld* GetWorld();

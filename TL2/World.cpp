@@ -258,47 +258,36 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     // === Draw Actors with Show Flag checks ===
     Renderer->SetViewModeType(ViewModeIndex);
 
-    // 일반 액터들 렌더링
-    if (IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-    {
+  
         int AllActorCount = 0;
         int FrustumCullCount = 0;
 
         const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
         for (AActor* Actor : LevelActors)
         {
+            // 일반 액터들 렌더링
+            if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+            {
+                continue;
+            }
             if (!Actor)
             {
                 continue;
             }
-
             if (Actor->GetActorHiddenInGame())
             {
                 continue;
             }
-
             if (Cast<AStaticMeshActor>(Actor) &&
-                !IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+                !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
             {
                 continue;
             }
 
             AllActorCount++;
-
             // NOTE: GetWorldBoundFromCube 를 자식 전체를 감싸는 AABB로 교체해야 프로스텀 컬링이 정상 작동할듯
-            // 또는 컴포넌트를 기준으 로프로스텀 컬링을 하도록 수정
-            //if (Actor->CollisionComponent)
-            //{
-            //    FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
-
-            //    // 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
-            //    if (!ViewFrustum.IsVisible(Test))
-            //    {
-            //        FrustumCullCount++;
-
-            //        continue;
-            //    }
-            //}
+             //또는 컴포넌트를 기준으 로프로스텀 컬링을 하도록 수정
+       
 
             bool bIsSelected = SelectionManager.IsActorSelected(Actor);
             /*if (bIsSelected)
@@ -323,13 +312,13 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 }
 
                 if (Cast<UTextRenderComponent>(Component) &&
-                    !IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+                    !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
                 {
                     continue;
                 }
 
                 if (Cast<UAABoundingBoxComponent>(Component) &&
-                    !IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                    !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
                     continue;
                 }
@@ -343,7 +332,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             }
             Renderer->OMSetBlendState(false);
         }
-    }
+    
 
     // 엔진 액터들 (그리드 등)
     for (AActor* EngineActor : EngineActors)
@@ -358,7 +347,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             continue;
         }
 
-        if (Cast<AGridActor>(EngineActor) && !IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+        if (Cast<AGridActor>(EngineActor) && !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
         {
             continue;
         }
@@ -439,6 +428,21 @@ void UWorld::Tick(float DeltaSeconds)
 float UWorld::GetTimeSeconds() const
 {
     return 0.0f;
+}
+
+bool UWorld::FrustumCullActors(const FFrustum& ViewFrustum, const AActor* Actor, int & FrustumCullCount)
+{
+    if (Actor->CollisionComponent)
+    {
+        FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
+
+        // 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
+        if (!ViewFrustum.IsVisible(Test))
+        {
+            FrustumCullCount++;
+            return true;
+        }
+    }
 }
 
 FString UWorld::GenerateUniqueActorName(const FString& ActorType)

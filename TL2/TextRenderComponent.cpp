@@ -129,6 +129,7 @@ void UTextRenderComponent::DuplicateSubObjects()
 
 void UTextRenderComponent::Render(URenderer* InRenderer, const FMatrix& InView, const FMatrix& InProj)
 {
+
 	// Text가 변경되었다면 버퍼를 업데이트
 	if (bIsDirty)
 	{

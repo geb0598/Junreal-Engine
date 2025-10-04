@@ -229,3 +229,13 @@ void FViewport::ReleaseRenderTargets()
         RenderTargetTexture = nullptr;
     }
 }
+
+void FViewport::ToggleShowFlag(EEngineShowFlags Flag)
+{
+    ShowFlags = HasShowFlag(ShowFlags, Flag) ? (ShowFlags & ~Flag) : (ShowFlags | Flag);
+}
+
+bool FViewport::IsShowFlagEnabled(EEngineShowFlags Flag) const
+{
+    return HasShowFlag(ShowFlags, Flag);
+}

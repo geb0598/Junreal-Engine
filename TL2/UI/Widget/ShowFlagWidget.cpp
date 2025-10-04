@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "ShowFlagWidget.h"
 #include "../../World.h"
+#include "../../SViewportWindow.h"
+#include "../../FViewport.h"
 #include "../UIManager.h"
 
 UShowFlagWidget::UShowFlagWidget()
@@ -32,9 +34,16 @@ void UShowFlagWidget::RenderWidget()
 {
     UWorld* World = GetWorld();
     if (!World) return;
-    
-    // World의 현재 Show Flag 상태와 동기화
-    SyncWithWorld(World);
+
+    // 메인 뷰포트 가져오기
+    SViewportWindow* MainViewportWindow = World->GetMainViewport();
+    if (!MainViewportWindow) return;
+
+    FViewport* Viewport = MainViewportWindow->GetViewport();
+    if (!Viewport) return;
+
+    // Viewport의 현재 Show Flag 상태와 동기화
+    SyncWithViewport(Viewport);
     
     // Show Flag 섹션 헤더
     ImGui::PushStyleColor(ImGuiCol_Text, HeaderColor);
@@ -57,33 +66,33 @@ void UShowFlagWidget::RenderWidget()
             if (bCompactMode)
             {
                 // 컴팩트 모드: 중요한 것들만 간단히
-                RenderShowFlagCheckbox("Primitives", EEngineShowFlags::SF_Primitives, World);
+                RenderShowFlagCheckbox("Primitives", EEngineShowFlags::SF_Primitives, Viewport);
                 ImGui::SameLine();
-                RenderShowFlagCheckbox("Grid", EEngineShowFlags::SF_Grid, World);
-                
-                RenderShowFlagCheckbox("Static Meshes", EEngineShowFlags::SF_StaticMeshes, World);
+                RenderShowFlagCheckbox("Grid", EEngineShowFlags::SF_Grid, Viewport);
+
+                RenderShowFlagCheckbox("Static Meshes", EEngineShowFlags::SF_StaticMeshes, Viewport);
                 ImGui::SameLine();
-                RenderShowFlagCheckbox("Text", EEngineShowFlags::SF_BillboardText, World);
-                
-                RenderShowFlagCheckbox("Bounds", EEngineShowFlags::SF_BoundingBoxes, World);
+                RenderShowFlagCheckbox("Text", EEngineShowFlags::SF_BillboardText, Viewport);
+
+                RenderShowFlagCheckbox("Bounds", EEngineShowFlags::SF_BoundingBoxes, Viewport);
                 ImGui::SameLine();
-                RenderShowFlagCheckbox("Wireframe", EEngineShowFlags::SF_Wireframe, World);
+                RenderShowFlagCheckbox("Wireframe", EEngineShowFlags::SF_Wireframe, Viewport);
             }
             else
             {
                 // 전체 제어 버튼들
-                RenderControlButtons(World);
-                
+                RenderControlButtons(Viewport);
+
                 ImGui::Separator();
-                
+
                 // 카테고리별 섹션들
-                RenderPrimitiveSection(World);
+                RenderPrimitiveSection(Viewport);
                 ImGui::Separator();
-                
-                RenderDebugSection(World);
+
+                RenderDebugSection(Viewport);
                 ImGui::Separator();
-                
-                RenderLightingSection(World);
+
+                RenderLightingSection(Viewport);
             }
         }
         ImGui::EndChild();
@@ -98,45 +107,45 @@ UWorld* UShowFlagWidget::GetWorld()
     return UUIManager::GetInstance().GetWorld();
 }
 
-void UShowFlagWidget::SyncWithWorld(UWorld* World)
+void UShowFlagWidget::SyncWithViewport(FViewport* Viewport)
 {
-    if (!World) return;
-    
-    EEngineShowFlags CurrentFlags = World->GetShowFlags();
-    
+    if (!Viewport) return;
+
+    EEngineShowFlags CurrentFlags = Viewport->GetShowFlags();
+
     // 각 플래그 상태를 로컬 변수에 동기화
-    bPrimitives = World->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives);
-    bStaticMeshes = World->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes);
-    bWireframe = World->IsShowFlagEnabled(EEngineShowFlags::SF_Wireframe);
-    bBillboardText = World->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText);
-    bBoundingBoxes = World->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes);
-    bGrid = World->IsShowFlagEnabled(EEngineShowFlags::SF_Grid);
-    bLighting = World->IsShowFlagEnabled(EEngineShowFlags::SF_Lighting);
+    bPrimitives = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives);
+    bStaticMeshes = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes);
+    bWireframe = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Wireframe);
+    bBillboardText = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText);
+    bBoundingBoxes = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes);
+    bGrid = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Grid);
+    bLighting = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Lighting);
 }
 
-void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags Flag, UWorld* World)
+void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags Flag, FViewport* Viewport)
 {
-    if (!World) return;
-    
-    bool bCurrentState = World->IsShowFlagEnabled(Flag);
-    
+    if (!Viewport) return;
+
+    bool bCurrentState = Viewport->IsShowFlagEnabled(Flag);
+
     // 상태에 따라 색상 변경
     ImVec4 checkboxColor = bCurrentState ? ActiveColor : InactiveColor;
     ImGui::PushStyleColor(ImGuiCol_CheckMark, checkboxColor);
-    
+
     if (ImGui::Checkbox(Label, &bCurrentState))
     {
-        // 체크박스 상태가 변경되면 World의 Show Flag 업데이트
+        // 체크박스 상태가 변경되면 Viewport의 Show Flag 업데이트
         if (bCurrentState)
         {
-            World->EnableShowFlag(Flag);
+            Viewport->EnableShowFlag(Flag);
         }
         else
         {
-            World->DisableShowFlag(Flag);
+            Viewport->DisableShowFlag(Flag);
         }
     }
-    
+
     ImGui::PopStyleColor();
     
     // 툴팁 표시
@@ -184,32 +193,32 @@ void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags
     }
 }
 
-void UShowFlagWidget::RenderPrimitiveSection(UWorld* World)
+void UShowFlagWidget::RenderPrimitiveSection(FViewport* Viewport)
 {
     ImGui::PushStyleColor(ImGuiCol_Text, HeaderColor);
     if (ImGui::TreeNode("Primitive Rendering"))
     {
         ImGui::PopStyleColor();
-        
-        RenderShowFlagCheckbox("Primitives", EEngineShowFlags::SF_Primitives, World);
-        
+
+        RenderShowFlagCheckbox("Primitives", EEngineShowFlags::SF_Primitives, Viewport);
+
         // Primitives가 활성화되어 있을 때만 하위 옵션들 활성화
-        bool bPrimitivesEnabled = World->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives);
+        bool bPrimitivesEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives);
         if (!bPrimitivesEnabled)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
         }
-        
+
         ImGui::Indent(15.0f);
-        RenderShowFlagCheckbox("Static Meshes", EEngineShowFlags::SF_StaticMeshes, World);
-        RenderShowFlagCheckbox("Wireframe", EEngineShowFlags::SF_Wireframe, World);
+        RenderShowFlagCheckbox("Static Meshes", EEngineShowFlags::SF_StaticMeshes, Viewport);
+        RenderShowFlagCheckbox("Wireframe", EEngineShowFlags::SF_Wireframe, Viewport);
         ImGui::Unindent(15.0f);
-        
+
         if (!bPrimitivesEnabled)
         {
             ImGui::PopStyleVar();
         }
-        
+
         ImGui::TreePop();
     }
     else
@@ -218,17 +227,17 @@ void UShowFlagWidget::RenderPrimitiveSection(UWorld* World)
     }
 }
 
-void UShowFlagWidget::RenderDebugSection(UWorld* World)
+void UShowFlagWidget::RenderDebugSection(FViewport* Viewport)
 {
     ImGui::PushStyleColor(ImGuiCol_Text, HeaderColor);
     if (ImGui::TreeNode("Debug Features"))
     {
         ImGui::PopStyleColor();
-        
-        RenderShowFlagCheckbox("Billboard Text", EEngineShowFlags::SF_BillboardText, World);
-        RenderShowFlagCheckbox("Bounding Boxes", EEngineShowFlags::SF_BoundingBoxes, World);
-        RenderShowFlagCheckbox("Grid", EEngineShowFlags::SF_Grid, World);
-        
+
+        RenderShowFlagCheckbox("Billboard Text", EEngineShowFlags::SF_BillboardText, Viewport);
+        RenderShowFlagCheckbox("Bounding Boxes", EEngineShowFlags::SF_BoundingBoxes, Viewport);
+        RenderShowFlagCheckbox("Grid", EEngineShowFlags::SF_Grid, Viewport);
+
         ImGui::TreePop();
     }
     else
@@ -237,15 +246,15 @@ void UShowFlagWidget::RenderDebugSection(UWorld* World)
     }
 }
 
-void UShowFlagWidget::RenderLightingSection(UWorld* World)
+void UShowFlagWidget::RenderLightingSection(FViewport* Viewport)
 {
     ImGui::PushStyleColor(ImGuiCol_Text, HeaderColor);
     if (ImGui::TreeNode("Lighting"))
     {
         ImGui::PopStyleColor();
-        
-        RenderShowFlagCheckbox("Lighting", EEngineShowFlags::SF_Lighting, World);
-        
+
+        RenderShowFlagCheckbox("Lighting", EEngineShowFlags::SF_Lighting, Viewport);
+
         ImGui::TreePop();
     }
     else
@@ -254,29 +263,29 @@ void UShowFlagWidget::RenderLightingSection(UWorld* World)
     }
 }
 
-void UShowFlagWidget::RenderControlButtons(UWorld* World)
+void UShowFlagWidget::RenderControlButtons(FViewport* Viewport)
 {
-    if (!World) return;
-    
+    if (!Viewport) return;
+
     ImGui::Text("Quick Controls:");
-    
+
     // 버튼들을 한 줄에 배치
     if (ImGui::Button("Show All"))
     {
-        World->SetShowFlags(EEngineShowFlags::SF_All);
+        Viewport->SetShowFlags(EEngineShowFlags::SF_All);
     }
-    
+
     ImGui::SameLine();
-    
+
     if (ImGui::Button("Hide All"))
     {
-        World->SetShowFlags(EEngineShowFlags::None);
+        Viewport->SetShowFlags(EEngineShowFlags::None);
     }
-    
+
     ImGui::SameLine();
-    
+
     if (ImGui::Button("Reset"))
     {
-        World->SetShowFlags(EEngineShowFlags::SF_DefaultEnabled);
+        Viewport->SetShowFlags(EEngineShowFlags::SF_DefaultEnabled);
     }
 }

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Object.h"
 #include "Vector.h"
+#include "Enums.h"
 #include <d3d11.h>
 
 class FViewportClient;
@@ -56,6 +57,14 @@ public:
     // 유효성 검사
     bool IsValid() const { return RenderTargetView != nullptr; }
 
+    /** === Show Flag 시스템 === */
+    EEngineShowFlags GetShowFlags() const { return ShowFlags; }
+    void SetShowFlags(EEngineShowFlags InShowFlags) { ShowFlags = InShowFlags; }
+    void EnableShowFlag(EEngineShowFlags Flag) { ShowFlags |= Flag; }
+    void DisableShowFlag(EEngineShowFlags Flag) { ShowFlags &= ~Flag; }
+    void ToggleShowFlag(EEngineShowFlags Flag);
+    bool IsShowFlagEnabled(EEngineShowFlags Flag) const;
+
 private:
     void CreateRenderTargets();
     void ReleaseRenderTargets();
@@ -83,5 +92,9 @@ private:
     bool  MainViewport = false;
 
     FVector2D ViewportMousePosition{};
+
+    /** === Show Flag 시스템 === */
+    EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled
+        | EEngineShowFlags::SF_BillboardText;
 };
 

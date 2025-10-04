@@ -56,9 +56,9 @@ UControlPanelWindow::UControlPanelWindow()
 	CameraControlWidget->Initialize();
 	AddWidget(CameraControlWidget);
 
-	UShowFlagWidget* ShowFlagWidget = NewObject<UShowFlagWidget>();
-	ShowFlagWidget->Initialize();
-	AddWidget(ShowFlagWidget);
+	//UShowFlagWidget* ShowFlagWidget = NewObject<UShowFlagWidget>();
+	//ShowFlagWidget->Initialize();
+	//AddWidget(ShowFlagWidget);
 }
 
 /**

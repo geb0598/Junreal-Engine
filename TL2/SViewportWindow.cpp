@@ -240,6 +240,57 @@ void SViewportWindow::RenderToolbar()
 			case 2: ViewportClient->SetViewModeIndex(EViewModeIndex::VMI_Wireframe); break;
 			}
 		}
+
+		// ShowFlags 콤보박스
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(70.0f);
+		if (ImGui::BeginCombo("##ShowFlags", "Show Flags"))
+		{
+			// Primitives
+			bool bPrimitivesEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives);
+			if (ImGui::Checkbox("Primitives", &bPrimitivesEnabled))
+			{
+				Viewport->ToggleShowFlag(EEngineShowFlags::SF_Primitives);
+			}
+
+			// Static Meshes
+			bool bStaticMeshesEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes);
+			if (ImGui::Checkbox("Static Meshes", &bStaticMeshesEnabled))
+			{
+				Viewport->ToggleShowFlag(EEngineShowFlags::SF_StaticMeshes);
+			}
+
+			// Grid
+			bool bGridEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Grid);
+			if (ImGui::Checkbox("Grid", &bGridEnabled))
+			{
+				Viewport->ToggleShowFlag(EEngineShowFlags::SF_Grid);
+			}
+
+			// Billboard Text
+			bool bTextEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText);
+			if (ImGui::Checkbox("Billboard Text", &bTextEnabled))
+			{
+				Viewport->ToggleShowFlag(EEngineShowFlags::SF_BillboardText);
+			}
+
+			// Bounding Boxes
+			bool bBoundsEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes);
+			if (ImGui::Checkbox("Bounding Boxes", &bBoundsEnabled))
+			{
+				Viewport->ToggleShowFlag(EEngineShowFlags::SF_BoundingBoxes);
+			}
+
+			//// Wireframe
+			//bool bWireframeEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Wireframe);
+			//if (ImGui::Checkbox("Wireframe", &bWireframeEnabled))
+			//{
+			//	Viewport->ToggleShowFlag(EEngineShowFlags::SF_Wireframe);
+			//}
+
+			ImGui::EndCombo();
+		}
+
 		// PIE Play/Stop 버튼
 		ImGui::SameLine();
 		UEngine* Engine = GetEngine();

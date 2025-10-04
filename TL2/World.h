@@ -6,7 +6,7 @@
 #include "Enums.h"
 #include"Engine.h"
 #include"Level.h"
-
+#include"Frustum.h"
 
 // Forward Declarations
 class UResourceManager;
@@ -25,6 +25,8 @@ class SViewportWindow;
 class UOctree;
 class FBVH;
 class ULevel;
+
+struct FFrustum;
 /**
  * UWorld
  * - 월드 단위의 액터/타임/매니저 관리 클래스
@@ -89,22 +91,14 @@ public:
 	EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }
 	void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
 
-	/** === Show Flag 시스템 === */
-	EEngineShowFlags GetShowFlags() const { return ShowFlags; }
-	void SetShowFlags(EEngineShowFlags InShowFlags) { ShowFlags = InShowFlags; }
-	void EnableShowFlag(EEngineShowFlags Flag) { ShowFlags |= Flag; }
-	void DisableShowFlag(EEngineShowFlags Flag) { ShowFlags &= ~Flag; }
-	void ToggleShowFlag(EEngineShowFlags Flag) { ShowFlags = HasShowFlag(ShowFlags, Flag) ? (ShowFlags & ~Flag) : (ShowFlags | Flag); }
-	bool IsShowFlagEnabled(EEngineShowFlags Flag) const { return HasShowFlag(ShowFlags, Flag); }
-
-
-
 	/** Generate unique name for actor based on type */
 	FString GenerateUniqueActorName(const FString& ActorType);
 
 	/** === 타임 / 틱 === */
 	virtual void Tick(float DeltaSeconds);
 	float GetTimeSeconds() const;
+
+	bool FrustumCullActors(const FFrustum& ViewFrustum, const AActor* Actor, int& FrustumCullCount);
 
 	/** === 렌더 === */
 	void Render();
@@ -170,10 +164,6 @@ private:
 
 	/** == 기즈모 == */
 	AGizmoActor* GizmoActor;
-
-	/** === Show Flag 시스템 === */
-	EEngineShowFlags ShowFlags = EEngineShowFlags::SF_DefaultEnabled
-		| EEngineShowFlags::SF_BillboardText;
 
 	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 
