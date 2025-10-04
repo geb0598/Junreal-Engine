@@ -103,6 +103,7 @@ public:
 	/** === 렌더 === */
 	void Render();
 	void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
+	void RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
 	//void GameRender(ACameraActor* Camera, FViewport* Viewport);
 
 	  /** === 필요한 엑터 게터 === */

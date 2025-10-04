@@ -349,6 +349,7 @@ void D3D11RHI::UpdateHighLightConstantBuffers(const uint32 InPicked, const FVect
         dataPtr->Gizmo = Gizmo;
         DeviceContext->Unmap(HighLightCB, 0);
         DeviceContext->VSSetConstantBuffers(2, 1, &HighLightCB); // b2 슬롯
+        DeviceContext->PSSetConstantBuffers(2, 1, &HighLightCB); // b2 슬롯 (Pixel Shader에도 바인딩)
     }
 }
 

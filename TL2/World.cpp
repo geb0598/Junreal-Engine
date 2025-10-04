@@ -251,13 +251,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     Renderer->BeginLineBatch();
     Renderer->SetViewModeType(ViewModeIndex);
-
-    // === Begin Line Batch for all actors ===
-    Renderer->BeginLineBatch();
-
-    // === Draw Actors with Show Flag checks ===
-    Renderer->SetViewModeType(ViewModeIndex);
-
   
         int AllActorCount = 0;
         int FrustumCullCount = 0;
@@ -283,19 +276,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             {
                 continue;
             }
-
             AllActorCount++;
-            // NOTE: GetWorldBoundFromCube 를 자식 전체를 감싸는 AABB로 교체해야 프로스텀 컬링이 정상 작동할듯
-             //또는 컴포넌트를 기준으 로프로스텀 컬링을 하도록 수정
-       
-
-            bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-            /*if (bIsSelected)
-                Renderer->OMSetDepthStencilState(EComparisonFunc::Always);*/
-            // 이렇게 하면, 같은 메시에 속한 정점끼리도 뒤에 있는게 앞에 그려지는 경우가 발생해, 이상하게 렌더링 됨.
-
-            Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-
             for (UActorComponent* Component : Actor->GetComponents())
             {
                 if (!Component)
@@ -325,16 +306,34 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
                 if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
                 {
-                    Renderer->SetViewModeType(ViewModeIndex);
+                    bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+
+                    //// 선택된 액터는 항상 앞에 보이도록 depth test를 Always로 설정
+                    //if (bIsSelected)//나중에 추가구현
+                    //{
+                    //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+                    //}
+
+                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
                     Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-                    //	Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+
+                    //// depth test 원래대로 복원
+                    //if (bIsSelected)
+                    //{
+                    //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+                    //}
                 }
             }
             Renderer->OMSetBlendState(false);
         }
-    
+    // 엔진 액터들 (그리드 등) 렌더링
+    RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
 
-    // 엔진 액터들 (그리드 등)
+    Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+}
+
+void UWorld::RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
+{
     for (AActor* EngineActor : EngineActors)
     {
         if (!EngineActor)
@@ -376,11 +375,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
         }
         Renderer->OMSetBlendState(false);
     }
-    //RenderSceneGraph();
-
-    Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
-
-    Renderer->UpdateHighLightConstantBuffer(false, rgb, 0, 0, 0, 0);
 }
 
 void UWorld::Tick(float DeltaSeconds)
@@ -473,8 +467,8 @@ bool UWorld::DestroyActor(AActor* Actor)
         UIManager.ResetPickedActor();
     }
 
-    // 배열에서 제거 시도
-   // Level에서 제거 시도
+    // 배열에서  제거 시도
+    // Level에서 제거 시도
     if (Level)
     {
         Level->RemoveActor(Actor);
