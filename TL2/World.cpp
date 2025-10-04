@@ -858,6 +858,295 @@ void UWorld::SaveScene(const FString& SceneName)
     FSceneLoader::Save(Primitives, CamPtr, SceneName);
 }
 
+void UWorld::SaveSceneV2(const FString& SceneName)
+{
+    FSceneData SceneData;
+    SceneData.Version = 2;
+    SceneData.NextUUID = UObject::PeekNextUUID();
+
+    // 카메라 데이터 채우기
+    if (MainCameraActor && MainCameraActor->GetCameraComponent())
+    {
+        UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
+        SceneData.Camera.Location = MainCameraActor->GetActorLocation();
+        SceneData.Camera.Rotation.X = 0.0f;
+        SceneData.Camera.Rotation.Y = MainCameraActor->GetCameraPitch();
+        SceneData.Camera.Rotation.Z = MainCameraActor->GetCameraYaw();
+        SceneData.Camera.FOV = Cam->GetFOV();
+        SceneData.Camera.NearClip = Cam->GetNearClip();
+        SceneData.Camera.FarClip = Cam->GetFarClip();
+    }
+
+    // Actor 및 Component 계층 수집
+    for (AActor* Actor : Level->GetActors())
+    {
+        if (!Actor) continue;
+
+        // Actor 데이터
+        FActorData ActorData;
+        ActorData.UUID = Actor->UUID;
+        ActorData.Name = Actor->GetName().ToString();
+
+        if (Cast<AStaticMeshActor>(Actor))
+            ActorData.Type = "StaticMeshActor";
+        else
+            ActorData.Type = "Actor";
+
+        if (Actor->GetRootComponent())
+            ActorData.RootComponentUUID = Actor->GetRootComponent()->UUID;
+
+        SceneData.Actors.push_back(ActorData);
+
+        // OwnedComponents 순회 (모든 컴포넌트 포함)
+        for (UActorComponent* ActorComp : Actor->GetComponents())
+        {
+            if (!ActorComp) continue;
+
+            // SceneComponent만 처리 (Transform 정보가 있는 컴포넌트)
+            USceneComponent* Comp = Cast<USceneComponent>(ActorComp);
+            if (!Comp) continue;
+
+            FComponentData CompData;
+            CompData.UUID = Comp->UUID;
+            CompData.OwnerActorUUID = Actor->UUID;
+
+            // 부모 컴포넌트 UUID (RootComponent면 0)
+            if (Comp->GetAttachParent())
+                CompData.ParentComponentUUID = Comp->GetAttachParent()->UUID;
+            else
+                CompData.ParentComponentUUID = 0;
+
+            // Transform
+            CompData.RelativeLocation = Comp->GetRelativeLocation();
+            CompData.RelativeRotation = Comp->GetRelativeRotation().ToEuler();
+            CompData.RelativeScale = Comp->GetRelativeScale();
+
+            // Type 및 Type별 속성
+            if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Comp))
+            {
+                CompData.Type = "StaticMeshComponent";
+                if (StaticMeshComponent->GetStaticMesh())
+                {
+                    CompData.StaticMesh = StaticMeshComponent->GetStaticMesh()->GetAssetPathFileName();
+                }
+                // TODO: Materials 수집
+            }
+            else if (Cast<UAABoundingBoxComponent>(Comp))
+            {
+                CompData.Type = "AABoundingBoxComponent";
+            }
+            else
+            {
+                CompData.Type = "SceneComponent";
+            }
+
+            SceneData.Components.push_back(CompData);
+        }
+    }
+
+    // Scene 디렉터리에 V2 포맷으로 저장
+    FSceneLoader::SaveV2(SceneData, SceneName);
+}
+
+void UWorld::LoadSceneV2(const FString& SceneName)
+{
+    namespace fs = std::filesystem;
+    fs::path path = fs::path("Scene") / SceneName;
+    if (path.extension().string() != ".Scene")
+    {
+        path.replace_extension(".Scene");
+    }
+
+    const FString FilePath = path.make_preferred().string();
+
+    // NextUUID 업데이트
+    uint32 LoadedNextUUID = 0;
+    if (FSceneLoader::TryReadNextUUID(FilePath, LoadedNextUUID))
+    {
+        if (LoadedNextUUID > UObject::PeekNextUUID())
+        {
+            UObject::SetNextUUID(LoadedNextUUID);
+        }
+    }
+
+    // 기존 씬 비우기
+    CreateNewScene();
+
+    // V2 데이터 로드
+    FSceneData SceneData = FSceneLoader::LoadV2(FilePath);
+
+    // 마우스 델타 초기화
+    const FVector2D CurrentMousePos = UInputManager::GetInstance().GetMousePosition();
+    UInputManager::GetInstance().SetLastMousePosition(CurrentMousePos);
+
+
+
+    if (MainCameraActor && MainCameraActor->GetCameraComponent())
+    {
+        UCameraComponent* Cam = MainCameraActor->GetCameraComponent();
+        MainCameraActor->SetActorLocation(SceneData.Camera.Location);
+        MainCameraActor->SetCameraPitch(SceneData.Camera.Rotation.Y);
+        MainCameraActor->SetCameraYaw(SceneData.Camera.Rotation.Z);
+
+        // 입력 경로와 동일한 방식으로 각도/회전 적용
+      // 매핑: Pitch = CamData.Rotation.Y, Yaw = CamData.Rotation.Z
+        MainCameraActor->SetAnglesImmediate(SceneData.Camera.Rotation.Y, SceneData.Camera.Rotation.Z);
+
+        // UIManager의 카메라 회전 상태도 동기화
+        UIManager.UpdateMouseRotation(SceneData.Camera.Rotation.Y, SceneData.Camera.Rotation.Z);
+
+        Cam->SetFOV(SceneData.Camera.FOV);
+        Cam->SetClipPlanes(SceneData.Camera.NearClip, SceneData.Camera.FarClip);
+
+        // UI 위젯에 현재 카메라 상태로 재동기화 요청
+        UIManager.SyncCameraControlFromCamera();
+      
+    }
+
+    // UUID → Object 매핑 테이블
+    TMap<uint32, AActor*> ActorMap;
+    TMap<uint32, USceneComponent*> ComponentMap;
+
+    // ========================================
+    // Pass 1: Actor 및 Component 생성
+    // ========================================
+    for (const FActorData& ActorData : SceneData.Actors)
+    {
+        AActor* NewActor = nullptr;
+
+        if (ActorData.Type == "StaticMeshActor")
+        {
+            NewActor = NewObject<AStaticMeshActor>();
+        }
+        else
+        {
+            NewActor = NewObject<AActor>();
+        }
+
+        if (!NewActor) continue;
+
+        NewActor->UUID = ActorData.UUID;
+        NewActor->SetName(ActorData.Name);
+        NewActor->SetWorld(this);
+
+        ActorMap.Add(ActorData.UUID, NewActor);
+    }
+
+    // Component 생성
+    for (const FComponentData& CompData : SceneData.Components)
+    {
+        USceneComponent* NewComp = nullptr;
+
+        if (CompData.Type == "StaticMeshComponent")
+        {
+            UStaticMeshComponent* SMC = NewObject<UStaticMeshComponent>();
+            if (!CompData.StaticMesh.empty())
+            {
+                SMC->SetStaticMesh(CompData.StaticMesh);
+            }
+            NewComp = SMC;
+        }
+        else if (CompData.Type == "AABoundingBoxComponent")
+        {
+            NewComp = NewObject<UAABoundingBoxComponent>();
+
+        }
+        else
+        {
+            NewComp = NewObject<USceneComponent>();
+        }
+
+        if (!NewComp) continue;
+
+        NewComp->UUID = CompData.UUID;
+        NewComp->SetRelativeLocation(CompData.RelativeLocation);
+        NewComp->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
+        NewComp->SetRelativeScale(CompData.RelativeScale);
+
+        // Owner Actor 설정
+        if (AActor** OwnerActor = ActorMap.Find(CompData.OwnerActorUUID))
+        {
+            NewComp->SetOwner(*OwnerActor);
+        }
+
+        ComponentMap.Add(CompData.UUID, NewComp);
+    }
+
+    // ========================================
+    // Pass 2: Actor-Component 연결 및 계층 구조 설정
+    // ========================================
+    for (const FActorData& ActorData : SceneData.Actors)
+    {
+        AActor** ActorPtr = ActorMap.Find(ActorData.UUID);
+        if (!ActorPtr) continue;
+
+        AActor* Actor = *ActorPtr;
+
+        // RootComponent 설정
+        if (USceneComponent** RootCompPtr = ComponentMap.Find(ActorData.RootComponentUUID))
+        {
+            Actor->RootComponent = *RootCompPtr;
+        }
+    }
+
+    // Component 부모-자식 관계 설정
+    for (const FComponentData& CompData : SceneData.Components)
+    {
+        USceneComponent** CompPtr = ComponentMap.Find(CompData.UUID);
+        if (!CompPtr) continue;
+
+        USceneComponent* Comp = *CompPtr;
+
+        // 부모 컴포넌트 연결 (ParentUUID가 0이 아니면)
+        if (CompData.ParentComponentUUID != 0)
+        {
+            if (USceneComponent** ParentPtr = ComponentMap.Find(CompData.ParentComponentUUID))
+            {
+                Comp->SetupAttachment(*ParentPtr, EAttachmentRule::KeepRelative);
+            }
+        }
+
+        // Actor의 OwnedComponents에 추가
+        if (AActor** OwnerActorPtr = ActorMap.Find(CompData.OwnerActorUUID))
+        {
+            (*OwnerActorPtr)->OwnedComponents.Add(Comp);
+        }
+    }
+
+    // Actor를 Level에 추가
+    for (auto& Pair : ActorMap)
+    {
+        AActor* Actor = Pair.second;
+        Level->AddActor(Actor);
+
+        // StaticMeshActor 전용 포인터 재설정
+        if (AStaticMeshActor* StaticMeshActor = Cast<AStaticMeshActor>(Actor))
+        {
+            StaticMeshActor->SetStaticMeshComponent( Cast<UStaticMeshComponent>(StaticMeshActor->RootComponent));
+
+            // CollisionComponent 찾기
+            for (UActorComponent* Comp : StaticMeshActor->OwnedComponents)
+            {
+                if (UAABoundingBoxComponent* BBoxComp = Cast<UAABoundingBoxComponent>(Comp))
+                {
+                    StaticMeshActor->CollisionComponent = BBoxComp;
+                    StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
+                    break;
+                }
+            }
+        }
+    }
+
+    // NextUUID 업데이트 (로드된 모든 UUID + 1)
+    uint32 MaxUUID = SceneData.NextUUID;
+    if (MaxUUID > UObject::PeekNextUUID())
+    {
+        UObject::SetNextUUID(MaxUUID);
+    }
+
+    UE_LOG("Scene V2 loaded successfully: %s", SceneName.c_str());
+}
+
 AGizmoActor* UWorld::GetGizmoActor()
 {
     return GizmoActor;

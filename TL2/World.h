@@ -77,8 +77,13 @@ public:
 	bool DestroyActor(AActor* Actor);
 
 	void CreateNewScene();
+	// Version 1 (Legacy)
 	void LoadScene(const FString& SceneName);
 	void SaveScene(const FString& SceneName);
+
+	// Version 2 (Component Hierarchy)
+	void LoadSceneV2(const FString& SceneName);
+	void SaveSceneV2(const FString& SceneName);
 	ACameraActor* GetCameraActor() { return MainCameraActor; }
 
 	EViewModeIndex GetViewModeIndex() { return ViewModeIndex; }

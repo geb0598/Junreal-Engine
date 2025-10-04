@@ -50,6 +50,17 @@ void USceneIOWidget::RenderWidget()
 
 void USceneIOWidget::RenderSaveLoadSection()
 {
+	// 버전 선택 체크박스
+	ImGui::Checkbox("Use V2 Format (Component Hierarchy)", &bUseV2Format);
+	ImGui::SameLine();
+	ImGui::TextDisabled("(?)");
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("V2: Saves component hierarchy\nV1: Legacy format (flat structure)");
+	}
+
+	ImGui::Spacing();
+
 	// 공용 씬 이름 입력 (Scene/Name.Scene 으로 강제 저장/로드)
 	ImGui::SetNextItemWidth(220);
 	ImGui::InputText("Scene Name", NewLevelNameBuffer, sizeof(NewLevelNameBuffer));
@@ -203,17 +214,26 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 
 		if (InFilePath.empty())
 		{
-			// Quick Save: 이름만 넘김. Scene 경로/확장자는 FSceneLoader::Save가 처리
-			CurrentWorld->SaveScene("QuickSave");
-			UE_LOG("SceneIO: Quick Save executed to Scene/QuickSave.Scene");
-			SetStatusMessage("Quick Save completed: Scene/QuickSave.Scene");
+			// Quick Save
+			if (bUseV2Format)
+			{
+				CurrentWorld->SaveSceneV2("QuickSave");
+				UE_LOG("SceneIO: Quick Save V2 executed to Scene/QuickSave.Scene");
+				SetStatusMessage("Quick Save V2 completed: Scene/QuickSave.Scene");
+			}
+			else
+			{
+				CurrentWorld->SaveScene("QuickSave");
+				UE_LOG("SceneIO: Quick Save V1 executed to Scene/QuickSave.Scene");
+				SetStatusMessage("Quick Save V1 completed: Scene/QuickSave.Scene");
+			}
 		}
 		else
 		{
 			// 파일 경로에서 베이스 이름만 추출하여 넘김
 			FString SceneName = InFilePath;
 			size_t LastSlash = SceneName.find_last_of("\\/");
-			if (LastSlash != std::string::npos) 
+			if (LastSlash != std::string::npos)
 			{
 				SceneName = SceneName.substr(LastSlash + 1);
 			}
@@ -222,9 +242,18 @@ void USceneIOWidget::SaveLevel(const FString& InFilePath)
 				if (LastDot != std::string::npos) SceneName = SceneName.substr(0, LastDot);
 			}
 
-			CurrentWorld->SaveScene(SceneName);
-			UE_LOG("SceneIO: Scene saved: %s", SceneName.c_str());
-			SetStatusMessage("Scene saved: Scene/" + SceneName + ".Scene");
+			if (bUseV2Format)
+			{
+				CurrentWorld->SaveSceneV2(SceneName);
+				UE_LOG("SceneIO: Scene V2 saved: %s", SceneName.c_str());
+				SetStatusMessage("Scene V2 saved: Scene/" + SceneName + ".Scene");
+			}
+			else
+			{
+				CurrentWorld->SaveScene(SceneName);
+				UE_LOG("SceneIO: Scene V1 saved: %s", SceneName.c_str());
+				SetStatusMessage("Scene V1 saved: Scene/" + SceneName + ".Scene");
+			}
 		}
 	}
 	catch (const std::exception& Exception)
@@ -281,11 +310,19 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 			// UObject::SetNextUUID(1); // 필요하면 활성화
 		}
 
-		// 2) 씬 로드 (World 내부에서 파일명은 SceneName + ".Scene"으로 접근)
-		CurrentWorld->LoadScene(SceneName);
-
-		UE_LOG("SceneIO: Scene loaded successfully: %s", SceneName.c_str());
-		SetStatusMessage("Scene loaded successfully: " + SceneName);
+		// 2) 씬 로드
+		if (bUseV2Format)
+		{
+			CurrentWorld->LoadSceneV2(SceneName);
+			UE_LOG("SceneIO: Scene V2 loaded successfully: %s", SceneName.c_str());
+			SetStatusMessage("Scene V2 loaded successfully: " + SceneName);
+		}
+		else
+		{
+			CurrentWorld->LoadScene(SceneName);
+			UE_LOG("SceneIO: Scene V1 loaded successfully: %s", SceneName.c_str());
+			SetStatusMessage("Scene V1 loaded successfully: " + SceneName);
+		}
 	}
 	catch (const std::exception& Exception)
 	{

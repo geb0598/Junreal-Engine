@@ -46,6 +46,9 @@ private:
 	FString StatusMessage;
 	float StatusMessageTimer;
 	bool bIsStatusError;
-	
+
+	// Scene format version
+	bool bUseV2Format = true;  // 기본값: Version 2 사용
+
 	static constexpr float STATUS_MESSAGE_DURATION = 3.0f;
 };
