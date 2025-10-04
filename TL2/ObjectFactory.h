@@ -14,9 +14,13 @@ namespace ObjectFactory
 
     // Registry 접근자
     TMap<UClass*, ConstructFunc>& GetRegistry();
+    TMap<FString, UClass*>& GetNameRegistry();
 
     // 클래스 등록
     void RegisterClassType(UClass* Class, ConstructFunc Func);
+
+    // 클래스 이름으로 UClass 찾기
+    UClass* FindClassByName(const FString& ClassName);
 
     // 1) 순수 생성 (GUObjectArray 등록 X)
     UObject* ConstructObject(UClass* Class);
@@ -24,6 +28,7 @@ namespace ObjectFactory
     // 2) 생성 + GUObjectArray 자동 등록
     UObject* NewObject(UClass* Class);
     UObject* NewObject(UObject* Outer, UClass* Class);
+    UObject* NewObject(const FString& ClassName);
 
     // 3) 템플릿 버전 (타입 안전)
     template<class T>

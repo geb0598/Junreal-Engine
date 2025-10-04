@@ -886,11 +886,7 @@ void UWorld::SaveSceneV2(const FString& SceneName)
         FActorData ActorData;
         ActorData.UUID = Actor->UUID;
         ActorData.Name = Actor->GetName().ToString();
-
-        if (Cast<AStaticMeshActor>(Actor))
-            ActorData.Type = "StaticMeshActor";
-        else
-            ActorData.Type = "Actor";
+        ActorData.Type = Actor->GetClass()->Name;
 
         if (Actor->GetRootComponent())
             ActorData.RootComponentUUID = Actor->GetRootComponent()->UUID;
@@ -921,23 +917,22 @@ void UWorld::SaveSceneV2(const FString& SceneName)
             CompData.RelativeRotation = Comp->GetRelativeRotation().ToEuler();
             CompData.RelativeScale = Comp->GetRelativeScale();
 
-            // Type 및 Type별 속성
+            // Type 자동 가져오기
+            CompData.Type = Comp->GetClass()->Name;
+
+            // Type별 속성
             if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Comp))
             {
-                CompData.Type = "StaticMeshComponent";
                 if (StaticMeshComponent->GetStaticMesh())
                 {
                     CompData.StaticMesh = StaticMeshComponent->GetStaticMesh()->GetAssetPathFileName();
+                    UE_LOG("SaveScene: StaticMesh saved: %s", CompData.StaticMesh.c_str());
+                }
+                else
+                {
+                    UE_LOG("SaveScene: StaticMeshComponent has no StaticMesh assigned");
                 }
                 // TODO: Materials 수집
-            }
-            else if (Cast<UAABoundingBoxComponent>(Comp))
-            {
-                CompData.Type = "AABoundingBoxComponent";
-            }
-            else
-            {
-                CompData.Type = "SceneComponent";
             }
 
             SceneData.Components.push_back(CompData);
@@ -1012,18 +1007,13 @@ void UWorld::LoadSceneV2(const FString& SceneName)
     // ========================================
     for (const FActorData& ActorData : SceneData.Actors)
     {
-        AActor* NewActor = nullptr;
+        AActor* NewActor = Cast<AActor>(NewObject(ActorData.Type));
 
-        if (ActorData.Type == "StaticMeshActor")
+        if (!NewActor)
         {
-            NewActor = NewObject<AStaticMeshActor>();
+            UE_LOG("Failed to create Actor: %s", ActorData.Type.c_str());
+            continue;
         }
-        else
-        {
-            NewActor = NewObject<AActor>();
-        }
-
-        if (!NewActor) continue;
 
         NewActor->UUID = ActorData.UUID;
         NewActor->SetName(ActorData.Name);
@@ -1035,33 +1025,28 @@ void UWorld::LoadSceneV2(const FString& SceneName)
     // Component 생성
     for (const FComponentData& CompData : SceneData.Components)
     {
-        USceneComponent* NewComp = nullptr;
+        USceneComponent* NewComp = Cast<USceneComponent>(NewObject(CompData.Type));
 
-        if (CompData.Type == "StaticMeshComponent")
+        if (!NewComp)
         {
-            UStaticMeshComponent* SMC = NewObject<UStaticMeshComponent>();
-            if (!CompData.StaticMesh.empty())
-            {
-                SMC->SetStaticMesh(CompData.StaticMesh);
-            }
-            NewComp = SMC;
+            UE_LOG("Failed to create Component: %s", CompData.Type.c_str());
+            continue;
         }
-        else if (CompData.Type == "AABoundingBoxComponent")
-        {
-            NewComp = NewObject<UAABoundingBoxComponent>();
-
-        }
-        else
-        {
-            NewComp = NewObject<USceneComponent>();
-        }
-
-        if (!NewComp) continue;
 
         NewComp->UUID = CompData.UUID;
         NewComp->SetRelativeLocation(CompData.RelativeLocation);
         NewComp->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
         NewComp->SetRelativeScale(CompData.RelativeScale);
+
+        // Type별 속성 복원
+        if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(NewComp))
+        {
+            if (!CompData.StaticMesh.empty())
+            {
+                SMC->SetStaticMesh(CompData.StaticMesh);
+            }
+            // TODO: Materials 복원
+        }
 
         // Owner Actor 설정
         if (AActor** OwnerActor = ActorMap.Find(CompData.OwnerActorUUID))

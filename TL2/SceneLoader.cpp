@@ -275,7 +275,7 @@ void FSceneLoader::SaveV2(const FSceneData& SceneData, const FString& SceneName)
         writeVec3("RelativeScale", Comp.RelativeScale, 6);
 
         // Type별 속성
-        if (Comp.Type == "StaticMeshComponent" && !Comp.StaticMesh.empty())
+        if (Comp.Type.find("StaticMeshComponent") != std::string::npos && !Comp.StaticMesh.empty())
         {
             oss << ",\n";
             FString AssetPath = NormalizePath(Comp.StaticMesh);

@@ -12,9 +12,39 @@ namespace ObjectFactory
         return Registry;
     }
 
+    TMap<FString, UClass*>& GetNameRegistry()
+    {
+        static TMap<FString, UClass*> NameRegistry;
+        return NameRegistry;
+    }
+
     void RegisterClassType(UClass* Class, ConstructFunc Func)
     {
         GetRegistry()[Class] = std::move(Func);
+        // 클래스 이름으로도 등록
+        if (Class && Class->Name)
+        {
+            GetNameRegistry()[Class->Name] = Class;
+        }
+    }
+
+    UClass* FindClassByName(const FString& ClassName)
+    {
+        auto& nameReg = GetNameRegistry();
+        auto it = nameReg.find(ClassName);
+        if (it == nameReg.end()) return nullptr;
+        return it->second;
+    }
+
+    UObject* NewObject(const FString& ClassName)
+    {
+        UClass* Class = FindClassByName(ClassName);
+        if (!Class)
+        {
+            UE_LOG("ObjectFactory: Class not found: %s", ClassName.c_str());
+            return nullptr;
+        }
+        return NewObject(Class);
     }
 
     UObject* ConstructObject(UClass* Class)
