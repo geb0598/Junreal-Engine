@@ -84,6 +84,9 @@ public:
 protected:
     void UpdateRelativeTransform();
 
+    // Duplicate 헬퍼: 공통 속성 복사 (Transform, AttachChildren)
+    void CopyCommonProperties(USceneComponent* Target);
+
 protected:
     // [PIE] 값 복사
     FVector RelativeLocation{ 0,0,0 };

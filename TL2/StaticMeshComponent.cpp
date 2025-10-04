@@ -102,29 +102,22 @@ void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, c
 
 UObject* UStaticMeshComponent::Duplicate()
 {
-    UStaticMeshComponent* DuplicatedComponent = NewObject<UStaticMeshComponent>(*this);
+    UStaticMeshComponent* DuplicatedComponent = Cast<UStaticMeshComponent>(NewObject(GetClass()));
 
-    // Transform 속성 복사 (USceneComponent)
-    DuplicatedComponent->RelativeLocation = this->RelativeLocation;
-    DuplicatedComponent->RelativeRotation = this->RelativeRotation;
-    DuplicatedComponent->RelativeScale = this->RelativeScale;
-    DuplicatedComponent->UpdateRelativeTransform();
+    // 공통 속성 복사 (Transform, AttachChildren) - 부모 헬퍼 사용
+    CopyCommonProperties(DuplicatedComponent);
 
-    // Material 속성 복사 (UPrimitiveComponent)
+    // StaticMeshComponent 전용 속성 복사
     DuplicatedComponent->Material = this->Material;
-
-    // StaticMeshComponent 속성 복사
     DuplicatedComponent->StaticMesh = this->StaticMesh;
     DuplicatedComponent->MaterailSlots = this->MaterailSlots;
 
     DuplicatedComponent->DuplicateSubObjects();
-
     return DuplicatedComponent;
 }
 
 void UStaticMeshComponent::DuplicateSubObjects()
 {
-    // 부모의 깊은 복사 수행
+    // 부모의 깊은 복사 수행 (AttachChildren 재귀 복제)
     Super_t::DuplicateSubObjects();
-
 }

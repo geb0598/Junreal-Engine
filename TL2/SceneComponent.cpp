@@ -259,16 +259,30 @@ void USceneComponent::UpdateRelativeTransform()
 
 // Duplicate function
 
+void USceneComponent::CopyCommonProperties(USceneComponent* Target)
+{
+    if (!Target) return;
+
+    // Transform 속성 복사 (모든 SceneComponent 공통)
+    Target->RelativeLocation = this->RelativeLocation;
+    Target->RelativeRotation = this->RelativeRotation;
+    Target->RelativeScale = this->RelativeScale;
+    Target->UpdateRelativeTransform();
+
+    // 원본(this)의 자식 정보를 임시로 복사 (생성자가 초기화했으므로)
+    // DuplicateSubObjects에서 이를 사용하여 자식들을 재귀 복제
+    Target->AttachChildren = this->AttachChildren;
+}
+
 UObject* USceneComponent::Duplicate()
 {
-    USceneComponent* DuplicatedComponent = NewObject<USceneComponent>(*this);
+    // 올바른 타입으로 생성 (자식 클래스 포함)
+    USceneComponent* DuplicatedComponent = Cast<USceneComponent>(NewObject(GetClass()));
 
-    // Transform 속성 복사
-    DuplicatedComponent->RelativeLocation = this->RelativeLocation;
-    DuplicatedComponent->RelativeRotation = this->RelativeRotation;
-    DuplicatedComponent->RelativeScale = this->RelativeScale;
-    DuplicatedComponent->UpdateRelativeTransform();
+    // 공통 속성 복사
+    CopyCommonProperties(DuplicatedComponent);
 
+    // 자식 클래스별 추가 속성 복사 및 계층 구조 복제
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;
@@ -281,7 +295,8 @@ UObject* USceneComponent::Duplicate()
 void USceneComponent::DuplicateSubObjects()
 {
     Super_t::DuplicateSubObjects();
-    
+
+    // AttachChildren을 재귀적으로 복제
     TArray<USceneComponent*> DuplicatedChildren;
     for (USceneComponent* Component : AttachChildren)
     {

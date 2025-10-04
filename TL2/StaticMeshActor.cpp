@@ -62,26 +62,37 @@ void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
 
 UObject* AStaticMeshActor::Duplicate()
 {
+    // 원본(this)의 컴포넌트들 저장
+    USceneComponent* OriginalRoot = this->RootComponent;
+
+    // 얕은 복사 수행 (생성자 실행됨 - StaticMeshComponent, CollisionComponent 생성)
     AStaticMeshActor* DuplicatedActor = NewObject<AStaticMeshActor>(*this);
 
-    // 생성자가 빈 컴포넌트를 만들었으므로, 원본의 속성을 복사
-    if (this->StaticMeshComponent && DuplicatedActor->StaticMeshComponent)
+    // 생성자가 만든 컴포넌트들 삭제
+    if (DuplicatedActor->StaticMeshComponent)
     {
-        UStaticMeshComponent* SrcComp = this->StaticMeshComponent;
-        UStaticMeshComponent* DstComp = DuplicatedActor->StaticMeshComponent;
-
-        // Transform 복사
-        DstComp->SetRelativeLocation(SrcComp->GetRelativeLocation());
-        DstComp->SetRelativeRotation(SrcComp->GetRelativeRotation());
-        DstComp->SetRelativeScale(SrcComp->GetRelativeScale());
-
-        // StaticMesh 복사 (SetStaticMesh는 내부적으로 Material도 설정)
-        if (SrcComp->GetStaticMesh())
-        {
-            DstComp->SetStaticMesh(SrcComp->GetStaticMesh()->GetAssetPathFileName());
-        }
+        DuplicatedActor->OwnedComponents.Remove(DuplicatedActor->StaticMeshComponent);
+        ObjectFactory::DeleteObject(DuplicatedActor->StaticMeshComponent);
+        DuplicatedActor->StaticMeshComponent = nullptr;
     }
 
+    if (DuplicatedActor->CollisionComponent)
+    {
+        DuplicatedActor->OwnedComponents.Remove(DuplicatedActor->CollisionComponent);
+        ObjectFactory::DeleteObject(DuplicatedActor->CollisionComponent);
+        DuplicatedActor->CollisionComponent = nullptr;
+    }
+
+    DuplicatedActor->RootComponent = nullptr;
+    DuplicatedActor->OwnedComponents.clear();
+
+    // 원본의 RootComponent(StaticMeshComponent) 복제
+    if (OriginalRoot)
+    {
+        DuplicatedActor->RootComponent = Cast<USceneComponent>(OriginalRoot->Duplicate());
+    }
+
+    // OwnedComponents 재구성 및 타입별 포인터 재설정
     DuplicatedActor->DuplicateSubObjects();
 
     return DuplicatedActor;
@@ -89,16 +100,21 @@ UObject* AStaticMeshActor::Duplicate()
 
 void AStaticMeshActor::DuplicateSubObjects()
 {
+    // Duplicate()에서 이미 RootComponent를 복제했으므로
+    // 부모 클래스가 OwnedComponents를 재구성
     Super_t::DuplicateSubObjects();
-    if (!RootComponent)
-    {
-        UE_LOG("AStaticMeshActor: DuplicateSubObjects 실패\n");
-        return;
-    }
 
-    if (UStaticMeshComponent* Component = Cast<UStaticMeshComponent>(RootComponent))
+    // 타입별 포인터 재설정
+    StaticMeshComponent = Cast<UStaticMeshComponent>(RootComponent);
+
+    // CollisionComponent 찾기
+    for (UActorComponent* Comp : OwnedComponents)
     {
-        StaticMeshComponent = Component;
+        if (UAABoundingBoxComponent* BBoxComp = Cast<UAABoundingBoxComponent>(Comp))
+        {
+            CollisionComponent = BBoxComp;
+            break;
+        }
     }
 }
 

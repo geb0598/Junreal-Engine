@@ -275,10 +275,31 @@ bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
 
 UObject* AActor::Duplicate()
 {
-    AActor* DuplicatedComponent = NewObject<AActor>(*this);
-    DuplicatedComponent->DuplicateSubObjects();
+    // 원본(this)의 RootComponent 저장
+    USceneComponent* OriginalRoot = this->RootComponent;
 
-    return DuplicatedComponent;
+    // 얕은 복사 수행 (생성자 실행됨)
+    AActor* DuplicateActor = NewObject<AActor>(*this);
+
+    // 생성자가 만든 RootComponent 삭제
+    if (DuplicateActor->RootComponent)
+    {
+        DuplicateActor->OwnedComponents.Remove(DuplicateActor->RootComponent);
+        ObjectFactory::DeleteObject(DuplicateActor->RootComponent);
+        DuplicateActor->RootComponent = nullptr;
+    }
+    DuplicateActor->OwnedComponents.clear();
+
+    // 원본의 RootComponent 복제
+    if (OriginalRoot)
+    {
+        DuplicateActor->RootComponent = Cast<USceneComponent>(OriginalRoot->Duplicate());
+    }
+
+    // OwnedComponents 재구성
+    DuplicateActor->DuplicateSubObjects();
+
+    return DuplicateActor;
 }
 
 /**
@@ -289,24 +310,23 @@ void AActor::DuplicateSubObjects()
 {
     Super_t::DuplicateSubObjects();
 
+    // Duplicate()에서 이미 RootComponent를 복제했으므로
+    // 여기서는 OwnedComponents만 재구성
     if (RootComponent)
     {
-        RootComponent = Cast<USceneComponent>(RootComponent->Duplicate());
-    }
-    OwnedComponents.clear();
-
-    TQueue<USceneComponent*> Queue;
-    Queue.Enqueue(RootComponent);
-    while (Queue.size() > 0)
-    {
-        USceneComponent* Component = Queue.back();
-        Queue.pop();
-        Component->SetOwner(this); // 복사된 Actor를 수동 설정
-        OwnedComponents.Add(Component);
-
-        for (USceneComponent* Child : Component->GetAttachChildren())
+        TQueue<USceneComponent*> Queue;
+        Queue.Enqueue(RootComponent);
+        while (Queue.size() > 0)
         {
-            Queue.Enqueue(Child);
+            USceneComponent* Component = Queue.back();
+            Queue.pop();
+            Component->SetOwner(this);
+            OwnedComponents.Add(Component);
+
+            for (USceneComponent* Child : Component->GetAttachChildren())
+            {
+                Queue.Enqueue(Child);
+            }
         }
     }
 
