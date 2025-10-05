@@ -59,6 +59,10 @@ void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMat
     }
 }
 
+void UAABoundingBoxComponent::TickComponent(float DeltaTime)
+{
+}
+
 FBound UAABoundingBoxComponent::GetWorldBoundFromCube()
 {
     auto corners = GetLocalCorners();
@@ -172,6 +176,26 @@ TArray<FVector4> UAABoundingBoxComponent::GetLocalCorners() const
     };
 }
 
+UObject* UAABoundingBoxComponent::Duplicate()
+{
+    // 부모의 Duplicate 호출 (얕은 복사)
+    UAABoundingBoxComponent* DuplicatedComponent = NewObject<UAABoundingBoxComponent>(*this);
+
+    // AABoundingBoxComponent 고유 속성 복사
+    DuplicatedComponent->Bound = this->Bound;
+    DuplicatedComponent->LocalMin = this->LocalMin;
+    DuplicatedComponent->LocalMax = this->LocalMax;
+    DuplicatedComponent->LineColor = this->LineColor;
+    DuplicatedComponent->PrimitiveType = this->PrimitiveType;
+    DuplicatedComponent->LastWorldMat = this->LastWorldMat;
+    DuplicatedComponent->WorldBound = this->WorldBound;
+
+    // 자식 컴포넌트 복제
+    DuplicatedComponent->DuplicateSubObjects();
+
+    return DuplicatedComponent;
+}
+
 void UAABoundingBoxComponent::CreateLineData(
     const FVector& Min, const FVector& Max,
     OUT TArray<FVector>& Start,
@@ -189,7 +213,7 @@ void UAABoundingBoxComponent::CreateLineData(
     const FVector v7(Min.X, Max.Y, Max.Z);
 
     // 선 색상 정의
-  
+
 
     // --- 아래쪽 면 ---
     Start.Add(v0); End.Add(v1); Color.Add(LineColor);

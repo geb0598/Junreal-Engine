@@ -9,6 +9,7 @@ public:
     UShapeComponent() = default;
     virtual ~UShapeComponent() = default;
 
+    void TickComponent(float DeltaTime) override {};
     // 충돌 검사 시 재정의
     virtual bool IntersectsRay(const FRay& Ray) const { return false; }
 

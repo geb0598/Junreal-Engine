@@ -7,6 +7,9 @@
 #include "FViewportClient.h"
 #include"SViewportWindow.h"
 #include"SMultiViewportWindow.h"
+#include "EditorClipboard.h"
+#include "UI/UIManager.h"
+#include "GizmoActor.h"
 UEditorEngine::UEditorEngine()
 {
 }
@@ -52,6 +55,9 @@ void UEditorEngine::Tick(float DeltaSeconds)
                 World->Tick(DeltaSeconds);
             }
         }
+
+        // 에디터 전용 단축키 처리 (PIE 중이 아닐 때만)
+        ProcessEditorShortcuts();
     }
 }
 
@@ -163,6 +169,67 @@ void UEditorEngine::EndPIE()
         {
             WorldContexts.erase(WorldContexts.begin() + i);
             break;
+        }
+    }
+}
+
+void UEditorEngine::ProcessEditorShortcuts()
+{
+    UInputManager& InputManager = UInputManager::GetInstance();
+
+    // Ctrl 키가 눌려있는지 확인
+    bool bCtrlDown = InputManager.IsKeyDown(VK_CONTROL);
+
+    if (bCtrlDown)
+    {
+        // Ctrl+C: Copy (이번 프레임에 처음 눌렸을 때만)
+        if (InputManager.IsKeyPressed('C'))  // VK 'C' = 0x43
+        {
+            TArray<AActor*> SelectedActors = USelectionManager::GetInstance().GetSelectedActors();
+            if (!SelectedActors.empty())
+            {
+                UEditorClipboard::GetInstance().Copy(SelectedActors);
+            }
+            else
+            {
+                UE_LOG("EditorEngine: No actors selected to copy");
+            }
+        }
+        // Ctrl+V: Paste
+        else if (InputManager.IsKeyPressed('V'))  // VK 'V' = 0x56
+        {
+            if (UEditorClipboard::GetInstance().HasCopiedActors())
+            {
+                UWorld* EditorWorld = GetWorld(EWorldType::Editor);
+                if (!EditorWorld) return;
+
+                TArray<AActor*> PastedActors = UEditorClipboard::GetInstance().Paste(EditorWorld);
+
+                // 붙여넣은 액터들을 선택
+                if (!PastedActors.empty())
+                {
+                    USelectionManager::GetInstance().ClearSelection();
+                    for (AActor* Actor : PastedActors)
+                    {
+                        USelectionManager::GetInstance().SelectActor(Actor);
+                    }
+
+                    // 첫 번째 액터를 Gizmo 타겟으로 설정
+                    AGizmoActor* GizmoActor = EditorWorld->GetGizmoActor();
+                    if (GizmoActor && !PastedActors.empty())
+                    {
+                        GizmoActor->SetTargetActor(PastedActors[0]);
+                        GizmoActor->SetActorLocation(PastedActors[0]->GetActorLocation());
+                    }
+
+                    // UI 업데이트
+                    UUIManager::GetInstance().SetPickedActor(PastedActors[0]);
+                }
+            }
+            else
+            {
+                UE_LOG("EditorEngine: Nothing to paste");
+            }
         }
     }
 }

@@ -272,11 +272,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			PrevTime = CurrTime;
 
 
-			// 이제 Tick 호출
-			GetEngine()->Tick(DeltaSeconds);
-			GetEngine()->Render();
-	
-			// 처리할 메시지가 더 이상 없을때 까지 수행
+			// 입력 업데이트 (이전 프레임 상태 저장)
+			InputMgr.Update();
+
+			// 처리할 메시지가 더 이상 없을때 까지 수행 (새 입력 수집)
 			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				TranslateMessage(&msg);
@@ -288,6 +287,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					break;
 				}
 			}
+
+			// Tick 및 Render (입력 처리)
+			GetEngine()->Tick(DeltaSeconds);
+			GetEngine()->Render();
 
 			if (InputMgr.IsKeyPressed(VK_ESCAPE))
 			{

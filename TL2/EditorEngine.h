@@ -15,6 +15,9 @@ public:
     void StartPIE();
     void EndPIE();
     bool GetPIEShutdownRequested() { return bPIEShutdownRequested; };
+
+    // 에디터 전용 단축키 처리 (Ctrl+C/V 등)
+    void ProcessEditorShortcuts();
 protected:
     ~UEditorEngine();
 private:

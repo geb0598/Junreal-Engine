@@ -156,7 +156,7 @@ public:
     void SetFromVertices(const TArray<FNormalVertex>& Verts);
     void SetMinMax(const FBound& Bound);
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
-
+    void TickComponent(float DeltaTime) override;
     // 월드 좌표계에서의 AABB 반환
     FBound GetWorldBoundFromCube();
     FBound GetWorldBoundFromSphere() const;
@@ -169,6 +169,10 @@ public:
 
     void SetPrimitiveType(EPrimitiveType InType) { PrimitiveType = InType; }
     void SetLineColor(FVector4 InLineColor) { LineColor = InLineColor; };
+
+    // Duplicate
+    UObject* Duplicate() override;
+
 private:
     void CreateLineData(
         const FVector& Min, const FVector& Max,

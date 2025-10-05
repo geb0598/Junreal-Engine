@@ -17,9 +17,27 @@
 #include "Frustum.h"
 #include "Octree.h"
 #include "BVH.h"
+#include"UEContainer.h"
+#include"StaticMeshActor.h"
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
+
+static inline FString GetBaseNameNoExt(const FString& Path)
+{
+    const size_t sep = Path.find_last_of("/\\");
+    const size_t start = (sep == FString::npos) ? 0 : sep + 1;
+
+    const FString ext = ".obj";
+    size_t end = Path.size();
+    if (end >= ext.size() && Path.compare(end - ext.size(), ext.size(), ext) == 0)
+    {
+        end -= ext.size();
+    }
+    if (start <= end) return Path.substr(start, end - start);
+    return Path;
+}
+
 
 UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
                    , UIManager(UUIManager::GetInstance())
@@ -415,7 +433,7 @@ void UWorld::Tick(float DeltaSeconds)
         MultiViewport->OnUpdate(DeltaSeconds);
     }
 
-    InputManager.Update();
+    //InputManager.Update();
     UIManager.Update(DeltaSeconds);
 }
 
@@ -1231,5 +1249,20 @@ void UWorld::CleanupWorld()
 void UWorld::SpawnActor(AActor* InActor)
 {
     InActor->SetWorld(this);
+  
+    for(UActorComponent* Component : InActor->GetComponents())
+    {
+        if (UStaticMeshComponent* ActorComp = Cast<UStaticMeshComponent>(Component))
+        {
+            FString ActorName = GenerateUniqueActorName(
+                GetBaseNameNoExt(ActorComp->GetStaticMesh()->GetAssetPathFileName())
+            );
+            InActor->SetName(ActorName);
+        }
+        //if (UAABoundingBoxComponent* CollisionComponent = Cast<UAABoundingBoxComponent>(Component)) {
+        //    InActor->CollisionComponent = CollisionComponent;
+        //}
+	}
+   
     Level->GetActors().Add(InActor);
 }

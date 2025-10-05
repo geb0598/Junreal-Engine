@@ -334,6 +334,7 @@ bool UInputManager::IsKeyDown(int KeyCode) const
 
 bool UInputManager::IsKeyPressed(int KeyCode) const
 {
+    
     if (KeyCode < 0 || KeyCode >= 256) return false;
     return KeyStates[KeyCode] && !PreviousKeyStates[KeyCode];
 }
