@@ -318,7 +318,7 @@ void AActor::DuplicateSubObjects()
         Queue.Enqueue(RootComponent);
         while (Queue.size() > 0)
         {
-            USceneComponent* Component = Queue.back();
+            USceneComponent* Component = Queue.front();
             Queue.pop();
             Component->SetOwner(this);
             OwnedComponents.Add(Component);

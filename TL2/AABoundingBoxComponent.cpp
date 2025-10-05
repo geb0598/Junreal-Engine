@@ -47,8 +47,8 @@ void UAABoundingBoxComponent::SetMinMax(const FBound& Bound)
 
 void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
-    if (USelectionManager::GetInstance().GetSelectedActor() == GetOwner())
-    {
+  //  if (USelectionManager::GetInstance().GetSelectedActor() == GetOwner())
+    //{
         TArray<FVector> Start;
         TArray<FVector> End;
         TArray<FVector4> Color;
@@ -56,7 +56,7 @@ void UAABoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMat
         Bound = GetWorldBoundFromCube();
         CreateLineData(Bound.Min, Bound.Max, Start, End, Color);
         Renderer->AddLines(Start, End, Color);
-    }
+   // }
 }
 
 void UAABoundingBoxComponent::TickComponent(float DeltaTime)
