@@ -1250,19 +1250,14 @@ void UWorld::SpawnActor(AActor* InActor)
 {
     InActor->SetWorld(this);
   
-    for(UActorComponent* Component : InActor->GetComponents())
-    {
-        if (UStaticMeshComponent* ActorComp = Cast<UStaticMeshComponent>(Component))
+ 
+        if (UStaticMeshComponent* ActorComp = Cast<UStaticMeshComponent>(InActor->RootComponent))
         {
             FString ActorName = GenerateUniqueActorName(
                 GetBaseNameNoExt(ActorComp->GetStaticMesh()->GetAssetPathFileName())
             );
             InActor->SetName(ActorName);
         }
-        //if (UAABoundingBoxComponent* CollisionComponent = Cast<UAABoundingBoxComponent>(Component)) {
-        //    InActor->CollisionComponent = CollisionComponent;
-        //}
-	}
    
     Level->GetActors().Add(InActor);
 }

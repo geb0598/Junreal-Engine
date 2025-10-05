@@ -18,6 +18,9 @@ public:
 
     // 에디터 전용 단축키 처리 (Ctrl+C/V 등)
     void ProcessEditorShortcuts();
+
+    // Alt+드래그 복제 처리
+    void ProcessAltDragDuplication();
 protected:
     ~UEditorEngine();
 private:
@@ -26,7 +29,8 @@ private:
     UWorld* PendingDeletePIEWorld = nullptr;
     bool bPIEShutdownRequested = false;
 
-
+    // Alt+드래그 복제 상태
+    bool bAltDragDuplicationHandled = false;
 
 };
 

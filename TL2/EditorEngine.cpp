@@ -58,6 +58,9 @@ void UEditorEngine::Tick(float DeltaSeconds)
 
         // 에디터 전용 단축키 처리 (PIE 중이 아닐 때만)
         ProcessEditorShortcuts();
+
+        // Alt+드래그 복제 처리
+        ProcessAltDragDuplication();
     }
 }
 
@@ -231,6 +234,60 @@ void UEditorEngine::ProcessEditorShortcuts()
                 UE_LOG("EditorEngine: Nothing to paste");
             }
         }
+    }
+}
+
+void UEditorEngine::ProcessAltDragDuplication()
+{
+    UInputManager& InputManager = UInputManager::GetInstance();
+    UWorld* EditorWorld = GetWorld(EWorldType::Editor);
+    if (!EditorWorld) return;
+
+    AGizmoActor* GizmoActor = EditorWorld->GetGizmoActor();
+    if (!GizmoActor) return;
+
+    // Alt 키가 눌려있고, 마우스 왼쪽 버튼이 눌려있고, 기즈모가 드래그 중인지 확인
+    bool bAltDown = InputManager.IsKeyDown(VK_MENU);
+    bool bLeftButtonDown = InputManager.IsMouseButtonDown(LeftButton);
+    bool bGizmoDragging = GizmoActor->GetbIsDragging();
+
+    // Alt+드래그가 시작되었을 때 (드래그 중이고 아직 복제하지 않았을 때)
+    if (bAltDown && bLeftButtonDown && bGizmoDragging && !bAltDragDuplicationHandled)
+    {
+        AActor* TargetActor = GizmoActor->GetTargetActor();
+        if (TargetActor)
+        {
+            // 액터 복제
+            AActor* DuplicatedActor = Cast<AActor>(TargetActor->Duplicate());
+
+            if (DuplicatedActor)
+            {
+                // 월드에 스폰
+                EditorWorld->SpawnActor(DuplicatedActor);
+
+                // 복제된 액터를 선택
+                USelectionManager::GetInstance().ClearSelection();
+                USelectionManager::GetInstance().SelectActor(DuplicatedActor);
+
+                // 기즈모 타겟을 복제된 액터로 변경
+                GizmoActor->SetTargetActor(DuplicatedActor);
+                GizmoActor->SetActorLocation(DuplicatedActor->GetActorLocation());
+
+                // UI 업데이트
+                UUIManager::GetInstance().SetPickedActor(DuplicatedActor);
+
+                // 복제 처리 완료 표시
+                bAltDragDuplicationHandled = true;
+
+                UE_LOG("EditorEngine: Alt+Drag duplication completed");
+            }
+        }
+    }
+
+    // 마우스 버튼이 떼어지면 복제 상태 리셋
+    if (!bLeftButtonDown)
+    {
+        bAltDragDuplicationHandled = false;
     }
 }
 
