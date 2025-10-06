@@ -130,4 +130,12 @@ private:
     // Delayed refresh (to avoid iterator invalidation during rendering)
     bool bNeedRefreshNextFrame = false;
     void RequestDelayedRefresh() { bNeedRefreshNextFrame = true; }
+
+    // Camera animation for focus
+    bool bCameraAnimating = false;
+    FVector CameraAnimStartPos;
+    FVector CameraAnimTargetPos;
+    float CameraAnimTime = 0.0f;
+    float CameraAnimDuration = 0.5f; // 0.5 seconds
+    void UpdateCameraAnimation(float DeltaTime);
 };

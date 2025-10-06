@@ -68,7 +68,7 @@ private:
     // 애니메이션 관련 변수
     bool bIsAnimating = false;
     float AnimationProgress = 0.0f;
-    float AnimationDuration = 0.3f; // 애니메이션 지속 시간 (초)
+    float AnimationDuration = 0.5f; // 애니메이션 지속 시간 (초)
 
     // 애니메이션 방향 (true: 4분할->전체화면, false: 전체화면->4분할)
     bool bExpandingToSingle = false;

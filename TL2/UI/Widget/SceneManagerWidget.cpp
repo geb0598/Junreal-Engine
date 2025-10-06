@@ -44,6 +44,10 @@ void USceneManagerWidget::Update()
         bNeedRefreshNextFrame = false;
         return; // 이번 프레임은 새로고침만 하고 끝
     }
+
+    // Update camera animation
+    float DeltaTime = ImGui::GetIO().DeltaTime;
+    UpdateCameraAnimation(DeltaTime);
     
     // Check if we need to refresh (world changed or actors added/removed)
     static size_t LastActorCount = 0;
@@ -347,7 +351,12 @@ void USceneManagerWidget::RenderActorNode(FActorTreeNode* Node, int32 Depth)
             FVector Dir = Cam->GetForward();
             if (Dir.SizeSquared() < KINDA_SMALL_NUMBER) Dir = FVector(1, 0, 0);
             FVector Pos = Center - Dir * kDist;
-            Cam->SetActorLocation(Pos);
+
+            // Start camera animation instead of instant movement
+            bCameraAnimating = true;
+            CameraAnimStartPos = Cam->GetActorLocation();
+            CameraAnimTargetPos = Pos;
+            CameraAnimTime = 0.0f;
         }
         ImGui::ClearActiveID();
     }
@@ -902,5 +911,40 @@ void USceneManagerWidget::CollapseAllCategories()
         }
     }
     UE_LOG("SceneManager: Collapsed all categories");
+}
+
+void USceneManagerWidget::UpdateCameraAnimation(float DeltaTime)
+{
+    if (!bCameraAnimating)
+        return;
+
+    if (!UIManager || !UIManager->GetCamera())
+    {
+        bCameraAnimating = false;
+        return;
+    }
+
+    ACameraActor* Cam = UIManager->GetCamera();
+    CameraAnimTime += DeltaTime;
+
+    // Calculate interpolation alpha (0 to 1)
+    float Alpha = CameraAnimTime / CameraAnimDuration;
+
+    if (Alpha >= 1.0f)
+    {
+        // Animation complete
+        Cam->SetActorLocation(CameraAnimTargetPos);
+        bCameraAnimating = false;
+        CameraAnimTime = 0.0f;
+    }
+    else
+    {
+        // Smooth interpolation using ease-out curve
+        float EasedAlpha = 1.0f - (1.0f - Alpha) * (1.0f - Alpha);
+
+        // Lerp between start and target position
+        FVector NewPos = CameraAnimStartPos + (CameraAnimTargetPos - CameraAnimStartPos) * EasedAlpha;
+        Cam->SetActorLocation(NewPos);
+    }
 }
 
