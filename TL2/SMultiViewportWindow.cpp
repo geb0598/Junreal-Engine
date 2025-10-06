@@ -191,12 +191,17 @@ void SMultiViewportWindow::SwitchLayout(EViewportLayoutMode NewMode)
 
 void SMultiViewportWindow::SwitchPanel(SWindow* SwitchPanel)
 {
+	if (bIsAnimating) return; // 애니메이션 중에는 패널 전환 불가
 
-	if (TopPanel->SideLT != SwitchPanel) {
-		TopPanel->SideLT = SwitchPanel;
+	if (TopPanel->SideLT != SwitchPanel)
+	{
+		// 4분할 -> 전체화면 애니메이션 시작
+		StartExpandAnimation(SwitchPanel);
 	}
-	else {
-		TopPanel->SideLT = LeftPanel;
+	else
+	{
+		// 전체화면 -> 4분할 애니메이션 시작
+		StartCollapseAnimation();
 	}
 }
 
@@ -216,6 +221,9 @@ void SMultiViewportWindow::OnRender()
 
 void SMultiViewportWindow::OnUpdate(float DeltaSeconds)
 {
+	// 애니메이션 업데이트
+	UpdateAnimation(DeltaSeconds);
+
 	if (RootSplitter) {
 		// 메뉴바 높이만큼 아래로 이동
 		float menuBarHeight = ImGui::GetFrameHeight();
@@ -273,4 +281,154 @@ void SMultiViewportWindow::OnShutdown()
 {
 	SaveSplitterConfig();
 
+}
+
+void SMultiViewportWindow::StartExpandAnimation(SWindow* TargetViewport)
+{
+	if (bIsAnimating) return;
+
+	// 현재 스플리터 비율 저장
+	SavedLeftTopRatio = LeftTop->GetSplitRatio();
+	SavedLeftBottomRatio = LeftBottom->GetSplitRatio();
+	SavedLeftPanelRatio = LeftPanel->GetSplitRatio();
+
+	// 애니메이션 시작
+	bIsAnimating = true;
+	bExpandingToSingle = true;
+	AnimationProgress = 0.0f;
+	AnimTargetViewport = TargetViewport;
+}
+
+void SMultiViewportWindow::StartCollapseAnimation()
+{
+	if (bIsAnimating) return;
+
+	// 현재 전체화면인 뷰포트 확인
+	SWindow* currentFullscreen = TopPanel->SideLT;
+
+	bool isTopLeft = (currentFullscreen == Viewports[0]);
+	bool isTopRight = (currentFullscreen == Viewports[1]);
+	bool isBottomLeft = (currentFullscreen == Viewports[2]);
+	bool isBottomRight = (currentFullscreen == Viewports[3]);
+
+	// 애니메이션 시작 전에 LeftPanel로 전환하고 스플리터를 확장 상태로 설정
+	TopPanel->SideLT = LeftPanel;
+
+	if (isTopLeft || currentFullscreen == MainViewport)
+	{
+		LeftTop->SetSplitRatio(1.0f);
+		LeftPanel->SetSplitRatio(1.0f);
+	}
+	else if (isTopRight)
+	{
+		LeftTop->SetSplitRatio(0.0f);
+		LeftPanel->SetSplitRatio(1.0f);
+	}
+	else if (isBottomLeft)
+	{
+		LeftBottom->SetSplitRatio(1.0f);
+		LeftPanel->SetSplitRatio(0.0f);
+	}
+	else if (isBottomRight)
+	{
+		LeftBottom->SetSplitRatio(0.0f);
+		LeftPanel->SetSplitRatio(0.0f);
+	}
+
+	// 애니메이션 시작
+	bIsAnimating = true;
+	bExpandingToSingle = false;
+	AnimationProgress = 0.0f;
+}
+
+void SMultiViewportWindow::UpdateAnimation(float DeltaSeconds)
+{
+	if (!bIsAnimating) return;
+
+	// 애니메이션 진행
+	AnimationProgress += DeltaSeconds / AnimationDuration;
+
+	// 확장 애니메이션 시 99% 지점에서 전체화면으로 전환 (더 부드러운 전환)
+	if (bExpandingToSingle && AnimationProgress >= 0.99f && TopPanel->SideLT != AnimTargetViewport)
+	{
+		TopPanel->SideLT = AnimTargetViewport;
+		CurrentMode = EViewportLayoutMode::SingleMain;
+	}
+
+	if (AnimationProgress >= 1.0f)
+	{
+		AnimationProgress = 1.0f;
+		bIsAnimating = false;
+
+		// 애니메이션 완료 시 최종 상태로 전환
+		if (bExpandingToSingle)
+		{
+			// 전체화면으로 전환 (이미 95% 시점에서 전환됨)
+			TopPanel->SideLT = AnimTargetViewport;
+			CurrentMode = EViewportLayoutMode::SingleMain;
+		}
+		else
+		{
+			// 4분할로 전환
+			TopPanel->SideLT = LeftPanel;
+			CurrentMode = EViewportLayoutMode::FourSplit;
+
+			// 저장된 비율로 복원
+			LeftTop->SetSplitRatio(SavedLeftTopRatio);
+			LeftBottom->SetSplitRatio(SavedLeftBottomRatio);
+			LeftPanel->SetSplitRatio(SavedLeftPanelRatio);
+		}
+
+		AnimTargetViewport = nullptr;
+		return;
+	}
+
+	// Ease-in-out 함수 적용 (부드러운 애니메이션)
+	float t = AnimationProgress;
+	float easedT = t < 0.5f ? 2.0f * t * t : 1.0f - pow(-2.0f * t + 2.0f, 2.0f) / 2.0f;
+
+	if (bExpandingToSingle)
+	{
+		// 4분할 -> 전체화면 애니메이션
+		// 선택된 뷰포트가 어느 위치에 있는지 확인
+		bool isTopLeft = (AnimTargetViewport == Viewports[0]);
+		bool isTopRight = (AnimTargetViewport == Viewports[1]);
+		bool isBottomLeft = (AnimTargetViewport == Viewports[2]);
+		bool isBottomRight = (AnimTargetViewport == Viewports[3]);
+
+		if (isTopLeft)
+		{
+			// 좌상단 뷰포트 확장
+			LeftTop->SetSplitRatio(FMath::Lerp(SavedLeftTopRatio, 1.0f, easedT));
+			LeftPanel->SetSplitRatio(FMath::Lerp(SavedLeftPanelRatio, 1.0f, easedT));
+		}
+		else if (isTopRight)
+		{
+			// 우상단 뷰포트 확장
+			LeftTop->SetSplitRatio(FMath::Lerp(SavedLeftTopRatio, 0.0f, easedT));
+			LeftPanel->SetSplitRatio(FMath::Lerp(SavedLeftPanelRatio, 1.0f, easedT));
+		}
+		else if (isBottomLeft)
+		{
+			// 좌하단 뷰포트 확장
+			LeftBottom->SetSplitRatio(FMath::Lerp(SavedLeftBottomRatio, 1.0f, easedT));
+			LeftPanel->SetSplitRatio(FMath::Lerp(SavedLeftPanelRatio, 0.0f, easedT));
+		}
+		else if (isBottomRight)
+		{
+			// 우하단 뷰포트 확장
+			LeftBottom->SetSplitRatio(FMath::Lerp(SavedLeftBottomRatio, 0.0f, easedT));
+			LeftPanel->SetSplitRatio(FMath::Lerp(SavedLeftPanelRatio, 0.0f, easedT));
+		}
+	}
+	else
+	{
+		// 전체화면 -> 4분할 애니메이션
+		// StartCollapseAnimation에서 이미 LeftPanel로 전환하고 확장 상태로 설정했음
+		// 여기서는 저장된 비율로 보간만 수행
+
+		LeftTop->SetSplitRatio(FMath::Lerp(LeftTop->GetSplitRatio(), SavedLeftTopRatio, easedT));
+		LeftBottom->SetSplitRatio(FMath::Lerp(LeftBottom->GetSplitRatio(), SavedLeftBottomRatio, easedT));
+		LeftPanel->SetSplitRatio(FMath::Lerp(LeftPanel->GetSplitRatio(), SavedLeftPanelRatio, easedT));
+	}
 }

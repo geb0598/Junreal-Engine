@@ -65,6 +65,27 @@ private:
     // 현재 모드
     EViewportLayoutMode CurrentMode = EViewportLayoutMode::FourSplit;
 
+    // 애니메이션 관련 변수
+    bool bIsAnimating = false;
+    float AnimationProgress = 0.0f;
+    float AnimationDuration = 0.3f; // 애니메이션 지속 시간 (초)
+
+    // 애니메이션 방향 (true: 4분할->전체화면, false: 전체화면->4분할)
+    bool bExpandingToSingle = false;
+
+    // 애니메이션 대상 뷰포트
+    SWindow* AnimTargetViewport = nullptr;
+
+    // 저장된 스플리터 비율 (애니메이션 전 상태로 복귀하기 위해)
+    float SavedLeftTopRatio = 0.5f;
+    float SavedLeftBottomRatio = 0.5f;
+    float SavedLeftPanelRatio = 0.5f;
+
+    // 애니메이션 업데이트 함수
+    void UpdateAnimation(float DeltaSeconds);
+    void StartExpandAnimation(SWindow* TargetViewport);
+    void StartCollapseAnimation();
+
     // 메뉴바 관련
     void OnFileMenuAction(const char* action);
     void OnEditMenuAction(const char* action);

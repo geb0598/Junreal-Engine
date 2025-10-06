@@ -39,6 +39,10 @@ namespace FMath {
     static T Clamp(T Value, T Min, T Max) {
         return Value < Min ? Min : (Value > Max ? Max : Value);
     }
+    template<typename T>
+    static T Lerp(T A, T B, float Alpha) {
+        return A + (B - A) * Alpha;
+    }
 }
 // 각도를 -180 ~ 180 범위로 정규화 (모듈러 연산)
 inline float NormalizeAngleDeg(float angleDeg)
