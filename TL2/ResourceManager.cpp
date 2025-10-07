@@ -46,43 +46,7 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     
 }
 
-UMaterial* UResourceManager::GetOrCreateMaterial(const FString& Name, EVertexLayoutType layoutType)
-{
-    auto it = MaterialMap.find(Name);
-    if (it != MaterialMap.end())
-        return it->second;
 
-    // FName → FString 변환
-    FString BaseName = Name;
-
-    // Shader, Texture 로드
-    UShader* Shader;
-    UTexture* Texture;
-
-    if (UResourceManager::GetInstance().Get<UShader>(Name))
-    {
-        Shader = UResourceManager::GetInstance().Get<UShader>(Name);
-    }
-    else
-    {
-        Shader = UResourceManager::GetInstance().Load<UShader>(Name, layoutType);
-    }
-    if (UResourceManager::GetInstance().Get<UTexture>(Name))
-    {
-        Texture = UResourceManager::GetInstance().Get<UTexture>(Name);
-    }
-    else
-    {
-        Texture = UResourceManager::GetInstance().Load<UTexture>(Name);
-    }
-    // Material 생성
-    UMaterial* Mat = NewObject<UMaterial>();
-    if (Shader)  Mat->SetShader(Shader);
-    if (Texture) Mat->SetTexture(Texture);
-
-    MaterialMap[Name] = Mat;
-    return Mat;
-}
 
 // 전체 해제
 void UResourceManager::Clear()
@@ -407,6 +371,7 @@ void UResourceManager::CreateDefaultShader()
     // 템플릿 Load 멤버함수 호출해서 Resources[UShader의 typeIndex][shader 파일 이름]에 UShader 포인터 할당
     Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
     Load<UShader>("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
+    Load<UShader>("DecalShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
     Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
     Load<UShader>("Billboard.hlsl", EVertexLayoutType::PositionBillBoard);
     Load<UShader>("TextShader.hlsl");
@@ -427,6 +392,7 @@ void UResourceManager::InitShaderILMap()
     layout.Add({ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     layout.Add({ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     ShaderToInputLayoutMap["StaticMeshShader.hlsl"] = layout;
+    ShaderToInputLayoutMap["DecalShader.hlsl"] = layout;
     layout.clear();
 
     layout.Add({ "WORLDPOSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });

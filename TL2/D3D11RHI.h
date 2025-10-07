@@ -86,6 +86,10 @@ public:
     {
         return SwapChain;
     }
+    inline ID3D11ShaderResourceView* GetDepthSRV()
+    {
+        return DepthSRV;
+    }
 
 private:
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다
@@ -129,6 +133,7 @@ private:
     ID3D11Texture2D* FrameBuffer{};//
     ID3D11RenderTargetView* RenderTargetView{};//
     ID3D11DepthStencilView* DepthStencilView{};//
+    ID3D11ShaderResourceView* DepthSRV{}; // Depth buffer를 셰이더에서 읽기 위한 SRV
 
     // 버퍼 핸들
     ID3D11Buffer* ModelCB{};

@@ -36,7 +36,6 @@ public:
     //FResourceData* CreateOrGetResourceData(const FString& Name, uint32 Size, const TArray<uint32>& Indicies);
     //    FTextureData* GetOrCreateTexture
 
-    UMaterial* GetOrCreateMaterial(const FString& Name,  EVertexLayoutType layoutType);
 
     void CreateTextBillboardTexture();
 
@@ -207,7 +206,7 @@ TArray<FString> UResourceManager::GetAllFilePaths()
     {
         return Paths;
     }
-
+    Paths.push_back("None");
     for (auto& Pair : Resources[TypeIndex])
     {
         if (Pair.second)

@@ -8,20 +8,20 @@ UBillboardComponent::UBillboardComponent()
 {
     SetRelativeLocation({ 0, 0, 1 });
 
-    auto& RM = UResourceManager::GetInstance();
+    auto& ResourceManager = UResourceManager::GetInstance();
 
     // 빌보드용 메시 가져오기 (단일 쿼드)
-    BillboardQuad = RM.Get<UTextQuad>("Billboard");
+    BillboardQuad = ResourceManager.Get<UTextQuad>("Billboard");
 
     // 머티리얼 생성 또는 가져오기
-    if (auto* M = RM.Get<UMaterial>("Billboard"))
+    if (auto* M = ResourceManager.Get<UMaterial>("Billboard"))
     {
         Material = M;
     }
     else
     {
         Material = NewObject<UMaterial>();
-        RM.Add<UMaterial>("Billboard", Material);
+        ResourceManager.Add<UMaterial>("Billboard", Material);
     }
 }
 

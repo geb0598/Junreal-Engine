@@ -472,21 +472,30 @@ void D3D11RHI::CreateFrameBuffer()
     depthDesc.Height = swapDesc.BufferDesc.Height;
     depthDesc.MipLevels = 1;
     depthDesc.ArraySize = 1;
-    depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // 깊이 24비트 + 스텐실 8비트
+    depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; // SRV를 생성하려면 TYPELESS 포맷 사용
     depthDesc.SampleDesc.Count = 1;
     depthDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV 바인딩 추가
 
     ID3D11Texture2D* depthBuffer = nullptr;
     Device->CreateTexture2D(&depthDesc, nullptr, &depthBuffer);
 
     // DepthStencilView 생성
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-    dsvDesc.Format = depthDesc.Format;
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // DSV는 D24_UNORM_S8_UINT 포맷
     dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Texture2D.MipSlice = 0;
 
     Device->CreateDepthStencilView(depthBuffer, &dsvDesc, &DepthStencilView);
+
+    // ShaderResourceView 생성 (데칼 렌더링에서 사용)
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // SRV는 R24_UNORM_X8_TYPELESS 포맷
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+
+    Device->CreateShaderResourceView(depthBuffer, &srvDesc, &DepthSRV);
 
     depthBuffer->Release(); // 뷰만 참조 유지
 }
@@ -638,6 +647,12 @@ void D3D11RHI::ReleaseFrameBuffer()
     {
         RenderTargetView->Release();
         RenderTargetView = nullptr;
+    }
+
+    if (DepthSRV)
+    {
+        DepthSRV->Release();
+        DepthSRV = nullptr;
     }
 
     if (DepthStencilView)
