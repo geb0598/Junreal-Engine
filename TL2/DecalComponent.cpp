@@ -10,13 +10,14 @@ UDecalComponent::UDecalComponent()
 {
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("cube-tex.obj");
-    SetMaterial("DecalShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
-
     // 기본 데칼 텍스처 로드
+
+    SetMaterial("DecalShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
     if (Material)
     {
-        Material->Load("Editor/Icon/PointLight_64x.dds", UResourceManager::GetInstance().GetDevice());
+        Material->Load("Editor/Decal/SpotLight_64x.dds", UResourceManager::GetInstance().GetDevice());
     }
+  
 }
 
 UDecalComponent::~UDecalComponent()
@@ -28,13 +29,17 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     if (!DecalBoxMesh || !Material)
         return;
 
-    // 데칼 크기를 적용한 월드 행렬 생성
-   // FMatrix ScaleMatrix = FMatrix::FromTRS(DecalSize);
-    //FMatrix WorldMatrix = ScaleMatrix * GetWorldMatrix();
+    // 월드 행렬 생성
     FMatrix WorldMatrix = GetWorldMatrix();
+    FMatrix InvWorldMatrix = WorldMatrix.InverseAffine();
+
+    // ViewProj 행렬 및 역행렬 계산
+    FMatrix ViewProj = View * Proj;
+    FMatrix InvViewProj = ViewProj.InverseAffine();
 
     // 상수 버퍼 업데이트
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
+    Renderer->UpdateInvWorldBuffer(InvWorldMatrix, InvViewProj);
 
     // 데칼 셰이더 준비
     Renderer->PrepareShader(Material->GetShader());
@@ -42,11 +47,17 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     // 블렌드 스테이트 활성화 (반투명)
     Renderer->OMSetBlendState(true);
 
-    // Depth 테스트는 하되 쓰기는 하지 않음
-    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqualReadOnly);
+    // Depth SRV를 shader resource로 사용하기 위해 depth stencil view를 먼저 해제
+    ID3D11RenderTargetView* currentRTV = nullptr;
+    Renderer->GetRHIDevice()->GetDeviceContext()->OMGetRenderTargets(1, &currentRTV, nullptr);
+    Renderer->GetRHIDevice()->GetDeviceContext()->OMSetRenderTargets(1, &currentRTV, nullptr);
+    if (currentRTV) currentRTV->Release();
+
+    // 데칼: 깊이 읽기만, 비교는 ALWAYS
+    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
 
     // 앞면 컬링 (데칼 박스 내부만 그리기)
-    Renderer->RSSetState(EViewModeIndex::VMI_Lit);
+    Renderer->RSSetFrontCullState();
 
     // 데칼 박스 메쉬 렌더링
     UINT stride = sizeof(FVertexDynamic);
@@ -60,26 +71,28 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     Renderer->GetRHIDevice()->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
-    FTextureData* TextureData = nullptr;
-
-    bool bHasTexture = !(Material->GetMaterialInfo().DiffuseTextureFileName == FName::None());
-  /*  if (bHasTexture)
-    {
-        TextureData = UResourceManager::GetInstance().CreateOrGetTextureData("cube_texture.dds");
-        Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
-    }*/
-    // 텍스처 바인딩Renderer->GetRHIDevice()
+    // 텍스처 바인딩
     if (Material->GetTexture())
     {
         ID3D11ShaderResourceView* TextureSRV = Material->GetTexture()->GetShaderResourceView();
         Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(0, 1, &TextureSRV);
     }
 
+    // Sampler 바인딩
+    Renderer->GetRHIDevice()->PSSetDefaultSampler(0);
+
     // Depth SRV 바인딩 (t1 슬롯)
     ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(Renderer->GetRHIDevice())->GetDepthSRV();
     Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(1, 1, &DepthSRV);
 
     Renderer->GetRHIDevice()->GetDeviceContext()->DrawIndexed(DecalBoxMesh->GetIndexCount(), 0, 0);
+
+    // SRV 리셋
+    ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
+    Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(0, 2, nullSRV);
+
+    // Depth Stencil View 복원
+    Renderer->GetRHIDevice()->OMSetRenderTargets();
 
     // 상태 복원
     Renderer->OMSetBlendState(false);

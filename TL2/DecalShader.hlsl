@@ -16,6 +16,12 @@ cbuffer ColorBuffer : register(b3)
     float4 LerpColor;
 }
 
+cbuffer InvWorldBuffer : register(b4)
+{
+    row_major float4x4 InvWorldMatrix;
+    row_major float4x4 InvViewProjMatrix;
+}
+
 // 데칼 텍스처
 Texture2D g_DecalTexture : register(t0);
 // Depth 버퍼 (화면 공간의 깊이 정보)
@@ -74,16 +80,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     ndcPos.z = depth;
     ndcPos.w = 1.0f;
 
-    // View-Projection 역행렬 계산 (간단한 구현)
-    // 실제로는 CPU에서 미리 계산해서 상수 버퍼로 전달하는 것이 효율적
-    float4x4 VP = mul(ViewMatrix, ProjectionMatrix);
-
-    // 간단한 구현을 위해 현재는 데칼 박스의 로컬 좌표계로 변환
-    // WorldMatrix의 역행렬 계산 (간단한 방법)
-    float4x4 InvWorld = WorldMatrix; // TODO: 실제 역행렬 계산 필요
+    // NDC에서 월드 공간 좌표로 복원
+    float4 worldPos = mul(ndcPos, InvViewProjMatrix);
+    worldPos /= worldPos.w; // perspective divide
 
     // 4. 월드 위치를 데칼 로컬 좌표로 변환
-    float3 decalLocalPos = mul(float4(input.worldPos.xyz, 1.0f), InvWorld).xyz;
+    float3 decalLocalPos = mul(worldPos, InvWorldMatrix).xyz;
 
     // 5. 데칼 박스 범위 체크 (-0.5 ~ 0.5)
     if (abs(decalLocalPos.x) > 0.5f ||

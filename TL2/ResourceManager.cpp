@@ -433,12 +433,14 @@ FString& UResourceManager::GetProperShader(const FString& InTextureName)
     return TextureToShaderMap[InTextureName];
 }
 
-void UResourceManager::InitTexToShaderMap()
+void UResourceManager::InitTexToShaderMap()//?? 왜 이렇게 만들었는지 이해는 안되지만 사용하기로 함 
 {
     TextureToShaderMap[R"(Editor/Icon/Pawn_64x.dds)"] = "Billboard.hlsl";
     TextureToShaderMap[R"(Editor/Icon/PointLight_64x.dds)"] = "Billboard.hlsl";
     TextureToShaderMap[R"(Editor/Icon/SpotLight_64x.dds)"] = "Billboard.hlsl";
     TextureToShaderMap["TextBillboard.dds"] = "TextShader.hlsl";
+    TextureToShaderMap[R"(Editor/Decal/PointLight_64x.dds)"] = "DecalShader.hlsl";
+    TextureToShaderMap[R"(Editor/Decal/SpotLight_64x.dds)"] = "DecalShader.hlsl";
 }
 
 

@@ -51,9 +51,11 @@ public:
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
     void UpdateColorConstantBuffers(const FVector4& InColor) override;
     void UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec) override;
+    void UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix) override;
 
     void IASetPrimitiveTopology() override;
     void RSSetState(EViewModeIndex ViewModeIndex) override;
+    void RSSetFrontCullState() override;
     void RSSetViewport() override;
     void OMSetRenderTargets() override;
     void OMSetBlendState(bool bIsBlendMode) override;
@@ -119,6 +121,7 @@ private:
 
     ID3D11RasterizerState* DefaultRasterizerState{};//
     ID3D11RasterizerState* WireFrameRasterizerState{};//
+    ID3D11RasterizerState* FrontCullRasterizerState{};//
 
     ID3D11DepthStencilState* DepthStencilState{};
 
@@ -143,6 +146,7 @@ private:
     ID3D11Buffer* ColorCB{};
     ID3D11Buffer* PixelConstCB{};
     ID3D11Buffer* UVScrollCB{};
+    ID3D11Buffer* InvWorldCB{};
 
     ID3D11Buffer* ConstantBuffer{};
 

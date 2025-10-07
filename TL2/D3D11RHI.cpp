@@ -116,6 +116,7 @@ void D3D11RHI::Release()
     if (BillboardCB) { BillboardCB->Release(); BillboardCB = nullptr; }
     if (PixelConstCB) { PixelConstCB->Release(); PixelConstCB = nullptr; }
     if (UVScrollCB) { UVScrollCB->Release(); UVScrollCB = nullptr; }
+    if (InvWorldCB) { InvWorldCB->Release(); InvWorldCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체
@@ -385,6 +386,11 @@ void D3D11RHI::RSSetState(EViewModeIndex ViewModeIndex)
     }
 }
 
+void D3D11RHI::RSSetFrontCullState()
+{
+    DeviceContext->RSSetState(FrontCullRasterizerState);
+}
+
 void D3D11RHI::RSSetViewport()
 {
     DeviceContext->RSSetViewports(1, &ViewportInfo);
@@ -515,6 +521,13 @@ void D3D11RHI::CreateRasterizerState()
     wireframerasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
 
     Device->CreateRasterizerState(&wireframerasterizerdesc, &WireFrameRasterizerState);
+
+    D3D11_RASTERIZER_DESC frontcullrasterizerdesc = {};
+    frontcullrasterizerdesc.FillMode = D3D11_FILL_SOLID; // 채우기 모드
+    frontcullrasterizerdesc.CullMode = D3D11_CULL_FRONT; // 프론트 페이스 컬링
+    frontcullrasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
+
+    Device->CreateRasterizerState(&frontcullrasterizerdesc, &FrontCullRasterizerState);
 }
 
 void D3D11RHI::CreateConstantBuffer()
@@ -585,6 +598,14 @@ void D3D11RHI::CreateConstantBuffer()
         }
         DeviceContext->PSSetConstantBuffers(5, 1, &UVScrollCB);
     }
+
+    // b4 : InvWorldBuffer (데칼용 - InvWorld + InvViewProj)
+    D3D11_BUFFER_DESC invWorldDesc = {};
+    invWorldDesc.Usage = D3D11_USAGE_DYNAMIC;
+    invWorldDesc.ByteWidth = sizeof(FMatrix) * 2; // InvWorldMatrix + InvViewProjMatrix
+    invWorldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    invWorldDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    Device->CreateBuffer(&invWorldDesc, nullptr, &InvWorldCB);
 }
 
 void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec)
@@ -602,6 +623,28 @@ void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeS
     }
 }
 
+void D3D11RHI::UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix)
+{
+    if (!InvWorldCB) return;
+
+    struct InvWorldBufferType
+    {
+        FMatrix InvWorld;
+        FMatrix InvViewProj;
+    };
+
+    InvWorldBufferType data;
+    data.InvWorld = InvWorldMatrix;
+    data.InvViewProj = InvViewProjMatrix;
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    if (SUCCEEDED(DeviceContext->Map(InvWorldCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+    {
+        memcpy(mapped.pData, &data, sizeof(InvWorldBufferType));
+        DeviceContext->Unmap(InvWorldCB, 0);
+        DeviceContext->PSSetConstantBuffers(4, 1, &InvWorldCB);
+    }
+}
 
 void D3D11RHI::ReleaseSamplerState()
 {
@@ -632,6 +675,11 @@ void D3D11RHI::ReleaseRasterizerState()
     {
         WireFrameRasterizerState->Release();
         WireFrameRasterizerState = nullptr;
+    }
+    if (FrontCullRasterizerState)
+    {
+        FrontCullRasterizerState->Release();
+        FrontCullRasterizerState = nullptr;
     }
     DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 }

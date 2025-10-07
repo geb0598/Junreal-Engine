@@ -82,6 +82,11 @@ void URenderer::RSSetState(EViewModeIndex ViewModeIndex)
     RHIDevice->RSSetState(ViewModeIndex);
 }
 
+void URenderer::RSSetFrontCullState()
+{
+    RHIDevice->RSSetFrontCullState();
+}
+
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
     RHIDevice->UpdateConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
@@ -110,6 +115,11 @@ void URenderer::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInf
 void URenderer::UpdateColorBuffer(const FVector4& Color)
 {
     RHIDevice->UpdateColorConstantBuffers(Color);
+}
+
+void URenderer::UpdateInvWorldBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix)
+{
+    RHIDevice->UpdateInvWorldConstantBuffer(InvWorldMatrix, InvViewProjMatrix);
 }
 
 void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
