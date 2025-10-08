@@ -89,16 +89,17 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     // 5️⃣ World → Decal Local
     float3 decalLocalPos = mul(worldPos, InvWorldMatrix).xyz;
 
-    // 6️⃣ 데칼 박스 범위 검사 (-0.5~+0.5) ?? 왜 필요한거지 
-    //if (abs(decalLocalPos.x) > 0.5f ||
-    //    abs(decalLocalPos.y) > 0.5f ||
-    //    abs(decalLocalPos.z) > 0.5f)
-    //{
-    //    discard;
-    //}
+    // 6️⃣ 데칼 박스 범위 검사 (-0.5~+0.5)
+    // 데칼 박스 밖의 픽셀은 렌더링하지 않음
+    if (abs(decalLocalPos.x) > 10.0f ||
+        abs(decalLocalPos.y) > 10.0f ||
+        abs(decalLocalPos.z) > 10.0f)
+    {
+        discard;
+    }
 
     // 7️⃣ 로컬 → UV (0~1)
-   // float2 decalUV = decalLocalPos.xy + 0.5f;
+    float2 decalUV = decalLocalPos.xy + 0.5f;
 
   
 
@@ -106,7 +107,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     // return float4(decalLocalPos * 0.5f + 0.5f, 1.0f);
 
     // 🐛 디버그: UV 좌표 시각화
-    // return float4(decalUV, 0.0f, 1.0f);
+     //return float4(decalUV, 0.0f, 1.0f);
 
     // 8️⃣ 데칼 텍스처 샘플링
     float4 decalColor = g_DecalTexture.Sample(g_Sample, decalUV);

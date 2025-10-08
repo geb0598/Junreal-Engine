@@ -30,7 +30,9 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
         return;
 
     // 월드/역월드
-    FMatrix WorldMatrix = GetWorldMatrix();
+    // DecalSize를 스케일로 적용
+    FMatrix ScaleMatrix = FMatrix::CreateScale(DecalSize);
+    FMatrix WorldMatrix = ScaleMatrix * GetWorldMatrix();
     FMatrix InvWorldMatrix = WorldMatrix.InverseAffine(); // OK(Affine)
 
     // ViewProj 및 역행렬 (투영 포함 → 일반 Inverse 필요)

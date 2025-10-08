@@ -551,6 +551,16 @@ struct alignas(16) FMatrix
         );
     }
 
+    static FMatrix CreateScale(const FVector& Scale)
+    {
+        return FMatrix(
+            Scale.X, 0, 0, 0,
+            0, Scale.Y, 0, 0,
+            0, 0, Scale.Z, 0,
+            0, 0, 0, 1
+        );
+    }
+
     // 행렬 == 행렬
     bool operator==(const FMatrix& B) const noexcept
     {
