@@ -31,6 +31,10 @@ public:
 
     void RSSetFrontCullState();
 
+    void RSSetNoCullState();
+
+    void RSSetDefaultState();
+
     void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
 
     void UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo);

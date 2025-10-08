@@ -4,9 +4,9 @@
 #include "SceneComponent.h"
 #include "SceneRotationUtils.h"
 
-void UPrimitiveComponent::SetMaterial(const FString& FilePath, EVertexLayoutType layoutType)
+void UPrimitiveComponent::SetMaterial(const FString& FilePath)
 {
-    Material = UResourceManager::GetInstance().Load<UMaterial>(FilePath, layoutType);
+    Material = UResourceManager::GetInstance().Load<UMaterial>(FilePath);
 }
 
 void UPrimitiveComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)

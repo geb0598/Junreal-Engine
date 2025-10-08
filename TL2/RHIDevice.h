@@ -57,6 +57,8 @@ public:
     virtual void RSSetViewport() = 0;
     virtual void RSSetState(EViewModeIndex ViewModeIndex) = 0;
     virtual void RSSetFrontCullState() = 0;
+    virtual void RSSetNoCullState() = 0;
+    virtual void RSSetDefaultState() = 0;
     virtual void OMSetRenderTargets() = 0;
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;
     virtual void OmSetDepthStencilState(EComparisonFunc Func) = 0;

@@ -52,9 +52,6 @@ public:
     void CreateBillboardMesh();
     void CreateGridMesh(int N, const FString& FilePath);
     void CreateBoxWireframeMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
-    //FMeshData* CreateWireBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
-   // void CreateBoxMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
-    void CreateDefaultShader();
     void InitShaderILMap();
     void InitTexToShaderMap();
 
@@ -62,8 +59,8 @@ public:
     bool Add(const FString& InFilePath, UObject* InObject);
     template<typename T>
     T* Get(const FString& InFilePath);
-    template<typename T, typename ... Args>
-    T* Load(const FString& InFilePath, Args&& ...);
+    template<typename T>
+    T* Load(const FString& InFilePath);
     template<typename T>
     ResourceType GetResourceType();
 
@@ -135,8 +132,8 @@ T* UResourceManager::Get(const FString& InFilePath)
     return nullptr;
 }
 
-template<typename T, typename ...Args>
-inline T* UResourceManager::Load(const FString& InFilePath, Args&&... InArgs)//있으면 긁어오고 없으면 만듦
+template<typename T>
+inline T* UResourceManager::Load(const FString& InFilePath)//있으면 긁어오고 없으면 만듦
 {
     uint8 typeIndex = static_cast<uint8>(GetResourceType<T>());
     auto iter = Resources[typeIndex].find(InFilePath);

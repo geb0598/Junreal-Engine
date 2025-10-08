@@ -21,7 +21,7 @@ std::vector<FVector> MakeVerticesFromFBox(const FBox& Box)
 UOBoundingBoxComponent::UOBoundingBoxComponent()
     : LocalMin(FVector{}), LocalMax(FVector{})
 {
-    SetMaterial("CollisionDebug.hlsl", EVertexLayoutType::PositionCollisionDebug);
+    SetMaterial("CollisionDebug.hlsl");
 }
 
 void UOBoundingBoxComponent::SetFromVertices(const std::vector<FVector>& Verts)

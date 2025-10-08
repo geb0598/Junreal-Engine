@@ -87,6 +87,16 @@ void URenderer::RSSetFrontCullState()
     RHIDevice->RSSetFrontCullState();
 }
 
+void URenderer::RSSetNoCullState()
+{
+    RHIDevice->RSSetNoCullState();
+}
+
+void URenderer::RSSetDefaultState()
+{
+    RHIDevice->RSSetDefaultState();
+}
+
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
     RHIDevice->UpdateConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
@@ -374,7 +384,7 @@ void URenderer::InitializeLineBatch()
     LineBatchData = new FMeshData();
     
     // Load line shader
-    LineShader = UResourceManager::GetInstance().Load<UShader>("ShaderLine.hlsl", EVertexLayoutType::PositionColor);
+    LineShader = UResourceManager::GetInstance().Load<UShader>("ShaderLine.hlsl");
 }
 
 void URenderer::BeginLineBatch()

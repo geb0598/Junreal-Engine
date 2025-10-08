@@ -41,8 +41,6 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     CreateBillboardMesh();//"Billboard"
 
     CreateTextBillboardTexture();
-
-    CreateDefaultShader();
     
 }
 
@@ -366,16 +364,7 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
     UMeshLoader::GetInstance().AddMeshData(FilePath, MeshData);
 }
 
-void UResourceManager::CreateDefaultShader()
-{
-    // 템플릿 Load 멤버함수 호출해서 Resources[UShader의 typeIndex][shader 파일 이름]에 UShader 포인터 할당
-    Load<UShader>("Primitive.hlsl", EVertexLayoutType::PositionColor);
-    Load<UShader>("StaticMeshShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
-    Load<UShader>("DecalShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
-    Load<UShader>("TextBillboard.hlsl", EVertexLayoutType::PositionBillBoard);
-    Load<UShader>("Billboard.hlsl", EVertexLayoutType::PositionBillBoard);
-    Load<UShader>("TextShader.hlsl");
-}
+
 
 void UResourceManager::InitShaderILMap()
 {

@@ -274,11 +274,13 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     Renderer->BeginLineBatch();
     Renderer->SetViewModeType(ViewModeIndex);
-  
+
         int AllActorCount = 0;
         int FrustumCullCount = 0;
 
         const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
+
+        // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
         for (AActor* Actor : LevelActors)
         {
             // 일반 액터들 렌더링
@@ -327,6 +329,12 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     continue;
                 }
 
+                // 데칼 컴포넌트는 Pass 2에서 렌더링
+                if (Cast<UDecalComponent>(Component))
+                {
+                    continue;
+                }
+
                 if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
                 {
                     bool bIsSelected = SelectionManager.IsActorSelected(Actor);
@@ -349,8 +357,50 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             }
             Renderer->OMSetBlendState(false);
         }
+
     // 엔진 액터들 (그리드 등) 렌더링
     RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
+
+    // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
+    for (AActor* Actor : LevelActors)
+    {
+        if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+        {
+            continue;
+        }
+        if (!Actor)
+        {
+            continue;
+        }
+        if (Actor->GetActorHiddenInGame())
+        {
+            continue;
+        }
+
+        for (UActorComponent* Component : Actor->GetComponents())
+        {
+            if (!Component)
+            {
+                continue;
+            }
+
+            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+            {
+                if (!ActorComp->IsActive())
+                {
+                    continue;
+                }
+            }
+
+            // 데칼 컴포넌트만 렌더링
+            if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
+            {
+                bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+                Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                DecalComp->Render(Renderer, ViewMatrix, ProjectionMatrix);
+            }
+        }
+    }
 
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 }

@@ -1,4 +1,6 @@
-// DecalShader.hlsl - Screen-Space Decal Shader
+//======================================================
+// DecalShader.hlsl - Screen-Space Decal Shader (Fixed)
+//======================================================
 
 cbuffer ModelBuffer : register(b0)
 {
@@ -22,13 +24,16 @@ cbuffer InvWorldBuffer : register(b4)
     row_major float4x4 InvViewProjMatrix;
 }
 
-// 데칼 텍스처
+//------------------------------------------------------
+// Resources
+//------------------------------------------------------
 Texture2D g_DecalTexture : register(t0);
-// Depth 버퍼 (화면 공간의 깊이 정보)
 Texture2D g_DepthTexture : register(t1);
-
 SamplerState g_Sample : register(s0);
 
+//------------------------------------------------------
+// Vertex Shader
+//------------------------------------------------------
 struct VS_INPUT
 {
     float3 position : POSITION;
@@ -39,75 +44,77 @@ struct VS_INPUT
 
 struct PS_INPUT
 {
-    float4 position : SV_POSITION;
-    float4 screenPos : TEXCOORD0;
-    float4 worldPos : TEXCOORD1;
+    float4 position : SV_POSITION; // 픽셀 셰이더에서 자동으로 화면 픽셀 좌표로 변환됨
 };
 
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
 
-    // 데칼 박스의 로컬 좌표를 월드 좌표로 변환
-    float4 worldPos = mul(float4(input.position, 1.0f), WorldMatrix);
-    output.worldPos = worldPos;
-
-    // 월드 좌표를 화면 좌표로 변환
-    float4x4 VP = mul(ViewMatrix, ProjectionMatrix);
-    output.position = mul(worldPos, VP);
-
-    // Screen space position for texture coordinate calculation
-    output.screenPos = output.position;
+    // 월드 → 뷰 → 프로젝션 (row_major 기준)
+    float4x4 MVP = mul(mul(WorldMatrix, ViewMatrix), ProjectionMatrix);
+    output.position = mul(float4(input.position, 1.0f), MVP);
 
     return output;
 }
 
+//------------------------------------------------------
+// Pixel Shader
+//------------------------------------------------------
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
-    // 1. 화면 좌표를 UV 좌표로 변환 (0~1 범위)
-    float2 screenUV = input.screenPos.xy / input.screenPos.w;
-    screenUV = screenUV * 0.5f + 0.5f;
-    screenUV.y = 1.0f - screenUV.y; // Y축 반전
+    // 1️⃣ 화면 좌표 → [0,1] UV 변환
+    // SV_Position은 픽셀 셰이더에서 화면 픽셀 좌표 (x, y, depth, 1/w)를 제공
+    // 화면 해상도로 나눠서 [0,1] 범위로 변환
+    // CLIENTWIDTH, CLIENTHEIGHT 대신 상수 버퍼나 추론 필요
+    // 임시로 텍스처 크기 기반 계산 (GetDimensions 사용)
+    float2 screenSize;
+    g_DepthTexture.GetDimensions(screenSize.x, screenSize.y);
+    float2 screenUV = input.position.xy / screenSize;
 
-    // 2. Depth 버퍼에서 깊이 값 읽기
+    // 2️⃣ Depth 버퍼 샘플링 (0~1)
     float depth = g_DepthTexture.Sample(g_Sample, screenUV).r;
-
-    // 3. 화면 좌표와 깊이를 이용해 월드 위치 복원
-    // NDC 좌표 계산
+      // 🐛 디버그: 깊이 값 시각화
+   // return float4(depth, depth, depth, 1.0f);
+    // 3️⃣ NDC 좌표 구성 (DirectX: Z 0~1 → NDC -1~1 변환)
     float4 ndcPos;
     ndcPos.xy = screenUV * 2.0f - 1.0f;
-    ndcPos.y *= -1.0f;
-    ndcPos.z = depth;
+    ndcPos.z = depth * 2.0f - 1.0f; // ✅ 중요 수정점
     ndcPos.w = 1.0f;
 
-    // NDC에서 월드 공간 좌표로 복원
+    // 4️⃣ NDC → World
     float4 worldPos = mul(ndcPos, InvViewProjMatrix);
-    worldPos /= worldPos.w; // perspective divide
+    worldPos /= worldPos.w;
 
-    // 4. 월드 위치를 데칼 로컬 좌표로 변환
+    // 5️⃣ World → Decal Local
     float3 decalLocalPos = mul(worldPos, InvWorldMatrix).xyz;
 
-    // 5. 데칼 박스 범위 체크 (-0.5 ~ 0.5)
-    if (abs(decalLocalPos.x) > 0.5f ||
-        abs(decalLocalPos.y) > 0.5f ||
-        abs(decalLocalPos.z) > 0.5f)
-    {
-        discard; // 박스 밖이면 픽셀 버림
-    }
+    // 6️⃣ 데칼 박스 범위 검사 (-0.5~+0.5) ?? 왜 필요한거지 
+    //if (abs(decalLocalPos.x) > 0.5f ||
+    //    abs(decalLocalPos.y) > 0.5f ||
+    //    abs(decalLocalPos.z) > 0.5f)
+    //{
+    //    discard;
+    //}
 
-    // 6. 로컬 좌표를 UV 좌표로 변환 (0~1)
-    float2 decalUV = decalLocalPos.xy + 0.5f;
+    // 7️⃣ 로컬 → UV (0~1)
+   // float2 decalUV = decalLocalPos.xy + 0.5f;
 
-    // 7. 데칼 텍스처 샘플링
+  
+
+    // 🐛 디버그: 로컬 좌표 시각화
+    // return float4(decalLocalPos * 0.5f + 0.5f, 1.0f);
+
+    // 🐛 디버그: UV 좌표 시각화
+    // return float4(decalUV, 0.0f, 1.0f);
+
+    // 8️⃣ 데칼 텍스처 샘플링
     float4 decalColor = g_DecalTexture.Sample(g_Sample, decalUV);
 
-    // 8. 알파 값을 이용한 블렌딩
-    // 투명도가 0이면 픽셀 버림
+    // 9️⃣ 알파 컷아웃
     if (decalColor.a < 0.01f)
-    {
         discard;
-    }
 
-    // 9. 최종 색상 반환 (알파 블렌딩은 하드웨어에서 처리)
+    // 🔟 최종 색상 출력 (하드웨어 블렌딩)
     return decalColor;
 }

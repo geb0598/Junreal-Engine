@@ -391,6 +391,16 @@ void D3D11RHI::RSSetFrontCullState()
     DeviceContext->RSSetState(FrontCullRasterizerState);
 }
 
+void D3D11RHI::RSSetNoCullState()
+{
+    DeviceContext->RSSetState(NoCullRasterizerState);
+}
+
+void D3D11RHI::RSSetDefaultState()
+{
+    DeviceContext->RSSetState(DefaultRasterizerState);
+}
+
 void D3D11RHI::RSSetViewport()
 {
     DeviceContext->RSSetViewports(1, &ViewportInfo);
@@ -528,6 +538,13 @@ void D3D11RHI::CreateRasterizerState()
     frontcullrasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
 
     Device->CreateRasterizerState(&frontcullrasterizerdesc, &FrontCullRasterizerState);
+
+    D3D11_RASTERIZER_DESC nocullrasterizerdesc = {};
+    nocullrasterizerdesc.FillMode = D3D11_FILL_SOLID; // 채우기 모드
+    nocullrasterizerdesc.CullMode = D3D11_CULL_NONE; // 컬링 없음
+    nocullrasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
+
+    Device->CreateRasterizerState(&nocullrasterizerdesc, &NoCullRasterizerState);
 }
 
 void D3D11RHI::CreateConstantBuffer()
@@ -681,6 +698,11 @@ void D3D11RHI::ReleaseRasterizerState()
         FrontCullRasterizerState->Release();
         FrontCullRasterizerState = nullptr;
     }
+    if (NoCullRasterizerState)
+    {
+        NoCullRasterizerState->Release();
+        NoCullRasterizerState = nullptr;
+    }
     DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 }
 
@@ -741,6 +763,9 @@ void D3D11RHI::OmSetDepthStencilState(EComparisonFunc Func)
         break;
     case EComparisonFunc::LessEqual:
         DeviceContext->OMSetDepthStencilState(DepthStencilStateLessEqualWrite, 0);
+        break;
+    case EComparisonFunc::LessEqualReadOnly:
+        DeviceContext->OMSetDepthStencilState(DepthStencilStateLessEqualReadOnly, 0);
         break;
     case EComparisonFunc::GreaterEqual:
         DeviceContext->OMSetDepthStencilState(DepthStencilStateGreaterEqualWrite, 0);

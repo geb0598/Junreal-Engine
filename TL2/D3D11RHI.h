@@ -56,6 +56,8 @@ public:
     void IASetPrimitiveTopology() override;
     void RSSetState(EViewModeIndex ViewModeIndex) override;
     void RSSetFrontCullState() override;
+    void RSSetNoCullState() override;
+    void RSSetDefaultState() override;
     void RSSetViewport() override;
     void OMSetRenderTargets() override;
     void OMSetBlendState(bool bIsBlendMode) override;
@@ -122,6 +124,7 @@ private:
     ID3D11RasterizerState* DefaultRasterizerState{};//
     ID3D11RasterizerState* WireFrameRasterizerState{};//
     ID3D11RasterizerState* FrontCullRasterizerState{};//
+    ID3D11RasterizerState* NoCullRasterizerState{};//
 
     ID3D11DepthStencilState* DepthStencilState{};
 

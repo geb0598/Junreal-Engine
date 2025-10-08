@@ -9,10 +9,10 @@ IMPLEMENT_CLASS(UDecalComponent)
 UDecalComponent::UDecalComponent()
 {
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
-    DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("cube-tex.obj");
+    DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
 
-    SetMaterial("DecalShader.hlsl", EVertexLayoutType::PositionColorTexturNormal);
+    SetMaterial("DecalShader.hlsl");
     if (Material)
     {
         Material->Load("Editor/Decal/SpotLight_64x.dds", UResourceManager::GetInstance().GetDevice());
@@ -29,74 +29,75 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     if (!DecalBoxMesh || !Material)
         return;
 
-    // 월드 행렬 생성
+    // 월드/역월드
     FMatrix WorldMatrix = GetWorldMatrix();
-    FMatrix InvWorldMatrix = WorldMatrix.InverseAffine();
+    FMatrix InvWorldMatrix = WorldMatrix.InverseAffine(); // OK(Affine)
 
-    // ViewProj 행렬 및 역행렬 계산
-    FMatrix ViewProj = View * Proj;
-    FMatrix InvViewProj = ViewProj.InverseAffine();
+    // ViewProj 및 역행렬 (투영 포함 → 일반 Inverse 필요)
+    FMatrix ViewProj = View * Proj;                   // row-major 기준
+    FMatrix InvViewProj = ViewProj.Inverse();         // 투영 포함되므로 일반 Inverse 사용
 
     // 상수 버퍼 업데이트
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
     Renderer->UpdateInvWorldBuffer(InvWorldMatrix, InvViewProj);
 
-    // 데칼 셰이더 준비
+    // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
+    Renderer->OMSetBlendState(true);                  // (SrcAlpha, InvSrcAlpha)인지 내부 확인
 
-    // 블렌드 스테이트 활성화 (반투명)
-    Renderer->OMSetBlendState(true);
-
-    // Depth SRV를 shader resource로 사용하기 위해 depth stencil view를 먼저 해제
+    // =========================
+    // RTV 유지 + DSV 언바인드
+    // =========================
+    // FIX: 현재 RTV를 조회해서 DSV만 떼고 다시 바인딩
     ID3D11RenderTargetView* currentRTV = nullptr;
-    Renderer->GetRHIDevice()->GetDeviceContext()->OMGetRenderTargets(1, &currentRTV, nullptr);
-    Renderer->GetRHIDevice()->GetDeviceContext()->OMSetRenderTargets(1, &currentRTV, nullptr);
-    if (currentRTV) currentRTV->Release();
+    ID3D11DeviceContext* ctx = Renderer->GetRHIDevice()->GetDeviceContext();
 
-    // 데칼: 깊이 읽기만, 비교는 ALWAYS
-    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+    ctx->OMGetRenderTargets(1, &currentRTV, nullptr);            // 현재 RTV 핸들 얻고
+    ctx->OMSetRenderTargets(1, &currentRTV, nullptr);            // RTV 유지 + DSV 해제
+    if (currentRTV) currentRTV->Release();                       // 로컬 ref release
 
-    // 앞면 컬링 (데칼 박스 내부만 그리기)
-    Renderer->RSSetFrontCullState();
+    // 데칼은 깊이 "읽기"만 (LessEqual + DepthWrite Off)
+    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqualReadOnly);
 
-    // 데칼 박스 메쉬 렌더링
+    // 컬링 끄기(양면)
+    Renderer->RSSetNoCullState();
+
+    // 입력 어셈블러
     UINT stride = sizeof(FVertexDynamic);
     UINT offset = 0;
+    ID3D11Buffer* vb = DecalBoxMesh->GetVertexBuffer();
+    ID3D11Buffer* ib = DecalBoxMesh->GetIndexBuffer();
+    ctx->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+    ctx->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+    ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    ID3D11Buffer* VertexBuffer = DecalBoxMesh->GetVertexBuffer();
-    ID3D11Buffer* IndexBuffer = DecalBoxMesh->GetIndexBuffer();
-
-    Renderer->GetRHIDevice()->GetDeviceContext()->IASetVertexBuffers(0, 1, &VertexBuffer, &stride, &offset);
-    Renderer->GetRHIDevice()->GetDeviceContext()->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    Renderer->GetRHIDevice()->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-
-    // 텍스처 바인딩
+    // 텍스처 & 샘플러
     if (Material->GetTexture())
     {
-        ID3D11ShaderResourceView* TextureSRV = Material->GetTexture()->GetShaderResourceView();
-        Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(0, 1, &TextureSRV);
+        ID3D11ShaderResourceView* texSRV = Material->GetTexture()->GetShaderResourceView();
+        ctx->PSSetShaderResources(0, 1, &texSRV);
     }
-
-    // Sampler 바인딩
     Renderer->GetRHIDevice()->PSSetDefaultSampler(0);
 
-    // Depth SRV 바인딩 (t1 슬롯)
-    ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(Renderer->GetRHIDevice())->GetDepthSRV();
-    Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(1, 1, &DepthSRV);
+    // Depth SRV 바인딩 (t1)
+    ID3D11ShaderResourceView* depthSRV =
+        static_cast<D3D11RHI*>(Renderer->GetRHIDevice())->GetDepthSRV();
+    ctx->PSSetShaderResources(1, 1, &depthSRV);
 
-    Renderer->GetRHIDevice()->GetDeviceContext()->DrawIndexed(DecalBoxMesh->GetIndexCount(), 0, 0);
+    // 드로우
+    ctx->DrawIndexed(DecalBoxMesh->GetIndexCount(), 0, 0);
 
-    // SRV 리셋
+    // SRV 언바인드 (리소스 hazard 방지)
     ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
-    Renderer->GetRHIDevice()->GetDeviceContext()->PSSetShaderResources(0, 2, nullSRV);
+    ctx->PSSetShaderResources(0, 2, nullSRV);
 
-    // Depth Stencil View 복원
+    // 원래 DSV/RTV 복원 (렌더러가 백버퍼/DSV 재바인딩)
     Renderer->GetRHIDevice()->OMSetRenderTargets();
 
     // 상태 복원
     Renderer->OMSetBlendState(false);
-    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+    Renderer->RSSetDefaultState();
+    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual); // 기본 상태로 복원
 }
 
 void UDecalComponent::SetDecalTexture(const FString& TexturePath)
