@@ -121,13 +121,13 @@ void UDecalComponent::SetDecalTexture(const FString& TexturePath)
 
 UObject* UDecalComponent::Duplicate()
 {
-    UDecalComponent* NewComp = static_cast<UDecalComponent*>(UPrimitiveComponent::Duplicate());
-    if (NewComp)
+    UDecalComponent* DuplicatedComponent = Cast<UDecalComponent>(NewObject(GetClass()));
+    if (DuplicatedComponent)
     {
-        NewComp->DecalSize = DecalSize;
-        NewComp->BlendMode = BlendMode;
+        DuplicatedComponent->DecalSize = DecalSize;
+        DuplicatedComponent->BlendMode = BlendMode;
     }
-    return NewComp;
+    return DuplicatedComponent;
 }
 
 void UDecalComponent::DuplicateSubObjects()
