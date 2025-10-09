@@ -84,6 +84,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     // 4️⃣ NDC 좌표 구성 (DirectX: Z 0~1 → NDC -1~1 변환)
     float4 ndcPos;
     ndcPos.xy = viewportUV * 2.0f - 1.0f;
+    ndcPos.y = -ndcPos.y; // Y축 반전 (UV는 아래로 증가, NDC는 위로 증가)
     ndcPos.z = depth ; // ✅ 중요 수정점
     ndcPos.w = 1.0f;
       //return ndcPos;
