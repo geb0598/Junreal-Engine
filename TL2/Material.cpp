@@ -10,9 +10,11 @@ void UMaterial::Load(const FString& InFilePath, ID3D11Device* InDevice)
 
     if (InFilePath.find(".dds") != std::string::npos)
     {
-        FString shaderName = UResourceManager::GetInstance().GetProperShader(InFilePath);
-
-        Shader = UResourceManager::GetInstance().Load<UShader>(shaderName);
+       
+        /*FString shaderName = UResourceManager::GetInstance().GetProperShader(InFilePath);
+        if (Shader) {
+            Shader = UResourceManager::GetInstance().Load<UShader>(shaderName);
+        }*/
         Texture = UResourceManager::GetInstance().Load<UTexture>(InFilePath);
     }
     else if (InFilePath.find(".hlsl") != std::string::npos)

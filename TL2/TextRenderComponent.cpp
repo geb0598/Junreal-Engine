@@ -40,7 +40,7 @@ UTextRenderComponent::UTextRenderComponent()
 	Mesh->Load(&MeshData, ResourceManager.GetDevice());
 	TextQuad = Mesh;
 
-	if (auto* M = ResourceManager.Get<UMaterial>("TextBillboard"))
+	/*if (auto* M = ResourceManager.Get<UMaterial>("TextBillboard"))
 	{
 		Material = M;
 	}
@@ -48,8 +48,8 @@ UTextRenderComponent::UTextRenderComponent()
 	{
 		Material = NewObject<UMaterial>();
 		ResourceManager.Add<UMaterial>("TextBillboard", Material);
-	}
-
+	}*/
+	SetMaterial("TextShader.hlsl");//여기서 자동으로 메테리얼을 세팅해줍니다. 굳이 만들 필요 없음
 	Material->Load("TextBillboard.dds", ResourceManager.GetDevice());
 
 	Text = "Text";    // 텍스트를 생성하면 설정되는 기본 텍스트
