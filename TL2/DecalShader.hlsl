@@ -24,7 +24,7 @@ cbuffer InvWorldBuffer : register(b4)
     row_major float4x4 InvViewProjMatrix;
 }
 
-cbuffer ViewportBuffer : register(b5)
+cbuffer ViewportBuffer : register(b6)
 {
     float4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
 }

@@ -689,7 +689,7 @@ void D3D11RHI::UpdateViewportConstantBuffer(float StartX, float StartY, float Si
     {
         memcpy(mapped.pData, &data, sizeof(ViewportBufferType));
         DeviceContext->Unmap(ViewportCB, 0);
-        DeviceContext->PSSetConstantBuffers(5, 1, &ViewportCB);
+        DeviceContext->PSSetConstantBuffers(6, 1, &ViewportCB);
     }
 }
 
