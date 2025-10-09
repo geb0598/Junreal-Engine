@@ -397,7 +397,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             {
                 bool bIsSelected = SelectionManager.IsActorSelected(Actor);
                 Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-                DecalComp->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                DecalComp->Render(Renderer, ViewMatrix, ProjectionMatrix, Viewport);
             }
         }
     }

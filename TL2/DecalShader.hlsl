@@ -24,6 +24,11 @@ cbuffer InvWorldBuffer : register(b4)
     row_major float4x4 InvViewProjMatrix;
 }
 
+cbuffer ViewportBuffer : register(b5)
+{
+    float4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
+}
+
 //------------------------------------------------------
 // Resources
 //------------------------------------------------------
@@ -63,41 +68,43 @@ PS_INPUT mainVS(VS_INPUT input)
 //------------------------------------------------------
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
-    // 1️⃣ 화면 좌표 → [0,1] UV 변환
-    // SV_Position은 픽셀 셰이더에서 화면 픽셀 좌표 (x, y, depth, 1/w)를 제공
-    // 화면 해상도로 나눠서 [0,1] 범위로 변환
-    // CLIENTWIDTH, CLIENTHEIGHT 대신 상수 버퍼나 추론 필요
-    // 임시로 텍스처 크기 기반 계산 (GetDimensions 사용)
+    // 1️⃣ Depth 샘플링: 전체 화면 기준 UV 사용
     float2 screenSize;
     g_DepthTexture.GetDimensions(screenSize.x, screenSize.y);
-    float2 screenUV = input.position.xy / screenSize;
+    float2 depthUV = input.position.xy / screenSize;
 
     // 2️⃣ Depth 버퍼 샘플링 (0~1)
-    float depth = g_DepthTexture.Sample(g_Sample, screenUV).r;
-      // 🐛 디버그: 깊이 값 시각화
-   // return float4(depth, depth, depth, 1.0f);
-    // 3️⃣ NDC 좌표 구성 (DirectX: Z 0~1 → NDC -1~1 변환)
-    float4 ndcPos;
-    ndcPos.xy = screenUV * 2.0f - 1.0f;
-    ndcPos.z = depth * 2.0f - 1.0f; // ✅ 중요 수정점
-    ndcPos.w = 1.0f;
+    float depth = g_DepthTexture.Sample(g_Sample, depthUV).r;
 
+    // 3️⃣ NDC 계산: 뷰포트 로컬 UV 사용
+    float2 viewportLocalPos = input.position.xy - ViewportRect.xy;
+    float2 viewportUV = viewportLocalPos / ViewportRect.zw;
+      // 🐛 디버그: 깊이 값 시각화
+    //return float4(depth, depth, depth, 1.0f);
+    // 4️⃣ NDC 좌표 구성 (DirectX: Z 0~1 → NDC -1~1 변환)
+    float4 ndcPos;
+    ndcPos.xy = viewportUV * 2.0f - 1.0f;
+    ndcPos.z = depth ; // ✅ 중요 수정점
+    ndcPos.w = 1.0f;
+      //return ndcPos;
     // 4️⃣ NDC → World
     float4 worldPos = mul(ndcPos, InvViewProjMatrix);
     worldPos /= worldPos.w;
 
     // 5️⃣ World → Decal Local
     float3 decalLocalPos = mul(worldPos, InvWorldMatrix).xyz;
-
+    
     // 6️⃣ 데칼 박스 범위 검사 (-0.5~+0.5)
     // 데칼 박스 밖의 픽셀은 렌더링하지 않음
-    if (abs(decalLocalPos.x) > 10.0f ||
-        abs(decalLocalPos.y) > 10.0f ||
-        abs(decalLocalPos.z) > 10.0f)
+    if (abs(decalLocalPos.x) > 1.0f ||
+        abs(decalLocalPos.y) > 1.0f ||
+        abs(decalLocalPos.z) > 1.0f)
     {
         discard;
     }
-
+   
+    //return float4(1,0,0,1);
+    
     // 7️⃣ 로컬 → UV (0~1)
     float2 decalUV = decalLocalPos.xy + 0.5f;
 
@@ -115,7 +122,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     // 9️⃣ 알파 컷아웃
     if (decalColor.a < 0.01f)
         discard;
-
+   // return float4(decalLocalPos * 0.5f + 0.5f, 1.0f);
     // 🔟 최종 색상 출력 (하드웨어 블렌딩)
     return decalColor;
 }

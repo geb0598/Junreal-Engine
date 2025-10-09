@@ -65,6 +65,11 @@ struct ColorBufferType
     FVector4 Color;
 };
 
+// b5: Viewport 정보 (데칼용 Screen-Space UV 계산)
+struct ViewportBufferType
+{
+    FVector4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
+};
 
 struct BillboardBufferType
 {
@@ -117,6 +122,7 @@ void D3D11RHI::Release()
     if (PixelConstCB) { PixelConstCB->Release(); PixelConstCB = nullptr; }
     if (UVScrollCB) { UVScrollCB->Release(); UVScrollCB = nullptr; }
     if (InvWorldCB) { InvWorldCB->Release(); InvWorldCB = nullptr; }
+    if (ViewportCB) { ViewportCB->Release(); ViewportCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체
@@ -205,9 +211,9 @@ void D3D11RHI::CreateSamplerState()
 {
     D3D11_SAMPLER_DESC SampleDesc = {};
     SampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    SampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    SampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    SampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    SampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     SampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     SampleDesc.MinLOD = 0;
     SampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -623,6 +629,14 @@ void D3D11RHI::CreateConstantBuffer()
     invWorldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     invWorldDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&invWorldDesc, nullptr, &InvWorldCB);
+
+    // b5 : ViewportBuffer (데칼용 - Viewport 정보)
+    D3D11_BUFFER_DESC viewportDesc = {};
+    viewportDesc.Usage = D3D11_USAGE_DYNAMIC;
+    viewportDesc.ByteWidth = sizeof(ViewportBufferType);
+    viewportDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    viewportDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    Device->CreateBuffer(&viewportDesc, nullptr, &ViewportCB);
 }
 
 void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec)
@@ -660,6 +674,22 @@ void D3D11RHI::UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const
         memcpy(mapped.pData, &data, sizeof(InvWorldBufferType));
         DeviceContext->Unmap(InvWorldCB, 0);
         DeviceContext->PSSetConstantBuffers(4, 1, &InvWorldCB);
+    }
+}
+
+void D3D11RHI::UpdateViewportConstantBuffer(float StartX, float StartY, float SizeX, float SizeY)
+{
+    if (!ViewportCB) return;
+
+    ViewportBufferType data;
+    data.ViewportRect = FVector4(StartX, StartY, SizeX, SizeY);
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    if (SUCCEEDED(DeviceContext->Map(ViewportCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+    {
+        memcpy(mapped.pData, &data, sizeof(ViewportBufferType));
+        DeviceContext->Unmap(ViewportCB, 0);
+        DeviceContext->PSSetConstantBuffers(5, 1, &ViewportCB);
     }
 }
 

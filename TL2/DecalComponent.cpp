@@ -24,7 +24,7 @@ UDecalComponent::~UDecalComponent()
 {
 }
 
-void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj)
+void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
 {
     if (!DecalBoxMesh || !Material)
         return;
@@ -42,6 +42,14 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     // 상수 버퍼 업데이트
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
     Renderer->UpdateInvWorldBuffer(InvWorldMatrix, InvViewProj);
+
+    // 뷰포트 정보 전달 (4분할 뷰포트 지원)
+    Renderer->UpdateViewportBuffer(
+        static_cast<float>(Viewport->GetStartX()),
+        static_cast<float>(Viewport->GetStartY()),
+        static_cast<float>(Viewport->GetSizeX()),
+        static_cast<float>(Viewport->GetSizeY())
+    );
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
@@ -62,7 +70,7 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqualReadOnly);
 
     // 컬링 끄기(양면)
-    Renderer->RSSetNoCullState();
+    Renderer->RSSetFrontCullState();
 
     // 입력 어셈블러
     UINT stride = sizeof(FVertexDynamic);
