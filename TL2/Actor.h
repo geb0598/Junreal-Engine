@@ -6,6 +6,7 @@
 class UWorld;
 class USceneComponent;
 class UAABoundingBoxComponent;
+class UOBoundingBoxComponent;
 class UShapeComponent;
 
 class AActor : public UObject
@@ -120,6 +121,7 @@ public:
     
     // [PIE] ???
     UAABoundingBoxComponent* CollisionComponent = nullptr;
+    UOBoundingBoxComponent* OBBCollisionComponent = nullptr;
 
     // [PIE] 외부에서 초기화, Level로 변경 필요?
     UWorld* World = nullptr;
