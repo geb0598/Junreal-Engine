@@ -28,6 +28,8 @@ public:
     // 로컬 기준 8개 꼭짓점 반환
     std::vector<FVector> GetLocalCorners() const;
 
+    TArray<FVector> GetWorldCorners() const;
+
     FBox GetWorldOBBFromAttachParent() const;
 
 	void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
@@ -40,6 +42,7 @@ public:
 
     void SetLineColor(FVector4 InLineColor) { LineColor = InLineColor; }
 
+    bool IntersectWithAABB(const FBound& AABB) const;
     // Duplicate
     UObject* Duplicate() override;
 

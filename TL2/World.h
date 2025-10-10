@@ -159,8 +159,9 @@ private:
 	TArray<AActor*> EngineActors;
 	/** === 액터 관리 === */
 	TArray<AActor*> Actors;
-	/** === 데칼 렌더링의 타겟이 되는 PrimitiveComponent 리스트 === **/
-	TArray<UPrimitiveComponent*> PrimitiveComponentsForDecal;
+
+	/** === 렌더링 되는 Actor 리스트 === **/
+	TArray<AActor*> VisibleActors;
 
 	// Object naming system
 	TMap<FString, int32> ObjectTypeCounts;
