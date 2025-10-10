@@ -24,11 +24,6 @@ cbuffer DecalTransformBuffer : register(b4)
     row_major float4x4 DecalProjectionMatrix;
 }
 
-cbuffer ViewportBuffer : register(b6)
-{
-    float4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
-}
-
 //------------------------------------------------------
 // Resources
 //------------------------------------------------------
@@ -74,9 +69,9 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     
     //데칼 크기와 transform을 분리하고 프로젝션 구현이 완료되면 주석 해제
     //DecalPosition = mul(DecalPosition, DecalProjectionMatrix);
-    if (abs(DecalPosition.x) > 1.0f ||
-        abs(DecalPosition.y) > 1.0f ||
-        abs(DecalPosition.z) > 1.0f)
+    if (abs(DecalPosition.x) > 0.5f ||
+        abs(DecalPosition.y) > 0.5f ||
+        abs(DecalPosition.z) > 0.5f)
     {
         discard;
     }

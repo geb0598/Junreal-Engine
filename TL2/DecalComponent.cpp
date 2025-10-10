@@ -57,14 +57,6 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     //InvWorldMatrix = 데칼의 WorldMatrixInverse
     Renderer->UpdateInvWorldBuffer(InvWorldMatrix, InvViewProj);
 
-    // 뷰포트 정보 전달 (4분할 뷰포트 지원)
-    Renderer->UpdateViewportBuffer(
-        static_cast<float>(Viewport->GetStartX()),
-        static_cast<float>(Viewport->GetStartY()),
-        static_cast<float>(Viewport->GetSizeX()),
-        static_cast<float>(Viewport->GetSizeY())
-    );
-
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
     Renderer->OMSetBlendState(true);                  // (SrcAlpha, InvSrcAlpha)인지 내부 확인
