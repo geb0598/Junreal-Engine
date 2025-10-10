@@ -169,6 +169,10 @@
     <ClCompile Include="BVH.cpp" />
     <ClCompile Include="DecalActor.cpp" />
     <ClCompile Include="DecalComponent.cpp" />
+    <ClCompile Include="DecalComponentScreen.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="EditorClipboard.cpp" />
     <ClCompile Include="EditorEngine.cpp" />
     <ClCompile Include="Engine.cpp" />
@@ -313,6 +317,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="DecalShaderScreen.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Primitive.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -360,6 +368,10 @@
     <ClInclude Include="BVH.h" />
     <ClInclude Include="DecalActor.h" />
     <ClInclude Include="DecalComponent.h" />
+    <ClInclude Include="DecalComponentScreen.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="EditorClipboard.h" />
     <ClInclude Include="EditorEngine.h" />
     <ClInclude Include="Engine.h" />
