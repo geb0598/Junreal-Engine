@@ -764,6 +764,7 @@ struct alignas(16) FMatrix
     static FMatrix LookAtLH(const FVector& Eye, const FVector& At, const FVector& Up);
     static FMatrix PerspectiveFovLH(float FovY, float Aspect, float Zn, float Zf);
     static FMatrix OrthoLH(float Width, float Height, float Zn, float Zf);
+    static FMatrix OffCenterOrthoLH(float Left, float Right, float Top, float Bottom, float Near, float Far);
 };
 
 //Without Last RC
@@ -963,6 +964,25 @@ inline FMatrix FMatrix::OrthoLH(float Width, float Height, float Zn, float Zf)
     m.M[3][2] = -Zn / DZ;   // 행벡터 규약: 마지막 행에 배치
     // 나머지는 Identity()로 이미 [0,0,0,1]
     return m;
+}
+
+inline FMatrix FMatrix::OffCenterOrthoLH(float Left, float Right, float Top, float Bottom, float Near, float Far)
+{
+    FMatrix Result{ FMatrix::Identity() };
+    //[Left, Right] -> [-1, 1]
+    Result.M[0][0] = 2.0f / (Right - Left);
+    Result.M[3][0] = -(Right + Left) / (Right - Left);
+    
+    //[Bottom, Top] -> [-1, 1]
+    Result.M[1][1] = 2.0f / (Top - Bottom);
+    Result.M[3][1] = -(Top + Bottom) / (Top - Bottom);
+
+    //[Near, Far] -> [0, 1]
+    Result.M[2][2] = 1.0f / (Far - Near);
+    Result.M[3][2] = -Near / (Far - Near);
+    Result.M[3][3] = 1.0f;
+
+    return Result;
 }
 
 // FTransform → Matrix (row-vector convention; translation in last row)

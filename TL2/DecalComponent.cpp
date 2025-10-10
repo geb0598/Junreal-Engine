@@ -25,6 +25,23 @@ UDecalComponent::~UDecalComponent()
 {
 }
 
+void UDecalComponent::SetDecalSize(const FVector& InSize)
+{
+    DecalSize = InSize;
+    UpdateDecalProjectionMatrix();
+}
+
+void UDecalComponent::UpdateDecalProjectionMatrix()
+{
+    float Right = DecalSize.Y / 2.0f;
+    float Left = -DecalSize.Y / 2.0f;
+    float Top = DecalSize.Z / 2.0f;
+    float Bottom = -DecalSize.Z / 2.0f;
+    float Near = 0.0f;
+    float Far = DecalSize.X / 2.0f;
+    DecalProjectionMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
+}
+
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
 {
     if (!DecalBoxMesh || !Material)
@@ -40,8 +57,7 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     
     // 월드/역월드
     // DecalSize를 스케일로 적용, 데칼 world inverse를 구하기 위함
-    FMatrix ScaleMatrix = FMatrix::CreateScale(DecalSize);
-    FMatrix WorldMatrix = ScaleMatrix * GetWorldMatrix();
+    FMatrix WorldMatrix = GetWorldMatrix();
     FMatrix InvWorldMatrix = WorldMatrix.InverseAffine(); // OK(Affine)
 
     //데칼 world inverse를 구했으므로 Componenent의 worldMatrix를 구해줌
@@ -49,13 +65,12 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
 
     // ViewProj 및 역행렬 (투영 포함 → 일반 Inverse 필요)
     FMatrix ViewProj = View * Proj;                   // row-major 기준
-    FMatrix InvViewProj = ViewProj.Inverse();         // 투영 포함되므로 일반 Inverse 사용
 
     // 상수 버퍼 업데이트
     //WorldMatrix = 데칼을 투영할 Component의 WorldMatrix
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
     //InvWorldMatrix = 데칼의 WorldMatrixInverse
-    Renderer->UpdateInvWorldBuffer(InvWorldMatrix, InvViewProj);
+    Renderer->UpdateInvWorldBuffer(InvWorldMatrix, DecalProjectionMatrix);
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
@@ -109,6 +124,7 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     Renderer->RSSetDefaultState();
     Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual); // 기본 상태로 복원
 }
+
 
 void UDecalComponent::SetDecalTexture(const FString& TexturePath)
 {

@@ -65,18 +65,17 @@ PS_INPUT mainVS(VS_INPUT input)
 //------------------------------------------------------
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
-    float3 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse).xyz;
+    float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);
     
-    //데칼 크기와 transform을 분리하고 프로젝션 구현이 완료되면 주석 해제
-    //DecalPosition = mul(DecalPosition, DecalProjectionMatrix);
-    if (abs(DecalPosition.x) > 0.5f ||
-        abs(DecalPosition.y) > 0.5f ||
-        abs(DecalPosition.z) > 0.5f)
+    float3 NDCPosition = mul(DecalPosition, DecalProjectionMatrix).xyz;
+    if (abs(NDCPosition.x) > 0.5f ||
+        abs(NDCPosition.y) > 0.5f ||
+        abs(NDCPosition.z) > 0.5f)
     {
         discard;
     }
     
-    float2 DecalUV = float2(DecalPosition.x + 0.5f, 1.0f - (DecalPosition.y + 0.5f));
+    float2 DecalUV = float2(DecalPosition.x*0.5f + 0.5f, 1.0f - (DecalPosition.y*0.5f + 0.5f));
     
     float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
     return DecalColor;
