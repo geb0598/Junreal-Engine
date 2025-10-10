@@ -53,7 +53,7 @@ PS_INPUT mainVS(VS_INPUT input)
 
     // 월드 → 뷰 → 프로젝션 (row_major 기준)
     float4 WorldPosition = mul(float4(input.position, 1.0f), WorldMatrix);
-    
+
     float4 ClipPosition = mul(mul(WorldPosition, ViewMatrix), ProjectionMatrix);
     output.position = ClipPosition;
     output.WorldPosition = WorldPosition.xyz;
@@ -75,9 +75,31 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     {
         discard;
     }
+    float3 dpdx = ddx(input.WorldPosition);
+  
+    float3 dpdy = ddy(input.WorldPosition);
+
+    float3 surfaceNormal = normalize(cross(dpdy, dpdx));
     
-    float2 DecalUV = float2(NDCPosition.x * 0.5f + 0.5f, 1.0f - (NDCPosition.y * 0.5f + 0.5f));
-    
+    // 데칼 방향(전방) - 데칼의 Z축 방향 (투영 방향)
+    float3 decalForward = normalize(DecalWorldMatrixInverse._m10_m11_m12);
+
+    // 표면 노멀과 데칼 투영 방향의 내적 계산
+    // facing > 0: 앞면 (데칼 방향과 같은 방향)
+    // facing < 0: 뒷면 (데칼 방향과 반대 방향)
+    // facing ≈ 0: 수직면 (90도)
+    float facing = dot(surfaceNormal, decalForward);
+
+    // 앞면만 유지: facing이 0.17 이상이어야 함
+    // 0.17 미만 = 수직면 + 뒷면 모두 제거
+    // 값을 높이면 더 엄격하게 잘림 (0.5 = 60도)
+    if (facing < 0.17f)
+    {
+        discard;
+    }
+
+    float2 DecalUV = float2(DecalPosition.x*0.5f + 0.5f, 1.0f - (DecalPosition.y*0.5f + 0.5f));
+
     float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
     return DecalColor;
 }
