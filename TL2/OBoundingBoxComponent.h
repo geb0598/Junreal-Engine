@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "ShapeComponent.h"
 
+struct FOrientedBound;
+struct FBound;
 struct FBox
 {
     FVector Min;
@@ -16,12 +18,9 @@ class UOBoundingBoxComponent :
     DECLARE_CLASS(UOBoundingBoxComponent,UShapeComponent)
 public:
     UOBoundingBoxComponent();
-
+    ~UOBoundingBoxComponent() override;
     // 주어진 로컬 버텍스들로부터 Min/Max 계산
     void SetFromVertices(const std::vector<FVector>& Verts);
-
-    // 월드 좌표계에서의 AABB 반환
-    FBox GetWorldBox() const;
 
     // 로컬 공간에서의 Extent (절반 크기)
     FVector GetExtent() const;
@@ -32,11 +31,29 @@ public:
     FBox GetWorldOBBFromAttachParent() const;
 
 	void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
-    // Debug 렌더링용
-    // void DrawDebug(ID3D11DeviceContext* DC);
+
+    void CreateLineData(const std::vector<FVector>& corners, OUT TArray<FVector>& Start, OUT TArray<FVector>& End, OUT TArray<FVector4>& Color);
+
+    // OBB 관련 함수들
+    FOrientedBound GetWorldOrientedBound() const;
+    bool RayIntersectsOBB(const FVector& Origin, const FVector& Direction, float& Distance) const;
+
+    void SetLineColor(FVector4 InLineColor) { LineColor = InLineColor; }
+
+    // Duplicate
+    UObject* Duplicate() override;
 
 private:
+ /*   void CreateLineData(
+        const FVector& Min, const FVector& Max,
+        OUT TArray<FVector>& Start,
+        OUT TArray<FVector>& End,
+        OUT TArray<FVector4>& Color);*/
+
+   // CreateOBBLineData(worldCorners, OBBStart, OBBEnd, OBBColor);
+
     FVector LocalMin;
     FVector LocalMax;
+    FVector4 LineColor;
 };
 
