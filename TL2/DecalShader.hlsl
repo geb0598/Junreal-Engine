@@ -1,5 +1,5 @@
 //======================================================
-// DecalShader.hlsl - Screen-Space Decal Shader (Fixed)
+// ForwardDecalShader.hlsl - Forward 렌더링으로 projection decal Shading
 //======================================================
 
 cbuffer ModelBuffer : register(b0)
@@ -18,10 +18,10 @@ cbuffer ColorBuffer : register(b3)
     float4 LerpColor;
 }
 
-cbuffer InvWorldBuffer : register(b4)
+cbuffer DecalTransformBuffer : register(b4)
 {
-    row_major float4x4 InvWorldMatrix;
-    row_major float4x4 InvViewProjMatrix;
+    row_major float4x4 DecalWorldMatrixInverse;
+    row_major float4x4 DecalProjectionMatrix;
 }
 
 cbuffer ViewportBuffer : register(b6)
@@ -33,7 +33,6 @@ cbuffer ViewportBuffer : register(b6)
 // Resources
 //------------------------------------------------------
 Texture2D g_DecalTexture : register(t0);
-Texture2D g_DepthTexture : register(t1);
 SamplerState g_Sample : register(s0);
 
 //------------------------------------------------------
@@ -50,6 +49,7 @@ struct VS_INPUT
 struct PS_INPUT
 {
     float4 position : SV_POSITION; // 픽셀 셰이더에서 자동으로 화면 픽셀 좌표로 변환됨
+    float3 WorldPosition : WORLDPOSITION;
 };
 
 PS_INPUT mainVS(VS_INPUT input)
@@ -57,9 +57,11 @@ PS_INPUT mainVS(VS_INPUT input)
     PS_INPUT output;
 
     // 월드 → 뷰 → 프로젝션 (row_major 기준)
-    float4x4 MVP = mul(mul(WorldMatrix, ViewMatrix), ProjectionMatrix);
-    output.position = mul(float4(input.position, 1.0f), MVP);
-
+    float4 WorldPosition = mul(float4(input.position, 1.0f), WorldMatrix);
+    
+    float4 ClipPosition = mul(mul(WorldPosition, ViewMatrix), ProjectionMatrix);
+    output.position = ClipPosition;
+    output.WorldPosition = WorldPosition.xyz;
     return output;
 }
 
@@ -68,62 +70,19 @@ PS_INPUT mainVS(VS_INPUT input)
 //------------------------------------------------------
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
-    // 1️⃣ Depth 샘플링: 전체 화면 기준 UV 사용
-    float2 screenSize;
-    g_DepthTexture.GetDimensions(screenSize.x, screenSize.y);
-    float2 depthUV = input.position.xy / screenSize;
-
-    // 2️⃣ Depth 버퍼 샘플링 (0~1)
-    float depth = g_DepthTexture.Sample(g_Sample, depthUV).r;
-
-    // 3️⃣ NDC 계산: 뷰포트 로컬 UV 사용
-    float2 viewportLocalPos = input.position.xy - ViewportRect.xy;
-    float2 viewportUV = viewportLocalPos / ViewportRect.zw;
-      // 🐛 디버그: 깊이 값 시각화
-    //return float4(depth, depth, depth, 1.0f);
-    // 4️⃣ NDC 좌표 구성 (DirectX: Z 0~1 → NDC -1~1 변환)
-    float4 ndcPos;
-    ndcPos.xy = viewportUV * 2.0f - 1.0f;
-    ndcPos.y = -ndcPos.y; // Y축 반전 (UV는 아래로 증가, NDC는 위로 증가)
-    ndcPos.z = depth ; // ✅ 중요 수정점
-    ndcPos.w = 1.0f;
-      //return ndcPos;
-    // 4️⃣ NDC → World
-    float4 worldPos = mul(ndcPos, InvViewProjMatrix);
-    worldPos /= worldPos.w;
-
-    // 5️⃣ World → Decal Local
-    float3 decalLocalPos = mul(worldPos, InvWorldMatrix).xyz;
+    float3 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse).xyz;
     
-    // 6️⃣ 데칼 박스 범위 검사 (-0.5~+0.5)
-    // 데칼 박스 밖의 픽셀은 렌더링하지 않음
-    if (abs(decalLocalPos.x) > 1.0f ||
-        abs(decalLocalPos.y) > 1.0f ||
-        abs(decalLocalPos.z) > 1.0f)
+    //데칼 크기와 transform을 분리하고 프로젝션 구현이 완료되면 주석 해제
+    //DecalPosition = mul(DecalPosition, DecalProjectionMatrix);
+    if (abs(DecalPosition.x) > 1.0f ||
+        abs(DecalPosition.y) > 1.0f ||
+        abs(DecalPosition.z) > 1.0f)
     {
         discard;
     }
-   
-    //return float4(1,0,0,1);
     
-    // 7️⃣ 로컬 → UV (0~1)
-    float2 decalUV = decalLocalPos.xy + 0.5f;
-
-  
-
-    // 🐛 디버그: 로컬 좌표 시각화
-    // return float4(decalLocalPos * 0.5f + 0.5f, 1.0f);
-
-    // 🐛 디버그: UV 좌표 시각화
-     //return float4(decalUV, 0.0f, 1.0f);
-
-    // 8️⃣ 데칼 텍스처 샘플링
-    float4 decalColor = g_DecalTexture.Sample(g_Sample, decalUV);
-
-    // 9️⃣ 알파 컷아웃
-    if (decalColor.a < 0.01f)
-        discard;
-   // return float4(decalLocalPos * 0.5f + 0.5f, 1.0f);
-    // 🔟 최종 색상 출력 (하드웨어 블렌딩)
-    return decalColor;
+    float2 DecalUV = float2(DecalPosition.x + 0.5f, 1.0f - (DecalPosition.y + 0.5f));
+    
+    float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
+    return DecalColor;
 }

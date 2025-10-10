@@ -3,6 +3,7 @@
 #include "DecalComponent.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
+#include "StaticMeshComponent.h"
 
 IMPLEMENT_CLASS(UDecalComponent)
 
@@ -24,23 +25,36 @@ UDecalComponent::~UDecalComponent()
 {
 }
 
-void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
+void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
 {
     if (!DecalBoxMesh || !Material)
         return;
 
+    //일단 프로젝션 데칼 테스트용으로 StaticMesh만 처리
+    UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Component);
+    if (!StaticMeshComponent)
+    {
+        return;
+    }
+    UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
+    
     // 월드/역월드
-    // DecalSize를 스케일로 적용
+    // DecalSize를 스케일로 적용, 데칼 world inverse를 구하기 위함
     FMatrix ScaleMatrix = FMatrix::CreateScale(DecalSize);
     FMatrix WorldMatrix = ScaleMatrix * GetWorldMatrix();
     FMatrix InvWorldMatrix = WorldMatrix.InverseAffine(); // OK(Affine)
+
+    //데칼 world inverse를 구했으므로 Componenent의 worldMatrix를 구해줌
+    WorldMatrix = Component->GetWorldMatrix();
 
     // ViewProj 및 역행렬 (투영 포함 → 일반 Inverse 필요)
     FMatrix ViewProj = View * Proj;                   // row-major 기준
     FMatrix InvViewProj = ViewProj.Inverse();         // 투영 포함되므로 일반 Inverse 사용
 
     // 상수 버퍼 업데이트
+    //WorldMatrix = 데칼을 투영할 Component의 WorldMatrix
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
+    //InvWorldMatrix = 데칼의 WorldMatrixInverse
     Renderer->UpdateInvWorldBuffer(InvWorldMatrix, InvViewProj);
 
     // 뷰포트 정보 전달 (4분할 뷰포트 지원)
@@ -70,13 +84,13 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqualReadOnly);
 
     // 컬링 끄기(양면)
-    Renderer->RSSetFrontCullState();
+    Renderer->RSSetDefaultState();
 
     // 입력 어셈블러
     UINT stride = sizeof(FVertexDynamic);
     UINT offset = 0;
-    ID3D11Buffer* vb = DecalBoxMesh->GetVertexBuffer();
-    ID3D11Buffer* ib = DecalBoxMesh->GetIndexBuffer();
+    ID3D11Buffer* vb = StaticMesh->GetVertexBuffer();
+    ID3D11Buffer* ib = StaticMesh->GetIndexBuffer();;
     ctx->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
     ctx->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -89,17 +103,11 @@ void UDecalComponent::Render(URenderer* Renderer, const FMatrix& View, const FMa
     }
     Renderer->GetRHIDevice()->PSSetDefaultSampler(0);
 
-    // Depth SRV 바인딩 (t1)
-    ID3D11ShaderResourceView* depthSRV =
-        static_cast<D3D11RHI*>(Renderer->GetRHIDevice())->GetDepthSRV();
-    ctx->PSSetShaderResources(1, 1, &depthSRV);
+    // 서브매시 처리도 해줘야함.
+    ctx->DrawIndexed(StaticMesh->GetIndexCount() , 0, 0);
 
-    // 드로우
-    ctx->DrawIndexed(DecalBoxMesh->GetIndexCount(), 0, 0);
-
-    // SRV 언바인드 (리소스 hazard 방지)
-    ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
-    ctx->PSSetShaderResources(0, 2, nullSRV);
+    ID3D11ShaderResourceView* nullSRV = nullptr;
+    ctx->PSSetShaderResources(0, 1, &nullSRV);
 
     // 원래 DSV/RTV 복원 (렌더러가 백버퍼/DSV 재바인딩)
     Renderer->GetRHIDevice()->OMSetRenderTargets();
