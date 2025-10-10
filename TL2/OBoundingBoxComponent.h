@@ -32,6 +32,8 @@ public:
 
 	void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
 
+    void CreateLineData(const std::vector<FVector>& corners, OUT TArray<FVector>& Start, OUT TArray<FVector>& End, OUT TArray<FVector4>& Color);
+
     // OBB 관련 함수들
     FOrientedBound GetWorldOrientedBound() const;
     bool RayIntersectsOBB(const FVector& Origin, const FVector& Direction, float& Distance) const;
@@ -42,11 +44,13 @@ public:
     UObject* Duplicate() override;
 
 private:
-    void CreateLineData(
+ /*   void CreateLineData(
         const FVector& Min, const FVector& Max,
         OUT TArray<FVector>& Start,
         OUT TArray<FVector>& End,
-        OUT TArray<FVector4>& Color);
+        OUT TArray<FVector4>& Color);*/
+
+   // CreateOBBLineData(worldCorners, OBBStart, OBBEnd, OBBColor);
 
     FVector LocalMin;
     FVector LocalMax;

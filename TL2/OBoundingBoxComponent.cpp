@@ -117,44 +117,30 @@ void UOBoundingBoxComponent::Render(URenderer* Renderer, const FMatrix& ViewMatr
     // 인덱스: 0(min,min,min), 1(max,min,min), 2(min,max,min), 3(max,max,min)
     //         4(min,min,max), 5(max,min,max), 6(min,max,max), 7(max,max,max)
 
-	CreateLineData(worldCorners[0], worldCorners[7], OBBStart, OBBEnd, OBBColor);
+	CreateLineData(worldCorners,  OBBStart, OBBEnd, OBBColor);
 
     Renderer->AddLines(OBBStart, OBBEnd, OBBColor);
 }
 
 void UOBoundingBoxComponent::CreateLineData(
-    const FVector& Min, const FVector& Max,
+    const std::vector<FVector>& corners,
     OUT TArray<FVector>& Start,
     OUT TArray<FVector>& End,
     OUT TArray<FVector4>& Color)
 {
     // 8개 꼭짓점 정의
-    const FVector v0(Min.X, Min.Y, Min.Z);
-    const FVector v1(Max.X, Min.Y, Min.Z);
-    const FVector v2(Max.X, Max.Y, Min.Z);
-    const FVector v3(Min.X, Max.Y, Min.Z);
-    const FVector v4(Min.X, Min.Y, Max.Z);
-    const FVector v5(Max.X, Min.Y, Max.Z);
-    const FVector v6(Max.X, Max.Y, Max.Z);
-    const FVector v7(Min.X, Max.Y, Max.Z);
+    static const int edges[12][2] = {
+         {0,1}, {1,3}, {3,2}, {2,0}, // 아래
+         {4,5}, {5,7}, {7,6}, {6,4}, // 위
+         {0,4}, {1,5}, {2,6}, {3,7}  // 기둥
+    };
 
-    // --- 아래쪽 면 ---
-    Start.Add(v0); End.Add(v1); Color.Add(LineColor);
-    Start.Add(v1); End.Add(v2); Color.Add(LineColor);
-    Start.Add(v2); End.Add(v3); Color.Add(LineColor);
-    Start.Add(v3); End.Add(v0); Color.Add(LineColor);
-
-    // --- 위쪽 면 ---
-    Start.Add(v4); End.Add(v5); Color.Add(LineColor);
-    Start.Add(v5); End.Add(v6); Color.Add(LineColor);
-    Start.Add(v6); End.Add(v7); Color.Add(LineColor);
-    Start.Add(v7); End.Add(v4); Color.Add(LineColor);
-
-    // --- 옆면 기둥 ---
-    Start.Add(v0); End.Add(v4); Color.Add(LineColor);
-    Start.Add(v1); End.Add(v5); Color.Add(LineColor);
-    Start.Add(v2); End.Add(v6); Color.Add(LineColor);
-    Start.Add(v3); End.Add(v7); Color.Add(LineColor);
+    for (int i = 0; i < 12; ++i)
+    {
+        Start.Add(corners[edges[i][0]]);
+        End.Add(corners[edges[i][1]]);
+        Color.Add(LineColor);
+    }
 }
 
 FOrientedBound UOBoundingBoxComponent::GetWorldOrientedBound() const
