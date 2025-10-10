@@ -293,6 +293,10 @@ struct FVector4
         : X(InX), Y(InY), Z(InZ), W(InW)
     {
     }
+    FVector4(const FVector& InVt3, float InW = 0)
+        : X(InVt3.X), Y(InVt3.Y), Z(InVt3.Z), W(InW)
+    {
+    }
 
     FVector4 ComponentMin(const FVector4& B)
     {

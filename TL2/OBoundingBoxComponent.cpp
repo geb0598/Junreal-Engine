@@ -60,6 +60,24 @@ std::vector<FVector> UOBoundingBoxComponent::GetLocalCorners() const
         {LocalMax.X, LocalMax.Y, LocalMax.Z}
     };
 }
+TArray<FVector> UOBoundingBoxComponent::GetWorldCorners() const
+{
+    FMatrix WorldMat = FMatrix::Identity();
+    if (GetOwner()) {
+        WorldMat = GetOwner()->GetWorldMatrix();
+    }
+
+    std::vector<FVector> LocalCorners = GetLocalCorners();
+    TArray<FVector> WorldCorners(8);
+    int idx = 0;
+    for (FVector& LocalCorner : LocalCorners)
+    {
+        FVector4 Vt4 = FVector4(LocalCorner, 1);
+        Vt4 = Vt4 * WorldMat;
+        WorldCorners[idx++] = FVector(Vt4.X, Vt4.Y, Vt4.Z);
+    }
+    return WorldCorners;
+}
 
 
 FBox UOBoundingBoxComponent::GetWorldOBBFromAttachParent() const
@@ -192,4 +210,75 @@ UObject* UOBoundingBoxComponent::Duplicate()
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;
+}
+bool UOBoundingBoxComponent::IntersectWithAABB(const FBound& AABB) const
+{
+    FMatrix WorldMatrix = GetOwner()->GetWorldMatrix();
+
+    FVector WorldAxis[3];
+    WorldAxis[0] = FVector(1, 0, 0) * WorldMatrix;
+    WorldAxis[1] = FVector(0, 1, 0) * WorldMatrix;
+    WorldAxis[2] = FVector(0, 0, 1) * WorldMatrix;
+    TArray<FVector> WorldCorners = GetWorldCorners();
+    FVector SATAxises[15];
+    SATAxises[0] = FVector(1, 0, 0);
+    SATAxises[1] = FVector(0, 1, 0);
+    SATAxises[2] = FVector(0, 0, 1);
+    SATAxises[3] = WorldAxis[0];
+    SATAxises[4] = WorldAxis[1];
+    SATAxises[5] = WorldAxis[2];
+
+    for (int i = 0; i < 3; i++)
+    {
+        SATAxises[6 + i * 3] = FVector::Cross(WorldAxis[i], FVector(1, 0, 0));
+        SATAxises[6 + i * 3 + 1] = FVector::Cross(WorldAxis[i], FVector(0, 1, 0));
+        SATAxises[6 + i * 3 + 2] = FVector::Cross(WorldAxis[i], FVector(0, 0, 1));
+    }
+
+    for (FVector& SATAxis : SATAxises)
+    {
+        FVector Normal = SATAxis.GetNormalized();
+        if (Normal == FVector(0, 0, 0))
+        {
+            continue;
+        }
+
+        //AABB Min, Max 구하기
+        //한쪽 끝점과 반대쪽 끝점
+        FVector AABBOuter1 = FVector(SATAxis.X > 0 ? AABB.Min.X : AABB.Max.X, SATAxis.Y > 0 ? AABB.Min.Y : AABB.Max.Y, SATAxis.Z > 0 ? AABB.Min.Z : AABB.Max.Z);
+        FVector AABBOuter2 = FVector(SATAxis.X > 0 ? AABB.Max.X : AABB.Min.X, SATAxis.Y > 0 ? AABB.Max.Y : AABB.Min.Y, SATAxis.Z > 0 ? AABB.Max.Z : AABB.Min.Z);
+        float AABBDotValue1 = Normal.Dot(AABBOuter1);
+        float AABBDotValue2 = Normal.Dot(AABBOuter2);
+        float AABBMin = AABBDotValue1 < AABBDotValue2 ? AABBDotValue1 : AABBDotValue2;
+        float AABBMax = AABBDotValue1 < AABBDotValue2 ? AABBDotValue2 : AABBDotValue1;
+
+        //OBB Min, Max 구하기
+        float OBBMin = 0, OBBMax = 0;
+        FVector OBBVertex = WorldCorners[0];
+        float OBBVertexDotValue = Normal.Dot(OBBVertex);
+        OBBMin = OBBVertexDotValue;
+        OBBMax = OBBVertexDotValue;
+        for (int i = 1; i < 8; i++)
+        {
+            OBBVertex = WorldCorners[i];
+            OBBVertexDotValue = Normal.Dot(OBBVertex);
+            if (OBBMin > OBBVertexDotValue)
+            {
+                OBBMin = OBBVertexDotValue;
+            }
+            else if (OBBMax < OBBVertexDotValue)
+            {
+                OBBMax = OBBVertexDotValue;
+            }
+        }
+
+        //A의 최대가 B의 최소보다 작거나, B의 최대가 A의 최소보다 작으면 겹치지 않음
+        if (AABBMax < OBBMin || OBBMax < AABBMin)
+        {
+            //한 축이라도 겹치지 않으면 충돌 x
+            return false;
+        }
+    }
+    return true;
+
 }

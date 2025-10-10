@@ -280,7 +280,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
         const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
         //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
-       PrimitiveComponentsForDecal.clear();
+       VisibleActors.clear();
 
         // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
         for (AActor* Actor : LevelActors)
@@ -304,6 +304,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 continue;
             }
             AllActorCount++;
+            bool bVisible = false;
             for (UActorComponent* Component : Actor->GetComponents())
             {
                 if (!Component)
@@ -347,9 +348,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
                     //}
                     
-                    //데칼 렌더링을 위해 Primitive저장
-                    PrimitiveComponentsForDecal.Add(Primitive);
-
+                    bVisible = true;
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
                     Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
 
@@ -359,6 +358,10 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
                     //}
                 }
+            }
+            if (bVisible)
+            {
+                VisibleActors.Add(Actor);
             }
             Renderer->OMSetBlendState(false);
         }
@@ -382,6 +385,26 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             continue;
         }
 
+        //액터에 OBBComponent 없으면 Continue;
+        UOBoundingBoxComponent* OBBComp = nullptr;
+        for (UActorComponent* Component : Actor->GetComponents())
+        {
+            if (!Component)
+            {
+                continue;
+            }
+
+            if (OBBComp = Cast<UOBoundingBoxComponent>(Component))
+            {
+                break;
+            }
+        }
+
+        if (OBBComp == nullptr)
+        {
+            continue;
+        }
+
         for (UActorComponent* Component : Actor->GetComponents())
         {
             if (!Component)
@@ -397,16 +420,40 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 }
             }
 
-            // 데칼 컴포넌트만 렌더링
-            if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
+            UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
+            if (DecalComp)
             {
-                bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-                Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-                //현재 SAT를 구현하지 않아서 PrimitiveComponent들을 모두 순회하고 있음. 
-                //SAT를 구현해서 데칼 OBB에 들어오는 것만 Rendering해야함.
-                for (auto Component : PrimitiveComponentsForDecal)
+
+                TArray<AActor*> ActorsInDecal;
+                for (auto VisibleActor : VisibleActors)
                 {
-                    DecalComp->Render(Renderer, Component, ViewMatrix, ProjectionMatrix, Viewport);
+                    const TSet<UActorComponent*>& OwnedComponents = VisibleActor->GetComponents();
+                    //VisibleActor의 AABBComponent와 OBB가 충돌 한다면 ActorsInDecal에 추가
+                    for (auto Comp : OwnedComponents)
+                    {
+                        if (UAABoundingBoxComponent* AABBComp = Cast<UAABoundingBoxComponent>(Comp))
+                        {
+                            if (OBBComp->IntersectWithAABB(*AABBComp->GetFBound()))
+                            {
+                                ActorsInDecal.Push(VisibleActor);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                for (AActor* ActorInDecal : ActorsInDecal)
+                {
+                    bool bIsSelected = SelectionManager.IsActorSelected(ActorInDecal);
+                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                    const TSet<UActorComponent*>& OwnedComponents = ActorInDecal->GetComponents();
+                    for (auto Comp : OwnedComponents)
+                    {
+                        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Comp))
+                        {
+                            DecalComp->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                        }
+                    }
                 }
             }
         }
