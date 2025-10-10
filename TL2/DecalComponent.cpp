@@ -19,6 +19,7 @@ UDecalComponent::UDecalComponent()
         Material->Load("Editor/Decal/SpotLight_64x.dds", UResourceManager::GetInstance().GetDevice());
     }
   
+    UpdateDecalProjectionMatrix();
 }
 
 UDecalComponent::~UDecalComponent()

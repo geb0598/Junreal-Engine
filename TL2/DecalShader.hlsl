@@ -68,14 +68,15 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);
     
     float3 NDCPosition = mul(DecalPosition, DecalProjectionMatrix).xyz;
-    if (abs(NDCPosition.x) > 0.5f ||
-        abs(NDCPosition.y) > 0.5f ||
-        abs(NDCPosition.z) > 0.5f)
+    
+    if (abs(NDCPosition.x) > 1.0f ||
+        abs(NDCPosition.y) > 1.0f ||
+        abs(NDCPosition.z) > 1.0f)
     {
         discard;
     }
     
-    float2 DecalUV = float2(DecalPosition.x*0.5f + 0.5f, 1.0f - (DecalPosition.y*0.5f + 0.5f));
+    float2 DecalUV = float2(NDCPosition.x * 0.5f + 0.5f, 1.0f - (NDCPosition.y * 0.5f + 0.5f));
     
     float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
     return DecalColor;
