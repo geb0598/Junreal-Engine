@@ -744,8 +744,9 @@ void UTargetActorTransformWidget::UpdateTransformFromActor()
 	}
 
 	// 균등 스케일 여부 판단
-	bUniformScale = (abs(EditScale.X - EditScale.Y) < 0.01f &&
-		abs(EditScale.Y - EditScale.Z) < 0.01f);
+	// uniform scale이 한번이라도 적용되면 이후 false로 되돌릴 수가 없음. 필요 시 수정해서 사용
+	/*bUniformScale = (abs(EditScale.X - EditScale.Y) < 0.01f &&
+		abs(EditScale.Y - EditScale.Z) < 0.01f);*/
 
 	ResetChangeFlags();
 }
