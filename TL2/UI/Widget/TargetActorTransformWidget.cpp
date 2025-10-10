@@ -755,7 +755,7 @@ void UTargetActorTransformWidget::ApplyTransformToActor() const
 {
 	if (!SelectedActor || !SelectedComponent)
 		return;
-
+	 
 	// 변경사항이 있는 경우에만 적용
 	if (bPositionChanged)
 	{
