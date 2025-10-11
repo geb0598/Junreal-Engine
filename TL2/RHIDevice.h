@@ -2,6 +2,14 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include "Vector.h"
+#include "CBufferTypes.h"
+
+#define UPDATE_CBUFFER_VIRTUAL_FUNC(TYPE)\
+    virtual void UpdateCBuffer(const TYPE& CBufferData) = 0;
+#define UPDATE_SET_CBUFFER_VIRTUAL_FUNC(TYPE)\
+    virtual void UpdateSetCBuffer(const TYPE& CBufferData) = 0;
+#define SET_CBUFFER_VIRTUAL_FUNC(TYPE)\
+    virtual void SetCBuffer(const TYPE& CBufferData) = 0;
 
 struct ModelBufferType
 {
@@ -49,6 +57,9 @@ public:
     virtual void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) = 0;
 
     // update
+    CBUFFER_TYPE_LIST(UPDATE_CBUFFER_VIRTUAL_FUNC)
+    CBUFFER_TYPE_LIST(UPDATE_SET_CBUFFER_VIRTUAL_FUNC)
+    CBUFFER_TYPE_LIST(SET_CBUFFER_VIRTUAL_FUNC)
     virtual void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) = 0;
     virtual void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)=0;
     virtual void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture) = 0;

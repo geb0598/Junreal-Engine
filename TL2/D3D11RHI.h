@@ -2,6 +2,45 @@
 #include "RHIDevice.h"
 #include "ResourceManager.h"
 
+#define DECLARE_CBUFFER(TYPE)\
+    ID3D11Buffer* TYPE##uffer{};
+
+#define UPDATE_CBUFFER_FUNC(TYPE)\
+    void UpdateCBuffer(const TYPE& CBufferData) override \
+{\
+    CBufferUpdate(TYPE##uffer, CBufferData);\
+}
+
+#define UPDATE_SET_CBUFFER_FUNC(TYPE)\
+    void UpdateSetCBuffer(const TYPE& CBufferData) override\
+{\
+    CBufferUpdateSet(TYPE##uffer, CBufferData, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
+}
+
+#define SET_CBUFFER_FUNC(TYPE)\
+    void SetCBuffer(const TYPE& CBufferData) override\
+{\
+    CBufferSet(TYPE##uffer, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
+}
+
+
+//example
+//ID3D11Buffer* TestCBuffer{};
+//
+//void UpdateCBuffer(const TestCB& CBufferData) override
+//{
+//    CBufferUpdate(TestCBuffer, CBufferData);
+//}
+//
+//void UpdateSetCBuffer(const TestCB& CBufferData) override
+//{
+//    CBufferUpdateSet(TestCBuffer, CBufferData, TestCBSlotNum, TestCBSetVS, TestCBSetPS);
+//}
+//void SetCBuffer() override
+//{
+//    CBufferSet(TestCBuffer, TestCBSlotNum, TestCBSetVS, TestCBSetPS);
+//}
+
 class D3D11RHI : public URHIDevice
 {
 public:
@@ -41,7 +80,9 @@ public:
 
     static HRESULT CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mesh, ID3D11Buffer** outBuffer);
 
-
+    CBUFFER_TYPE_LIST(UPDATE_CBUFFER_FUNC)
+    CBUFFER_TYPE_LIST(UPDATE_SET_CBUFFER_FUNC)
+    CBUFFER_TYPE_LIST(SET_CBUFFER_FUNC)
 
     void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
     void UpdateViewConstantBuffers( const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) ;
@@ -107,6 +148,38 @@ public:
     }
 
 private:
+
+    template <typename T>
+    void CBufferUpdate(ID3D11Buffer* CBuffer, T& CBufferData)
+    {
+        D3D11_MAPPED_SUBRESOURCE MSR;
+
+        //gpu메모리를 cpu가 접근할 수 있도록 잠금
+        //D3D11_MAP_WRITE_DISCARD : gpu안의 데이터를 버리고 cpu에서 넣는 데이터로 덮어씌움 
+        //gpu내용을 버림으로써 gpu안의 메모리를 읽는 과정 생략
+        DeviceContext->Map(CBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MSR);
+        memcpy(MSR.pData, &CBufferData, sizeof(T));
+        DeviceContext->Unmap(CBuffer, 0);
+    }
+    void CBufferSet(ID3D11Buffer* CBuffer, const uint32 SlotNum, const bool bSetVS, const  bool bSetPS)
+    {
+        if (bSetVS)
+        {
+            DeviceContext->VSSetConstantBuffers(SlotNum, 1, &CBuffer);
+        }
+        if (bSetPS)
+        {
+            DeviceContext->PSSetConstantBuffers(SlotNum, 1, &CBuffer);
+        }
+    }
+
+    template <typename T>
+    void CBufferUpdateSet(ID3D11Buffer* CBuffer, T& CBufferData, const uint32 SlotNum, const bool bSetVS, const bool bSetPS)
+    {
+        CBufferUpdate(CBuffer, CBufferData);
+        CBufferSet(CBuffer, SlotNum, bSetVS, bSetPS);
+    }
+
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다
     void CreateFrameBuffer() override;
     void CreateRasterizerState() override;
@@ -161,6 +234,7 @@ private:
     ID3D11ShaderResourceView* DepthSRV{}; // Depth buffer를 셰이더에서 읽기 위한 SRV
 
 
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER)
 
     // 버퍼 핸들
     ID3D11Buffer* ModelCB{};
