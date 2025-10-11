@@ -6,6 +6,7 @@
 #include "CameraComponent.h"
 #include "Vector.h"
 #include "World.h"
+#include "SelectionManager.h"
 #include <algorithm>
 
 //// UE_LOG 대체 매크로
@@ -208,7 +209,7 @@ void UCameraControlWidget::RenderWidget()
 			if (UIManager)
 			{
 				CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
-				AActor* SelectedActor = UIManager->GetSelectedActor();
+				AActor* SelectedActor = USelectionManager::GetInstance().GetSelectedActor();
 				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
 			}
 		}
@@ -223,7 +224,7 @@ void UCameraControlWidget::RenderWidget()
 				// 스페이스 모드 전환
 				CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ?
 				EGizmoSpace::Local : EGizmoSpace::World;
-				AActor* SelectedActor = UIManager->GetSelectedActor();
+				AActor* SelectedActor = USelectionManager::GetInstance().GetSelectedActor();
 				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
 			}
 		}

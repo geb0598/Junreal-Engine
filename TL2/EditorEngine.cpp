@@ -226,7 +226,7 @@ void UEditorEngine::ProcessEditorShortcuts()
                     }
 
                     // UI 업데이트
-                    UUIManager::GetInstance().SetPickedActor(PastedActors[0]);
+                   // UUIManager::GetInstance().SetPickedActor(PastedActors[0]);
                 }
             }
             else
@@ -274,7 +274,7 @@ void UEditorEngine::ProcessAltDragDuplication()
                 GizmoActor->SetActorLocation(DuplicatedActor->GetActorLocation());
 
                 // UI 업데이트
-                UUIManager::GetInstance().SetPickedActor(DuplicatedActor);
+               // UUIManager::GetInstance().SetPickedActor(DuplicatedActor);
 
                 // 복제 처리 완료 표시
                 bAltDragDuplicationHandled = true;

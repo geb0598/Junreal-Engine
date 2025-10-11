@@ -105,13 +105,13 @@ void UTargetActorTransformWidget::Initialize()
 	}
 }
 
-AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
-{
-	if (!UIManager)
-		return nullptr;
-
-	return UIManager->GetSelectedActor();
-}
+//AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
+//{
+//	if (!UIManager)
+//		return nullptr;
+//
+//	return UIManager->GetSelectedActor();
+//}
 
 void UTargetActorTransformWidget::Update()
 {
