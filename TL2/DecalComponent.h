@@ -20,7 +20,7 @@ public:
     FVector2D GetUVTiling() const { return UVTiling; }
 
     // 데칼 텍스처 설정
-    void SetDecalTexture(const FString& TexturePath);
+    void SetDecalTexture( FString NewTexturePath);
     const FString& GetTexturePath() const { return TexturePath; }
 
     UObject* Duplicate() override;
