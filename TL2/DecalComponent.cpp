@@ -40,7 +40,16 @@ void UDecalComponent::UpdateDecalProjectionMatrix()
     float Bottom = -DecalSize.Z / 2.0f;
     float Near = 0.0f;
     float Far = DecalSize.X / 2.0f;
-    DecalProjectionMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
+
+    FMatrix OrthoMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
+
+    // UV 타일링을 위한 스케일 행렬 생성
+    FMatrix ScaleMatrix = FMatrix::Identity();
+    ScaleMatrix.M[0][0] = UVTiling.X;  // X 스케일
+    ScaleMatrix.M[1][1] = UVTiling.Y;  // Y 스케일
+    ScaleMatrix.M[2][2] = 1.0f;        // Z 스케일
+
+    DecalProjectionMatrix = OrthoMatrix * ScaleMatrix;
 }
 
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
@@ -142,6 +151,7 @@ UObject* UDecalComponent::Duplicate()
     if (DuplicatedComponent)
     {
         DuplicatedComponent->DecalSize = DecalSize;
+        DuplicatedComponent->UVTiling = UVTiling;
         DuplicatedComponent->BlendMode = BlendMode;
     }
     return DuplicatedComponent;
