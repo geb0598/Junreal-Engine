@@ -17,7 +17,9 @@ public:
     void SetDecalSize(const FVector& InSize);
     FVector GetDecalSize() const { return DecalSize; }
 
-
+    // UV 타일링 설정
+    void SetUVTiling(const FVector2D& InTiling) { UVTiling = InTiling; UpdateDecalProjectionMatrix(); }
+    FVector2D GetUVTiling() const { return UVTiling; }
 
     // 데칼 텍스처 설정
     void SetDecalTexture(const FString& TexturePath);
@@ -36,6 +38,9 @@ protected:
 
     // 데칼 크기
     FVector DecalSize = FVector(1.0f, 1.0f, 1.0f);
+
+    // UV 타일링
+    FVector2D UVTiling = FVector2D(4.0f, 4.0f);
 
     // 데칼 블렌드 모드
     enum class EDecalBlendMode

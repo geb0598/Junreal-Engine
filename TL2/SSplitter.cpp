@@ -200,7 +200,7 @@ void SSplitter::LoadFromConfig(const FString& SectionName)
                 {
                     std::string value = line.substr(pos + 3);
                     SplitRatio = std::stof(value);
-                    SplitRatio = FMath::Clamp(SplitRatio, 0.1f, 0.9f);
+                    SplitRatio = FMath::Clamp(SplitRatio, 0.01f, 0.99f);
                     break;
                 }
             }
