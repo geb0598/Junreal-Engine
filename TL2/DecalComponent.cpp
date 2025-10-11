@@ -12,7 +12,7 @@ UDecalComponent::UDecalComponent()
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
-
+    LocalAABB = FAABB(FVector(-0.5f, -0.5f, -0.5f), FVector(0.5f, 0.5f, 0.5f));
     SetMaterial("DecalShader.hlsl");
     if (Material)
     {

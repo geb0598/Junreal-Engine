@@ -274,85 +274,96 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     Renderer->BeginLineBatch();
     Renderer->SetViewModeType(ViewModeIndex);
 
-        int AllActorCount = 0;
-        int FrustumCullCount = 0;
+    int AllActorCount = 0;
+    int FrustumCullCount = 0;
 
-        const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
-        //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
-        VisiblePrimitives.clear();
+    const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
+    //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
+    VisiblePrimitives.clear();
 
-        // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
-        for (AActor* Actor : LevelActors)
+    // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
+    for (AActor* Actor : LevelActors)
+    {
+        // 일반 액터들 렌더링
+        if (!Actor)
         {
-            // 일반 액터들 렌더링
-            if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+            continue;
+        }
+        if (Actor->GetActorHiddenInGame())
+        {
+            continue;
+        }
+        AllActorCount++;
+        for (UActorComponent* Component : Actor->GetComponents())
+        {
+            if (!Component)
             {
                 continue;
             }
-            if (!Actor)
-            {
-                continue;
-            }
-            if (Actor->GetActorHiddenInGame())
-            {
-                continue;
-            }
-            if (Cast<AStaticMeshActor>(Actor) &&
-                !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
-            {
-                continue;
-            }
-            AllActorCount++;
-            for (UActorComponent* Component : Actor->GetComponents())
-            {
-                if (!Component)
-                {
-                    continue;
-                }
 
-                if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+            //Billboard Showflag Check
+            if (Cast<UTextRenderComponent>(Component) &&
+                !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+            {
+                continue;
+            }
+
+            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(Component))
+            {
+                //BoundingBox Showflag Check
+                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
-                    if (!ActorComp->IsActive())
+                    const TArray<FVector>& WireLine = StaticMeshComp->GetWorldAABB().GetWireLine();
+                    int WireLineSize = WireLine.Num();
+                    for (int i = 0; i < WireLineSize; i += 2)
                     {
-                        continue;
+                        Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 1, 0, 1));
                     }
                 }
+                //StaticMesh Showflag Check
+                if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+                {
+                    continue;
+                }
+            }
+            // 데칼 컴포넌트는 Pass 2에서 렌더링
+            if (Cast<UDecalComponent>(Component))
+            {
+                continue;
+            }
 
-                if (Cast<UTextRenderComponent>(Component) &&
-                    !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                if (!Primitive->IsActive())
                 {
                     continue;
                 }
 
-                // 데칼 컴포넌트는 Pass 2에서 렌더링
-                if (Cast<UDecalComponent>(Component))
-                {
-                    continue;
-                }
+                bool bIsSelected = SelectionManager.IsActorSelected(Actor);
 
-                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-                {
-                    bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+                //// 선택된 액터는 항상 앞에 보이도록 depth test를 Always로 설정
+                //if (bIsSelected)//나중에 추가구현
+                //{
+                //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+                //}
 
-                    //// 선택된 액터는 항상 앞에 보이도록 depth test를 Always로 설정
-                    //if (bIsSelected)//나중에 추가구현
-                    //{
-                    //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-                    //}
-                    
+                //Primitive Showflag Check
+                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+                {
                     VisiblePrimitives.Push(Primitive);
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
                     Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-
-                    //// depth test 원래대로 복원
-                    //if (bIsSelected)
-                    //{
-                    //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-                    //}
                 }
+
+                //// depth test 원래대로 복원
+                //if (bIsSelected)
+                //{
+                //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+                //}
             }
-            Renderer->OMSetBlendState(false);
         }
+        Renderer->OMSetBlendState(false);
+    }
 
     // 엔진 액터들 (그리드 등) 렌더링
     RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
@@ -380,17 +391,23 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 continue;
             }
 
-            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+            if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
             {
-                if (!ActorComp->IsActive())
+                if (!DecalComp->IsActive())
                 {
                     continue;
                 }
-            }
 
-            UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
-            if (DecalComp)
-            {
+                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                {
+                    const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
+                    int WireLineSize = WireLine.Num();
+                    for (int i = 0; i < WireLineSize; i += 2)
+                    {
+                        Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
+                    }
+                }
+
                 const FOBB DecalOBB = DecalComp->GetWorldOBB();
                 TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
                 for (auto VisiblePrimitive : VisiblePrimitives)

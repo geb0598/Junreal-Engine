@@ -19,7 +19,6 @@ public:
     FVector GetDecalSize() const { return DecalSize; }
 
 
-
     // 데칼 텍스처 설정
     void SetDecalTexture(const FString& TexturePath);
 

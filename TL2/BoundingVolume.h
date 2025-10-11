@@ -182,6 +182,28 @@ struct FAABB
             Min.Y <= Other.Max.Y && Max.Y >= Other.Min.Y &&
             Min.Z <= Other.Max.Z && Max.Z >= Other.Min.Z);
     }
+    TArray<FVector> GetWireLine() const
+    {
+        if (Min == Max)
+        {
+            return {};
+        }
+
+        return{
+            GetVertex(0), GetVertex(1),
+            GetVertex(1), GetVertex(3),
+            GetVertex(3), GetVertex(2),
+            GetVertex(2), GetVertex(0),
+            GetVertex(4), GetVertex(5),
+            GetVertex(5), GetVertex(7),
+            GetVertex(7), GetVertex(6),
+            GetVertex(6), GetVertex(4),
+            GetVertex(0), GetVertex(4),
+            GetVertex(1), GetVertex(5),
+            GetVertex(2), GetVertex(6),
+            GetVertex(3), GetVertex(7),
+        };
+    }
 };
 
 struct FOBB
@@ -224,6 +246,29 @@ struct FOBB
         Vertex += (idx & (1 << 1)) == 0 ? Axis[1] * Extents.X : -Axis[1] * Extents.X;
         Vertex += (idx & (1 << 2)) == 0 ? Axis[2] * Extents.X : -Axis[2] * Extents.X;
         return Vertex;
+    }
+
+    TArray<FVector> GetWireLine() const
+    {
+        if (Extents == FVector(0,0,0))
+        {
+            return {};
+        }
+
+        return{
+            GetVertex(0), GetVertex(1),
+            GetVertex(1), GetVertex(3),
+            GetVertex(3), GetVertex(2),
+            GetVertex(2), GetVertex(0),
+            GetVertex(4), GetVertex(5),
+            GetVertex(5), GetVertex(7),
+            GetVertex(7), GetVertex(6),
+            GetVertex(6), GetVertex(4),
+            GetVertex(0), GetVertex(4),
+            GetVertex(1), GetVertex(5),
+            GetVertex(2), GetVertex(6),
+            GetVertex(3), GetVertex(7),
+        };
     }
 };
 
