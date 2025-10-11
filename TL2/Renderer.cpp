@@ -101,62 +101,6 @@ void URenderer::RSSetDefaultState()
     RHIDevice->RSSetDefaultState();
 }
 
-void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-{
-    RHIDevice->UpdateConstantBuffers(ModelBufferType(ModelMatrix, 0), ViewMatrix, ProjMatrix);
-}
-
-void URenderer::UpdateConstantBuffer(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-{
-    RHIDevice->UpdateConstantBuffers(ModelConstant, ViewMatrix, ProjMatrix);
-}
-
-void URenderer::UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
-{
-    RHIDevice->UpdateHighLightConstantBuffers(InPicked, InColor, X, Y, Z, Gizmo);
-}
-
-void URenderer::UpdateBillboardConstantBuffers(const FVector& pos,const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)
-{
-    RHIDevice->UpdateBillboardConstantBuffers(pos,ViewMatrix, ProjMatrix, CameraRight, CameraUp);
-}
-
-//void URenderer::UpdateTextConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-//{
-//    RHIDevice->UpdateTextConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
-//}
-
-void URenderer::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
-{
-    RHIDevice->UpdatePixelConstantBuffers(InMaterialInfo, bHasMaterial, bHasTexture);
-}
-
-void URenderer::UpdateColorBuffer(const FVector4& Color)
-{
-    RHIDevice->UpdateColorConstantBuffers(Color);
-}
-
-void URenderer::UpdateInvWorldBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix)
-{
-    RHIDevice->UpdateInvWorldConstantBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
-}
-
-void URenderer::UpdateViewportBuffer(float StartX, float StartY, float SizeX, float SizeY)
-{
-    static_cast<D3D11RHI*>(RHIDevice)->UpdateViewportConstantBuffer(StartX, StartY, SizeX, SizeY);
-}
-
-void URenderer::UpdateDecalBuffer(float InFadeAlpha)
-{
-    RHIDevice->UpdateDecalConstantBuffer(InFadeAlpha);
-}
-
-void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
-{
-    RHIDevice->UpdateUVScrollConstantBuffers(Speed, TimeSec);
-}
-
-
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
 {
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();

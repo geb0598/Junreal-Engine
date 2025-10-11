@@ -230,15 +230,6 @@ HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mes
     return device->CreateBuffer(&ibd, &iinitData, outBuffer);
 }
 
-//이거 두개를 나눔
-void D3D11RHI::UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-{
-   
-    UpdateModelConstantBuffers(ModelConstant);
-   
-    UpdateViewConstantBuffers(ViewMatrix, ProjMatrix);
-}
-
 
 void D3D11RHI::IASetPrimitiveTopology()
 {

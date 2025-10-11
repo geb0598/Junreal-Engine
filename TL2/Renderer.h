@@ -59,29 +59,8 @@ public:
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
         CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
         CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
-    void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
-
-    void UpdateConstantBuffer(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
-
-    void UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo);
-
-    void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp);
-
-    void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture);
-
-    void UpdateColorBuffer(const FVector4& Color);
-
-    void UpdateInvWorldBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix);
-
-    void UpdateViewportBuffer(float StartX, float StartY, float SizeX, float SizeY);
-
-    void UpdateDecalBuffer(float InFadeAlpha);
 
     void DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots);
-
-    void UpdateUVScroll(const FVector2D& Speed, float TimeSec);
-
-    void ReadBackIdBuffer();
 
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
     void DrawIndexedPrimitiveComponent(UBillboardComponent* Comp,
