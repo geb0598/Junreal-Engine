@@ -52,7 +52,7 @@ public:
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
     void UpdateColorConstantBuffers(const FVector4& InColor) override;
     void UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec) override;
-    void UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix) override;
+    void UpdateInvWorldConstantBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix) override;
     void UpdateViewportConstantBuffer(float StartX, float StartY, float SizeX, float SizeY);
     void UpdateDecalConstantBuffer(float InFadeAlpha) override;
 
