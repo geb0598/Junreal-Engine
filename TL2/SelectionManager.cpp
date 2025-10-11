@@ -24,6 +24,7 @@ void USelectionManager::SelectActor(AActor* Actor)
     
     // 새 액터 선택
     SelectedActors.Add(Actor);
+    SelectedComponent = Actor->GetRootComponent();
 }
 
 void USelectionManager::DeselectActor(AActor* Actor)
@@ -35,6 +36,7 @@ void USelectionManager::DeselectActor(AActor* Actor)
     {
         SelectedActors.erase(it);
     }
+    SelectedComponent = nullptr;
 }
 
 void USelectionManager::SelectComponent(USceneComponent* Component)

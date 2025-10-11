@@ -209,8 +209,8 @@ void UCameraControlWidget::RenderWidget()
 			if (UIManager)
 			{
 				CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
-				AActor* SelectedActor = USelectionManager::GetInstance().GetSelectedActor();
-				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
+				USceneComponent* SelectedComponent = USelectionManager::GetInstance().GetSelectedComponent();
+				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedComponent);
 			}
 		}
 
@@ -224,8 +224,8 @@ void UCameraControlWidget::RenderWidget()
 				// 스페이스 모드 전환
 				CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ?
 				EGizmoSpace::Local : EGizmoSpace::World;
-				AActor* SelectedActor = USelectionManager::GetInstance().GetSelectedActor();
-				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedActor);
+				USceneComponent* SelectedComponent = USelectionManager::GetInstance().GetSelectedComponent();
+				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedComponent);
 			}
 		}
 

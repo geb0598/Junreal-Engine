@@ -229,7 +229,6 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
             if (GizmoActor)
             {
                 GizmoActor->SetTargetActor(ComponentPicked->GetOwner());
-                GizmoActor->SetActorLocation(ComponentPicked->GetOwner()->GetActorLocation());
             }
         }
         else

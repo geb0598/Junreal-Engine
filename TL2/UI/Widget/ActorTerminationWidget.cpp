@@ -121,6 +121,8 @@ void UActorTerminationWidget::DeleteSelectedActor()
 	// Transform 위젯의 선택도 해제
 	UIManager->ClearTransformWidgetSelection();
 
+	USelectionManager& SelectionManager = USelectionManager::GetInstance();
+	SelectionManager.DeselectActor(SelectionManager.GetSelectedActor());
 	// 기즈모가 이 액터를 타겟으로 잡고 있다면 해제
 	if (AGizmoActor* Gizmo = UIManager->GetGizmoActor())
 	{
