@@ -70,20 +70,19 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     
     // 월드/역월드
     // DecalSize를 스케일로 적용, 데칼 world inverse를 구하기 위함
-    FMatrix WorldMatrix = GetWorldMatrix();
-    FMatrix InvWorldMatrix = WorldMatrix.InverseAffine(); // OK(Affine)
+    FMatrix DecalWorldMatrix = GetWorldMatrix();           // 데칼의 원본 월드 행렬
+    FMatrix DecalWorldMatrixInverse = DecalWorldMatrix.InverseAffine();
 
-    //데칼 world inverse를 구했으므로 Componenent의 worldMatrix를 구해줌
-    WorldMatrix = Component->GetWorldMatrix();
-
-    // ViewProj 및 역행렬 (투영 포함 → 일반 Inverse 필요)
-    FMatrix ViewProj = View * Proj;                   // row-major 기준
+    //데칼 world inverse를 구했으므로 Component의 worldMatrix를 구해줌
+    FMatrix MeshWorldMatrix = Component->GetWorldMatrix();
 
     // 상수 버퍼 업데이트
-    //WorldMatrix = 데칼을 투영할 Component의 WorldMatrix
-    Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
-    //InvWorldMatrix = 데칼의 WorldMatrixInverse
-    Renderer->UpdateInvWorldBuffer(InvWorldMatrix, DecalProjectionMatrix);
+    //MeshWorldMatrix = 데칼을 투영할 Component의 WorldMatrix
+    Renderer->UpdateConstantBuffer(MeshWorldMatrix, View, Proj);
+    //DecalWorldMatrix = 데칼의 원본 월드 행렬
+    //DecalWorldMatrixInverse = 데칼의 역 월드 행렬
+    //DecalProjectionMatrix = 데칼 투영 행렬
+    Renderer->UpdateInvWorldBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());

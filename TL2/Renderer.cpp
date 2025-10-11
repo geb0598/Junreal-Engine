@@ -127,9 +127,9 @@ void URenderer::UpdateColorBuffer(const FVector4& Color)
     RHIDevice->UpdateColorConstantBuffers(Color);
 }
 
-void URenderer::UpdateInvWorldBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix)
+void URenderer::UpdateInvWorldBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix)
 {
-    RHIDevice->UpdateInvWorldConstantBuffer(InvWorldMatrix, InvViewProjMatrix);
+    RHIDevice->UpdateInvWorldConstantBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
 }
 
 void URenderer::UpdateViewportBuffer(float StartX, float StartY, float SizeX, float SizeY)

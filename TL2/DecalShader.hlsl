@@ -20,6 +20,7 @@ cbuffer ColorBuffer : register(b3)
 
 cbuffer DecalTransformBuffer : register(b4)
 {
+    row_major float4x4 DecalWorldMatrix;
     row_major float4x4 DecalWorldMatrixInverse;
     row_major float4x4 DecalProjectionMatrix;
 }
@@ -84,7 +85,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float3 surfaceNormal = normalize(cross(dpdy, dpdx));
     
     // 데칼 방향(전방) - 데칼의 X축 방향 (투영 방향)
-    float3 decalForward = normalize(DecalWorldMatrixInverse._m10_m11_m12);
+    float3 decalForward = normalize(DecalWorldMatrix._m20_m21_m22);
 
     // 표면 노멀과 데칼 투영 방향의 내적 계산
     // facing > 0: 앞면 (데칼 방향과 같은 방향)
@@ -93,7 +94,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float facing = dot(surfaceNormal, decalForward);//X축과 노멀값 내적 
 
     // 뒷면은 완전히 제거
-    if (facing < 0.0f)
+    if (facing < 0.3f)
     {
         discard;
     }

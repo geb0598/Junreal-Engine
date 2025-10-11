@@ -45,7 +45,7 @@ public:
 
     void UpdateColorBuffer(const FVector4& Color);
 
-    void UpdateInvWorldBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix);
+    void UpdateInvWorldBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix);
 
     void UpdateViewportBuffer(float StartX, float StartY, float SizeX, float SizeY);
 

@@ -628,10 +628,10 @@ void D3D11RHI::CreateConstantBuffer()
         DeviceContext->PSSetConstantBuffers(5, 1, &UVScrollCB);
     }
 
-    // b4 : InvWorldBuffer (데칼용 - InvWorld + InvViewProj)
+    // b4 : InvWorldBuffer (데칼용 - DecalWorld + DecalWorldInverse + DecalProjection)
     D3D11_BUFFER_DESC invWorldDesc = {};
     invWorldDesc.Usage = D3D11_USAGE_DYNAMIC;
-    invWorldDesc.ByteWidth = sizeof(FMatrix) * 2; // InvWorldMatrix + InvViewProjMatrix
+    invWorldDesc.ByteWidth = sizeof(FMatrix) * 3; // DecalWorldMatrix + DecalWorldMatrixInverse + DecalProjectionMatrix
     invWorldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     invWorldDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&invWorldDesc, nullptr, &InvWorldCB);
@@ -660,24 +660,26 @@ void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeS
     }
 }
 
-void D3D11RHI::UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix)
+void D3D11RHI::UpdateInvWorldConstantBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix)
 {
     if (!InvWorldCB) return;
 
-    struct InvWorldBufferType
+    struct DecalTransformBufferType
     {
-        FMatrix InvWorld;
-        FMatrix InvViewProj;
+        FMatrix DecalWorld;
+        FMatrix DecalWorldInverse;
+        FMatrix DecalProjection;
     };
 
-    InvWorldBufferType data;
-    data.InvWorld = InvWorldMatrix;
-    data.InvViewProj = InvViewProjMatrix;
+    DecalTransformBufferType data;
+    data.DecalWorld = DecalWorldMatrix;
+    data.DecalWorldInverse = DecalWorldMatrixInverse;
+    data.DecalProjection = DecalProjectionMatrix;
 
     D3D11_MAPPED_SUBRESOURCE mapped;
     if (SUCCEEDED(DeviceContext->Map(InvWorldCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
     {
-        memcpy(mapped.pData, &data, sizeof(InvWorldBufferType));
+        memcpy(mapped.pData, &data, sizeof(DecalTransformBufferType));
         DeviceContext->Unmap(InvWorldCB, 0);
         DeviceContext->PSSetConstantBuffers(4, 1, &InvWorldCB);
     }
