@@ -3,7 +3,6 @@
 #include "SceneComponent.h"
 #include "ObjectFactory.h"
 #include "ShapeComponent.h"
-#include "AABoundingBoxComponent.h"
 #include "MeshComponent.h"
 #include "TextRenderComponent.h"
 

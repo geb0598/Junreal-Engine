@@ -27,68 +27,68 @@ void FBVH::Build(const TArray<AActor*>& Actors)
     if (Actors.Num() == 0)
         return;
 
-    // 1. 액터들의 AABB 정보 수집
-    ActorBounds.Reserve(Actors.Num());
-    ActorIndices.Reserve(Actors.Num());
-
-    for (int i = 0; i < Actors.Num(); ++i)
+    //전체 액터 순회하며 StaticMeshComponent 추출
+    TArray<UStaticMeshComponent*> StaticMeshComponents;
+    for (const AActor* Actor : Actors)
     {
-        AActor* Actor = Actors[i];
         if (!Actor || Actor->GetActorHiddenInGame())
-            continue;
-
-        const FBound* ActorBounds_Local = nullptr;
-        bool bHasBounds = false;
-
-        if (const AStaticMeshActor* StaticMeshActor = Cast<const AStaticMeshActor>(Actor))
         {
-            for (auto Component : StaticMeshActor->GetComponents()) // 최적화: AABB 컴포넌트만 검색
-            {
-                if (UAABoundingBoxComponent* AABBComponent = Cast<UAABoundingBoxComponent>(Component))
-                {
-                    ActorBounds_Local = AABBComponent->GetFBound();
-                    bHasBounds = true;
-                    break;
-                }
-            }
+            continue;
         }
 
-        if (bHasBounds)
+        for (auto Component : Actor->GetComponents())
         {
-            FActorBounds AB(Actor, *ActorBounds_Local);
-            ActorBounds.Add(AB);
-            ActorIndices.Add(ActorBounds.Num() - 1);
+            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(Component))
+            {
+                StaticMeshComponents.Push(StaticMeshComp);
+            }
         }
     }
 
-    if (ActorBounds.Num() == 0)
+    if (StaticMeshComponents.Num() == 0)
+    {
         return;
+    }
+
+    // 1. 액터들의 AABB 정보 수집
+    MeshBounds.Reserve(StaticMeshComponents.Num());
+    MeshIndices.Reserve(StaticMeshComponents.Num());
+
+    for (int i = 0; i < StaticMeshComponents.Num(); ++i)
+    {
+        UStaticMeshComponent* StaticMeshComp = StaticMeshComponents[i];
+        const FAABB* MeshBounds_Local = nullptr;
+        bool bHasBounds = false;
+
+        MeshBounds.emplace_back(FBVHStaticMeshAABB(StaticMeshComp, StaticMeshComp->GetWorldAABB()));
+        MeshIndices.Add(MeshBounds.Num() - 1);
+    }
 
     // 2. 노드 배열 예약 (최악의 경우 2*N-1개 노드)
-    Nodes.Reserve(ActorBounds.Num() * 2);
+    Nodes.Reserve(MeshBounds.Num() * 2);
 
     // 3. 재귀적으로 BVH 구축
     MaxDepth = 0;
-    int RootIndex = BuildRecursive(0, ActorBounds.Num(), 0);
+    int RootIndex = BuildRecursive(0, MeshBounds.Num(), 0);
 
     uint64_t BuildCycles = BVHBuildTimer.Finish();
     double BuildTimeMs = FPlatformTime::ToMilliseconds(BuildCycles);
 
     char buf[256];
     sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
-        ActorBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
+        MeshBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
     UE_LOG(buf);
 }
 
 void FBVH::Clear()
 {
     Nodes.Empty();
-    ActorBounds.Empty();
-    ActorIndices.Empty();
+    MeshBounds.Empty();
+    MeshIndices.Empty();
     MaxDepth = 0;
 }
 
-AActor* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const
+UStaticMeshComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const
 {
     if (Nodes.Num() == 0)
         return nullptr;
@@ -97,11 +97,11 @@ AActor* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, f
     FScopeCycleCounter BVHIntersectTimer(BVHIntersectStatId);
 
     OutDistance = FLT_MAX;
-    AActor* HitActor = nullptr;
+    UStaticMeshComponent* HitStaticMeshComponent = nullptr;
 
     // 최적화된 Ray 생성 (InverseDirection과 Sign 미리 계산)
     FOptimizedRay OptRay(RayOrigin, RayDirection);
-    bool bHit = IntersectNode(0, OptRay, OutDistance, HitActor);
+    bool bHit = IntersectNode(0, OptRay, OutDistance, HitStaticMeshComponent);
 
     uint64_t IntersectCycles = BVHIntersectTimer.Finish();
     double IntersectTimeMs = FPlatformTime::ToMilliseconds(IntersectCycles);
@@ -112,7 +112,7 @@ AActor* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, f
         sprintf_s(buf, "[BVH Pick] Hit actor at distance %.3f (Time: %.3fms)\n",
             OutDistance, IntersectTimeMs);
         UE_LOG(buf);
-        return HitActor;
+        return HitStaticMeshComponent;
     }
     else
     {
@@ -123,7 +123,7 @@ AActor* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, f
     }
 }
 
-int FBVH::BuildRecursive(int FirstActor, int ActorCount, int Depth)
+int FBVH::BuildRecursive(int FirstMeshBound, int MeshBoundCount, int Depth)
 {
     MaxDepth = FMath::Max(MaxDepth, Depth);
 
@@ -132,59 +132,54 @@ int FBVH::BuildRecursive(int FirstActor, int ActorCount, int Depth)
     Nodes.Add(NewNode);
     FBVHNode& Node = Nodes[NodeIndex];
 
-    Node.BoundingBox = CalculateBounds(FirstActor, ActorCount);
+    Node.BoundingBox = CalculateBounds(FirstMeshBound, MeshBoundCount);
 
-    if (ActorCount <= MaxActorsPerLeaf || Depth >= MaxBVHDepth)
+    if (MeshBoundCount <= MaxActorsPerLeaf || Depth >= MaxBVHDepth)
     {
-        Node.FirstActor = FirstActor;
-        Node.ActorCount = ActorCount;
+        Node.FirstMeshBound = FirstMeshBound;
+        Node.MeshBoundCount = MeshBoundCount;
         return NodeIndex;
     }
 
     int BestAxis;
     float BestSplitPos;
-    int SplitIndex = FindBestSplit(FirstActor, ActorCount, BestAxis, BestSplitPos);
+    int SplitIndex = FindBestSplit(FirstMeshBound, MeshBoundCount, BestAxis, BestSplitPos);
 
-    if (SplitIndex == FirstActor || SplitIndex == FirstActor + ActorCount)
+    if (SplitIndex == FirstMeshBound || SplitIndex == FirstMeshBound + MeshBoundCount)
     {
-        Node.FirstActor = FirstActor;
-        Node.ActorCount = ActorCount;
+        Node.FirstMeshBound = FirstMeshBound;
+        Node.MeshBoundCount = MeshBoundCount;
         return NodeIndex;
     }
 
-    int ActualSplit = PartitionActors(FirstActor, ActorCount, BestAxis, BestSplitPos);
+    int ActualSplit = PartitionActors(FirstMeshBound, MeshBoundCount, BestAxis, BestSplitPos);
 
-    int LeftCount = ActualSplit - FirstActor;
-    int RightCount = ActorCount - LeftCount;
+    int LeftCount = ActualSplit - FirstMeshBound;
+    int RightCount = MeshBoundCount - LeftCount;
 
     if (LeftCount == 0 || RightCount == 0)
     {
-        Node.FirstActor = FirstActor;
-        Node.ActorCount = ActorCount;
+        Node.FirstMeshBound = FirstMeshBound;
+        Node.MeshBoundCount = MeshBoundCount;
         return NodeIndex;
     }
 
-    Node.LeftChild = BuildRecursive(FirstActor, LeftCount, Depth + 1);
+    Node.LeftChild = BuildRecursive(FirstMeshBound, LeftCount, Depth + 1);
     Node.RightChild = BuildRecursive(ActualSplit, RightCount, Depth + 1);
 
     return NodeIndex;
 }
-// BVH.cpp
-float FBVH::SurfaceArea(const FBound& b) {
-    FVector s = b.Max - b.Min;
-    if (s.X <= 0 || s.Y <= 0 || s.Z <= 0) return 0.0f;
-    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
-}
 
-FBound FBVH::CalculateBounds(int FirstActor, int ActorCount) const
+
+FAABB FBVH::CalculateBounds(int FirstMeshBound, int MeshBoundCount) const
 {
-    FBound Bounds;
+    FAABB Bounds;
     bool bFirst = true;
 
-    for (int i = 0; i < ActorCount; ++i)
+    for (int i = 0; i < MeshBoundCount; ++i)
     {
-        int ActorIndex = ActorIndices[FirstActor + i];
-        const FBound& ActorBound = ActorBounds[ActorIndex].Bounds;
+        int ActorIndex = MeshIndices[FirstMeshBound + i];
+        const FAABB& ActorBound = MeshBounds[ActorIndex].AABB;
 
         if (bFirst)
         {
@@ -206,15 +201,15 @@ FBound FBVH::CalculateBounds(int FirstActor, int ActorCount) const
     return Bounds;
 }
 
-FBound FBVH::CalculateCentroidBounds(int FirstActor, int ActorCount) const
+FAABB FBVH::CalculateCentroidBounds(int FirstMeshBound, int MeshBoundCount) const
 {
-    FBound Bounds;
+    FAABB Bounds;
     bool bFirst = true;
 
-    for (int i = 0; i < ActorCount; ++i)
+    for (int i = 0; i < MeshBoundCount; ++i)
     {
-        int ActorIndex = ActorIndices[FirstActor + i];
-        const FVector& Center = ActorBounds[ActorIndex].Center;
+        int ActorIndex = MeshIndices[FirstMeshBound + i];
+        const FVector& Center = MeshBounds[ActorIndex].Center;
 
         if (bFirst)
         {
@@ -236,24 +231,10 @@ FBound FBVH::CalculateCentroidBounds(int FirstActor, int ActorCount) const
     return Bounds;
 }
 
-// 🔥 새로 추가: Bound 합치는 유틸리티
-static inline FBound Union(const FBound& A, const FBound& B)
+int FBVH::FindBestSplit(int FirstMeshBound, int MeshBoundCount, int& OutAxis, float& OutSplitPos)
 {
-    FBound Out;
-    Out.Min.X = FMath::Min(A.Min.X, B.Min.X);
-    Out.Min.Y = FMath::Min(A.Min.Y, B.Min.Y);
-    Out.Min.Z = FMath::Min(A.Min.Z, B.Min.Z);
-
-    Out.Max.X = FMath::Max(A.Max.X, B.Max.X);
-    Out.Max.Y = FMath::Max(A.Max.Y, B.Max.Y);
-    Out.Max.Z = FMath::Max(A.Max.Z, B.Max.Z);
-    return Out;
-}
-
-int FBVH::FindBestSplit(int FirstActor, int ActorCount, int& OutAxis, float& OutSplitPos)
-{
-    FBound CentroidBounds = CalculateCentroidBounds(FirstActor, ActorCount);
-    FBound ParentBounds = CalculateBounds(FirstActor, ActorCount);
+    FAABB CentroidBounds = CalculateCentroidBounds(FirstMeshBound, MeshBoundCount);
+    FAABB ParentBounds = CalculateBounds(FirstMeshBound, MeshBoundCount);
 
     FVector Extent = CentroidBounds.Max - CentroidBounds.Min;
     OutAxis = 0;
@@ -263,99 +244,99 @@ int FBVH::FindBestSplit(int FirstActor, int ActorCount, int& OutAxis, float& Out
     if (Extent[OutAxis] < KINDA_SMALL_NUMBER)
     {
         OutSplitPos = CentroidBounds.Min[OutAxis];
-        return FirstActor + ActorCount / 2;
+        return FirstMeshBound + MeshBoundCount / 2;
     }
 
     // 1) 정렬 - TArray의 Sort 사용
     // 임시 배열 생성 후 정렬
     TArray<int> TempIndices;
-    TempIndices.Reserve(ActorCount);
-    for (int i = 0; i < ActorCount; ++i)
+    TempIndices.Reserve(MeshBoundCount);
+    for (int i = 0; i < MeshBoundCount; ++i)
     {
-        TempIndices.Add(ActorIndices[FirstActor + i]);
+        TempIndices.Add(MeshIndices[FirstMeshBound + i]);
     }
 
     TempIndices.Sort([&](int A, int B)
     {
-        return ActorBounds[A].Center[OutAxis] < ActorBounds[B].Center[OutAxis];
+        return MeshBounds[A].Center[OutAxis] < MeshBounds[B].Center[OutAxis];
     });
 
     // 정렬된 결과를 다시 복사
-    for (int i = 0; i < ActorCount; ++i)
+    for (int i = 0; i < MeshBoundCount; ++i)
     {
-        ActorIndices[FirstActor + i] = TempIndices[i];
+        MeshIndices[FirstMeshBound + i] = TempIndices[i];
     }
     // 2) Prefix/Suffix AABB 계산
-    TArray<FBound> Prefix;
-    TArray<FBound> Suffix;
-    Prefix.SetNum(ActorCount);
-    Suffix.SetNum(ActorCount);
+    TArray<FAABB> Prefix;
+    TArray<FAABB> Suffix;
+    Prefix.SetNum(MeshBoundCount);
+    Suffix.SetNum(MeshBoundCount);
 
-    Prefix[0] = ActorBounds[ActorIndices[FirstActor]].Bounds;
-    for (int i = 1; i < ActorCount; i++)
-        Prefix[i] = Union(Prefix[i - 1], ActorBounds[ActorIndices[FirstActor + i]].Bounds);
+    Prefix[0] = MeshBounds[MeshIndices[FirstMeshBound]].AABB;
+    for (int i = 1; i < MeshBoundCount; i++)
+        Prefix[i] = Prefix[i - 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB;
 
-    Suffix[ActorCount - 1] = ActorBounds[ActorIndices[FirstActor + ActorCount - 1]].Bounds;
-    for (int i = ActorCount - 2; i >= 0; i--)
-        Suffix[i] = Union(Suffix[i + 1], ActorBounds[ActorIndices[FirstActor + i]].Bounds);
+    Suffix[MeshBoundCount - 1] = MeshBounds[MeshIndices[FirstMeshBound + MeshBoundCount - 1]].AABB;
+    for (int i = MeshBoundCount - 2; i >= 0; i--)
+        Suffix[i] = (Suffix[i + 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB);
 
     // 3) SAH 비용 평가
     float BestCost = FLT_MAX;
-    int BestSplit = FirstActor + ActorCount / 2;
-    float SA_P = SurfaceArea(ParentBounds) + 1e-6f;
+    int BestSplit = FirstMeshBound + MeshBoundCount / 2;
+    float SA_P = ParentBounds.GetSurfaceArea() + 1e-6f;
 
-    for (int i = 0; i < ActorCount - 1; i++)
+    for (int i = 0; i < MeshBoundCount - 1; i++)
     {
         int LeftCount = i + 1;
-        int RightCount = ActorCount - LeftCount;
+        int RightCount = MeshBoundCount - LeftCount;
 
-        float SA_L = SurfaceArea(Prefix[i]);
-        float SA_R = SurfaceArea(Suffix[i + 1]);
+        float SA_L = Prefix[i].GetSurfaceArea();
+        float SA_R = Suffix[i + 1].GetSurfaceArea();
 
         float Cost = 1.0f + (SA_L / SA_P) * LeftCount + (SA_R / SA_P) * RightCount;
 
         if (Cost < BestCost)
         {
             BestCost = Cost;
-            BestSplit = FirstActor + LeftCount;
-            OutSplitPos = ActorBounds[ActorIndices[BestSplit]].Center[OutAxis];
+            BestSplit = FirstMeshBound + LeftCount;
+            OutSplitPos = MeshBounds[MeshIndices[BestSplit]].Center[OutAxis];
         }
     }
 
     return BestSplit;
 }
 
-//static inline float SurfaceArea(const FBound& b) {
+//static inline float SurfaceArea(const FAABB& b) {
 //    FVector s = b.Max - b.Min;
 //    if (s.X <= 0 || s.Y <= 0 || s.Z <= 0) return 0.0f;
 //    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
 //}
 
-float FBVH::CalculateSAH(int FirstActor, int LeftCount, int RightCount, const FBound& Parent) const
+float FBVH::CalculateSAH(int FirstMeshBound, int LeftCount, int RightCount, const FAABB& Parent) const
 {
-    FBound LB = CalculateBounds(FirstActor, LeftCount);
-    FBound RB = CalculateBounds(FirstActor + LeftCount, RightCount);
+    FAABB LB = CalculateBounds(FirstMeshBound, LeftCount);
+    FAABB RB = CalculateBounds(FirstMeshBound + LeftCount, RightCount);
 
-    float SA_P = SurfaceArea(Parent) + 1e-6f;
-    float SA_L = SurfaceArea(LB);
-    float SA_R = SurfaceArea(RB);
+    float SA_P = Parent.GetSurfaceArea() + 1e-6f;
+    float SA_L = LB.GetSurfaceArea();
+    float SA_R = RB.GetSurfaceArea();
 
     constexpr float Ct = 1.0f;
     constexpr float Ci = 1.0f;
     return Ct + Ci * ((SA_L / SA_P) * LeftCount + (SA_R / SA_P) * RightCount);
 }
 
-int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitPos)
+int FBVH::PartitionActors(int FirstMeshBound, int MeshBoundCount, int Axis, float SplitPos)
 {
-    int Left = FirstActor;
-    int Right = FirstActor + ActorCount - 1;
+    int Left = FirstMeshBound;
+    int Right = FirstMeshBound + MeshBoundCount - 1;
 
     while (Left <= Right)
     {
         while (Left <= Right)
         {
-            int LeftActorIndex = ActorIndices[Left];
-            const FVector& LeftCenter = ActorBounds[LeftActorIndex].Center;
+            int LeftActorIndex = MeshIndices[Left];
+            const FVector& LeftCenter = MeshBounds[LeftActorIndex].Center;
             if (LeftCenter[Axis] >= SplitPos)
                 break;
             Left++;
@@ -363,8 +344,8 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
 
         while (Left <= Right)
         {
-            int RightActorIndex = ActorIndices[Right];
-            const FVector& RightCenter = ActorBounds[RightActorIndex].Center;
+            int RightActorIndex = MeshIndices[Right];
+            const FVector& RightCenter = MeshBounds[RightActorIndex].Center;
             if (RightCenter[Axis] < SplitPos)
                 break;
             Right--;
@@ -372,9 +353,9 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
 
         if (Left < Right)
         {
-            int Temp = ActorIndices[Left];
-            ActorIndices[Left] = ActorIndices[Right];
-            ActorIndices[Right] = Temp;
+            int Temp = MeshIndices[Left];
+            MeshIndices[Left] = MeshIndices[Right];
+            MeshIndices[Right] = Temp;
             Left++;
             Right--;
         }
@@ -386,13 +367,13 @@ int FBVH::PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitP
 bool FBVH::IntersectNode(int NodeIndex,
     const FOptimizedRay& Ray,
     float& InOutDistance,
-    AActor*& OutActor) const
+    UStaticMeshComponent*& OutStaticMeshComp) const
 {
     const FBVHNode& Node = Nodes[NodeIndex];
 
     // 최적화된 Ray-AABB 교차 검사 사용
     float tNear;
-    if (!Ray.IntersectAABB(Node.BoundingBox, tNear))
+    if (!IntersectOptRayAABB(Ray, Node.BoundingBox, tNear))
         return false;
 
     if (tNear >= InOutDistance)
@@ -402,20 +383,20 @@ bool FBVH::IntersectNode(int NodeIndex,
     {
         bool bHit = false;
         float Closest = InOutDistance;
-        AActor* ClosestActor = nullptr;
+        UStaticMeshComponent* ClosetMesh = nullptr;
 
-        for (int i = 0; i < Node.ActorCount; ++i)
+        for (int i = 0; i < Node.MeshBoundCount; ++i)
         {
-            int ActorIndex = ActorIndices[Node.FirstActor + i];
-            AActor* Actor = ActorBounds[ActorIndex].Actor;
+            int ActorIndex = MeshIndices[Node.FirstMeshBound + i];
+            UStaticMeshComponent* StaticMeshComp = MeshBounds[ActorIndex].StaticMeshComp;
 
             float Dist;
-            if (IntersectActor(Actor, Ray.Origin, Ray.Direction, Dist))
+            if (CPickingSystem::CheckStaticMeshPicking(StaticMeshComp, Ray, Dist))
             {
                 if (Dist < Closest)
                 {
                     Closest = Dist;
-                    ClosestActor = Actor;
+                    ClosetMesh = StaticMeshComp;
                     bHit = true;
                 }
             }
@@ -424,7 +405,7 @@ bool FBVH::IntersectNode(int NodeIndex,
         if (bHit)
         {
             InOutDistance = Closest;
-            OutActor = ClosestActor;
+            OutStaticMeshComp = ClosetMesh;
         }
 
         return bHit;
@@ -441,7 +422,7 @@ bool FBVH::IntersectNode(int NodeIndex,
         {
             if (ChildIdx < 0) return { ChildIdx, FLT_MAX, false };
             float tN;
-            if (Ray.IntersectAABB(Nodes[ChildIdx].BoundingBox, tN))
+            if (IntersectOptRayAABB(Ray,Nodes[ChildIdx].BoundingBox,tN))
                 return { ChildIdx, tN, true };
             return { ChildIdx, FLT_MAX, false };
         };
@@ -456,35 +437,25 @@ bool FBVH::IntersectNode(int NodeIndex,
         const ChildHit First = (L.tNear < R.tNear) ? L : R;
         const ChildHit Second = (L.tNear < R.tNear) ? R : L;
 
-        if (IntersectNode(First.Index, Ray, InOutDistance, OutActor))
+        if (IntersectNode(First.Index, Ray, InOutDistance, OutStaticMeshComp))
             bHit = true;
 
         if (InOutDistance > Second.tNear)
         {
-            if (IntersectNode(Second.Index, Ray, InOutDistance, OutActor))
+            if (IntersectNode(Second.Index, Ray, InOutDistance, OutStaticMeshComp))
                 bHit = true;
         }
     }
     else if (L.bValid)
     {
-        if (IntersectNode(L.Index, Ray, InOutDistance, OutActor))
+        if (IntersectNode(L.Index, Ray, InOutDistance, OutStaticMeshComp))
             bHit = true;
     }
     else if (R.bValid)
     {
-        if (IntersectNode(R.Index, Ray, InOutDistance, OutActor))
+        if (IntersectNode(R.Index, Ray, InOutDistance, OutStaticMeshComp))
             bHit = true;
     }
 
     return bHit;
-}
-
-bool FBVH::IntersectActor(const AActor* Actor, const FVector& RayOrigin, const FVector& RayDirection,
-    float& OutDistance) const
-{
-    FRay Ray;
-    Ray.Origin = RayOrigin;
-    Ray.Direction = RayDirection;
-
-    return CPickingSystem::CheckActorPicking(Actor, Ray, OutDistance);
 }

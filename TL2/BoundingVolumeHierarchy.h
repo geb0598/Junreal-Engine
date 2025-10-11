@@ -1,15 +1,15 @@
 ﻿#pragma once
 #include "pch.h"
-#include "AABoundingBoxComponent.h"
+#include "BoundingVolume.h"
 #include "Actor.h"
 struct FMidPhaseBVHPrimitive
 {
 	AActor* Actor;
-	FBound Bounds; // actor's nounds
+	FAABB AABB; // actor's nounds
 };
 struct FMidPhaseBVHNode
 {
-	FBound Bounds; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
+	FAABB AABB; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
 	FMidPhaseBVHNode* Left = nullptr;
 	FMidPhaseBVHNode* Right = nullptr;
 
@@ -24,11 +24,11 @@ struct FMidPhaseBVHNode
 struct FNarrowPhaseBVHPrimitive
 {
 	int32 TriangleIndex; // in mesh
-	FBound Bounds;		 // triangle's bound
+	FAABB AABB;		 // triangle's bound
 };
 struct FNarrowPhaseBVHNode
 {
-	FBound Bounds; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
+	FAABB AABB; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
 	FNarrowPhaseBVHNode* Left;
 	FNarrowPhaseBVHNode* Right;
 
@@ -119,13 +119,13 @@ private:
 	* @param Primitives 프리미티브들의 배열
 	*/
 	template<typename TPrimitive>
-	FBound CalculateBounds(const TArray<TPrimitive>& Primitives)
+	FAABB CalculateBounds(const TArray<TPrimitive>& Primitives)
 	{
 		if (Primitives.IsEmpty())
 		{
-			return FBound(FVector(0, 0, 0), FVector(0, 0, 0));
+			return FAABB(FVector(0, 0, 0), FVector(0, 0, 0));
 		}
-		FBound TotalBound(FVector(FLT_MAX, FLT_MAX, FLT_MAX), FVector(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+		FAABB TotalBound(FVector(FLT_MAX, FLT_MAX, FLT_MAX), FVector(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 
 		for (const auto& Primitive : Primitives)
 		{

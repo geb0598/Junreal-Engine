@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Vector.h"
+#include "Enums.h"
 
 // Unreal-style simple ray type
 // 이거 어디둘지 모르겠음
@@ -7,13 +8,113 @@ struct alignas(16) FRay
 {
     FVector Origin;
     FVector Direction; // Normalized
+    FRay() = default;
+    FRay(const FOptimizedRay& OptRay);
+};
+
+// 최적화된 Ray-AABB 교차 검사를 위한 구조체
+struct alignas(16) FOptimizedRay
+{
+    FVector Origin;
+    FVector Direction;
+    FVector InverseDirection;  // 1.0f / Direction (division 제거용)
+    int Sign[3];              // Direction의 부호 (branchless용)
+    FOptimizedRay = default();
+    FOptimizedRay(const FVector& InOrigin, const FVector& InDirection)
+        : Origin(InOrigin), Direction(InDirection)
+    {
+        // InverseDirection 계산 (0으로 나누기 방지)
+        InverseDirection.X = (std::abs(InDirection.X) < KINDA_SMALL_NUMBER) ?
+            (InDirection.X < 0.0f ? -1e30f : 1e30f) : 1.0f / InDirection.X;
+        InverseDirection.Y = (std::abs(InDirection.Y) < KINDA_SMALL_NUMBER) ?
+            (InDirection.Y < 0.0f ? -1e30f : 1e30f) : 1.0f / InDirection.Y;
+        InverseDirection.Z = (std::abs(InDirection.Z) < KINDA_SMALL_NUMBER) ?
+            (InDirection.Z < 0.0f ? -1e30f : 1e30f) : 1.0f / InDirection.Z;
+
+        // Sign 계산 (branchless slab method용)
+        Sign[0] = (InverseDirection.X < 0.0f) ? 1 : 0;
+        Sign[1] = (InverseDirection.Y < 0.0f) ? 1 : 0;
+        Sign[2] = (InverseDirection.Z < 0.0f) ? 1 : 0;
+    }
 };
 
 struct FAABB
 {
     FVector Min;
     FVector Max;
+    FAABB() = default;
+    FAABB(const FVector* Vertices, const uint32 Count)
+    {
+        InitAABB(Vertices, Count);
+    }
+    FAABB(const TArray<FNormalVertex>& NormalVertices)
+    {
+        InitAABB(NormalVertices);
+    }
+    FAABB(const TArray<FVector>& Vertices)
+    {
+        InitAABB(Vertices);
+    }
+    void InitAABB(const TArray<FNormalVertex>& NormalVertices)
+    {
+        if (NormalVertices.Num() <= 0)
+        {
+            return;
+        }
+        Min = NormalVertices[0].pos;
+        Max = NormalVertices[0].pos;
+        for (const FNormalVertex& Vertex : NormalVertices)
+        {
+            Min.X = std::min(Min.X, Vertex.pos.X);
+            Min.Y = std::min(Min.Y, Vertex.pos.Y);
+            Min.Z = std::min(Min.Z, Vertex.pos.Z);
 
+            Max.X = std::max(Max.X, Vertex.pos.X);
+            Max.Y = std::max(Max.Y, Vertex.pos.Y);
+            Max.Z = std::max(Max.Z, Vertex.pos.Z);
+        }
+    }
+
+    void InitAABB(const TArray<FVector>& Vertices)
+    {
+        if (Vertices.Num() <= 0)
+        {
+            return;
+        }
+        Min = Vertices[0];
+        Max = Vertices[0];
+        for (const FVector& Vertex : Vertices)
+        {
+            Min.X = std::min(Min.X, Vertex.X);
+            Min.Y = std::min(Min.Y, Vertex.Y);
+            Min.Z = std::min(Min.Z, Vertex.Z);
+
+            Max.X = std::max(Max.X, Vertex.X);
+            Max.Y = std::max(Max.Y, Vertex.Y);
+            Max.Z = std::max(Max.Z, Vertex.Z);
+        }
+    }
+
+    void InitAABB(const FVector* Vertices, const uint32 Count)
+    {
+        if (Count <= 0)
+        {
+            return;
+        }
+        Min = Vertices[0];
+        Max = Vertices[0];
+        for (int i = 0; i < Count; i++)
+        {
+            FVector Vertex = Vertices[i];
+            Min.X = std::min(Min.X, Vertex.X);
+            Min.Y = std::min(Min.Y, Vertex.Y);
+            Min.Z = std::min(Min.Z, Vertex.Z);
+
+            Max.X = std::max(Max.X, Vertex.X);
+            Max.Y = std::max(Max.Y, Vertex.Y);
+            Max.Z = std::max(Max.Z, Vertex.Z);
+        }
+    }
     FAABB& operator+=(const FAABB& Other)
     {
         Min.X = std::min(Min.X, Other.Min.X);
@@ -26,7 +127,16 @@ struct FAABB
 
         return *this;
     }
-
+    static FAABB operator+(const FAABB& f1, const FAABB& f2);
+    FVector GetVertex(uint32 idx) const
+    {
+        idx = idx % 8;
+        FVector Vertex;
+        Vertex.X = (idx & 1) == 0 ? Min.X : Max.X;
+        Vertex.Y = (idx & (1 << 1)) == 0 ? Min.Y : Max.Y;
+        Vertex.Z = (idx & (1 << 2)) == 0 ? Min.Z : Max.Z;
+        return Vertex;
+    }
     // 센터 반환
     FVector GetCenter() const
     {
@@ -64,6 +174,7 @@ struct FOBB
     FVector Center;
     FVector Axis[3]; //Forward, Right, Up
     FVector Extents; //half size (x(Forward), y(Right), z(Up))
+    FOBB() = default;
 
     //AABB + WorldMatrix 생성자
     FOBB(const FAABB& LocalAABB, const FTransform& WorldTransform)
@@ -101,6 +212,9 @@ struct FOBB
     }
 };
 
+
+// 최적화된 Ray-AABB 교차 검사 (branchless slab method)
+bool IntersectOptRayAABB(const FOptimizedRay& Ray, const FAABB& AABB, float& OutTNear);
 
 bool IntersectRayAABB(const FRay& Ray, const FAABB& AABB, float& OutDistance);
 

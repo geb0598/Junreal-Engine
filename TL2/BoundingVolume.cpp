@@ -1,4 +1,18 @@
 ﻿#include "BoundingVolume.h"
+FRay::FRay(const FOptimizedRay& OptRay) : Origin(OptRay.Origin), Direction(OptRay.Direction){}
+
+FAABB FAABB::operator+(const FAABB& f1, const FAABB& f2)
+{
+    FAABB AABB;
+    AABB.Min.X = std::min(f1.Min.X, f2.Min.X);
+    AABB.Min.Y = std::min(f1.Min.Y, f2.Min.Y);
+    AABB.Min.Z = std::min(f1.Min.Z, f2.Min.Z);
+
+    AABB.Max.X = std::max(f1.Max.X, f2.Max.X);
+    AABB.Max.Y = std::max(f1.Max.Y, f2.Max.Y);
+    AABB.Max.Z = std::max(f1.Max.Z, f2.Max.Z);
+}
+
 
 bool IntersectRayAABB(const FRay& Ray, const FAABB& AABB, float& OutDistance)
 {
@@ -19,6 +33,32 @@ bool IntersectRayAABB(const FRay& Ray, const FAABB& AABB, float& OutDistance)
     return true;
 }
 
+// 최적화된 Ray-AABB 교차 검사 (branchless slab method)
+bool IntersectOptRayAABB(const FOptimizedRay& Ray, const FAABB& AABB, float& OutTNear)
+{
+    // AABB의 min/max를 배열로 접근하기 위한 설정
+    FVector BoundsArray[2] = { AABB.Min, AABB.Max };
+
+    float tmin = (BoundsArray[Ray.Sign[0]].X - Ray.Origin.X) * Ray.InverseDirection.X;
+    float tmax = (BoundsArray[1 - Ray.Sign[0]].X - Ray.Origin.X) * Ray.InverseDirection.X;
+
+    float tymin = (BoundsArray[Ray.Sign[1]].Y - Ray.Origin.Y) * Ray.InverseDirection.Y;
+    float tymax = (BoundsArray[1 - Ray.Sign[1]].Y - Ray.Origin.Y) * Ray.InverseDirection.Y;
+
+    // Branch 없이 min/max 계산
+    tmin = FMath::Max(tmin, tymin);
+    tmax = FMath::Min(tmax, tymax);
+
+    float tzmin = (BoundsArray[Ray.Sign[2]].Z - Ray.Origin.Z) * Ray.InverseDirection.Z;
+    float tzmax = (BoundsArray[1 - Ray.Sign[2]].Z - Ray.Origin.Z) * Ray.InverseDirection.Z;
+
+    tmin = FMath::Max(tmin, tzmin);
+    tmax = FMath::Min(tmax, tzmax);
+
+    // 교차 여부 및 거리 반환
+    OutTNear = tmin;
+    return (tmax >= tmin) && (tmax >= 0.0f);
+}
 
 bool IntersectOBBAABB(const FOBB& OBB, const FAABB& AABB)
 {

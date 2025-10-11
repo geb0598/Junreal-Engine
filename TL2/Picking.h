@@ -11,14 +11,6 @@ class AGizmoActor;
 // Forward Declarations
 class AActor;
 class ACameraActor;
-struct FBound;
-
-// Unreal-style simple ray type
-struct alignas(16) FRay
-{
-    FVector Origin;
-    FVector Direction; // Normalized
-};
 
 // Build A world-space ray from the current mouse position and camera/projection info.
 // - InView: view matrix (row-major, row-vector convention; built by LookAtLH)
@@ -117,6 +109,7 @@ public:
 
     /** === 헬퍼 함수들 === */
     static bool CheckActorPicking(const AActor* Actor, const FRay& Ray, float& OutDistance);
+    static bool CheckStaticMeshPicking(const UStaticMeshComponent* StaticMeshComp, const FRay& Ray, float& OutDistance);
 
     // 거리 기반 적응형 조기 종료 임계값
     static float GetAdaptiveThreshold(float cameraDistance);
