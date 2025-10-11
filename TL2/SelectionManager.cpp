@@ -37,6 +37,26 @@ void USelectionManager::DeselectActor(AActor* Actor)
     }
 }
 
+void USelectionManager::SelectComponent(USceneComponent* Component)
+{
+    if (!Component)
+    {
+        return;
+    }
+    AActor* SelectedActor = Component->GetOwner();
+    //이미 엑터가 피킹되어 있는 상황, 어느 컴포넌트든 선택 가능
+    if (IsActorSelected(SelectedActor))
+    {
+        SelectedComponent = Component;
+    }
+    //엑터가 선택 안돼있음, 루트 컴포넌트 피킹
+    else
+    {
+        SelectedActors.Add(SelectedActor);
+        SelectedComponent = SelectedActor->GetRootComponent();
+    }
+}
+
 void USelectionManager::ClearSelection()
 {
     for (AActor* Actor : SelectedActors)

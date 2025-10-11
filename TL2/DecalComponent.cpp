@@ -67,6 +67,10 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
         return;
     }
     UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
+    if (!StaticMesh)
+    {
+        return;
+    }
     
     // 월드/역월드
     // DecalSize를 스케일로 적용, 데칼 world inverse를 구하기 위함

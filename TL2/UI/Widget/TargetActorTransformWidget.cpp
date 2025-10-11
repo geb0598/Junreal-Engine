@@ -6,6 +6,7 @@
 #include "World.h"
 #include "Vector.h"
 #include "GizmoActor.h"
+#include "SelectionManager.h"
 #include <string>
 
 #include "BillboardComponent.h"
@@ -114,40 +115,42 @@ AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
 void UTargetActorTransformWidget::Update()
 {
 	// UIManager를 통해 현재 선택된 액터 가져오기
-	AActor* CurrentSelectedActor = GetCurrentSelectedActor();
-	if (SelectedActor != CurrentSelectedActor)
-	{
-		SelectedActor = CurrentSelectedActor;
-		// 새로 선택된 액터의 이름 캐시
-		if (SelectedActor)
-		{
-			try
-			{
-				// 새로운 액터가 선택되면, 선택된 컴포넌트를 해당 액터의 루트 컴포넌트로 초기화합니다.
-				SelectedComponent = SelectedActor->GetRootComponent();
 
-				CachedActorName = SelectedActor->GetName().ToString();
-			}
-			catch (...)
-			{
-				CachedActorName = "[Invalid Actor]";
-				SelectedActor = nullptr;
-				SelectedComponent = nullptr;
-			}
-		}
-		else
-		{
-			CachedActorName = "";
-			SelectedComponent = nullptr;
-		}
-	}
+	//if (SelectedActor != CurrentSelectedActor)
+	//{
+	//	SelectedActor = CurrentSelectedActor;
+	//	// 새로 선택된 액터의 이름 캐시
+	//	if (SelectedActor)
+	//	{
+	//		try
+	//		{
+	//			// 새로운 액터가 선택되면, 선택된 컴포넌트를 해당 액터의 루트 컴포넌트로 초기화합니다.
+	//			SelectedComponent = SelectedActor->GetRootComponent();
 
-	if (SelectedActor)
-	{
-		// 액터가 선택되어 있으면 항상 트랜스폼 정보를 업데이트하여
-		// 기즈모 조작을 실시간으로 UI에 반영합니다.
-		UpdateTransformFromActor();
-	}
+	//			CachedActorName = SelectedActor->GetName().ToString();
+	//		}
+	//		catch (...)
+	//		{
+	//			CachedActorName = "[Invalid Actor]";
+	//			SelectedActor = nullptr;
+	//			SelectedComponent = nullptr;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		CachedActorName = "";
+	//		SelectedComponent = nullptr;
+	//	}
+	//}
+
+	//if (SelectedActor)
+	//{
+	//	// 액터가 선택되어 있으면 항상 트랜스폼 정보를 업데이트하여
+	//	// 기즈모 조작을 실시간으로 UI에 반영합니다.
+	//	UpdateTransformFromActor();
+	//}
+
+	UpdateTransformFromActor();
 }
 
 /**
@@ -174,7 +177,7 @@ void UTargetActorTransformWidget::RenderWidget()
 	if (SelectedActor)
 	{
 		// 액터 이름 표시 (캐시된 이름 사용)
-		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", CachedActorName.c_str());
+		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Selected: %s", SelectedActor->GetName().ToString().c_str());
 		// 선택된 액터 UUID 표시(전역 고유 ID)
 		ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));
 		ImGui::Spacing();
@@ -690,6 +693,7 @@ void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* Scen
 	{
 		// 일치하면 Selected 플래그를 추가하여 하이라이트 효과를 줍니다.
 		NodeFlags |= ImGuiTreeNodeFlags_Selected;
+		
 	}
 	if (!bHasChildren)
 	{
@@ -707,7 +711,7 @@ void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* Scen
 	if (ImGui::IsItemClicked())
 	{
 		// 클릭되었다면, 멤버 변수인 SelectedComponent를 현재 컴포넌트로 업데이트합니다.
-		SelectedComponent = SceneComponent;
+		USelectionManager::GetInstance().SelectComponent(SceneComponent);
 	}
 
 	if (bNodeIsOpen)
@@ -732,6 +736,9 @@ void UTargetActorTransformWidget::PostProcess()
 
 void UTargetActorTransformWidget::UpdateTransformFromActor()
 {
+	USelectionManager& SelectionManager = USelectionManager::GetInstance();
+	SelectedActor = SelectionManager.GetSelectedActor();
+	SelectedComponent = SelectionManager.GetSelectedComponent();
 	if (!SelectedActor)
 		return;
 
