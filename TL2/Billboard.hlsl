@@ -22,6 +22,12 @@ struct PS_INPUT
     float2 tex : TEXCOORD0;
 };
 
+struct PS_OUTPUT
+{
+    float4 Color : SV_Target0;
+    uint UUID : SV_Target1;
+};
+
 Texture2D fontAtlas : register(t0);
 SamplerState linearSampler : register(s0);
 
@@ -51,9 +57,12 @@ PS_INPUT mainVS(VS_INPUT input)
 
 float4 mainPS(PS_INPUT input) : SV_Target
 {
+    PS_OUTPUT Result;
     float4 color = fontAtlas.Sample(linearSampler, input.tex);
 
     clip(color.a - 0.5f); // alpha - 0.5f < 0 이면 해당픽셀 렌더링 중단
 
+    Result.Color = color;
+    Result.UUID = 0;
     return color;
 }

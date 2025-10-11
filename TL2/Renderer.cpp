@@ -34,7 +34,7 @@ void URenderer::BeginFrame()
     // 백버퍼/깊이버퍼를 클리어
     RHIDevice->ClearBackBuffer();  // 배경색
     RHIDevice->ClearDepthBuffer(1.0f, 0);                 // 깊이값 초기화
-    RHIDevice->CreateBlendState();
+    //RHIDevice->CreateBlendState();
     RHIDevice->IASetPrimitiveTopology();
     // RS
     RHIDevice->RSSetViewport();
@@ -99,7 +99,12 @@ void URenderer::RSSetDefaultState()
 
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
-    RHIDevice->UpdateConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
+    RHIDevice->UpdateConstantBuffers(ModelBufferType(ModelMatrix, 0), ViewMatrix, ProjMatrix);
+}
+
+void URenderer::UpdateConstantBuffer(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
+{
+    RHIDevice->UpdateConstantBuffers(ModelConstant, ViewMatrix, ProjMatrix);
 }
 
 void URenderer::UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)

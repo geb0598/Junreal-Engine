@@ -1,6 +1,8 @@
 cbuffer ModelBuffer : register(b0)
 {
     row_major float4x4 WorldMatrix;
+    uint UUID;
+    float3 Padding;
 }
 
 cbuffer ViewProjBuffer : register(b1)
@@ -75,6 +77,12 @@ struct PS_INPUT
     float2 texCoord : TEXCOORD0;
 };
 
+struct PS_OUTPUT
+{
+    float4 Color : SV_Target0;
+    uint UUID : SV_Target1;
+};
+
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
@@ -121,6 +129,7 @@ PS_INPUT mainVS(VS_INPUT input)
 
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
+    PS_OUTPUT Result;
     // Lerp the incoming color with the global LerpColor
     float4 finalColor = input.color;
     finalColor.rgb = lerp(finalColor.rgb, LerpColor.rgb, LerpColor.a) * (1.0f - HasMaterial);
@@ -137,6 +146,9 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
         float3 highlightColor = float3(1.0, 1.0, 0.0); // 노란색
         finalColor.rgb = lerp(finalColor.rgb, highlightColor, 0.5);
     }
+    
+    Result.Color = finalColor;
+    Result.UUID = UUID;
     return finalColor;
 }
 
