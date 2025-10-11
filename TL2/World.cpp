@@ -418,7 +418,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                         if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
                         {
                             StaticMeshCompsInDecal.Push(StaticMeshComp);
-                            break;
                         }
                     }
                     
