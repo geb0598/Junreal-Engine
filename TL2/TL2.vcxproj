@@ -368,6 +368,7 @@
     <ClInclude Include="BoundingVolume.h" />
     <ClInclude Include="BoundingVolumeHierarchy.h" />
     <ClInclude Include="BVH.h" />
+    <ClInclude Include="CBufferTypes.h" />
     <ClInclude Include="DecalActor.h" />
     <ClInclude Include="DecalComponent.h" />
     <ClInclude Include="DecalComponentScreen.h">

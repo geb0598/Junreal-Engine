@@ -21,7 +21,8 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
 {
     if (StaticMesh)
     {
-        Renderer->UpdateConstantBuffer(ModelBufferType(GetWorldMatrix(),this->InternalIndex), ViewMatrix, ProjectionMatrix);
+        Renderer->UpdateSetCBuffer(ModelBufferType(GetWorldMatrix(), this->InternalIndex));
+        Renderer->UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
         Renderer->PrepareShader(GetMaterial()->GetShader());
         Renderer->DrawIndexedPrimitiveComponent(GetStaticMesh(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, MaterailSlots);
     }
