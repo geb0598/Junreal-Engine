@@ -40,7 +40,7 @@ protected:
     FVector DecalSize = FVector(1.0f, 1.0f, 1.0f);
 
     // UV 타일링
-    FVector2D UVTiling = FVector2D(4.0f, 4.0f);
+    FVector2D UVTiling = FVector2D(2.0f, 2.0f);
 
     // 데칼 블렌드 모드
     enum class EDecalBlendMode
