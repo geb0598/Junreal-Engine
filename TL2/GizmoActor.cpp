@@ -126,30 +126,28 @@ void AGizmoActor::Tick(float DeltaSeconds)
 	if (!InputManager) InputManager = &UInputManager::GetInstance();
 	if (!UIManager) UIManager = &UUIManager::GetInstance();
 
+	USceneComponent* SelectedComponent = nullptr;
 	// 컴포넌트 활성화 상태 업데이트    
 	if (SelectionManager->HasSelection() && CameraActor)
 	{
-		TargetActor = SelectionManager->GetSelectedActor();
+		SelectedComponent = SelectionManager->GetSelectedComponent();
 
-		// 기즈모 위치를 선택된 액터 위치로 업데이트
-		if (TargetActor)
+		// 기즈모 위치를 선택된 컴포넌트 위치로 업데이트
+		if (SelectedComponent)
 		{
-			SetSpaceWorldMatrix(CurrentSpace, TargetActor);
-			SetActorLocation(TargetActor->GetActorLocation());
+			SetSpaceWorldMatrix(CurrentSpace, SelectedComponent);
+			SetActorLocation(SelectedComponent->GetWorldLocation());
 		}
-	}
-	else
-	{
-		TargetActor = nullptr;
 	}
 	UpdateComponentVisibility();
 
 }
-void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) {
+void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) 
+{
 	UpdateConstantScreenScale(Camera, Viewport);
 
 
-TArray<USceneComponent*>* Components = GetGizmoComponents();
+	TArray<USceneComponent*>* Components = GetGizmoComponents();
 	if (!Components) return;
 
 
@@ -230,7 +228,7 @@ EGizmoMode  AGizmoActor::GetMode()
 	return CurrentMode;
 }
 
-void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor)
+void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, USceneComponent* SelectedComponent)
 {
 	SetSpace(NewSpace);
 
@@ -253,11 +251,11 @@ void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor)
 	}
 	else if (NewSpace == EGizmoSpace::Local)
 	{
-		if (!PickedActor)
+		if (!SelectedComponent)
 			return;
 
-		// 타겟 액터 회전 가져오기
-		FQuat TargetRot = PickedActor->GetActorRotation();
+		// 타겟 컴포넌트 회전 
+		FQuat TargetRot = SelectedComponent->GetWorldRotation();
 
 		 // ───────── Translate Gizmo ─────────
 		// ArrowX->AddRelativeRotation(AC);
@@ -352,9 +350,9 @@ static FVector2D GetStableAxisDirection(const FVector& WorldAxis, const ACameraA
 	return FVector2D(1.0f, 0.0f);
 }
 
-void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport)
+void AGizmoActor::OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport)
 {
-    if (!Target || !Camera )
+    if (!SelectedComponent || !Camera )
         return;
 
     FVector2D MouseDelta = FVector2D(MouseDeltaX, MouseDeltaY);
@@ -376,9 +374,9 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
 	{
 		switch (GizmoAxis)
 		{
-		case 1: Axis = Target->GetActorRight();   break; // Local X
-		case 2: Axis = Target->GetActorForward(); break; // Local Y
-		case 3: Axis = Target->GetActorUp();      break; // Local Z
+		case 1: Axis = SelectedComponent->GetOwner()->GetActorRight();   break; // Local X
+		case 2: Axis = SelectedComponent->GetOwner()->GetActorForward(); break; // Local Y
+		case 3: Axis = SelectedComponent->GetOwner()->GetActorUp();      break; // Local Z
 		}
 	}
 
@@ -415,8 +413,8 @@ void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, fl
 worldPerPixel *= zoomFactor;*/ 
 
         float Movement = px * worldPerPixel;
-        FVector CurrentLocation = Target->GetActorLocation();
-        Target->SetActorLocation(CurrentLocation + Axis * Movement);
+        FVector CurrentLocation = SelectedComponent->GetWorldLocation();
+		SelectedComponent->SetWorldLocation(CurrentLocation + Axis * Movement);
 
 		break;
 	}
@@ -436,9 +434,9 @@ worldPerPixel *= zoomFactor;*/
 		{
 			switch (GizmoAxis)
 			{
-			case 1: Axis = Target->GetActorRight();   break; // Local X
-			case 2: Axis = Target->GetActorForward(); break; // Local Y
-			case 3: Axis = Target->GetActorUp();      break; // Local Z
+			case 1: Axis = SelectedComponent->GetOwner()->GetActorRight();   break; // Local X
+			case 2: Axis = SelectedComponent->GetOwner()->GetActorForward(); break; // Local Y
+			case 3: Axis = SelectedComponent->GetOwner()->GetActorUp();      break; // Local Z
 			}
 		}
 
@@ -467,7 +465,7 @@ worldPerPixel *= zoomFactor;*/
 			worldPerPixel = (2.0f * z) / (h * yScale);
 		}
 		float Movement = px * worldPerPixel;
-		FVector NewScale = Target->GetActorScale();
+		FVector NewScale = SelectedComponent->GetWorldScale();
 
 		// Apply movement to the correct local axis based on which gizmo was dragged
 		switch (GizmoAxis)
@@ -483,7 +481,7 @@ worldPerPixel *= zoomFactor;*/
 			break;
 		}
 
-		Target->SetActorScale(NewScale);
+		SelectedComponent->SetWorldScale(NewScale);
 
 		break;
 	}
@@ -500,7 +498,7 @@ worldPerPixel *= zoomFactor;*/
 
 		// = MakeQuatFromAxisAngle(RotationAxis.X, Angle);
 		FQuat DeltaQuat{};
-		FQuat CurrentRot = Target->GetActorRotation();
+		FQuat CurrentRot = SelectedComponent->GetWorldRotation();
 		if (CurrentSpace == EGizmoSpace::World)
 		{
 
@@ -531,7 +529,7 @@ worldPerPixel *= zoomFactor;*/
 			}
 			}
 			FQuat NewRot = DeltaQuat * CurrentRot; // 월드 기준 회전
-			Target->SetActorRotation(NewRot);
+			SelectedComponent->SetWorldRotation(NewRot);
 		}
 		else
 		{
@@ -546,7 +544,7 @@ worldPerPixel *= zoomFactor;*/
 
 			//FQuat DeltaQuat = MakeQuatFromAxisAngle(RotationAxis, Angle);
 
-			FQuat CurrentRot = Target->GetActorRotation();
+			FQuat CurrentRot = SelectedComponent->GetWorldRotation();
 
 			switch (GizmoAxis)
 			{
@@ -577,7 +575,7 @@ worldPerPixel *= zoomFactor;*/
 
 			FQuat NewRot = DeltaQuat * CurrentRot; // 월드 기준 회전
 
-			Target->SetActorRotation(NewRot);
+			SelectedComponent->SetWorldRotation(NewRot);
 
 
 			break;
@@ -597,7 +595,8 @@ void AGizmoActor::UpdateGizmoPosition()
 
 void AGizmoActor::ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY)
 {
-	if (!TargetActor || !Camera) return;
+	USceneComponent* SelectedComponent = SelectionManager->GetSelectedComponent();
+	if (!SelectedComponent || !Camera) return;
 
 	
     UpdateConstantScreenScale(Camera, Viewport);
@@ -605,7 +604,7 @@ void AGizmoActor::ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewp
     ProcessGizmoModeSwitch();
 
 	// 기즈모 드래그
-	ProcessGizmoDragging(Camera, Viewport, MousePositionX, MousePositionY);
+	ProcessGizmoDragging(Camera, SelectedComponent, Viewport, MousePositionX, MousePositionY);
 
 	ProcessGizmoHovering(Camera,  Viewport,  MousePositionX, MousePositionY);
 
@@ -633,25 +632,25 @@ void AGizmoActor::ProcessGizmoHovering(ACameraActor* Camera,FViewport* Viewport 
 
 }
 
-void AGizmoActor::ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY)
+void AGizmoActor::ProcessGizmoDragging(ACameraActor* Camera, USceneComponent* SelectedComponent, FViewport* Viewport, float MousePositionX, float MousePositionY)
 {
-	if (!TargetActor || !Camera ) return;
+	if (!SelectedComponent || !Camera ) return;
 
 	if (InputManager->IsMouseButtonDown(LeftButton))
 	{
 		FVector2D MouseDelta = InputManager->GetMouseDelta();
 		if ((MouseDelta.X * MouseDelta.X + MouseDelta.Y * MouseDelta.Y) > 0.0f)
 		{
-            OnDrag(TargetActor, GizmoAxis, MouseDelta.X, MouseDelta.Y, CameraActor, Viewport);
+            OnDrag(SelectedComponent, GizmoAxis, MouseDelta.X, MouseDelta.Y, CameraActor, Viewport);
 			bIsDragging = true;
-			SetActorLocation(TargetActor->GetActorLocation());
+			SetActorLocation(SelectedComponent->GetWorldLocation());
 		}
 	}
 	if (InputManager->IsMouseButtonReleased(LeftButton))
 	{
 		bIsDragging = false;
 		GizmoAxis = 0;
-		SetSpaceWorldMatrix(CurrentSpace, TargetActor);
+		SetSpaceWorldMatrix(CurrentSpace, SelectedComponent);
 	}
 }
 
@@ -722,7 +721,7 @@ void AGizmoActor::UpdateConstantScreenScale(ACameraActor* Camera, FViewport* Vie
     SetActorScale(FVector(scale, scale, scale));
 }
 
-void AGizmoActor::OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera)
+void AGizmoActor::OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera)
 {
-    OnDrag(Target, GizmoAxis, MouseDeltaX, MouseDeltaY, Camera, nullptr);
+    OnDrag(SelectedComponent, GizmoAxis, MouseDeltaX, MouseDeltaY, Camera, nullptr);
 }

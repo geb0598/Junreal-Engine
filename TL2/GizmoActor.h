@@ -39,7 +39,7 @@ public:
     UGizmoRotateComponent* GetRotateZ() const { return RotateZ; }
     void SetMode(EGizmoMode NewMode);
     EGizmoMode GetMode();
-    void SetSpaceWorldMatrix(EGizmoSpace NewSpace, AActor* PickedActor);
+    void SetSpaceWorldMatrix(EGizmoSpace NewSpace, USceneComponent* SelectedComponent);
     void SetSpace(EGizmoSpace NewSpace) { CurrentSpace = NewSpace; }
     EGizmoSpace GetSpace() const { return CurrentSpace; }
 
@@ -57,8 +57,8 @@ public:
     
     EGizmoMode GetGizmoMode() const;
 
-    void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport);
-    void OnDrag(AActor* Target, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera);
+    void OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera, FViewport* Viewport);
+    void OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, float MouseDeltaX, float MouseDeltaY, const ACameraActor* Camera);
     
     // Gizmo interaction methods
     void SetTargetActor(AActor* InTargetActor) { TargetActor = InTargetActor; Tick(0.f);  }
@@ -94,6 +94,7 @@ protected:
     
     // Interaction state
     AActor* TargetActor = nullptr;
+    USceneComponent* TargetComponent = nullptr;
     ACameraActor* CameraActor = nullptr;
     
     // Manager references
@@ -105,7 +106,7 @@ protected:
     // Gizmo interaction methods
    
     void ProcessGizmoHovering(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
-    void ProcessGizmoDragging(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
+    void ProcessGizmoDragging(ACameraActor* Camera, USceneComponent* SelectedComponent, FViewport* Viewport, float MousePositionX, float MousePositionY);
     void ProcessGizmoModeSwitch();
     void UpdateGizmoPosition();
     void UpdateComponentVisibility();

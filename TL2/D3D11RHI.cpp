@@ -957,41 +957,6 @@ void D3D11RHI::CreateShader(ID3D11InputLayout** SimpleInputLayout, ID3D11VertexS
     vertexshaderCSO->Release();
     pixelshaderCSO->Release();
 }
-void D3D11RHI::OnResize(UINT NewWidth, UINT NewHeight)
-{
-    if (!Device || !DeviceContext || !SwapChain)
-        return;
-
-    // 기존 리소스 해제
-    ReleaseFrameBuffer();
-
-    // 스왑체인 버퍼 리사이즈
-    HRESULT hr = SwapChain->ResizeBuffers(
-        0,                 // 버퍼 개수 (0 = 기존 유지)
-        NewWidth,
-        NewHeight,
-        DXGI_FORMAT_UNKNOWN, // 기존 포맷 유지
-        0
-    );
-    if (FAILED(hr))
-    {
-        UE_LOG("SwapChain->ResizeBuffers failed!\n");
-        return;
-    }
-
-    // 새 프레임버퍼/RTV/DSV 생성
-    CreateFrameBuffer();
-
-    // 뷰포트 갱신
-    ViewportInfo.TopLeftX = 0.0f;
-    ViewportInfo.TopLeftY = 0.0f;
-    ViewportInfo.Width = static_cast<float>(NewWidth);
-    ViewportInfo.Height = static_cast<float>(NewHeight);
-    ViewportInfo.MinDepth = 0.0f;
-    ViewportInfo.MaxDepth = 1.0f;
-
-    DeviceContext->RSSetViewports(1, &ViewportInfo);
-}
 void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
 {
     // 기존 바인딩 해제 후 뷰 해제
@@ -1089,7 +1054,7 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
     if (DeviceContext) {
         DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
     }
-
+    ReleaseIdBuffer();
     // 기존 뷰 해제
     if (RenderTargetView) { RenderTargetView->Release(); RenderTargetView = nullptr; }
     if (DepthStencilView) { DepthStencilView->Release(); DepthStencilView = nullptr; }
@@ -1101,7 +1066,7 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
 
     // 다시 RTV/DSV 만들기
     CreateBackBufferAndDepthStencil(width, height);
-
+    CreateIdBuffer();
     // 뷰포트도 갱신
     setviewort(width, height);
 }

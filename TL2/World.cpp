@@ -552,13 +552,13 @@ bool UWorld::DestroyActor(AActor* Actor)
     }
 
     // SelectionManager에서 선택 해제 (메모리 해제 전에 하자)
-    USelectionManager::GetInstance().DeselectActor(Actor);
+    SelectionManager.DeselectActor(Actor);
 
     // UIManager에서 픽된 액터 정리
-    if (UIManager.GetPickedActor() == Actor)
+   /* if (UIManager.GetPickedActor() == Actor)
     {
         UIManager.ResetPickedActor();
-    }
+    }*/
 
     // 배열에서  제거 시도
     // Level에서 제거 시도
@@ -569,7 +569,7 @@ bool UWorld::DestroyActor(AActor* Actor)
         // 메모리 해제
         ObjectFactory::DeleteObject(Actor);
         // 삭제된 액터 정리
-        USelectionManager::GetInstance().CleanupInvalidActors();
+        SelectionManager.CleanupInvalidActors();
 
         return true; // 성공적으로 삭제
     }
@@ -612,7 +612,7 @@ void UWorld::CreateNewScene()
 {
     // Safety: clear interactions that may hold stale pointers
     SelectionManager.ClearSelection();
-    UIManager.ResetPickedActor();
+   // UIManager.ResetPickedActor();
     // Level의 Actors 정리
     if (Level)
     {

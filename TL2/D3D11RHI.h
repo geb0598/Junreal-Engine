@@ -69,8 +69,6 @@ public:
 
     void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) override;
 
-    void OnResize(UINT NewWidth, UINT NewHeight);
-
     void CreateBackBufferAndDepthStencil(UINT width, UINT height);
 
     void SetViewport(UINT width, UINT height);
