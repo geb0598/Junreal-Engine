@@ -19,6 +19,8 @@ public:
     ~URenderer();
 
 public:
+    void Update(float DeltaSecond);
+
 	void BeginFrame();
 
     void PrepareShader(FShader& InShader);
@@ -55,6 +57,8 @@ public:
 
     void UpdateUVScroll(const FVector2D& Speed, float TimeSec);
 
+    void ReadBackIdBuffer();
+
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
     void DrawIndexedPrimitiveComponent(UBillboardComponent* Comp,
                                        D3D11_PRIMITIVE_TOPOLOGY InTopology);
@@ -65,6 +69,7 @@ public:
     void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f));
     void AddLines(const TArray<FVector>& StartPoints, const TArray<FVector>& EndPoints, const TArray<FVector4>& Colors);
     void EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
+    UPrimitiveComponent* GetCollidedPrimitive(int MouseX, int MouseY) const;
     void ClearLineBatch();
 
 	void EndFrame();
@@ -75,6 +80,7 @@ public:
 private:
 	URHIDevice* RHIDevice;
 
+    TArray<uint32> IdBufferCache;
     // Batch Line Rendering System using UDynamicMesh for efficiency
     ULineDynamicMesh* DynamicLineMesh = nullptr;
     FMeshData* LineBatchData = nullptr;

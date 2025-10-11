@@ -37,6 +37,7 @@ public:
     //getter
     virtual ID3D11Device* GetDevice() = 0;
     virtual ID3D11DeviceContext* GetDeviceContext() = 0;
+    virtual IDXGISwapChain* GetSwapChain() = 0;
 
     // create
     virtual void CreateDeviceAndSwapChain(HWND hWindow) = 0;;

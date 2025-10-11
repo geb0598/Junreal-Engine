@@ -23,6 +23,7 @@ struct PS_INPUT
 {
     float4 PosScreenspace : SV_POSITION;
     float2 Tex : TEXCOORD0;
+    uint UUID : UUID;
 };
 
 struct PS_OUTPUT
@@ -44,11 +45,11 @@ PS_INPUT mainVS(VS_INPUT Input)
     Output.PosScreenspace = mul(float4(Input.CenterPos, 1.0f), MVP);
     
     Output.Tex = Input.UVRect.xy; // UV는 C++에서 계산했으므로 그대로 전달
-       
+    Output.UUID = UUID;
     return Output;
 }
 
-float4 mainPS(PS_INPUT Input) : SV_Target
+PS_OUTPUT mainPS(PS_INPUT Input) : SV_Target
 {
     PS_OUTPUT Result;
     float4 Color = FontAtlas.Sample(LinearSampler, Input.Tex);
@@ -60,6 +61,6 @@ float4 mainPS(PS_INPUT Input) : SV_Target
     }
 
     Result.Color = Color;
-    Result.UUID = UUID;
-    return Color;
+    Result.UUID = Input.UUID;
+    return Result;
 }

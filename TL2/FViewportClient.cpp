@@ -217,9 +217,14 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         {
             return;
         }
-        PickedActor = CPickingSystem::PerformGlobalBVHPicking(
+        UPrimitiveComponent* Component = GEngine->GetWorld()->GetRenderer()->GetCollidedPrimitive(ViewportMousePos.X, ViewportMousePos.Y);
+        if (Component)
+        {
+            PickedActor = Component->GetOwner();
+        }
+        /*PickedActor = CPickingSystem::PerformGlobalBVHPicking(
             AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio,
-            Viewport);
+            Viewport);*/
 
 
         if (PickedActor)
@@ -227,6 +232,8 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
             USelectionManager::GetInstance().SelectActor(PickedActor);
             UUIManager::GetInstance().SetPickedActor(PickedActor);
             AGizmoActor* GizmoActor = World->GetGizmoActor();
+           
+
             if (GizmoActor)
             {
                 GizmoActor->SetTargetActor(PickedActor);

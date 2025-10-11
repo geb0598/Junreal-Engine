@@ -75,6 +75,7 @@ struct PS_INPUT
     float3 normal : NORMAL0;
     float4 color : COLOR; // Color to pass to the pixel shader
     float2 texCoord : TEXCOORD0;
+    uint UUID : UUID;
 };
 
 struct PS_OUTPUT
@@ -123,11 +124,11 @@ PS_INPUT mainVS(VS_INPUT input)
     
     output.normal = input.normal;
     output.texCoord = input.texCoord;
-    
+    output.UUID = UUID;
     return output;
 }
 
-float4 mainPS(PS_INPUT input) : SV_TARGET
+PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
 {
     PS_OUTPUT Result;
     // Lerp the incoming color with the global LerpColor
@@ -148,7 +149,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     }
     
     Result.Color = finalColor;
-    Result.UUID = UUID;
-    return finalColor;
+    Result.UUID = input.UUID;
+    return Result;
 }
 
