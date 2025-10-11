@@ -498,7 +498,7 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     if (DynamicLineMesh->GetCurrentVertexCount() > 0 && DynamicLineMesh->GetCurrentIndexCount() > 0)
     {
         UINT stride = sizeof(FVertexSimple);
-        UINT offset = 0;
+        UINT offset = 0;  
         
         ID3D11Buffer* vertexBuffer = DynamicLineMesh->GetVertexBuffer();
         ID3D11Buffer* indexBuffer = DynamicLineMesh->GetIndexBuffer();

@@ -53,6 +53,12 @@ struct PS_INPUT
     float3 WorldPosition : WORLDPOSITION;
 };
 
+struct PS_OUTPUT
+{
+    float4 Color : SV_TARGET;
+    float Depth : SV_Depth;
+};
+
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
@@ -66,11 +72,13 @@ PS_INPUT mainVS(VS_INPUT input)
     return output;
 }
 
+
 //------------------------------------------------------
 // Pixel Shader
 //------------------------------------------------------
-float4 mainPS(PS_INPUT input) : SV_TARGET
+PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
 {
+    PS_OUTPUT Result;
     float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);
 
     // 데칼 로컬 공간에서 범위 체크 (타일링과 무관)
@@ -126,5 +134,8 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     DecalColor.a *= angleFade * edgeFade;
     DecalColor.a *= CurrentAlpha;
     
-    return DecalColor;
+    Result.Color = DecalColor;
+    //SV_DEPTH 시멘틱을 쓰는 경우 z값을 정규화 하지 않고 그대로 넘어옴.
+    Result.Depth = input.position.z/input.position.w - 0.0001f;
+    return Result;
 }
