@@ -12,6 +12,7 @@ public:
     UDecalComponent();
     virtual ~UDecalComponent() override;
 
+    void TickComponent(float DeltaSeconds) override;
     void Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj, FViewport* Viewport) ;
 
     // 데칼 크기 설정 (박스 볼륨의 크기)
@@ -24,6 +25,7 @@ public:
 
     // 데칼 텍스처 설정
     void SetDecalTexture(const FString& TexturePath);
+    const FString& GetTexturePath() const { return TexturePath; }
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
@@ -31,8 +33,23 @@ public:
     UStaticMesh* GetDecalBoxMesh() const { return DecalBoxMesh; }
 
     const FOBB GetWorldOBB();
-protected:
 
+    // Fade Effect Getter/Setter Func
+    int32 GetSortOrder() const { return SortOrder; }
+    float GetFadeScreenSize() const { return FadeScreenSize; }
+    float GetFadeStartDelay() const { return FadeStartDelay; }
+    float GetFadeDuration() const { return FadeDuration; }
+    float GetFadeInStartDelay() const { return FadeInStartDelay; }
+    float GetFadeInDuration() const { return FadeInDuration; }
+    
+    void SetSortOrder(int32 InSortOrder) { SortOrder = InSortOrder; }
+    void SetFadeScreenSize(float InFadeScreenSize) { FadeScreenSize = InFadeScreenSize; }
+    void SetFadeStartDelay (float InFadeStartDelay ) { FadeStartDelay = InFadeStartDelay; }
+    void SetFadeDuration (float InFadeDuration ) { FadeDuration = InFadeDuration; }
+    void SetFadeInStartDelay (float InFadeInStartDelay ) { FadeInStartDelay = InFadeInStartDelay; }
+    void SetFadeInDuration(float InFadeInDuration) { FadeInDuration = InFadeInDuration; }
+
+protected:
     void UpdateDecalProjectionMatrix();
 
     // 데칼 박스 메쉬 (큐브)
@@ -40,6 +57,7 @@ protected:
     FMatrix DecalProjectionMatrix;
 
     // 데칼 크기
+    FString TexturePath;
     FVector DecalSize = FVector(1.0f, 1.0f, 1.0f);
 
     // UV 타일링
@@ -55,5 +73,28 @@ protected:
     };
 
     EDecalBlendMode BlendMode = EDecalBlendMode::Translucent;
+
+private:
     FAABB LocalAABB;
+    // Decal fade state
+    enum class EFadeState
+    {
+        None,
+        FadingIn,
+        FadingOut
+    };
+
+    EFadeState CurrentFadeState = EFadeState::None;
+
+    float CurrentAlpha = 1.0f;
+    float LifetimeTimer = 0.0f;
+    
+    int32 SortOrder = 0;
+    float FadeScreenSize = 0.01f;
+    float FadeStartDelay = 10.0f;
+    float FadeDuration = 0.0f;
+    float FadeInStartDelay = 10.0f;
+    float FadeInDuration = 10.0f;
+
+    bool bIsDirty = true;
 };
