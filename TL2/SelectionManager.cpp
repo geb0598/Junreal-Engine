@@ -71,6 +71,7 @@ void USelectionManager::ClearSelection()
         }
     }
     SelectedActors.clear();
+    SelectedComponent = nullptr;
 }
 
 bool USelectionManager::IsActorSelected(AActor* Actor) const
