@@ -405,7 +405,7 @@ void D3D11RHI::UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix&
     //dataPtr->cameraUp = CameraUp;
 
     DeviceContext->Unmap(BillboardCB, 0);
-    DeviceContext->VSSetConstantBuffers(0, 1, &BillboardCB); // b0 슬롯
+    DeviceContext->VSSetConstantBuffers(2, 1, &BillboardCB); // b2 슬롯
 }
 
 void D3D11RHI::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
