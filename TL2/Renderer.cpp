@@ -137,6 +137,11 @@ void URenderer::UpdateViewportBuffer(float StartX, float StartY, float SizeX, fl
     static_cast<D3D11RHI*>(RHIDevice)->UpdateViewportConstantBuffer(StartX, StartY, SizeX, SizeY);
 }
 
+void URenderer::UpdateDecalBuffer(float InFadeAlpha)
+{
+    RHIDevice->UpdateDecalConstantBuffer(InFadeAlpha);
+}
+
 void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
 {
     RHIDevice->UpdateUVScrollConstantBuffers(Speed, TimeSec);

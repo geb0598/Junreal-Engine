@@ -48,6 +48,7 @@ public:
     virtual void UpdateColorConstantBuffers(const FVector4& InColor) = 0;
     virtual void UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec) = 0;
     virtual void UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix) = 0;
+    virtual void UpdateDecalConstantBuffer(float InFadeAlpha) = 0;
 
     // clear
     virtual void ClearBackBuffer() = 0;

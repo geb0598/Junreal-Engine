@@ -14,6 +14,7 @@
 #include "ResourceManager.h"    
 #include "SceneComponent.h"    
 #include "TextRenderComponent.h"    
+#include "DecalComponent.h"
 #include <filesystem>
 #include <vector>
 
@@ -184,7 +185,8 @@ void UTargetActorTransformWidget::RenderWidget()
 			{ "StaticMesh Component", UStaticMeshComponent::StaticClass() },
 			{ "Text Component", UTextRenderComponent::StaticClass() },
 			{ "Scene Component", USceneComponent::StaticClass() },
-			{ "Billboard Component", UBillboardComponent::StaticClass() }
+			{ "Billboard Component", UBillboardComponent::StaticClass() },
+			{ "Decal Component", UDecalComponent::StaticClass() }
 		};
 
 		// 컴포넌트 추가 메뉴
@@ -480,8 +482,8 @@ void UTargetActorTransformWidget::RenderWidget()
 							ImGui::PopID();
 						}
 					}
+				}
 			}
-		}
 			// Billboard Component가 선택된 경우 Sprite UI
 			else if (UBillboardComponent* BBC = Cast<UBillboardComponent>(SelectedComponent))
 			{
@@ -647,10 +649,45 @@ void UTargetActorTransformWidget::RenderWidget()
 				//	TextRenderComponent->SetTextColor(FLinearColor(color[0], color[1], color[2]));
 				//}
 			}
-		else
-		{
-			ImGui::Text("Selected component is not a supported type.");
-		}
+			else if (UDecalComponent* DecalComponent = Cast<UDecalComponent>(SelectedComponent))
+			{
+				ImGui::Text("Decal Component Settings");
+				ImGui::Separator();
+
+				float FadeScreenSize = DecalComponent->GetFadeScreenSize();
+				if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.001f, -1.0f, 1.0f));
+				{
+					DecalComponent->SetFadeScreenSize(FadeScreenSize);
+				}
+
+				float FadeStartDelay = DecalComponent->GetFadeStartDelay();
+				if (ImGui::DragFloat("Fade Start Delay", &FadeStartDelay, 0.1f))
+				{
+					DecalComponent->SetFadeStartDelay(FadeStartDelay);
+				}
+				
+				float FadeDuration = DecalComponent->GetFadeDuration();
+				if (ImGui::DragFloat("Fade Duration", &FadeDuration, 0.1f))
+				{
+					DecalComponent->SetFadeDuration(FadeDuration);
+				}
+				
+				float FadeInStartDelay = DecalComponent->GetFadeInStartDelay();
+				if (ImGui::DragFloat("Fade In StartDelay", &FadeInStartDelay, 0.1f))
+				{
+					DecalComponent->SetFadeInStartDelay(FadeInStartDelay);
+				}
+				
+				float FadeInDuration = DecalComponent->GetFadeInDuration();
+				if (ImGui::DragFloat("Fade In Duration", &FadeInDuration, 0.1f))
+				{
+					DecalComponent->SetFadeInDuration(FadeInDuration);
+				}
+			}
+			else
+			{
+				ImGui::Text("Selected component is not a supported type.");
+			}
 		}
 	}
 	else

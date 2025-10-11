@@ -9,6 +9,8 @@ IMPLEMENT_CLASS(UDecalComponent)
 
 UDecalComponent::UDecalComponent()
 {
+    bCanEverTick = true;
+
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
@@ -52,6 +54,28 @@ void UDecalComponent::UpdateDecalProjectionMatrix()
     DecalProjectionMatrix = OrthoMatrix * ScaleMatrix;
 }
 
+void UDecalComponent::TickComponent(float DeltaSeconds)
+{
+    LifetimeTimer += DeltaSeconds;
+
+    float FadeInAlpha = 1.0f;
+    if (FadeInDuration > 0.0f)
+    {
+        float FadeInProgress = (LifetimeTimer - FadeInStartDelay) / FadeInDuration;
+        FadeInAlpha = std::max(0.0f, std::min(1.0f, FadeInProgress));
+    }
+
+    float FadeOutAlpha = 1.0f;
+    if (FadeDuration > 0.0f)
+    {
+        float FadeOutProgress = (LifetimeTimer - FadeStartDelay) / FadeDuration;
+        FadeOutAlpha = 1.0f - std::max(0.0f, std::min(1.0f, FadeOutProgress));
+    }
+
+    CurrentAlpha = std::min(FadeInAlpha, FadeOutAlpha);
+    UE_LOG("Tick - Delta: %.3f, Lifetime: %.3f, InAlpha: %.3f, OutAlpha: %.3f, FinalAlpha: %.3f", DeltaSeconds, LifetimeTimer, FadeInAlpha, FadeOutAlpha, CurrentAlpha);
+}
+
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
 {
     if (!DecalBoxMesh || !Material)
@@ -81,6 +105,7 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
     //InvWorldMatrix = 데칼의 WorldMatrixInverse
     Renderer->UpdateInvWorldBuffer(InvWorldMatrix, DecalProjectionMatrix);
+    Renderer->UpdateDecalBuffer(CurrentAlpha);
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
