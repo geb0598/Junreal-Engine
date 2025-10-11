@@ -400,6 +400,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
                 if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
+                    const FOBB WorldOBB = DecalComp->GetWorldOBB();
                     const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
                     int WireLineSize = WireLine.Num();
                     for (int i = 0; i < WireLineSize; i += 2)

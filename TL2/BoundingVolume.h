@@ -226,16 +226,11 @@ struct FOBB
 
         FMatrix WorldMatrix = WorldTransform.ToMatrixWithScaleLocalXYZ();
         FVector4 WorldCenter = FVector4(LocalAABBCenter, 1) * WorldMatrix;
-        FVector4 WorldExtent = FVector4(LocalAABBExtent, 1) * WorldMatrix;
-        FVector4 WorldAxis[3];
-        WorldAxis[0] = FVector4(LocalAABBAxis[0], 1) * WorldMatrix;
-        WorldAxis[1] = FVector4(LocalAABBAxis[1], 1) * WorldMatrix;
-        WorldAxis[2] = FVector4(LocalAABBAxis[2], 1) * WorldMatrix;
+        Extents = LocalAABBExtent * WorldTransform.Scale3D;
+        Axis[0] = WorldTransform.Rotation.RotateVector(LocalAABBAxis[0]);
+        Axis[1] = WorldTransform.Rotation.RotateVector(LocalAABBAxis[1]);
+        Axis[2] = WorldTransform.Rotation.RotateVector(LocalAABBAxis[2]);
         Center = FVector(WorldCenter.X, WorldCenter.Y, WorldCenter.Z);
-        Extents = FVector(WorldExtent.X, WorldExtent.Y, WorldExtent.Z);
-        Axis[0] = FVector(LocalAABBAxis[0].X, LocalAABBAxis[0].Y, LocalAABBAxis[0].Z);
-        Axis[1] = FVector(LocalAABBAxis[1].X, LocalAABBAxis[1].Y, LocalAABBAxis[1].Z);
-        Axis[2] = FVector(LocalAABBAxis[2].X, LocalAABBAxis[2].Y, LocalAABBAxis[2].Z);
     }
 
     FVector GetVertex(uint32 idx) const
@@ -243,8 +238,8 @@ struct FOBB
         idx = idx % 8;
         FVector Vertex = Center;
         Vertex += (idx & 1) == 0 ? Axis[0] * Extents.X : -Axis[0] * Extents.X;
-        Vertex += (idx & (1 << 1)) == 0 ? Axis[1] * Extents.X : -Axis[1] * Extents.X;
-        Vertex += (idx & (1 << 2)) == 0 ? Axis[2] * Extents.X : -Axis[2] * Extents.X;
+        Vertex += (idx & (1 << 1)) == 0 ? Axis[1] * Extents.Y : -Axis[1] * Extents.Y;
+        Vertex += (idx & (1 << 2)) == 0 ? Axis[2] * Extents.Z : -Axis[2] * Extents.Z;
         return Vertex;
     }
 
