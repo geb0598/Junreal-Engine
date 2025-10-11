@@ -117,6 +117,7 @@ AGizmoActor::AGizmoActor()
 	SelectionManager = &USelectionManager::GetInstance();
 	InputManager = &UInputManager::GetInstance();
 	UIManager = &UUIManager::GetInstance();
+	
 }
 
 void AGizmoActor::Tick(float DeltaSeconds)
@@ -142,10 +143,11 @@ void AGizmoActor::Tick(float DeltaSeconds)
 		TargetActor = nullptr;
 	}
 	UpdateComponentVisibility();
+
 }
 void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) {
+	UpdateConstantScreenScale(Camera, Viewport);
 
-UpdateConstantScreenScale(Camera, Viewport);
 
 TArray<USceneComponent*>* Components = GetGizmoComponents();
 	if (!Components) return;
@@ -698,7 +700,7 @@ void AGizmoActor::UpdateConstantScreenScale(ACameraActor* Camera, FViewport* Vie
     float aspect = w / h;
     FMatrix Proj = Camera->GetProjectionMatrix(aspect,Viewport);
     bool bOrtho = std::fabs(Proj.M[3][3] - 1.0f) < KINDA_SMALL_NUMBER;
-    float targetPx = 30.0f;
+    float targetPx = 60.0f;  // 기즈모 기본 크기 (픽셀) - 3배 증가
     float scale = 1.0f;
     if (bOrtho)
     {

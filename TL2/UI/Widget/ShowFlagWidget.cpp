@@ -23,6 +23,7 @@ void UShowFlagWidget::Initialize()
     bBoundingBoxes = false;
     bGrid = true;
     bLighting = true;
+    bDecals = true;
 }
 
 void UShowFlagWidget::Update()
@@ -77,6 +78,8 @@ void UShowFlagWidget::RenderWidget()
                 RenderShowFlagCheckbox("Bounds", EEngineShowFlags::SF_BoundingBoxes, Viewport);
                 ImGui::SameLine();
                 RenderShowFlagCheckbox("Wireframe", EEngineShowFlags::SF_Wireframe, Viewport);
+
+                RenderShowFlagCheckbox("Decals", EEngineShowFlags::SF_Decals, Viewport);
             }
             else
             {
@@ -121,6 +124,7 @@ void UShowFlagWidget::SyncWithViewport(FViewport* Viewport)
     bBoundingBoxes = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes);
     bGrid = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Grid);
     bLighting = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Lighting);
+    bDecals = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals);
 }
 
 void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags Flag, FViewport* Viewport)
@@ -184,6 +188,9 @@ void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags
             ImGui::Text("조명 효과 활성화/비활성화");
             ImGui::Text("라이팅 계산을 켜거나 끕니다.");
             break;
+        case EEngineShowFlags::SF_Decals:
+            ImGui::Text("데칼(Decal) 컴포넌트 표시/숨김");
+            ImGui::Text("월드 내 데칼 효과들을 켜거나 끕니다.");
         default:
             ImGui::Text("Show Flag 설정");
             break;
