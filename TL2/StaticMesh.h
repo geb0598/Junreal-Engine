@@ -3,6 +3,7 @@
 #include "Enums.h"
 #include <d3d11.h>
 #include "BoundingVolumeHierarchy.h"
+#include "BoundingVolume.h"
 
 class UStaticMesh : public UResourceBase
 {
@@ -30,7 +31,7 @@ public:
     bool HasMaterial() const { return StaticMeshAsset->bHasMaterial; }
 
     uint64 GetMeshGroupCount() const { return StaticMeshAsset->GroupInfos.size(); }
-
+    const FAABB& GetAABB()const { return AABB; }
     void BuildMeshBVH();
     FNarrowPhaseBVHNode* GetMeshBVH() const { return MeshBVH; }
 
@@ -40,6 +41,7 @@ private:
     void CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice);
 	void CreateIndexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice);
     void ReleaseResources();
+    void SetAABB();
 
     // GPU 리소스
     ID3D11Buffer* VertexBuffer = nullptr;
@@ -53,4 +55,6 @@ private:
 
     // mesh 단위 BVH 루트 노드
     FNarrowPhaseBVHNode* MeshBVH = nullptr;
+
+    FAABB AABB;
 };

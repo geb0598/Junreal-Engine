@@ -316,6 +316,22 @@ struct FVector4
             (W > B.W) ? W : B.W
         );
     }
+    FVector GetVt3()
+    {
+        if (W == 0)
+        {
+            return FVector(0, 0, 0);
+        }
+        else if (W == 1)
+        {
+            return FVector(X, Y, Z);
+        }
+        else
+        {
+            float RcpW = 1 / W;
+            return FVector(X, Y, Z) * RcpW;
+        }
+    }
 };
 
 // ─────────────────────────────
@@ -795,7 +811,6 @@ inline FVector4 operator*(const FVector4& V, const FMatrix& M)
         V.X * M.M[0][3] + V.Y * M.M[1][3] + V.Z * M.M[2][3] + V.W * M.M[3][3]
     );
 }
-
 // ─────────────────────────────
 // FTransform (position/rotation/scale)
 // ─────────────────────────────

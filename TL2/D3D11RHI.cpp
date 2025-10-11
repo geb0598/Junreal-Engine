@@ -69,6 +69,12 @@ struct ViewportBufferType
     FVector4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
 };
 
+struct DecalAlphaBufferType
+{
+    float CurrentAlpha;
+    float pad[3];
+};
+
 struct BillboardBufferType
 {
     FVector pos;
@@ -123,6 +129,7 @@ void D3D11RHI::Release()
     if (UVScrollCB) { UVScrollCB->Release(); UVScrollCB = nullptr; }
     if (InvWorldCB) { InvWorldCB->Release(); InvWorldCB = nullptr; }
     if (ViewportCB) { ViewportCB->Release(); ViewportCB = nullptr; }
+    if (DecalCB) { DecalCB->Release(); DecalCB = nullptr; }
     if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
 
     // 상태 객체
@@ -704,10 +711,10 @@ void D3D11RHI::CreateConstantBuffer()
         DeviceContext->PSSetConstantBuffers(5, 1, &UVScrollCB);
     }
 
-    // b4 : InvWorldBuffer (데칼용 - InvWorld + InvViewProj)
+    // b4 : InvWorldBuffer (데칼용 - DecalWorld + DecalWorldInverse + DecalProjection)
     D3D11_BUFFER_DESC invWorldDesc = {};
     invWorldDesc.Usage = D3D11_USAGE_DYNAMIC;
-    invWorldDesc.ByteWidth = sizeof(FMatrix) * 2; // InvWorldMatrix + InvViewProjMatrix
+    invWorldDesc.ByteWidth = sizeof(FMatrix) * 3; // DecalWorldMatrix + DecalWorldMatrixInverse + DecalProjectionMatrix
     invWorldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     invWorldDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&invWorldDesc, nullptr, &InvWorldCB);
@@ -719,6 +726,13 @@ void D3D11RHI::CreateConstantBuffer()
     viewportDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     viewportDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Device->CreateBuffer(&viewportDesc, nullptr, &ViewportCB);
+
+    D3D11_BUFFER_DESC decalDesc = {};
+    decalDesc.Usage = D3D11_USAGE_DYNAMIC;
+    decalDesc.ByteWidth = sizeof(DecalAlphaBufferType);
+    decalDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    decalDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+    Device->CreateBuffer(&decalDesc, nullptr, &DecalCB);
 }
 
 void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec)
@@ -736,24 +750,26 @@ void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeS
     }
 }
 
-void D3D11RHI::UpdateInvWorldConstantBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix)
+void D3D11RHI::UpdateInvWorldConstantBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix)
 {
     if (!InvWorldCB) return;
 
-    struct InvWorldBufferType
+    struct DecalTransformBufferType
     {
-        FMatrix InvWorld;
-        FMatrix InvViewProj;
+        FMatrix DecalWorld;
+        FMatrix DecalWorldInverse;
+        FMatrix DecalProjection;
     };
 
-    InvWorldBufferType data;
-    data.InvWorld = InvWorldMatrix;
-    data.InvViewProj = InvViewProjMatrix;
+    DecalTransformBufferType data;
+    data.DecalWorld = DecalWorldMatrix;
+    data.DecalWorldInverse = DecalWorldMatrixInverse;
+    data.DecalProjection = DecalProjectionMatrix;
 
     D3D11_MAPPED_SUBRESOURCE mapped;
     if (SUCCEEDED(DeviceContext->Map(InvWorldCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
     {
-        memcpy(mapped.pData, &data, sizeof(InvWorldBufferType));
+        memcpy(mapped.pData, &data, sizeof(DecalTransformBufferType));
         DeviceContext->Unmap(InvWorldCB, 0);
         DeviceContext->PSSetConstantBuffers(4, 1, &InvWorldCB);
     }
@@ -772,6 +788,22 @@ void D3D11RHI::UpdateViewportConstantBuffer(float StartX, float StartY, float Si
         memcpy(mapped.pData, &data, sizeof(ViewportBufferType));
         DeviceContext->Unmap(ViewportCB, 0);
         DeviceContext->PSSetConstantBuffers(6, 1, &ViewportCB);
+    }
+}
+
+void D3D11RHI::UpdateDecalConstantBuffer(float InFadeAlpha)
+{
+    if (!DecalCB) return;
+
+    DecalAlphaBufferType data;
+    data.CurrentAlpha = InFadeAlpha;
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    if (SUCCEEDED(DeviceContext->Map(DecalCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+    {
+        memcpy(mapped.pData, &data, sizeof(DecalAlphaBufferType));
+        DeviceContext->Unmap(DecalCB, 0);
+        DeviceContext->PSSetConstantBuffers(8, 1, &DecalCB);
     }
 }
 

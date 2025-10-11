@@ -136,14 +136,19 @@ void URenderer::UpdateColorBuffer(const FVector4& Color)
     RHIDevice->UpdateColorConstantBuffers(Color);
 }
 
-void URenderer::UpdateInvWorldBuffer(const FMatrix& InvWorldMatrix, const FMatrix& InvViewProjMatrix)
+void URenderer::UpdateInvWorldBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix)
 {
-    RHIDevice->UpdateInvWorldConstantBuffer(InvWorldMatrix, InvViewProjMatrix);
+    RHIDevice->UpdateInvWorldConstantBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
 }
 
 void URenderer::UpdateViewportBuffer(float StartX, float StartY, float SizeX, float SizeY)
 {
     static_cast<D3D11RHI*>(RHIDevice)->UpdateViewportConstantBuffer(StartX, StartY, SizeX, SizeY);
+}
+
+void URenderer::UpdateDecalBuffer(float InFadeAlpha)
+{
+    RHIDevice->UpdateDecalConstantBuffer(InFadeAlpha);
 }
 
 void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)

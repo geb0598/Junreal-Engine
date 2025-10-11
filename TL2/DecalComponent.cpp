@@ -9,14 +9,18 @@ IMPLEMENT_CLASS(UDecalComponent)
 
 UDecalComponent::UDecalComponent()
 {
+    bCanEverTick = true;
+
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
+    LocalAABB = FAABB(FVector(-0.5f, -0.5f, -0.5f), FVector(0.5f, 0.5f, 0.5f));
+    TexturePath = "Editor/Decal/SpotLight_64x.dds";
 
     SetMaterial("DecalShader.hlsl");
     if (Material)
     {
-        Material->Load("Editor/Decal/SpotLight_64x.dds", UResourceManager::GetInstance().GetDevice());
+        Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
     }
   
     UpdateDecalProjectionMatrix();
@@ -26,20 +30,15 @@ UDecalComponent::~UDecalComponent()
 {
 }
 
-void UDecalComponent::SetDecalSize(const FVector& InSize)
-{
-    DecalSize = InSize;
-    UpdateDecalProjectionMatrix();
-}
-
 void UDecalComponent::UpdateDecalProjectionMatrix()
 {
-    float Right = DecalSize.Y / 2.0f;
-    float Left = -DecalSize.Y / 2.0f;
-    float Top = DecalSize.Z / 2.0f;
-    float Bottom = -DecalSize.Z / 2.0f;
+    FOBB WorldOBB = GetWorldOBB();
+    float Right = WorldOBB.Extents.Y;
+    float Left = -WorldOBB.Extents.Y;
+    float Top = WorldOBB.Extents.Z;
+    float Bottom = -WorldOBB.Extents.Z;
     float Near = 0.0f;
-    float Far = DecalSize.X / 2.0f;
+    float Far = WorldOBB.Extents.X * 2;
 
     FMatrix OrthoMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
 
@@ -53,6 +52,31 @@ void UDecalComponent::UpdateDecalProjectionMatrix()
     UVScale.M[3][0] = -(UVTiling.X - 1.0f) / 2.0f;
     UVScale.M[3][1] = -(UVTiling.Y - 1.0f) / 2.0f;
     DecalProjectionMatrix = UVScale*OrthoMatrix ;
+}
+
+void UDecalComponent::TickComponent(float DeltaSeconds)
+{
+    LifetimeTimer += DeltaSeconds;
+    
+    const float FadeInEndTime = FadeInStartDelay + FadeInDuration;
+    const float FadeOutStartTime = FadeInEndTime + FadeStartDelay;
+
+    float FadeInAlpha = 1.0f;
+    if (FadeInDuration > 0.0f)
+    {
+        float FadeInProgress = (LifetimeTimer - FadeInStartDelay) / FadeInDuration;
+        FadeInAlpha = std::max(0.0f, std::min(1.0f, FadeInProgress));
+    }
+
+    float FadeOutAlpha = 1.0f;
+    if (FadeDuration > 0.0f)
+    {
+        float FadeOutProgress = (LifetimeTimer - FadeOutStartTime) / FadeDuration;
+        FadeOutAlpha = 1.0f - std::max(0.0f, std::min(1.0f, FadeOutProgress));
+    }
+
+    CurrentAlpha = std::min(FadeInAlpha, FadeOutAlpha);
+    //UE_LOG("Tick - Delta: %.3f, Lifetime: %.3f, InAlpha: %.3f, OutAlpha: %.3f, FinalAlpha: %.3f", DeltaSeconds, LifetimeTimer, FadeInAlpha, FadeOutAlpha, CurrentAlpha);
 }
 
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
@@ -72,22 +96,45 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
         return;
     }
     
+    float LifeTimeAlpha = CurrentAlpha;
+    float ScreenFadeAlpha = 1.0f;
+    UpdateDecalProjectionMatrix();
+    if (FadeScreenSize > 0.0f)
+    {
+        // Calculate an approximate bounding sphere radius from the decal's size
+        const FVector DecalCenter = GetWorldLocation();
+        const float DecalRadius =  GetWorldOBB().Extents.Size() / 2.0f;
+
+        // Get the camera's position
+        const FMatrix InvView = View.Inverse();
+        const FVector CameraPos = FVector(InvView.Rows[3].X, InvView.Rows[3].Y, InvView.Rows[3].Z);
+        const float Distance = FVector::Distance(CameraPos, DecalCenter);
+
+        if (Distance > 0.001f)
+        {
+            // Approximate the decal's apparent size
+            float ApparentSize = DecalRadius / Distance;
+            ScreenFadeAlpha = std::min(1.0f, ApparentSize / FadeScreenSize);
+        }
+    }
+    const float FinalAlpha = std::min(LifeTimeAlpha, ScreenFadeAlpha);
+
     // 월드/역월드
     // DecalSize를 스케일로 적용, 데칼 world inverse를 구하기 위함
-    FMatrix WorldMatrix = GetWorldMatrix();
-    FMatrix InvWorldMatrix = WorldMatrix.InverseAffine(); // OK(Affine)
+    FMatrix DecalWorldMatrix = GetWorldMatrix();           // 데칼의 원본 월드 행렬
+    FMatrix DecalWorldMatrixInverse = DecalWorldMatrix.InverseAffine();
 
-    //데칼 world inverse를 구했으므로 Componenent의 worldMatrix를 구해줌
-    WorldMatrix = Component->GetWorldMatrix();
-
-    // ViewProj 및 역행렬 (투영 포함 → 일반 Inverse 필요)
-    FMatrix ViewProj = View * Proj;                   // row-major 기준
+    //데칼 world inverse를 구했으므로 Component의 worldMatrix를 구해줌
+    FMatrix MeshWorldMatrix = Component->GetWorldMatrix();
 
     // 상수 버퍼 업데이트
-    //WorldMatrix = 데칼을 투영할 Component의 WorldMatrix
-    Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
-    //InvWorldMatrix = 데칼의 WorldMatrixInverse
-    Renderer->UpdateInvWorldBuffer(InvWorldMatrix, DecalProjectionMatrix);
+    //MeshWorldMatrix = 데칼을 투영할 Component의 WorldMatrix
+    Renderer->UpdateConstantBuffer(MeshWorldMatrix, View, Proj);
+    //DecalWorldMatrix = 데칼의 원본 월드 행렬
+    //DecalWorldMatrixInverse = 데칼의 역 월드 행렬
+    //DecalProjectionMatrix = 데칼 투영 행렬
+    Renderer->UpdateInvWorldBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
+    Renderer->UpdateDecalBuffer(FinalAlpha);
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
@@ -151,13 +198,16 @@ void UDecalComponent::SetDecalTexture(const FString& TexturePath)
     // TextRenderComponent와 동일한 방식으로 텍스처 로드
     Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
 }
+const FOBB UDecalComponent::GetWorldOBB()
+{
+    return FOBB(LocalAABB, GetWorldTransform());
+}
 
 UObject* UDecalComponent::Duplicate()
 {
     UDecalComponent* DuplicatedComponent = Cast<UDecalComponent>(NewObject(GetClass()));
     if (DuplicatedComponent)
     {
-        DuplicatedComponent->DecalSize = DecalSize;
         DuplicatedComponent->UVTiling = UVTiling;
         DuplicatedComponent->BlendMode = BlendMode;
     }

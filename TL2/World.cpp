@@ -7,7 +7,6 @@
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
-#include "AABoundingBoxComponent.h"
 #include "FViewport.h"
 #include "SViewportWindow.h"
 #include "SMultiViewportWindow.h"
@@ -205,28 +204,28 @@ void UWorld::InitializeGizmo()
 
 void UWorld::InitializeSceneGraph(TArray<AActor*>& Actors)
 {
-    Octree = NewObject<UOctree>();
-    //	Octree->Initialize(FBound({ -100,-100,-100 }, { 100,100,100 }));
-    //const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
-    Octree->Build(Actors, FBound({-100, -100, -100}, {100, 100, 100}), 0);
-
-    // 빌드 완료 후 모든 마이크로 BVH 미리 생성
-#ifndef _DEBUG
-    Octree->PreBuildAllMicroBVH();
-
-    // BVH 초기화 및 빌드
-    BVH = new FBVH();
-    BVH->Build(Actors);
-#endif
+//    Octree = NewObject<UOctree>();
+//    //	Octree->Initialize(FBound({ -100,-100,-100 }, { 100,100,100 }));
+//    //const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
+//    Octree->Build(Actors, FAABB({-100, -100, -100}, {100, 100, 100}), 0);
+//
+//    // 빌드 완료 후 모든 마이크로 BVH 미리 생성
+//#ifndef _DEBUG
+//    Octree->PreBuildAllMicroBVH();
+//
+//    // BVH 초기화 및 빌드
+//    BVH = new FBVH();
+//    BVH->Build(Actors);
+//#endif
 }
 
 void UWorld::RenderSceneGraph()
 {
-    if (!Octree)
-    {
-        return;
-    }
-    Octree->Render(nullptr);
+    //if (!Octree)
+    //{
+    //    return;
+    //}
+    //Octree->Render(nullptr);
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
@@ -275,17 +274,105 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     Renderer->BeginLineBatch();
     Renderer->SetViewModeType(ViewModeIndex);
 
-        int AllActorCount = 0;
-        int FrustumCullCount = 0;
+    int AllActorCount = 0;
+    int FrustumCullCount = 0;
 
-        const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
-        //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
-       VisibleActors.clear();
+    const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
+    //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
+    VisiblePrimitives.clear();
 
-        // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
+    // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
+    for (AActor* Actor : LevelActors)
+    {
+        // 일반 액터들 렌더링
+        if (!Actor)
+        {
+            continue;
+        }
+        if (Actor->GetActorHiddenInGame())
+        {
+            continue;
+        }
+        AllActorCount++;
+        for (UActorComponent* Component : Actor->GetComponents())
+        {
+            if (!Component)
+            {
+                continue;
+            }
+
+            //Billboard Showflag Check
+            if (Cast<UTextRenderComponent>(Component) &&
+                !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+            {
+                continue;
+            }
+
+            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(Component))
+            {
+                //BoundingBox Showflag Check
+                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                {
+                    const TArray<FVector>& WireLine = StaticMeshComp->GetWorldAABB().GetWireLine();
+                    int WireLineSize = WireLine.Num();
+                    for (int i = 0; i < WireLineSize; i += 2)
+                    {
+                        Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 1, 0, 1));
+                    }
+                }
+                //StaticMesh Showflag Check
+                if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
+                {
+                    continue;
+                }
+            }
+            // 데칼 컴포넌트는 Pass 2에서 렌더링
+            if (Cast<UDecalComponent>(Component))
+            {
+                continue;
+            }
+
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                if (!Primitive->IsActive())
+                {
+                    continue;
+                }
+
+                bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+
+                //// 선택된 액터는 항상 앞에 보이도록 depth test를 Always로 설정
+                //if (bIsSelected)//나중에 추가구현
+                //{
+                //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+                //}
+
+                //Primitive Showflag Check
+                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+                {
+                    VisiblePrimitives.Push(Primitive);
+                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                }
+
+                //// depth test 원래대로 복원
+                //if (bIsSelected)
+                //{
+                //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+                //}
+            }
+        }
+        Renderer->OMSetBlendState(false);
+    }
+
+    // 엔진 액터들 (그리드 등) 렌더링
+    RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
+
+    // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
+    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
+    {
         for (AActor* Actor : LevelActors)
         {
-            // 일반 액터들 렌더링
             if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
             {
                 continue;
@@ -298,13 +385,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             {
                 continue;
             }
-            if (Cast<AStaticMeshActor>(Actor) &&
-                !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
-            {
-                continue;
-            }
-            AllActorCount++;
-            bool bVisible = false;
+
             for (UActorComponent* Component : Actor->GetComponents())
             {
                 if (!Component)
@@ -312,146 +393,43 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     continue;
                 }
 
-                if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+                if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
                 {
-                    if (!ActorComp->IsActive())
+                    if (!DecalComp->IsActive())
                     {
                         continue;
                     }
-                }
 
-                if (Cast<UTextRenderComponent>(Component) &&
-                    !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
-                {
-                    continue;
-                }
-
-                if (Cast<UAABoundingBoxComponent>(Component) &&
-                    !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-                {
-                    continue;
-                }
-
-                // 데칼 컴포넌트는 Pass 2에서 렌더링
-                if (Cast<UDecalComponent>(Component))
-                {
-                    continue;
-                }
-
-                if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-                {
-                    bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-
-                    //// 선택된 액터는 항상 앞에 보이도록 depth test를 Always로 설정
-                    //if (bIsSelected)//나중에 추가구현
-                    //{
-                    //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-                    //}
-                    
-                    bVisible = true;
-                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
-
-                    //// depth test 원래대로 복원
-                    //if (bIsSelected)
-                    //{
-                    //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-                    //}
-                }
-            }
-            if (bVisible)
-            {
-                VisibleActors.Add(Actor);
-            }
-            Renderer->OMSetBlendState(false);
-        }
-
-    // 엔진 액터들 (그리드 등) 렌더링
-    RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
-
-    // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
-    for (AActor* Actor : LevelActors)
-    {
-        if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-        {
-            continue;
-        }
-        if (!Actor)
-        {
-            continue;
-        }
-        if (Actor->GetActorHiddenInGame())
-        {
-            continue;
-        }
-
-        //액터에 OBBComponent 없으면 Continue;
-        UOBoundingBoxComponent* OBBComp = nullptr;
-        for (UActorComponent* Component : Actor->GetComponents())
-        {
-            if (!Component)
-            {
-                continue;
-            }
-
-            if (OBBComp = Cast<UOBoundingBoxComponent>(Component))
-            {
-                break;
-            }
-        }
-
-        if (OBBComp == nullptr)
-        {
-            continue;
-        }
-
-        for (UActorComponent* Component : Actor->GetComponents())
-        {
-            if (!Component)
-            {
-                continue;
-            }
-
-            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
-            {
-                if (!ActorComp->IsActive())
-                {
-                    continue;
-                }
-            }
-
-            UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
-            if (DecalComp && Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
-            {
-                TArray<AActor*> ActorsInDecal;
-                for (auto VisibleActor : VisibleActors)
-                {
-                    const TSet<UActorComponent*>& OwnedComponents = VisibleActor->GetComponents();
-                    //VisibleActor의 AABBComponent와 OBB가 충돌 한다면 ActorsInDecal에 추가
-                    for (auto Comp : OwnedComponents)
+                    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                     {
-                        if (UAABoundingBoxComponent* AABBComp = Cast<UAABoundingBoxComponent>(Comp))
+                        const FOBB WorldOBB = DecalComp->GetWorldOBB();
+                        const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
+                        int WireLineSize = WireLine.Num();
+                        for (int i = 0; i < WireLineSize; i += 2)
                         {
-                            if (OBBComp->IntersectWithAABB(*AABBComp->GetFBound()))
-                            {
-                                ActorsInDecal.Push(VisibleActor);
-                                break;
-                            }
+                            Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
                         }
                     }
-                }
 
-                for (AActor* ActorInDecal : ActorsInDecal)
-                {
-                    bool bIsSelected = SelectionManager.IsActorSelected(ActorInDecal);
-                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-                    const TSet<UActorComponent*>& OwnedComponents = ActorInDecal->GetComponents();
-                    for (auto Comp : OwnedComponents)
+                    const FOBB DecalOBB = DecalComp->GetWorldOBB();
+                    TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
+                    for (auto VisiblePrimitive : VisiblePrimitives)
                     {
-                        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Comp))
+                        if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
                         {
-                            DecalComp->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                            if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
+                            {
+                                StaticMeshCompsInDecal.Push(StaticMeshComp);
+                            }
                         }
+
+                    }
+
+                    for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
+                    {
+                        bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
+                        Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                        DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
                     }
                 }
             }
@@ -554,21 +532,6 @@ float UWorld::GetTimeSeconds() const
     return 0.0f;
 }
 
-bool UWorld::FrustumCullActors(const FFrustum& ViewFrustum, const AActor* Actor, int & FrustumCullCount)
-{
-    if (Actor->CollisionComponent)
-    {
-        FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
-
-        // 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
-        if (!ViewFrustum.IsVisible(Test))
-        {
-            FrustumCullCount++;
-            return true;
-        }
-    }
-}
-
 FString UWorld::GenerateUniqueActorName(const FString& ActorType)
 {
     // Get current count for this type
@@ -660,10 +623,10 @@ void UWorld::CreateNewScene()
         Level->GetActors().clear();
     }
 
-    if (Octree)
-    {
-        Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
-    }
+    //if (Octree)
+    //{
+    //    Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
+    //}
     if (BVH)
     {
         BVH->Clear();//새로운 씬이 생기면 BVH를 지워준다.
@@ -887,15 +850,6 @@ void UWorld::LoadScene(const FString& SceneName)
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
             {
                 LoadedAssetPath = Mesh->GetAssetPathFileName();
-            }
-
-            if (LoadedAssetPath == "Data/Sphere.obj")
-            {
-                StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
-            }
-            else
-            {
-                StaticMeshActor->SetCollisionComponent();
             }
 
             FString BaseName = "StaticMesh";
@@ -1236,17 +1190,6 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         if (AStaticMeshActor* StaticMeshActor = Cast<AStaticMeshActor>(Actor))
         {
             StaticMeshActor->SetStaticMeshComponent( Cast<UStaticMeshComponent>(StaticMeshActor->RootComponent));
-
-            // CollisionComponent 찾기
-            for (UActorComponent* Comp : StaticMeshActor->OwnedComponents)
-            {
-                if (UAABoundingBoxComponent* BBoxComp = Cast<UAABoundingBoxComponent>(Comp))
-                {
-                    StaticMeshActor->CollisionComponent = BBoxComp;
-                    StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
-                    break;
-                }
-            }
         }
     }
 

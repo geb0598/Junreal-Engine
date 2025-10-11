@@ -5,9 +5,7 @@
 
 class UWorld;
 class USceneComponent;
-class UAABoundingBoxComponent;
-class UOBoundingBoxComponent;
-class UShapeComponent;
+class UActorComponent;
 
 class AActor : public UObject
 {
@@ -118,10 +116,6 @@ public:
     USceneComponent* RootComponent = nullptr;
     // [PIE] RootComponent 복사가 끝나면 자식 컴포넌트를 순회하면서 OwnedComponents에 루트와 하위 컴포넌트 모두 추가
     TSet<UActorComponent*> OwnedComponents;
-    
-    // [PIE] ???
-    UAABoundingBoxComponent* CollisionComponent = nullptr;
-    UOBoundingBoxComponent* OBBCollisionComponent = nullptr;
 
     // [PIE] 외부에서 초기화, Level로 변경 필요?
     UWorld* World = nullptr;

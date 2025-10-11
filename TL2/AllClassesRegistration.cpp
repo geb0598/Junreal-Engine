@@ -33,7 +33,6 @@
 #include "UI/Window/SceneWindow.h"
 #include "UI/Window/UIWindow.h"
 #include "TextRenderComponent.h"
-#include "AABoundingBoxComponent.h"
 #include "StaticMesh.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -59,9 +58,7 @@ IMPLEMENT_CLASS(UActorComponent)
 IMPLEMENT_CLASS(USceneComponent)
 IMPLEMENT_CLASS(UCameraComponent)
 IMPLEMENT_CLASS(UStaticMeshComponent)
-IMPLEMENT_CLASS(UAABoundingBoxComponent)
-IMPLEMENT_CLASS(UOBoundingBoxComponent)
-IMPLEMENT_CLASS(UShapeComponent)
+//IMPLEMENT_CLASS(UShapeComponent)
 
 IMPLEMENT_CLASS(AActor)
 IMPLEMENT_CLASS(ACameraActor)
@@ -122,7 +119,7 @@ IMPLEMENT_CLASS(UTexture)
 IMPLEMENT_CLASS(UDynamicMesh)
 IMPLEMENT_CLASS(ULineDynamicMesh)
 IMPLEMENT_CLASS(UTextQuad)
-IMPLEMENT_CLASS(UOctree)
+//IMPLEMENT_CLASS(UOctree)
 
 
 
