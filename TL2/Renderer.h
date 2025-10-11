@@ -56,19 +56,9 @@ public:
 
     void RSSetDefaultState();
 
-    void UpdateCBuffer(const ModelBufferType& CBufferData)
-    {
-        RHIDevice->UpdateCBuffer(CBufferData);
-    }
-    void UpdateSetCBuffer(const ModelBufferType& CBufferData)
-    {
-        RHIDevice->UpdateCBuffer(CBufferData);
-    }
-    void SetCBuffer(const ModelBufferType& CBufferData)
-    {
-        RHIDevice->UpdateCBuffer(CBufferData);
-    }
-
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
+        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
+        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
     void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
 
     void UpdateConstantBuffer(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);

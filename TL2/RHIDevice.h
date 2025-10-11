@@ -55,6 +55,7 @@ public:
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
+
     virtual void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) = 0;
     virtual void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)=0;
     virtual void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture) = 0;
