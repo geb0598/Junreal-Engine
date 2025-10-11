@@ -24,6 +24,11 @@ cbuffer DecalTransformBuffer : register(b4)
     row_major float4x4 DecalProjectionMatrix;
 }
 
+cbuffer DecalFXBuffer : register(b5)
+{
+    float CurrentAlpha;
+}
+
 //------------------------------------------------------
 // Resources
 //------------------------------------------------------
@@ -118,6 +123,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
     // 최종 알파 = 텍스처 알파 * 각도 페이드 * 가장자리 페이드
     DecalColor.a *= angleFade * edgeFade;
-
+    DecalColor.a *= CurrentAlpha;
+    
     return DecalColor;
 }

@@ -9,14 +9,17 @@ IMPLEMENT_CLASS(UDecalComponent)
 
 UDecalComponent::UDecalComponent()
 {
+    bCanEverTick = true;
+
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
+    TexturePath = "Editor/Decal/SpotLight_64x.dds";
 
     SetMaterial("DecalShader.hlsl");
     if (Material)
     {
-        Material->Load("Editor/Decal/SpotLight_64x.dds", UResourceManager::GetInstance().GetDevice());
+        Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
     }
   
     UpdateDecalProjectionMatrix();
@@ -55,6 +58,31 @@ void UDecalComponent::UpdateDecalProjectionMatrix()
     DecalProjectionMatrix = UVScale*OrthoMatrix ;
 }
 
+void UDecalComponent::TickComponent(float DeltaSeconds)
+{
+    LifetimeTimer += DeltaSeconds;
+    
+    const float FadeInEndTime = FadeInStartDelay + FadeInDuration;
+    const float FadeOutStartTime = FadeInEndTime + FadeStartDelay;
+
+    float FadeInAlpha = 1.0f;
+    if (FadeInDuration > 0.0f)
+    {
+        float FadeInProgress = (LifetimeTimer - FadeInStartDelay) / FadeInDuration;
+        FadeInAlpha = std::max(0.0f, std::min(1.0f, FadeInProgress));
+    }
+
+    float FadeOutAlpha = 1.0f;
+    if (FadeDuration > 0.0f)
+    {
+        float FadeOutProgress = (LifetimeTimer - FadeOutStartTime) / FadeDuration;
+        FadeOutAlpha = 1.0f - std::max(0.0f, std::min(1.0f, FadeOutProgress));
+    }
+
+    CurrentAlpha = std::min(FadeInAlpha, FadeOutAlpha);
+    //UE_LOG("Tick - Delta: %.3f, Lifetime: %.3f, InAlpha: %.3f, OutAlpha: %.3f, FinalAlpha: %.3f", DeltaSeconds, LifetimeTimer, FadeInAlpha, FadeOutAlpha, CurrentAlpha);
+}
+
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
 {
     if (!DecalBoxMesh || !Material)
@@ -72,6 +100,28 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
         return;
     }
     
+    float LifeTimeAlpha = CurrentAlpha;
+    float ScreenFadeAlpha = 1.0f;
+    if (FadeScreenSize > 0.0f)
+    {
+        // Calculate an approximate bounding sphere radius from the decal's size
+        const FVector DecalCenter = GetWorldLocation();
+        const float DecalRadius = DecalSize.Size() / 2.0f;
+
+        // Get the camera's position
+        const FMatrix InvView = View.Inverse();
+        const FVector CameraPos = FVector(InvView.Rows[3].X, InvView.Rows[3].Y, InvView.Rows[3].Z);
+        const float Distance = FVector::Distance(CameraPos, DecalCenter);
+
+        if (Distance > 0.001f)
+        {
+            // Approximate the decal's apparent size
+            float ApparentSize = DecalRadius / Distance;
+            ScreenFadeAlpha = std::min(1.0f, ApparentSize / FadeScreenSize);
+        }
+    }
+    const float FinalAlpha = std::min(LifeTimeAlpha, ScreenFadeAlpha);
+
     // 월드/역월드
     // DecalSize를 스케일로 적용, 데칼 world inverse를 구하기 위함
     FMatrix WorldMatrix = GetWorldMatrix();
@@ -88,6 +138,7 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     Renderer->UpdateConstantBuffer(WorldMatrix, View, Proj);
     //InvWorldMatrix = 데칼의 WorldMatrixInverse
     Renderer->UpdateInvWorldBuffer(InvWorldMatrix, DecalProjectionMatrix);
+    Renderer->UpdateDecalBuffer(FinalAlpha);
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
