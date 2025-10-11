@@ -91,7 +91,7 @@ void UStaticMesh::BuildMeshBVH()
         // BVH 프리미티브 생성 및 리스트에 추가
         FNarrowPhaseBVHPrimitive Primitive;
         Primitive.TriangleIndex = i;
-        Primitive.AABB.InitAABB({ V0,V1,V2 });
+        Primitive.Bounds.InitAABB({ V0,V1,V2 });
         Primitives.Add(Primitive);
     }
     if (!Primitives.IsEmpty())

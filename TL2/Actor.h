@@ -5,7 +5,7 @@
 
 class UWorld;
 class USceneComponent;
-class UShapeComponent;
+class UActorComponent;
 
 class AActor : public UObject
 {

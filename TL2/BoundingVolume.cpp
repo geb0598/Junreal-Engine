@@ -1,17 +1,9 @@
-﻿#include "BoundingVolume.h"
-FRay::FRay(const FOptimizedRay& OptRay) : Origin(OptRay.Origin), Direction(OptRay.Direction){}
-
-FAABB FAABB::operator+(const FAABB& f1, const FAABB& f2)
+﻿#include "pch.h"
+#include "BoundingVolume.h"
+FRay::FRay(const FOptimizedRay& OptRay) : Origin(OptRay.Origin), Direction(OptRay.Direction)
 {
-    FAABB AABB;
-    AABB.Min.X = std::min(f1.Min.X, f2.Min.X);
-    AABB.Min.Y = std::min(f1.Min.Y, f2.Min.Y);
-    AABB.Min.Z = std::min(f1.Min.Z, f2.Min.Z);
-
-    AABB.Max.X = std::max(f1.Max.X, f2.Max.X);
-    AABB.Max.Y = std::max(f1.Max.Y, f2.Max.Y);
-    AABB.Max.Z = std::max(f1.Max.Z, f2.Max.Z);
 }
+
 
 
 bool IntersectRayAABB(const FRay& Ray, const FAABB& AABB, float& OutDistance)

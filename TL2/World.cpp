@@ -7,7 +7,6 @@
 #include "CameraComponent.h"
 #include "ObjectFactory.h"
 #include "TextRenderComponent.h"
-#include "AABoundingBoxComponent.h"
 #include "FViewport.h"
 #include "SViewportWindow.h"
 #include "SMultiViewportWindow.h"
@@ -205,28 +204,28 @@ void UWorld::InitializeGizmo()
 
 void UWorld::InitializeSceneGraph(TArray<AActor*>& Actors)
 {
-    Octree = NewObject<UOctree>();
-    //	Octree->Initialize(FBound({ -100,-100,-100 }, { 100,100,100 }));
-    //const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
-    Octree->Build(Actors, FBound({-100, -100, -100}, {100, 100, 100}), 0);
-
-    // 빌드 완료 후 모든 마이크로 BVH 미리 생성
-#ifndef _DEBUG
-    Octree->PreBuildAllMicroBVH();
-
-    // BVH 초기화 및 빌드
-    BVH = new FBVH();
-    BVH->Build(Actors);
-#endif
+//    Octree = NewObject<UOctree>();
+//    //	Octree->Initialize(FBound({ -100,-100,-100 }, { 100,100,100 }));
+//    //const TArray<AActor*>& InActors, FBound& WorldBounds, int32 Depth = 0
+//    Octree->Build(Actors, FAABB({-100, -100, -100}, {100, 100, 100}), 0);
+//
+//    // 빌드 완료 후 모든 마이크로 BVH 미리 생성
+//#ifndef _DEBUG
+//    Octree->PreBuildAllMicroBVH();
+//
+//    // BVH 초기화 및 빌드
+//    BVH = new FBVH();
+//    BVH->Build(Actors);
+//#endif
 }
 
 void UWorld::RenderSceneGraph()
 {
-    if (!Octree)
-    {
-        return;
-    }
-    Octree->Render(nullptr);
+    //if (!Octree)
+    //{
+    //    return;
+    //}
+    //Octree->Render(nullptr);
 }
 
 void UWorld::SetRenderer(URenderer* InRenderer)
@@ -280,7 +279,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
         const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
         //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
-       VisibleActors.clear();
+        VisiblePrimitives.clear();
 
         // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
         for (AActor* Actor : LevelActors)
@@ -304,7 +303,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 continue;
             }
             AllActorCount++;
-            bool bVisible = false;
             for (UActorComponent* Component : Actor->GetComponents())
             {
                 if (!Component)
@@ -326,12 +324,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     continue;
                 }
 
-                if (Cast<UAABoundingBoxComponent>(Component) &&
-                    !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-                {
-                    continue;
-                }
-
                 // 데칼 컴포넌트는 Pass 2에서 렌더링
                 if (Cast<UDecalComponent>(Component))
                 {
@@ -348,7 +340,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
                     //}
                     
-                    bVisible = true;
+                    VisiblePrimitives.Push(Primitive);
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
                     Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
 
@@ -358,10 +350,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
                     //}
                 }
-            }
-            if (bVisible)
-            {
-                VisibleActors.Add(Actor);
             }
             Renderer->OMSetBlendState(false);
         }
@@ -385,26 +373,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             continue;
         }
 
-        //액터에 OBBComponent 없으면 Continue;
-        UOBoundingBoxComponent* OBBComp = nullptr;
-        for (UActorComponent* Component : Actor->GetComponents())
-        {
-            if (!Component)
-            {
-                continue;
-            }
-
-            if (OBBComp = Cast<UOBoundingBoxComponent>(Component))
-            {
-                break;
-            }
-        }
-
-        if (OBBComp == nullptr)
-        {
-            continue;
-        }
-
         for (UActorComponent* Component : Actor->GetComponents())
         {
             if (!Component)
@@ -423,37 +391,26 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
             if (DecalComp)
             {
-
-                TArray<AActor*> ActorsInDecal;
-                for (auto VisibleActor : VisibleActors)
+                const FOBB DecalOBB = DecalComp->GetWorldOBB();
+                TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
+                for (auto VisiblePrimitive : VisiblePrimitives)
                 {
-                    const TSet<UActorComponent*>& OwnedComponents = VisibleActor->GetComponents();
-                    //VisibleActor의 AABBComponent와 OBB가 충돌 한다면 ActorsInDecal에 추가
-                    for (auto Comp : OwnedComponents)
+                    if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
                     {
-                        if (UAABoundingBoxComponent* AABBComp = Cast<UAABoundingBoxComponent>(Comp))
+                        if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
                         {
-                            if (OBBComp->IntersectWithAABB(*AABBComp->GetFBound()))
-                            {
-                                ActorsInDecal.Push(VisibleActor);
-                                break;
-                            }
+                            StaticMeshCompsInDecal.Push(StaticMeshComp);
+                            break;
                         }
                     }
+                    
                 }
 
-                for (AActor* ActorInDecal : ActorsInDecal)
+                for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
                 {
-                    bool bIsSelected = SelectionManager.IsActorSelected(ActorInDecal);
+                    bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
                     Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-                    const TSet<UActorComponent*>& OwnedComponents = ActorInDecal->GetComponents();
-                    for (auto Comp : OwnedComponents)
-                    {
-                        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Comp))
-                        {
-                            DecalComp->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
-                        }
-                    }
+                    DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
                 }
             }
         }
@@ -554,21 +511,6 @@ float UWorld::GetTimeSeconds() const
     return 0.0f;
 }
 
-bool UWorld::FrustumCullActors(const FFrustum& ViewFrustum, const AActor* Actor, int & FrustumCullCount)
-{
-    if (Actor->CollisionComponent)
-    {
-        FBound Test = Actor->CollisionComponent->GetWorldBoundFromCube();
-
-        // 절두체 밖에 있다면, 이 액터의 렌더링 과정을 모두 건너뜁니다.
-        if (!ViewFrustum.IsVisible(Test))
-        {
-            FrustumCullCount++;
-            return true;
-        }
-    }
-}
-
 FString UWorld::GenerateUniqueActorName(const FString& ActorType)
 {
     // Get current count for this type
@@ -660,10 +602,10 @@ void UWorld::CreateNewScene()
         Level->GetActors().clear();
     }
 
-    if (Octree)
-    {
-        Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
-    }
+    //if (Octree)
+    //{
+    //    Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
+    //}
     if (BVH)
     {
         BVH->Clear();//새로운 씬이 생기면 BVH를 지워준다.
@@ -887,15 +829,6 @@ void UWorld::LoadScene(const FString& SceneName)
             if (UStaticMesh* Mesh = SMC->GetStaticMesh())
             {
                 LoadedAssetPath = Mesh->GetAssetPathFileName();
-            }
-
-            if (LoadedAssetPath == "Data/Sphere.obj")
-            {
-                StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
-            }
-            else
-            {
-                StaticMeshActor->SetCollisionComponent();
             }
 
             FString BaseName = "StaticMesh";
@@ -1236,17 +1169,6 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         if (AStaticMeshActor* StaticMeshActor = Cast<AStaticMeshActor>(Actor))
         {
             StaticMeshActor->SetStaticMeshComponent( Cast<UStaticMeshComponent>(StaticMeshActor->RootComponent));
-
-            // CollisionComponent 찾기
-            for (UActorComponent* Comp : StaticMeshActor->OwnedComponents)
-            {
-                if (UAABoundingBoxComponent* BBoxComp = Cast<UAABoundingBoxComponent>(Comp))
-                {
-                    StaticMeshActor->CollisionComponent = BBoxComp;
-                    StaticMeshActor->SetCollisionComponent(EPrimitiveType::Sphere);
-                    break;
-                }
-            }
         }
     }
 

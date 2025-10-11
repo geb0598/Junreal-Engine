@@ -1,7 +1,6 @@
 ﻿#include "pch.h"
 #include "Frustum.h"
 
-#include "AABoundingBoxComponent.h"
 #include "Vector.h"
 
 void FFrustum::Update(const FMatrix& InViewProjectionMatrix)
@@ -72,7 +71,7 @@ void FFrustum::Update(const FMatrix& InViewProjectionMatrix)
  * @param InBox 검사할 AABB(Axis-Aligned Bounding Box)입니다.
  * @return AABB가 보이거나 교차하면 true, 완전히 보이지 않아 컬링 대상이면 false를 반환합니다.
  */
-bool FFrustum::IsVisible(FBound& InBox) const
+bool FFrustum::IsVisible(FAABB& InBox) const
 {
 	// 절두체를 구성하는 6개의 평면에 대해 모두 검사합니다.
 	for (int32 i = 0; i < 6; ++i)

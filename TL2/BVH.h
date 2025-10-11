@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Vector.h"
 #include "UEContainer.h"
-#include"AABoundingBoxComponent.h"
+#include "BoundingVolume.h"
 #include "Actor.h"
 #include <cmath>
 
@@ -54,6 +54,7 @@ public:
 
     // 액터 배열로부터 BVH 구축
     void Build(const TArray<AActor*>& Actors);
+    void Build(const TArray<UStaticMeshComponent*>& StaticMeshComps);
     void Clear();
 
     // 빠른 레이 교차 검사 - 가장 가까운 액터 반환

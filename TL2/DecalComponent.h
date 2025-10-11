@@ -2,6 +2,7 @@
 #pragma once
 #include "PrimitiveComponent.h"
 #include "StaticMesh.h"
+#include "BoundingVolume.h"
 
 class UDecalComponent : public UPrimitiveComponent
 {
@@ -26,6 +27,8 @@ public:
     void DuplicateSubObjects() override;
 
     UStaticMesh* GetDecalBoxMesh() const { return DecalBoxMesh; }
+
+    const FOBB GetWorldOBB();
 protected:
 
     void UpdateDecalProjectionMatrix();
@@ -47,4 +50,5 @@ protected:
     };
 
     EDecalBlendMode BlendMode = EDecalBlendMode::Translucent;
+    FAABB LocalAABB;
 };

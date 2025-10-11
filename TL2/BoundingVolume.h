@@ -2,6 +2,8 @@
 #include "Vector.h"
 #include "Enums.h"
 
+struct FOptimizedRay;
+
 // Unreal-style simple ray type
 // 이거 어디둘지 모르겠음
 struct alignas(16) FRay
@@ -19,7 +21,7 @@ struct alignas(16) FOptimizedRay
     FVector Direction;
     FVector InverseDirection;  // 1.0f / Direction (division 제거용)
     int Sign[3];              // Direction의 부호 (branchless용)
-    FOptimizedRay = default();
+    FOptimizedRay() = default;
     FOptimizedRay(const FVector& InOrigin, const FVector& InDirection)
         : Origin(InOrigin), Direction(InDirection)
     {
@@ -43,6 +45,7 @@ struct FAABB
     FVector Min;
     FVector Max;
     FAABB() = default;
+    FAABB(const FVector& InMin, const FVector& InMax) : Min(InMin), Max(InMax) {}
     FAABB(const FVector* Vertices, const uint32 Count)
     {
         InitAABB(Vertices, Count);
@@ -127,7 +130,19 @@ struct FAABB
 
         return *this;
     }
-    static FAABB operator+(const FAABB& f1, const FAABB& f2);
+    FAABB operator+(const FAABB& Other)
+    {
+        FAABB result;
+        result.Min.X = std::min(Min.X, Other.Min.X);
+        result.Min.Y = std::min(Min.Y, Other.Min.Y);
+        result.Min.Z = std::min(Min.Z, Other.Min.Z);
+
+        result.Max.X = std::max(Max.X, Other.Max.X);
+        result.Max.Y = std::max(Max.Y, Other.Max.Y);
+        result.Max.Z = std::max(Max.Z, Other.Max.Z);
+
+        return *this;
+    }
     FVector GetVertex(uint32 idx) const
     {
         idx = idx % 8;

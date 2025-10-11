@@ -19,9 +19,6 @@ FBVH::~FBVH()
 
 void FBVH::Build(const TArray<AActor*>& Actors)
 {
-    TStatId BVHBuildStatId;
-    FScopeCycleCounter BVHBuildTimer(BVHBuildStatId);
-
     Clear();
 
     if (Actors.Num() == 0)
@@ -49,14 +46,22 @@ void FBVH::Build(const TArray<AActor*>& Actors)
     {
         return;
     }
+    Build(StaticMeshComponents);
+   
+}
 
+void FBVH::Build(const TArray<UStaticMeshComponent*>& StaticMeshComps)
+{
+    Clear();
+    TStatId BVHBuildStatId;
+    FScopeCycleCounter BVHBuildTimer(BVHBuildStatId);
     // 1. 액터들의 AABB 정보 수집
-    MeshBounds.Reserve(StaticMeshComponents.Num());
-    MeshIndices.Reserve(StaticMeshComponents.Num());
+    MeshBounds.Reserve(StaticMeshComps.Num());
+    MeshIndices.Reserve(StaticMeshComps.Num());
 
-    for (int i = 0; i < StaticMeshComponents.Num(); ++i)
+    for (int i = 0; i < StaticMeshComps.Num(); ++i)
     {
-        UStaticMeshComponent* StaticMeshComp = StaticMeshComponents[i];
+        UStaticMeshComponent* StaticMeshComp = StaticMeshComps[i];
         const FAABB* MeshBounds_Local = nullptr;
         bool bHasBounds = false;
 
@@ -79,6 +84,7 @@ void FBVH::Build(const TArray<AActor*>& Actors)
         MeshBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
     UE_LOG(buf);
 }
+
 
 void FBVH::Clear()
 {
@@ -274,11 +280,15 @@ int FBVH::FindBestSplit(int FirstMeshBound, int MeshBoundCount, int& OutAxis, fl
 
     Prefix[0] = MeshBounds[MeshIndices[FirstMeshBound]].AABB;
     for (int i = 1; i < MeshBoundCount; i++)
+    {
         Prefix[i] = Prefix[i - 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB;
+    }
 
     Suffix[MeshBoundCount - 1] = MeshBounds[MeshIndices[FirstMeshBound + MeshBoundCount - 1]].AABB;
     for (int i = MeshBoundCount - 2; i >= 0; i--)
-        Suffix[i] = (Suffix[i + 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB);
+    {
+        Suffix[i] = Suffix[i + 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB;
+    }
 
     // 3) SAH 비용 평가
     float BestCost = FLT_MAX;

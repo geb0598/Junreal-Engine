@@ -7,6 +7,7 @@
 #include"Engine.h"
 #include"Level.h"
 #include"Frustum.h"
+#include "BoundingVolume.h"
 
 // Forward Declarations
 class UResourceManager;
@@ -22,7 +23,7 @@ class SMultiViewportWindow;
 struct FTransform;
 struct FPrimitiveData;
 class SViewportWindow;
-class UOctree;
+//class UOctree;
 class FBVH;
 class ULevel;
 
@@ -98,8 +99,6 @@ public:
 	virtual void Tick(float DeltaSeconds);
 	float GetTimeSeconds() const;
 
-	bool FrustumCullActors(const FFrustum& ViewFrustum, const AActor* Actor, int& FrustumCullCount);
-
 	/** === 렌더 === */
 	void Render();
 	void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
@@ -112,7 +111,7 @@ public:
 	AGizmoActor* GetGizmoActor();
 	AGridActor* GetGridActor() { return GridActor; }
 
-	UOctree* GetOctree() { return Octree; }
+	//UOctree* GetOctree() { return Octree; }
 	FBVH* GetBVH() { return BVH; }
 
 	ULevel* GetLevel() { return Level; };
@@ -160,8 +159,8 @@ private:
 	/** === 액터 관리 === */
 	TArray<AActor*> Actors;
 
-	/** === 렌더링 되는 Actor 리스트 === **/
-	TArray<AActor*> VisibleActors;
+	/** === 렌더링 되는 StaticMeshComponent 리스트 === **/
+	TArray<UPrimitiveComponent*> VisiblePrimitives;
 
 	// Object naming system
 	TMap<FString, int32> ObjectTypeCounts;
@@ -171,7 +170,7 @@ private:
 
 	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 
-	UOctree* Octree;
+	//UOctree* Octree;
 	FBVH* BVH;
 };
 template<class T>

@@ -5,11 +5,11 @@
 struct FMidPhaseBVHPrimitive
 {
 	AActor* Actor;
-	FAABB AABB; // actor's nounds
+	FAABB Bounds; // actor's nounds
 };
 struct FMidPhaseBVHNode
 {
-	FAABB AABB; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
+	FAABB Bounds; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
 	FMidPhaseBVHNode* Left = nullptr;
 	FMidPhaseBVHNode* Right = nullptr;
 
@@ -24,11 +24,11 @@ struct FMidPhaseBVHNode
 struct FNarrowPhaseBVHPrimitive
 {
 	int32 TriangleIndex; // in mesh
-	FAABB AABB;		 // triangle's bound
+	FAABB Bounds;		 // triangle's bound
 };
 struct FNarrowPhaseBVHNode
 {
-	FAABB AABB; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
+	FAABB Bounds; // node's bounds - 자신과 모든 자손 노드에 포함된 프리미티브를 감싸는 거대한 aabb
 	FNarrowPhaseBVHNode* Left;
 	FNarrowPhaseBVHNode* Right;
 

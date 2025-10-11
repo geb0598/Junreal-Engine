@@ -18,7 +18,6 @@
 #include "UI/GlobalConsole.h"
 #include "ObjManager.h"
 #include"stdio.h"
-#include "AABoundingBoxComponent.h"
 #include "PickingTimer.h"
 #include "Octree.h"
 #include "BVH.h"
@@ -232,7 +231,7 @@ bool IntersectRayTriangleMT(const FRay& InRay,
 }
 
 // slab method - check intersect between Ray and AABB - 미완성
-bool IntersectRayBound(const FRay& InRay, const FBound& InBound, float* OutT)
+bool IntersectRayBound(const FRay& InRay, const FAABB& InBound, float* OutT)
 {
     float tmin = 0.0f;
     float tmax = FLT_MAX;
@@ -303,7 +302,7 @@ bool IntersectTriangleBVH(const FRay& LocalRay, FNarrowPhaseBVHNode* Node, const
     // 광선이 box와 충돌하지 않거나, 충돌거리가 이미 찾은 가장 가까운 삼각형보다 멀리 있으면 
     // 이 노드 내부에 있는 삼각형들은 검사할 필요 없으므로 탐색 종료
     float nodeHitDist;
-    if (!Node->Bounds.RayIntersects(LocalRay.Origin, LocalRay.Direction, nodeHitDist) 
+    if (!IntersectRayAABB(LocalRay, Node->Bounds, nodeHitDist)
         || nodeHitDist >= OutClosestHitDistance)
     {
         return false;
@@ -508,9 +507,9 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     if (BVH)
     {
         // 3. BVH로 Ray와 가장 가까운 Actor 반환
-        float hitDistance;
+        float hitDistance = 0;
         // Ray와 충돌하는 가장 가까운 액터를 정밀 검사까지 마쳐서 찾아줌.
-        AActor* HitActor = BVH->Intersect(WorldRay.Origin, WorldRay.Direction, hitDistance);
+        AActor* HitActor = nullptr;// BVH->Intersect(WorldRay.Origin, WorldRay.Direction, hitDistance);
 
         //if (CheckActorPicking(HitActor, WorldRay, hitDistance))
         if(HitActor)
@@ -1250,11 +1249,12 @@ AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
     float adaptiveThreshold = GetAdaptiveThreshold(cameraDistanceEstimate);
 
     // Octree 우선 사용
-    UOctree* Octree = GetEngine()->GetWorld()->GetOctree();
-    if (Octree)
+    //UOctree* Octree = GetEngine()->GetWorld()->GetOctree();
+    //if (Octree)
+    if(false)
     {
         TArray<AActor*> HitActors;
-        Octree->Query(ray, HitActors);
+        //Octree->Query(ray, HitActors);
 
         if (HitActors.Num() > 0)
         {
