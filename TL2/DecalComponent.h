@@ -24,6 +24,7 @@ public:
 
     // 데칼 텍스처 설정
     void SetDecalTexture(const FString& TexturePath);
+    const FString& GetTexturePath() const { return TexturePath; }
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
@@ -46,7 +47,6 @@ public:
     void SetFadeInDuration(float InFadeInDuration) { FadeInDuration = InFadeInDuration; }
 
 protected:
-
     void UpdateDecalProjectionMatrix();
 
     // 데칼 박스 메쉬 (큐브)
@@ -54,6 +54,7 @@ protected:
     FMatrix DecalProjectionMatrix;
 
     // 데칼 크기
+    FString TexturePath;
     FVector DecalSize = FVector(1.0f, 1.0f, 1.0f);
 
     // UV 타일링
@@ -87,7 +88,7 @@ private:
     int32 SortOrder = 0;
     float FadeScreenSize = 0.01f;
     float FadeStartDelay = 10.0f;
-    float FadeDuration = 10.0f;
+    float FadeDuration = 0.0f;
     float FadeInStartDelay = 10.0f;
     float FadeInDuration = 10.0f;
 

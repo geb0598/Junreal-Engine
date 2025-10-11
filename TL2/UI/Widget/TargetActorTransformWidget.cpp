@@ -652,8 +652,70 @@ void UTargetActorTransformWidget::RenderWidget()
 			else if (UDecalComponent* DecalComponent = Cast<UDecalComponent>(SelectedComponent))
 			{
 				ImGui::Text("Decal Component Settings");
+
+				// Decal Texture Setting
+				ImGui::Separator();
+				
+				// Editor/Icon 폴더에서 동적으로 스프라이트 옵션 로드
+				static TArray<FString> SpriteOptions;
+				static bool bSpriteOptionsLoaded = false;
+				static int currentSpriteIndex = 0; // 현재 선택된 스프라이트 인덱스
+
+				if (!bSpriteOptionsLoaded)
+				{
+					// Editor/Icon 폴더에서 .dds 파일들을 찾아서 추가
+					SpriteOptions = GetIconFiles();
+					bSpriteOptionsLoaded = true;
+
+					// 현재 텍스처와 일치하는 인덱스 찾기
+					FString CurrentTexture = DecalComponent->GetTexturePath();
+					for (int i = 0; i < SpriteOptions.size(); ++i)
+					{
+						if (SpriteOptions[i] == CurrentTexture)
+						{
+							currentSpriteIndex = i;
+							break;
+						}
+					}
+				}
+
+				// 스프라이트 선택 드롭다운 메뉴
+				ImGui::Text("Sprite Texture:");
+				FString currentDisplayName = (currentSpriteIndex >= 0 && currentSpriteIndex < SpriteOptions.size())
+					? GetBaseNameNoExt(SpriteOptions[currentSpriteIndex])
+					: "Select Sprite";
+
+				if (ImGui::BeginCombo("##SpriteCombo", currentDisplayName.c_str()))
+				{
+					for (int i = 0; i < SpriteOptions.size(); ++i)
+					{
+						FString displayName = GetBaseNameNoExt(SpriteOptions[i]);
+						bool isSelected = (currentSpriteIndex == i);
+
+						if (ImGui::Selectable(displayName.c_str(), isSelected))
+						{
+							currentSpriteIndex = i;
+							DecalComponent->SetDecalTexture(SpriteOptions[i]);
+						}
+
+						// 현재 선택된 항목에 포커스 설정
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				// 새로고침 버튼 (같은 줄에)
+				ImGui::SameLine();
+				if (ImGui::Button("Refresh"))
+				{
+					bSpriteOptionsLoaded = false; // 다음에 다시 로드하도록
+					currentSpriteIndex = 0; // 인덱스 리셋
+				}
+
 				ImGui::Separator();
 
+				// Decal Fade In/Out
 				float FadeScreenSize = DecalComponent->GetFadeScreenSize();
 				if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.001f, -1.0f, 1.0f));
 				{
@@ -682,6 +744,15 @@ void UTargetActorTransformWidget::RenderWidget()
 				if (ImGui::DragFloat("Fade In Duration", &FadeInDuration, 0.1f))
 				{
 					DecalComponent->SetFadeInDuration(FadeInDuration);
+				}
+
+				ImGui::Separator();
+
+				// Decal UV Tiling
+				FVector2D Tiling = DecalComponent->GetUVTiling();
+				if (ImGui::DragFloat2("UV Tiling", &Tiling.X, 0.1f, 1.0f, 10.0f))
+				{
+					DecalComponent->SetUVTiling(Tiling);
 				}
 			}
 			else

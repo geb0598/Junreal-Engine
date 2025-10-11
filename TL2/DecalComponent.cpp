@@ -14,11 +14,12 @@ UDecalComponent::UDecalComponent()
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
+    TexturePath = "Editor/Decal/SpotLight_64x.dds";
 
     SetMaterial("DecalShader.hlsl");
     if (Material)
     {
-        Material->Load("Editor/Decal/SpotLight_64x.dds", UResourceManager::GetInstance().GetDevice());
+        Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
     }
   
     UpdateDecalProjectionMatrix();
@@ -79,7 +80,7 @@ void UDecalComponent::TickComponent(float DeltaSeconds)
     }
 
     CurrentAlpha = std::min(FadeInAlpha, FadeOutAlpha);
-    UE_LOG("Tick - Delta: %.3f, Lifetime: %.3f, InAlpha: %.3f, OutAlpha: %.3f, FinalAlpha: %.3f", DeltaSeconds, LifetimeTimer, FadeInAlpha, FadeOutAlpha, CurrentAlpha);
+    //UE_LOG("Tick - Delta: %.3f, Lifetime: %.3f, InAlpha: %.3f, OutAlpha: %.3f, FinalAlpha: %.3f", DeltaSeconds, LifetimeTimer, FadeInAlpha, FadeOutAlpha, CurrentAlpha);
 }
 
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
