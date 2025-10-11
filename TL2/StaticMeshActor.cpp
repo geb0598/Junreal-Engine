@@ -1,5 +1,4 @@
 ﻿#include "pch.h"
-#include "AABoundingBoxComponent.h"
 #include "StaticMeshActor.h"
 #include "ObjectFactory.h"
 
@@ -20,9 +19,6 @@ AStaticMeshActor::AStaticMeshActor()
     StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");
     RootComponent = StaticMeshComponent;
     AddComponent(StaticMeshComponent);
-
-    CollisionComponent = CreateDefaultSubobject<UAABoundingBoxComponent>(FName("CollisionBox"));
-	CollisionComponent->SetupAttachment(RootComponent);
 }
 
 void AStaticMeshActor::Tick(float DeltaTime)
@@ -33,8 +29,8 @@ void AStaticMeshActor::Tick(float DeltaTime)
         RootComponent->AddLocalRotation({ 0.01f, 0.0f,0.0f });
         RootComponent->AddLocalOffset({ sin(times)/100, sin(times)/100,sin(times)/100 });
     }
-    if(bIsPicked&& CollisionComponent)
-    CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
+    /*if(bIsPicked&& CollisionComponent)
+    CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);*/
 }
 
 AStaticMeshActor::~AStaticMeshActor()
@@ -51,15 +47,6 @@ void AStaticMeshActor::SetStaticMeshComponent(UStaticMeshComponent* InStaticMesh
     StaticMeshComponent = InStaticMeshComponent;
 }
 
-void AStaticMeshActor::SetCollisionComponent(EPrimitiveType InType)
-{
-    if (!CollisionComponent) {
-        return;
-    }
-    CollisionComponent->SetFromVertices(StaticMeshComponent->GetStaticMesh()->GetStaticMeshAsset()->Vertices);
-    CollisionComponent->SetPrimitiveType(InType);
-}
-
 UObject* AStaticMeshActor::Duplicate()
 {
     // 원본(this)의 컴포넌트들 저장
@@ -74,13 +61,6 @@ UObject* AStaticMeshActor::Duplicate()
         DuplicatedActor->OwnedComponents.Remove(DuplicatedActor->StaticMeshComponent);
         ObjectFactory::DeleteObject(DuplicatedActor->StaticMeshComponent);
         DuplicatedActor->StaticMeshComponent = nullptr;
-    }
-
-    if (DuplicatedActor->CollisionComponent)
-    {
-        DuplicatedActor->OwnedComponents.Remove(DuplicatedActor->CollisionComponent);
-        ObjectFactory::DeleteObject(DuplicatedActor->CollisionComponent);
-        DuplicatedActor->CollisionComponent = nullptr;
     }
 
     DuplicatedActor->RootComponent = nullptr;
@@ -106,34 +86,11 @@ void AStaticMeshActor::DuplicateSubObjects()
 
     // 타입별 포인터 재설정
     StaticMeshComponent = Cast<UStaticMeshComponent>(RootComponent);
-
-    // CollisionComponent 찾기
-    for (UActorComponent* Comp : OwnedComponents)
-    {
-        if (UAABoundingBoxComponent* BBoxComp = Cast<UAABoundingBoxComponent>(Comp))
-        {
-            CollisionComponent = BBoxComp;
-            break;
-        }
-    }
 }
 
 // 특화된 멤버 컴포넌트 CollisionComponent, StaticMeshComponent 는 삭제 시 포인터를 초기화합니다.
 bool AStaticMeshActor::DeleteComponent(USceneComponent* ComponentToDelete)
 {
-    // 1. [자식 클래스의 추가 처리] 삭제 대상이 나의 특정 컴포넌트인지 확인합니다.
-    if (ComponentToDelete == CollisionComponent)
-    {
-        // 맞다면, 나의 멤버 포인터를 nullptr로 설정합니다.
-        CollisionComponent = nullptr;
-    }
-    else if (ComponentToDelete == StaticMeshComponent)
-    {
-        // AStaticMeshActor는 StaticMeshComponent가 Root 이기 때문에 삭제할 수 없음
-        UE_LOG("루트 컴포넌트는 직접 삭제할 수 없습니다.");
-        return false;
-    }
-
     // 2. [부모 클래스의 원래 기능 호출]
     // 기본적인 삭제 로직(소유 목록 제거, 메모리 해제 등)은 부모에게 위임합니다.
     // Super:: 키워드를 사용합니다.

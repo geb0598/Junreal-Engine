@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "PrimitiveComponent.h"
+#include "BoundingVolume.h"
 
 class UMeshComponent : public UPrimitiveComponent
 {

@@ -99,7 +99,32 @@ void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, c
 
     assert(MaterailSlots[InMaterialSlotIndex].bChangedByUser == true);
 }
+const FAABB UStaticMeshComponent::GetWorldAABB() const
+{
+    if (StaticMesh == nullptr)
+    {
+        return FAABB();
+    }
+    
+    //LocalAABB의 8점에 WorldMatrix를 곱해 AABB제작
+    const FMatrix& WorldMatrix = GetWorldMatrix();
+    const FAABB& LocalAABB = StaticMesh->GetAABB();
+    FVector WorldVertex[8];
+    for (int i = 0; i < 8; i++)
+    {
+        WorldVertex[i] = (FVector4(LocalAABB.GetVertex(i), 1) * WorldMatrix).GetVt3();
+    }
 
+    return FAABB(WorldVertex, 8);    
+}
+const FAABB& UStaticMeshComponent::GetLocalAABB() const
+{
+    if (StaticMesh == nullptr)
+    {
+        return FAABB();
+    }
+    return StaticMesh->GetAABB();
+}
 UObject* UStaticMeshComponent::Duplicate()
 {
     UStaticMeshComponent* DuplicatedComponent = Cast<UStaticMeshComponent>(NewObject(GetClass()));

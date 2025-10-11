@@ -26,6 +26,8 @@ void UStaticMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVerte
     CreateIndexBuffer(StaticMeshAsset, InDevice);
     VertexCount = static_cast<uint32>(StaticMeshAsset->Vertices.size());
     IndexCount = static_cast<uint32>(StaticMeshAsset->Indices.size());
+
+    SetAABB();
 #ifndef _DEBUG
     // Debug 빌드가 아닐 때만 BVH 생성
     BuildMeshBVH();
@@ -53,7 +55,7 @@ void UStaticMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutT
     VertexCount = static_cast<uint32>(InData->Vertices.size());
     IndexCount = static_cast<uint32>(InData->Indices.size());
 
-    
+    SetAABB();
     //BuildMeshBVH();
 }
 
@@ -86,13 +88,10 @@ void UStaticMesh::BuildMeshBVH()
         const FVector& V1 = StaticMeshAsset->Vertices[Index1].pos;
         const FVector& V2 = StaticMeshAsset->Vertices[Index2].pos;
 
-        // FTriangle을 이용해 이 삼각형의 경계 상자(AABB) 계산
-        FBound TriangleBounds = FTriangle(V0, V1, V2).GetBounds();
-
         // BVH 프리미티브 생성 및 리스트에 추가
         FNarrowPhaseBVHPrimitive Primitive;
         Primitive.TriangleIndex = i;
-        Primitive.Bounds = TriangleBounds;
+        Primitive.Bounds.InitAABB({ V0,V1,V2 });
         Primitives.Add(Primitive);
     }
     if (!Primitives.IsEmpty())
@@ -147,3 +146,7 @@ void UStaticMesh::ReleaseResources()
     }
 }
 
+void UStaticMesh::SetAABB()
+{
+    AABB.InitAABB(StaticMeshAsset->Vertices);
+}

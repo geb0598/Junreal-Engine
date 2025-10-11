@@ -14,6 +14,7 @@ UDecalComponent::UDecalComponent()
     // 기본 큐브 메쉬 로드 (데칼 볼륨으로 사용)
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
+    LocalAABB = FAABB(FVector(-0.5f, -0.5f, -0.5f), FVector(0.5f, 0.5f, 0.5f));
     TexturePath = "Editor/Decal/SpotLight_64x.dds";
 
     SetMaterial("DecalShader.hlsl");
@@ -29,20 +30,15 @@ UDecalComponent::~UDecalComponent()
 {
 }
 
-void UDecalComponent::SetDecalSize(const FVector& InSize)
-{
-    DecalSize = InSize;
-    UpdateDecalProjectionMatrix();
-}
-
 void UDecalComponent::UpdateDecalProjectionMatrix()
 {
-    float Right = DecalSize.Y / 2.0f;
-    float Left = -DecalSize.Y / 2.0f;
-    float Top = DecalSize.Z / 2.0f;
-    float Bottom = -DecalSize.Z / 2.0f;
+    FOBB WorldOBB = GetWorldOBB();
+    float Right = WorldOBB.Extents.Y;
+    float Left = -WorldOBB.Extents.Y;
+    float Top = WorldOBB.Extents.Z;
+    float Bottom = -WorldOBB.Extents.Z;
     float Near = 0.0f;
-    float Far = DecalSize.X / 2.0f;
+    float Far = WorldOBB.Extents.X * 2;
 
     FMatrix OrthoMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
 
@@ -102,11 +98,12 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     
     float LifeTimeAlpha = CurrentAlpha;
     float ScreenFadeAlpha = 1.0f;
+    UpdateDecalProjectionMatrix();
     if (FadeScreenSize > 0.0f)
     {
         // Calculate an approximate bounding sphere radius from the decal's size
         const FVector DecalCenter = GetWorldLocation();
-        const float DecalRadius = DecalSize.Size() / 2.0f;
+        const float DecalRadius =  GetWorldOBB().Extents.Size() / 2.0f;
 
         // Get the camera's position
         const FMatrix InvView = View.Inverse();
@@ -202,13 +199,16 @@ void UDecalComponent::SetDecalTexture(const FString& TexturePath)
     // TextRenderComponent와 동일한 방식으로 텍스처 로드
     Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
 }
+const FOBB UDecalComponent::GetWorldOBB()
+{
+    return FOBB(LocalAABB, GetWorldTransform());
+}
 
 UObject* UDecalComponent::Duplicate()
 {
     UDecalComponent* DuplicatedComponent = Cast<UDecalComponent>(NewObject(GetClass()));
     if (DuplicatedComponent)
     {
-        DuplicatedComponent->DecalSize = DecalSize;
         DuplicatedComponent->UVTiling = UVTiling;
         DuplicatedComponent->BlendMode = BlendMode;
     }

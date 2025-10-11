@@ -119,6 +119,10 @@ void UDecalComponent::SetDecalTexture(const FString& TexturePath)
     // TextRenderComponent와 동일한 방식으로 텍스처 로드
     Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
 }
+const FOBB UDecalComponent::GetWorldOBB()
+{
+    return FOBB(LocalAABB, GetWorldTransform());
+}
 
 UObject* UDecalComponent::Duplicate()
 {

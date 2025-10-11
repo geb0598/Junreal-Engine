@@ -17,16 +17,6 @@ struct FTriangle
     FTriangle(const FVector& InV0, const FVector& InV1, const FVector& InV2) :
         V0(InV0), V1(InV1), V2(InV2){ }
 
-    /**
-    * @brief 해당 삼각형을 꼭 맞게 감싸는 AABB 계산
-    * @return FBound 이 삼각형 경계 상자
-    */
-    FBound GetBounds() 
-    {
-        FVector Min = V0.ComponentMin(V1).ComponentMin(V2);
-        FVector Max = V0.ComponentMax(V1).ComponentMax(V2);
-        return FBound(Min, Max);
-    }
 
     ///**
     //* @brief Ray - triangle

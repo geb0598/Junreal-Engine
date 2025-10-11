@@ -9,6 +9,7 @@
 #include "SelectionManager.h"
 #include <string>
 
+#include "DecalComponent.h"
 #include "BillboardComponent.h"
 #include "StaticMeshActor.h"    
 #include "StaticMeshComponent.h"
@@ -403,15 +404,6 @@ void UTargetActorTransformWidget::RenderWidget()
 							{
 								const FString& NewPath = Paths[SelectedMeshIdx];
 								SMC->SetStaticMesh(NewPath);
-
-								// Sphere 충돌 특례
-								if (AStaticMeshActor* SMActor = Cast<AStaticMeshActor>(SelectedActor))
-								{
-									if (GetBaseNameNoExt(NewPath) == "Sphere")
-										SMActor->SetCollisionComponent(EPrimitiveType::Sphere);
-									else
-										SMActor->SetCollisionComponent();
-								}
 
 								UE_LOG("Applied StaticMesh: %s", NewPath.c_str());
 							}
