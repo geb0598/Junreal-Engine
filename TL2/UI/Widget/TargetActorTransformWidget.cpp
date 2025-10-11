@@ -208,17 +208,27 @@ void UTargetActorTransformWidget::RenderWidget()
 
 			if (ImGui::Button("-삭제"))
 			{
-				// 컴포넌트 삭제 시 상위 컴포넌트로 선택되도록 설정
-				USceneComponent* ParentComponent = SelectedComponent->GetAttachParent();
-				if (SelectedActor->DeleteComponent(SelectedComponent))
+				if (SelectedActor && SelectedComponent == SelectedActor->GetRootComponent())
 				{
-					if (ParentComponent)
+					UE_LOG("루트 컴포넌트는 UI에서 직접 삭제할 수 없습니다.");
+				}
+				else
+				{
+					USceneComponent* ParentComponent = SelectedComponent->GetAttachParent();
+					USelectionManager::GetInstance().ClearSelection();
+
+					if (SelectedActor->DeleteComponent(SelectedComponent))
 					{
-						SelectedComponent = ParentComponent;
-					}
-					else
-					{
-						SelectedComponent = SelectedActor->GetRootComponent();
+						if (ParentComponent)
+						{
+							USelectionManager::GetInstance().SelectComponent(ParentComponent);
+							SelectedComponent = ParentComponent;
+						}
+						else
+						{
+							// 컴포넌트 삭제 시 상위 컴포넌트로 선택되도록 설정
+							SelectedComponent = SelectedActor->GetRootComponent();
+						}
 					}
 				}
 			}
