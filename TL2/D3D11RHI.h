@@ -24,7 +24,7 @@
 }
 
 #define CREATE_CBUFFER(TYPE)\
-CreateCBuffer(TYPE##uffer, sizeof(TYPE));
+CreateCBuffer(&TYPE##uffer, sizeof(TYPE));
 
 #define RELEASE_CBUFFER(TYPE)\
 if(TYPE##uffer) {TYPE##uffer->Release(); TYPE##uffer = nullptr;}
@@ -156,7 +156,7 @@ private:
         CBufferSet(CBuffer, SlotNum, bSetVS, bSetPS);
     }
 
-    void CreateCBuffer(ID3D11Buffer* CBuffer, const uint32 Size)
+    void CreateCBuffer(ID3D11Buffer** CBuffer, const uint32 Size)
     {
         D3D11_BUFFER_DESC CBufferDesc = {};
         CBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
