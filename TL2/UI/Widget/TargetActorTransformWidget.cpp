@@ -713,6 +713,14 @@ void UTargetActorTransformWidget::RenderWidget()
 
 				ImGui::Separator();
 
+				int32 SortOrder = DecalComponent->GetSortOrder();
+				if (ImGui::DragInt("Sort Order", &SortOrder));
+				{
+					DecalComponent->SetSortOrder(SortOrder);
+				}
+
+				ImGui::Separator();
+
 				// Decal Fade In/Out
 				float FadeScreenSize = DecalComponent->GetFadeScreenSize();
 				if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.01f, 0.0f, 100.0f))
