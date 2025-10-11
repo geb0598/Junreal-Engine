@@ -266,8 +266,8 @@ void D3D11RHI::CreateIdBuffer()
     TextureDesc.Format = DXGI_FORMAT_R32_UINT;
     TextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
     TextureDesc.Usage = D3D11_USAGE_STAGING;
-    TextureDesc.Width = SwapDesc.BufferDesc.Width;
-    TextureDesc.Height = SwapDesc.BufferDesc.Height;
+    TextureDesc.Width = 1;
+    TextureDesc.Height = 1;
     TextureDesc.MipLevels = 1;
     TextureDesc.ArraySize = 1;
     TextureDesc.SampleDesc.Count = 1;

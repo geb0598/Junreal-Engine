@@ -25,13 +25,6 @@ URenderer::~URenderer()
 
 void URenderer::Update(float DeltaSeconds)
 {
-    static float FrameTime = 0.0f;
-    FrameTime += DeltaSeconds;
-    if (FrameTime > DeltaSeconds * 10)
-    {
-        FrameTime = 0.0f;
-        ReadBackIdBuffer();
-    }
     
 }
 void URenderer::BeginFrame()
@@ -158,42 +151,6 @@ void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
     RHIDevice->UpdateUVScrollConstantBuffers(Speed, TimeSec);
 }
 
-void URenderer::ReadBackIdBuffer()
-{
-    //IDBuffer를 얻어와야 하는데 RHIDevice가 추상클래스이고 거기서 GetBuffer같은 함수를 만드는 것이 좋은 설계가 아닌 것 같아서
-    //일단 테스트용으로 캐스팅해서 사용함
-
-    D3D11RHI* RHI = static_cast<D3D11RHI*>(RHIDevice);
-    ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
-    DXGI_SWAP_CHAIN_DESC SwapChainDesc= {};
-
-    RHIDevice->GetSwapChain()->GetDesc(&SwapChainDesc);
-    const LONG maxW = (LONG)SwapChainDesc.BufferDesc.Width;
-    const LONG maxH = (LONG)SwapChainDesc.BufferDesc.Height;
-   
-    DeviceContext->CopyResource(RHI->GetIdStagingBuffer(), RHI->GetIdBuffer());
-
-    D3D11_MAPPED_SUBRESOURCE Mapped{};
-    if (SUCCEEDED(DeviceContext->Map(RHI->GetIdStagingBuffer(), 0, D3D11_MAP_READ, 0, &Mapped)))
-    {
-        const uint8_t* Src = static_cast<const uint8_t*>(Mapped.pData);
-        const size_t RowPitch = Mapped.RowPitch;
-        const size_t BytesPerRow = maxW * sizeof(uint32);
-        const size_t NumPixels = maxW * maxH;
-
-        IdBufferCache.resize(maxW * maxH);
-        for (int Index = 0; Index < maxH; Index++)
-        {
-            uint8_t* pDest = reinterpret_cast<uint8_t*>(IdBufferCache.data()) + (Index * BytesPerRow);
-            
-            const uint8_t* pSourceRow = Src + (Index * RowPitch);
-           
-            memcpy(pDest, pSourceRow, BytesPerRow);
-        }
-
-        DeviceContext->Unmap(RHI->GetIdStagingBuffer(), 0);
-    }
-}
 
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
 {
@@ -556,16 +513,39 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
 
 UPrimitiveComponent* URenderer::GetCollidedPrimitive(int MouseX, int MouseY) const
 {
-    DXGI_SWAP_CHAIN_DESC SwapChainDesc;
-    RHIDevice->GetSwapChain()->GetDesc(&SwapChainDesc);
-   /* for (int a = 0; a < IdBufferCache.Num(); a++)
-        if (IdBufferCache[a] != 0)
-            UE_LOG("not zero");*/
+    //GPU와 동기화 문제 때문에 Map이 호출될때까지 기다려야해서 피킹 하는 프레임에 엄청난 프레임 드랍이 일어남.
+    //******비동기 방식으로 무조건 바꿔야함****************
+    uint32 PickedId = 0;
 
-    int Id = IdBufferCache[MouseY * SwapChainDesc.BufferDesc.Width + MouseX];
-    if (Id >= GUObjectArray.size()) return nullptr;
+    ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
+    //스테이징 버퍼를 가져와야 하는데 이걸 Device 추상 클래스가 Getter로 가지고 있는게 좋은 설계가 아닌 것 같아서 일단 캐스팅함
+    D3D11RHI* RHI = static_cast<D3D11RHI*>(RHIDevice);
 
-    return Cast<UPrimitiveComponent>(GUObjectArray[Id]);
+    D3D11_BOX Box{};
+    Box.left = MouseX;
+    Box.right= MouseX+1;
+    Box.top = MouseY;
+    Box.bottom = MouseY+1;
+    Box.front = 0;
+    Box.back = 1;
+    
+    DeviceContext->CopySubresourceRegion(
+        RHI->GetIdStagingBuffer(),
+        0,
+        0, 0, 0,
+        RHI->GetIdBuffer(),
+        0,
+        &Box);
+    D3D11_MAPPED_SUBRESOURCE MapResource{};
+    if (SUCCEEDED(DeviceContext->Map(RHI->GetIdStagingBuffer(), 0, D3D11_MAP_READ, 0, &MapResource)))
+    {
+        PickedId = *static_cast<uint32*>(MapResource.pData);
+        DeviceContext->Unmap(RHI->GetIdStagingBuffer(), 0);
+    }
+
+    if (PickedId == 0)
+        return nullptr;
+    return Cast<UPrimitiveComponent>(GUObjectArray[PickedId]);
 }
 
 

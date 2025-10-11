@@ -222,10 +222,6 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         {
             PickedActor = Component->GetOwner();
         }
-        /*PickedActor = CPickingSystem::PerformGlobalBVHPicking(
-            AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio,
-            Viewport);*/
-
 
         if (PickedActor)
         {
