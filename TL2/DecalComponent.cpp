@@ -40,7 +40,19 @@ void UDecalComponent::UpdateDecalProjectionMatrix()
     float Bottom = -DecalSize.Z / 2.0f;
     float Near = 0.0f;
     float Far = DecalSize.X / 2.0f;
-    DecalProjectionMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
+
+    FMatrix OrthoMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
+
+    // UV 타일링을 위한 스케일 행렬 생성
+    FMatrix UVScale = FMatrix::Identity();
+    UVScale.M[0][0] =  UVTiling.X;
+    UVScale.M[1][1] =  UVTiling.Y;
+    UVScale.M[2][2] = 1.0f;
+    // 중심 보정 (짝수일 때 반 픽셀 밀림 방지)
+    // 중심 보정 - 타일링된 텍스처를 중앙에 배치
+    UVScale.M[3][0] = -(UVTiling.X - 1.0f) / 2.0f;
+    UVScale.M[3][1] = -(UVTiling.Y - 1.0f) / 2.0f;
+    DecalProjectionMatrix = UVScale*OrthoMatrix ;
 }
 
 void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj,FViewport* Viewport)
@@ -55,6 +67,10 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
         return;
     }
     UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
+    if (!StaticMesh)
+    {
+        return;
+    }
     
     if (!StaticMesh)
     {
@@ -150,6 +166,7 @@ UObject* UDecalComponent::Duplicate()
     if (DuplicatedComponent)
     {
         DuplicatedComponent->DecalSize = DecalSize;
+        DuplicatedComponent->UVTiling = UVTiling;
         DuplicatedComponent->BlendMode = BlendMode;
     }
     return DuplicatedComponent;

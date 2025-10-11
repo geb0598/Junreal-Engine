@@ -23,6 +23,10 @@ URenderer::~URenderer()
     }
 }
 
+void URenderer::Update(float DeltaSeconds)
+{
+    
+}
 void URenderer::BeginFrame()
 {
     // 렌더링 통계 수집 시작
@@ -34,7 +38,7 @@ void URenderer::BeginFrame()
     // 백버퍼/깊이버퍼를 클리어
     RHIDevice->ClearBackBuffer();  // 배경색
     RHIDevice->ClearDepthBuffer(1.0f, 0);                 // 깊이값 초기화
-    RHIDevice->CreateBlendState();
+    //RHIDevice->CreateBlendState();
     RHIDevice->IASetPrimitiveTopology();
     // RS
     RHIDevice->RSSetViewport();
@@ -99,7 +103,12 @@ void URenderer::RSSetDefaultState()
 
 void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
-    RHIDevice->UpdateConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
+    RHIDevice->UpdateConstantBuffers(ModelBufferType(ModelMatrix, 0), ViewMatrix, ProjMatrix);
+}
+
+void URenderer::UpdateConstantBuffer(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
+{
+    RHIDevice->UpdateConstantBuffers(ModelConstant, ViewMatrix, ProjMatrix);
 }
 
 void URenderer::UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
@@ -141,6 +150,7 @@ void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
 {
     RHIDevice->UpdateUVScrollConstantBuffers(Speed, TimeSec);
 }
+
 
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
 {
@@ -350,6 +360,8 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 
 void URenderer::EndFrame()
 {
+
+    
     // 렌더링 통계 수집 종료
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();
     StatsCollector.EndFrame();
@@ -497,6 +509,45 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     
     bLineBatchActive = false;
 }
+
+
+UPrimitiveComponent* URenderer::GetCollidedPrimitive(int MouseX, int MouseY) const
+{
+    //GPU와 동기화 문제 때문에 Map이 호출될때까지 기다려야해서 피킹 하는 프레임에 엄청난 프레임 드랍이 일어남.
+    //******비동기 방식으로 무조건 바꿔야함****************
+    uint32 PickedId = 0;
+
+    ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
+    //스테이징 버퍼를 가져와야 하는데 이걸 Device 추상 클래스가 Getter로 가지고 있는게 좋은 설계가 아닌 것 같아서 일단 캐스팅함
+    D3D11RHI* RHI = static_cast<D3D11RHI*>(RHIDevice);
+
+    D3D11_BOX Box{};
+    Box.left = MouseX;
+    Box.right= MouseX+1;
+    Box.top = MouseY;
+    Box.bottom = MouseY+1;
+    Box.front = 0;
+    Box.back = 1;
+    
+    DeviceContext->CopySubresourceRegion(
+        RHI->GetIdStagingBuffer(),
+        0,
+        0, 0, 0,
+        RHI->GetIdBuffer(),
+        0,
+        &Box);
+    D3D11_MAPPED_SUBRESOURCE MapResource{};
+    if (SUCCEEDED(DeviceContext->Map(RHI->GetIdStagingBuffer(), 0, D3D11_MAP_READ, 0, &MapResource)))
+    {
+        PickedId = *static_cast<uint32*>(MapResource.pData);
+        DeviceContext->Unmap(RHI->GetIdStagingBuffer(), 0);
+    }
+
+    if (PickedId == 0)
+        return nullptr;
+    return Cast<UPrimitiveComponent>(GUObjectArray[PickedId]);
+}
+
 
 void URenderer::ResetRenderStateTracking()
 {

@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "UI/StatsOverlayD2D.h"
+#include "D3D11RHI.h"
 
 struct FConstants
 {
@@ -7,10 +8,7 @@ struct FConstants
     float Scale;
 };
 // b0 in VS
-struct ModelBufferType
-{
-    FMatrix Model;
-};
+
 
 // b0 in PS
 struct FMaterialInPs
@@ -91,6 +89,8 @@ void D3D11RHI::Initialize(HWND hWindow)
     CreateConstantBuffer();
 	CreateDepthStencilState();
 	CreateSamplerState();
+    CreateIdBuffer();
+
     UResourceManager::GetInstance().Initialize(Device,DeviceContext);
 
     // Initialize Direct2D overlay after device/swapchain ready
@@ -137,8 +137,9 @@ void D3D11RHI::Release()
     if (WireFrameRasterizerState) { WireFrameRasterizerState->Release();   WireFrameRasterizerState = nullptr; }
     if (NoCullRasterizerState) { NoCullRasterizerState->Release();   NoCullRasterizerState = nullptr; }
     if (FrontCullRasterizerState) { FrontCullRasterizerState->Release();   FrontCullRasterizerState = nullptr; }
-    if (BlendState) { BlendState->Release();        BlendState = nullptr; }
 
+    ReleaseIdBuffer();
+    ReleaseBlendState();
     // RTV/DSV/FrameBuffer
     ReleaseFrameBuffer();
 
@@ -150,6 +151,8 @@ void D3D11RHI::ClearBackBuffer()
 {
     float ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
     DeviceContext->ClearRenderTargetView(RenderTargetView, ClearColor);
+    float IDColor[4] = { 0.0f,0.0f,0.0f,0.0f };
+    DeviceContext->ClearRenderTargetView(IdBufferRTV, IDColor);
 }
 
 void D3D11RHI::ClearDepthBuffer(float Depth, UINT Stencil)
@@ -160,21 +163,38 @@ void D3D11RHI::ClearDepthBuffer(float Depth, UINT Stencil)
 
 void D3D11RHI::CreateBlendState()
 {
-    // Create once; reuse every frame
-    if (BlendState)
-        return;
+    D3D11_BLEND_DESC BlendDesc = {};
+ 
+    BlendDesc.IndependentBlendEnable = TRUE;
 
-    D3D11_BLEND_DESC bd = {};
-    auto& rt = bd.RenderTarget[0];
-    rt.BlendEnable = TRUE;
-    rt.SrcBlend = D3D11_BLEND_SRC_ALPHA;      // 스트레이트 알파
-    rt.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;  // (프리멀티면 ONE / INV_SRC_ALPHA)
-    rt.BlendOp = D3D11_BLEND_OP_ADD;
-    rt.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rt.DestBlendAlpha = D3D11_BLEND_ZERO;
-    rt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    rt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    Device->CreateBlendState(&bd, &BlendState);
+    D3D11_RENDER_TARGET_BLEND_DESC& Rt0 = BlendDesc.RenderTarget[0];
+
+    Rt0.BlendEnable = TRUE;
+    Rt0.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    Rt0.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    Rt0.BlendOp = D3D11_BLEND_OP_ADD;
+    Rt0.SrcBlendAlpha = D3D11_BLEND_ONE;
+    Rt0.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    Rt0.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    Rt0.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+
+    D3D11_RENDER_TARGET_BLEND_DESC& Rt1 = BlendDesc.RenderTarget[1];
+    Rt1.BlendEnable = FALSE;
+    Rt1.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    Device->CreateBlendState(&BlendDesc, &BlendStateTransparent);
+
+    BlendDesc = {};
+    BlendDesc.IndependentBlendEnable = TRUE;
+    Rt0 = BlendDesc.RenderTarget[0];
+    Rt0.BlendEnable = FALSE;
+    Rt0.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    Rt1 = BlendDesc.RenderTarget[1];
+    Rt1.BlendEnable = FALSE;
+    Rt1.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    Device->CreateBlendState(&BlendDesc, &BlendStateOpaque);
 }
 
 void D3D11RHI::CreateDepthStencilState()
@@ -213,14 +233,52 @@ void D3D11RHI::CreateSamplerState()
 {
     D3D11_SAMPLER_DESC SampleDesc = {};
     SampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    SampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    SampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    SampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    SampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    SampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    SampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     SampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     SampleDesc.MinLOD = 0;
     SampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	HRESULT HR = Device->CreateSamplerState(&SampleDesc, &DefaultSamplerState);
+}
+
+void D3D11RHI::CreateIdBuffer()
+{
+
+    DXGI_SWAP_CHAIN_DESC SwapDesc;
+    SwapChain->GetDesc(&SwapDesc);
+
+    D3D11_TEXTURE2D_DESC TextureDesc{};
+    TextureDesc.Format = DXGI_FORMAT_R32_UINT;
+    TextureDesc.CPUAccessFlags = 0;
+    TextureDesc.Usage = D3D11_USAGE_DEFAULT;
+    TextureDesc.Width = SwapDesc.BufferDesc.Width;
+    TextureDesc.Height = SwapDesc.BufferDesc.Height;
+    TextureDesc.MipLevels = 1;
+    TextureDesc.ArraySize = 1;
+    TextureDesc.SampleDesc.Count = 1;
+    TextureDesc.SampleDesc.Quality = 0;
+    TextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+    Device->CreateTexture2D(&TextureDesc, nullptr, &IdBuffer);
+
+    TextureDesc.Format = DXGI_FORMAT_R32_UINT;
+    TextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    TextureDesc.Usage = D3D11_USAGE_STAGING;
+    TextureDesc.Width = 1;
+    TextureDesc.Height = 1;
+    TextureDesc.MipLevels = 1;
+    TextureDesc.ArraySize = 1;
+    TextureDesc.SampleDesc.Count = 1;
+    TextureDesc.SampleDesc.Quality = 0;
+    TextureDesc.BindFlags = 0;
+
+    Device->CreateTexture2D(&TextureDesc, nullptr, &IdStagingBuffer);
+    if (IdBuffer)
+    {
+        Device->CreateRenderTargetView(IdBuffer, nullptr, &IdBufferRTV);
+    }
 }
 
 HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FMeshData* meshData, ID3D11Buffer** outBuffer)
@@ -258,14 +316,12 @@ HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mes
 }
 
 //이거 두개를 나눔
-void D3D11RHI::UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
+void D3D11RHI::UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
 {
    
-    UpdateModelConstantBuffers(ModelMatrix);
+    UpdateModelConstantBuffers(ModelConstant);
    
     UpdateViewConstantBuffers(ViewMatrix, ProjMatrix);
-    
- 
 }
 
 void D3D11RHI::UpdateViewConstantBuffers(const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
@@ -300,6 +356,25 @@ void D3D11RHI::UpdateModelConstantBuffers(const FMatrix& ModelMatrix)
 
         // HLSL 기본 row-major와 맞추기 위해 전치
         dataPtr->Model = ModelMatrix;
+        dataPtr->UUID = 0;
+
+        DeviceContext->Unmap(ModelCB, 0);
+        DeviceContext->VSSetConstantBuffers(0, 1, &ModelCB); // b0 슬롯
+    }
+}
+
+void D3D11RHI::UpdateModelConstantBuffers(const ModelBufferType& ModelConstant)
+{
+    // b0 : 모델 행렬
+    {
+
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        DeviceContext->Map(ModelCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+        auto* dataPtr = reinterpret_cast<ModelBufferType*>(mapped.pData);
+
+        // HLSL 기본 row-major와 맞추기 위해 전치
+        dataPtr->Model = ModelConstant.Model;
+        dataPtr->UUID = ModelConstant.UUID;
 
         DeviceContext->Unmap(ModelCB, 0);
         DeviceContext->VSSetConstantBuffers(0, 1, &ModelCB); // b0 슬롯
@@ -416,19 +491,20 @@ void D3D11RHI::RSSetViewport()
 
 void D3D11RHI::OMSetRenderTargets()
 {
-    DeviceContext->OMSetRenderTargets(1, &RenderTargetView, DepthStencilView);
+    ID3D11RenderTargetView* RTVList[]{ RenderTargetView, IdBufferRTV };
+
+    DeviceContext->OMSetRenderTargets(2, RTVList, DepthStencilView);
 }
 
 void D3D11RHI::OMSetBlendState(bool bIsBlendMode)
 {
     if (bIsBlendMode == true)
     {
-        float blendFactor[4] = { 0,0,0,0 };
-        DeviceContext->OMSetBlendState(BlendState, blendFactor, 0xffffffff);
+        DeviceContext->OMSetBlendState(BlendStateTransparent, nullptr, 0xffffffff);
     }
     else
     {
-        DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+        DeviceContext->OMSetBlendState(BlendStateOpaque, nullptr, 0xffffffff);
     }
 }
 
@@ -710,11 +786,8 @@ void D3D11RHI::ReleaseSamplerState()
 
 void D3D11RHI::ReleaseBlendState()
 {
-    if (BlendState)
-    {
-        BlendState->Release();
-        BlendState = nullptr;
-    }
+    if (BlendStateOpaque) { BlendStateOpaque->Release();        BlendStateOpaque = nullptr; }
+    if (BlendStateTransparent) { BlendStateTransparent->Release();  BlendStateTransparent = nullptr; }
 }
 
 void D3D11RHI::ReleaseRasterizerState()
@@ -788,6 +861,25 @@ void D3D11RHI::ReleaseDeviceAndSwapChain()
         Device = nullptr;
     }
 
+}
+
+void D3D11RHI::ReleaseIdBuffer()
+{
+    if (IdBufferRTV)
+    {
+        IdBufferRTV->Release();
+        IdBufferRTV = nullptr;
+    }
+    if (IdStagingBuffer)
+    {
+        IdStagingBuffer->Release();
+        IdStagingBuffer = nullptr;
+    }
+    if (IdBuffer)
+    {
+        IdBuffer->Release();
+        IdBuffer = nullptr;
+    }
 }
 
 void D3D11RHI::OmSetDepthStencilState(EComparisonFunc Func)

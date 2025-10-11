@@ -18,7 +18,7 @@ public:
     SWindow* GetRightOrBottom() const { return SideRB; }
 
     // 분할 비율 (0.0 ~ 1.0)
-    void SetSplitRatio(float Ratio) { SplitRatio = FMath::Clamp(Ratio, 0.1f, 0.9f); }
+    void SetSplitRatio(float Ratio) { SplitRatio = FMath::Clamp(Ratio, 0.01f, 0.99f); }
     float GetSplitRatio() const { return SplitRatio; }
 
     // 드래그 관련
