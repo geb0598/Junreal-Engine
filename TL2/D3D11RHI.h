@@ -5,19 +5,19 @@
 #define DECLARE_CBUFFER(TYPE)\
     ID3D11Buffer* TYPE##uffer{};
 
-#define UPDATE_CBUFFER_FUNC(TYPE)\
+#define DECLARE_CBUFFER_UPDATE_FUNC(TYPE)\
     void UpdateCBuffer(const TYPE& CBufferData) override \
 {\
     CBufferUpdate(TYPE##uffer, CBufferData);\
 }
 
-#define UPDATE_SET_CBUFFER_FUNC(TYPE)\
+#define DECLARE_CBUFFER_UPDATE_SET_FUNC(TYPE)\
     void UpdateSetCBuffer(const TYPE& CBufferData) override\
 {\
     CBufferUpdateSet(TYPE##uffer, CBufferData, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
 }
 
-#define SET_CBUFFER_FUNC(TYPE)\
+#define DECLARE_CBUFFER_SET_FUNC(TYPE)\
     void SetCBuffer(const TYPE& CBufferData) override\
 {\
     CBufferSet(TYPE##uffer, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
@@ -69,9 +69,9 @@ public:
 
     static HRESULT CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mesh, ID3D11Buffer** outBuffer);
 
-    CBUFFER_TYPE_LIST(UPDATE_CBUFFER_FUNC)
-        CBUFFER_TYPE_LIST(UPDATE_SET_CBUFFER_FUNC)
-        CBUFFER_TYPE_LIST(SET_CBUFFER_FUNC)
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
+        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
+        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
 
     void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
     void UpdateViewConstantBuffers( const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) ;

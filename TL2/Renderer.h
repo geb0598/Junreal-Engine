@@ -11,6 +11,25 @@ class UShader;
 class UStaticMesh;
 struct FMaterialSlot;
 
+//여긴 템플릿 써도 되는데 통일성을 위해 매크로로 적용
+#define DECLARE_CBUFFER_UPDATE_FUNC(TYPE)\
+   void UpdateCBuffer(const TYPE& CBufferData)\
+{\
+    RHIDevice->UpdateCBuffer(CBufferData);\
+}
+#define DECLARE_CBUFFER_UPDATE_SET_FUNC(TYPE)\
+void UpdateSetCBuffer(const TYPE& CBufferData)\
+{\
+    RHIDevice->UpdateSetCBuffer(CBufferData);\
+}
+#define DECLARE_CBUFFER_SET_FUNC(TYPE)\
+void SetCBuffer(const TYPE& CBufferData)\
+{\
+    RHIDevice->SetCBuffer(CBufferData);\
+}
+
+
+
 class URenderer
 {
 public:
@@ -36,6 +55,19 @@ public:
     void RSSetNoCullState();
 
     void RSSetDefaultState();
+
+    void UpdateCBuffer(const ModelBufferType& CBufferData)
+    {
+        RHIDevice->UpdateCBuffer(CBufferData);
+    }
+    void UpdateSetCBuffer(const ModelBufferType& CBufferData)
+    {
+        RHIDevice->UpdateCBuffer(CBufferData);
+    }
+    void SetCBuffer(const ModelBufferType& CBufferData)
+    {
+        RHIDevice->UpdateCBuffer(CBufferData);
+    }
 
     void UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix);
 
