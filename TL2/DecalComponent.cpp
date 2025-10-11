@@ -46,12 +46,15 @@ void UDecalComponent::UpdateDecalProjectionMatrix()
     FMatrix OrthoMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
 
     // UV 타일링을 위한 스케일 행렬 생성
-    FMatrix ScaleMatrix = FMatrix::Identity();
-    ScaleMatrix.M[0][0] = UVTiling.X;  // X 스케일
-    ScaleMatrix.M[1][1] = UVTiling.Y;  // Y 스케일
-    ScaleMatrix.M[2][2] = 1.0f;        // Z 스케일
-
-    DecalProjectionMatrix = OrthoMatrix * ScaleMatrix;
+    FMatrix UVScale = FMatrix::Identity();
+    UVScale.M[0][0] =  UVTiling.X;
+    UVScale.M[1][1] =  UVTiling.Y;
+    UVScale.M[2][2] = 1.0f;
+    // 중심 보정 (짝수일 때 반 픽셀 밀림 방지)
+    // 중심 보정 - 타일링된 텍스처를 중앙에 배치
+    UVScale.M[3][0] = -(UVTiling.X - 1.0f) / 2.0f;
+    UVScale.M[3][1] = -(UVTiling.Y - 1.0f) / 2.0f;
+    DecalProjectionMatrix = UVScale*OrthoMatrix ;
 }
 
 void UDecalComponent::TickComponent(float DeltaSeconds)
