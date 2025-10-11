@@ -5,6 +5,7 @@
 #include "../../Actor.h"
 #include "../../InputManager.h"
 #include "../../World.h"
+#include "SelectionManager.h"
 
 //// UE_LOG 대체 매크로
 //#define UE_LOG(fmt, ...)
@@ -29,7 +30,7 @@ void UActorTerminationWidget::Update()
 	// UIManager를 통해 현재 선택된 액터 가져오기
 	if (UIManager)
 	{
-		AActor* CurrentSelectedActor = UIManager->GetSelectedActor();
+		AActor* CurrentSelectedActor = USelectionManager::GetInstance().GetSelectedActor();
 		
 		// Update Current Selected Actor
 		if (SelectedActor != CurrentSelectedActor)
@@ -115,11 +116,13 @@ void UActorTerminationWidget::DeleteSelectedActor()
 	// 즉시 UI 상태 정리
 	SelectedActor = nullptr;
 	CachedActorName = "";
-	UIManager->ResetPickedActor();
+	//UIManager->ResetPickedActor();
 
 	// Transform 위젯의 선택도 해제
 	UIManager->ClearTransformWidgetSelection();
 
+	USelectionManager& SelectionManager = USelectionManager::GetInstance();
+	SelectionManager.DeselectActor(SelectionManager.GetSelectedActor());
 	// 기즈모가 이 액터를 타겟으로 잡고 있다면 해제
 	if (AGizmoActor* Gizmo = UIManager->GetGizmoActor())
 	{

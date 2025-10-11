@@ -20,12 +20,12 @@ public:
 
 	void Initialize() override;
 	void Update() override;
-	void DuplicateTarget() const;
+	void DuplicateTarget(AActor* SelectedActor) const;
 	void RenderWidget() override;
 	void PostProcess() override;
 
 	void UpdateTransformFromActor();
-	void ApplyTransformToActor() const;
+	void ApplyTransformToComponent(USceneComponent* SelectedComponent) const;
 
 	void RenderComponentHierarchy(USceneComponent* SceneComponent) ;
 
@@ -34,8 +34,9 @@ public:
 
 private:
 	UUIManager* UIManager = nullptr;
-	AActor* SelectedActor = nullptr;
-	USceneComponent* SelectedComponent = nullptr;	// 현재 선택된 SceneComponent를 저장할 포인터
+	USelectionManager* SelectionManager = nullptr;
+	//AActor* SelectedActor = nullptr;
+	//USceneComponent* SelectedComponent = nullptr;	// 현재 선택된 SceneComponent를 저장할 포인터
 	FString CachedActorName; // 액터 이름 캐시 (안전한 출력을 위해)
 
 	// Transform UI 상태
@@ -50,6 +51,6 @@ private:
 	bool bUniformScale = false;
 	
 	// 헬퍼 메서드
-	AActor* GetCurrentSelectedActor() const;
+	//AActor* GetCurrentSelectedActor() const;
 	void ResetChangeFlags();
 };

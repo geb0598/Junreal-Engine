@@ -295,7 +295,7 @@ void USceneIOWidget::LoadLevel(const FString& InFilePath)
 
 		// 로드 직전: Transform 위젯/선택 초기화
 		UUIManager::GetInstance().ClearTransformWidgetSelection();
-		UUIManager::GetInstance().ResetPickedActor();
+		//UUIManager::GetInstance().ResetPickedActor();
 
 		// 1) 선택된 파일 경로에서 NextUUID 읽기
 		// Save 포맷상 NextUUID는 "마지막으로 사용된 UUID" → 다음 값으로 쓰려면 +1 필요
@@ -349,7 +349,7 @@ void USceneIOWidget::CreateNewLevel()
 
 		// 로드 직전: Transform 위젯/선택 초기화
 		UUIManager::GetInstance().ClearTransformWidgetSelection();
-		UUIManager::GetInstance().ResetPickedActor();
+		//UUIManager::GetInstance().ResetPickedActor();
 
 		// 새 씬 생성 (이름 입력 없이)
 		CurrentWorld->CreateNewScene();

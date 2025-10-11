@@ -71,9 +71,9 @@ public:
 	AGizmoActor* GetGizmoActor() const { return GizmoActorRef; }
 	void SetCamera(ACameraActor* InCameraActor) { CameraActorRef = InCameraActor; }
 	ACameraActor* GetCamera() const { return CameraActorRef; }
-	void SetPickedActor(AActor* InPickedActor);
+	/*void SetPickedActor(AActor* InPickedActor);
 	AActor* GetPickedActor() const { return PickedActorRef; }
-	void ResetPickedActor();
+	void ResetPickedActor();*/
 	
 	// Selection management helper
 	AActor* GetSelectedActor() const;
@@ -115,7 +115,7 @@ private:
 	// Actor references
 	AGizmoActor* GizmoActorRef = nullptr;
 	ACameraActor* CameraActorRef = nullptr;
-	AActor* PickedActorRef = nullptr;
+	//AActor* PickedActorRef = nullptr;
 	
 	// Camera rotation state
 	FVector TempCameraRotation = {0.0f, 0.0f, 0.0f};

@@ -1,5 +1,13 @@
+//UUID만 필요하지만 기존 버퍼와 함수 재사용하기 위해서 모델버퍼 받아옴
+cbuffer ModelBuffer : register(b0)
+{
+    row_major float4x4 WorldMatrix;
+    uint UUID;
+    float3 Padding;
+}
+
 // C++에서 상수 버퍼를 통해 전달될 데이터
-cbuffer CameraInfo : register(b0)
+cbuffer CameraInfo : register(b2)
 {
     float3 textWorldPos;
     row_major matrix viewMatrix;
@@ -52,7 +60,7 @@ PS_INPUT mainVS(VS_INPUT input)
     float u = input.uvRect.x + ((corner == 1 || corner == 3) ? input.uvRect.z : 0.0f);
     float v = input.uvRect.y + ((corner == 2 || corner == 3) ? input.uvRect.w : 0.0f);
     output.tex = float2(u, v);
-    output.UUID = 0;
+    output.UUID = UUID;
     return output;
 }
 

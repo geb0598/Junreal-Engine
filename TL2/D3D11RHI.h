@@ -86,8 +86,6 @@ public:
 
     void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) override;
 
-    void OnResize(UINT NewWidth, UINT NewHeight);
-
     void CreateBackBufferAndDepthStencil(UINT width, UINT height);
 
     void SetViewport(UINT width, UINT height);
@@ -163,7 +161,7 @@ private:
         CBufferDesc.ByteWidth = (Size + 15) & ~15;
         CBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         CBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        Device->CreateBuffer(&CBufferDesc, nullptr, &CBuffer);
+        Device->CreateBuffer(&CBufferDesc, nullptr, CBuffer);
     }
 
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다

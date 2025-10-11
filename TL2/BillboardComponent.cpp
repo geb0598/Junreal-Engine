@@ -117,7 +117,10 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     FVector BillboardPos = GetWorldLocation();
 
     // 상수 버퍼 업데이트
-    Renderer->UpdateSetCBuffer(BillboardBufferType({ BillboardPos, View, Proj, View.InverseAffine()}));
+    ////UUID만 필요하지만 기존 버퍼와 함수 재사용하기 위해서 모델버퍼 받아옴
+    Renderer->UpdateSetCBuffer(ModelBufferType(FMatrix(), this->InternalIndex));
+    Renderer->UpdateSetCBuffer(ViewProjBufferType( FMatrix(), FMatrix()));
+    Renderer->UpdateSetCBuffer(BillboardBufferType(BillboardPos, View, Proj));
 
     // 셰이더 준비
     Renderer->PrepareShader(Material->GetShader());

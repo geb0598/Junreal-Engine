@@ -369,6 +369,8 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
 
     // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
+    // +-+-+ Collect +-+-+
+    TArray<UDecalComponent*> DecalsToRender;
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
     {
         for (AActor* Actor : LevelActors)
@@ -388,51 +390,58 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
             for (UActorComponent* Component : Actor->GetComponents())
             {
-                if (!Component)
+                if (!Component || !Component->IsActive())
                 {
                     continue;
                 }
 
-                if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
+                UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
+                if (DecalComp && Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
                 {
-                    if (!DecalComp->IsActive())
-                    {
-                        continue;
-                    }
-
-                    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-                    {
-                        const FOBB WorldOBB = DecalComp->GetWorldOBB();
-                        const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
-                        int WireLineSize = WireLine.Num();
-                        for (int i = 0; i < WireLineSize; i += 2)
-                        {
-                            Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
-                        }
-                    }
-
-                    const FOBB DecalOBB = DecalComp->GetWorldOBB();
-                    TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
-                    for (auto VisiblePrimitive : VisiblePrimitives)
-                    {
-                        if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
-                        {
-                            if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
-                            {
-                                StaticMeshCompsInDecal.Push(StaticMeshComp);
-                            }
-                        }
-
-                    }
-
-                    for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
-                    {
-                        bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
-                        Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
-                        DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
-                    }
+                    DecalsToRender.Add(DecalComp);
                 }
             }
+        }
+    }
+
+    // +-+-+ Sort +-+-+
+    DecalsToRender.Sort([](const UDecalComponent* A, const UDecalComponent* B)
+    {
+        return A->GetSortOrder() < B->GetSortOrder();
+    });
+
+    // +-+-+ Render +-+-+
+    for (UDecalComponent* DecalComp : DecalsToRender)
+    {
+        if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+        {
+            const FOBB WorldOBB = DecalComp->GetWorldOBB();
+            const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
+            int WireLineSize = WireLine.Num();
+            for (int i = 0; i < WireLineSize; i += 2)
+            {
+                Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
+            }
+        }
+
+        const FOBB DecalOBB = DecalComp->GetWorldOBB();
+        TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
+        for (auto VisiblePrimitive : VisiblePrimitives)
+        {
+            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
+            {
+                if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
+                {
+                    StaticMeshCompsInDecal.Push(StaticMeshComp);
+                }
+            }
+        }
+
+        for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
+        {
+            bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
+            Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+            DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
         }
     }
 
@@ -552,13 +561,13 @@ bool UWorld::DestroyActor(AActor* Actor)
     }
 
     // SelectionManager에서 선택 해제 (메모리 해제 전에 하자)
-    USelectionManager::GetInstance().DeselectActor(Actor);
+    SelectionManager.DeselectActor(Actor);
 
     // UIManager에서 픽된 액터 정리
-    if (UIManager.GetPickedActor() == Actor)
+   /* if (UIManager.GetPickedActor() == Actor)
     {
         UIManager.ResetPickedActor();
-    }
+    }*/
 
     // 배열에서  제거 시도
     // Level에서 제거 시도
@@ -569,7 +578,7 @@ bool UWorld::DestroyActor(AActor* Actor)
         // 메모리 해제
         ObjectFactory::DeleteObject(Actor);
         // 삭제된 액터 정리
-        USelectionManager::GetInstance().CleanupInvalidActors();
+        SelectionManager.CleanupInvalidActors();
 
         return true; // 성공적으로 삭제
     }
@@ -612,7 +621,7 @@ void UWorld::CreateNewScene()
 {
     // Safety: clear interactions that may hold stale pointers
     SelectionManager.ClearSelection();
-    UIManager.ResetPickedActor();
+   // UIManager.ResetPickedActor();
     // Level의 Actors 정리
     if (Level)
     {

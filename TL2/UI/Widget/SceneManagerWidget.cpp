@@ -434,7 +434,7 @@ void USceneManagerWidget::HandleActorSelection(AActor* Actor)
     // Sync with UIManager for gizmo positioning
     if (UIManager)
     {
-        UIManager->SetPickedActor(Actor);
+       // UIManager->SetPickedActor(Actor);
         
         // If there's a gizmo actor, position it at the selected actor
         if (UIManager->GetGizmoActor() && Actor)
@@ -698,10 +698,10 @@ void USceneManagerWidget::SyncSelectionFromViewport()
     if (!SelectedActor)
     {
         // 선택된 액터가 null이면 UI를 업데이트
-        if (UIManager)
+       /* if (UIManager)
         {
-            UIManager->ResetPickedActor();
-        }
+           UIManager->ResetPickedActor();
+        }*/
     }
 }
 

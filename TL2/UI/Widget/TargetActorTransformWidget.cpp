@@ -80,6 +80,7 @@ static TArray<FString> GetIconFiles()
 UTargetActorTransformWidget::UTargetActorTransformWidget()
 	: UWidget("Target Actor Transform Widget")
 	, UIManager(&UUIManager::GetInstance())
+	, SelectionManager(&USelectionManager::GetInstance())
 {
 
 }
@@ -89,8 +90,8 @@ UTargetActorTransformWidget::~UTargetActorTransformWidget() = default;
 void UTargetActorTransformWidget::OnSelectedActorCleared()
 {
 	// 즉시 내부 캐시/플래그 정리
-	SelectedActor = nullptr;
-	CachedActorName.clear();
+	//SelectedActor = nullptr;
+	//CachedActorName.clear();
 	ResetChangeFlags();
 }
 
@@ -106,13 +107,13 @@ void UTargetActorTransformWidget::Initialize()
 	}
 }
 
-AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
-{
-	if (!UIManager)
-		return nullptr;
-
-	return UIManager->GetSelectedActor();
-}
+//AActor* UTargetActorTransformWidget::GetCurrentSelectedActor() const
+//{
+//	if (!UIManager)
+//		return nullptr;
+//
+//	return UIManager->GetSelectedActor();
+//}
 
 void UTargetActorTransformWidget::Update()
 {
@@ -158,7 +159,7 @@ void UTargetActorTransformWidget::Update()
 /**
  * @brief Actor 복제 테스트 함수
  */
-void UTargetActorTransformWidget::DuplicateTarget() const
+void UTargetActorTransformWidget::DuplicateTarget(AActor* SelectedActor) const
 {
 	if (SelectedActor)
 	{
@@ -176,6 +177,8 @@ void UTargetActorTransformWidget::DuplicateTarget() const
 
 void UTargetActorTransformWidget::RenderWidget()
 {
+	AActor* SelectedActor = SelectionManager->GetSelectedActor();
+	USceneComponent* SelectedComponent = SelectionManager->GetSelectedComponent();
 	if (SelectedActor)
 	{
 		// 액터 이름 표시 (캐시된 이름 사용)
@@ -205,17 +208,27 @@ void UTargetActorTransformWidget::RenderWidget()
 
 			if (ImGui::Button("-삭제"))
 			{
-				// 컴포넌트 삭제 시 상위 컴포넌트로 선택되도록 설정
-				USceneComponent* ParentComponent = SelectedComponent->GetAttachParent();
-				if (SelectedActor->DeleteComponent(SelectedComponent))
+				if (SelectedActor && SelectedComponent == SelectedActor->GetRootComponent())
 				{
-					if (ParentComponent)
+					UE_LOG("루트 컴포넌트는 UI에서 직접 삭제할 수 없습니다.");
+				}
+				else
+				{
+					USceneComponent* ParentComponent = SelectedComponent->GetAttachParent();
+					USelectionManager::GetInstance().ClearSelection();
+
+					if (SelectedActor->DeleteComponent(SelectedComponent))
 					{
-						SelectedComponent = ParentComponent;
-					}
-					else
-					{
-						SelectedComponent = SelectedActor->GetRootComponent();
+						if (ParentComponent)
+						{
+							USelectionManager::GetInstance().SelectComponent(ParentComponent);
+							SelectedComponent = ParentComponent;
+						}
+						else
+						{
+							// 컴포넌트 삭제 시 상위 컴포넌트로 선택되도록 설정
+							SelectedComponent = SelectedActor->GetRootComponent();
+						}
 					}
 				}
 			}
@@ -309,23 +322,23 @@ void UTargetActorTransformWidget::RenderWidget()
 
 		ImGui::Spacing();
 
-		// 실시간 적용 버튼
-		if (ImGui::Button("Apply Transform"))
-		{
-			ApplyTransformToActor();
-		}
+		//// 실시간 적용 버튼
+		//if (ImGui::Button("Apply Transform"))
+		//{
+		//	ApplyTransformToActor();
+		//}
 
-		ImGui::SameLine();
-		if (ImGui::Button("Reset Transform"))
-		{
-			UpdateTransformFromActor();
-			ResetChangeFlags();
-		}
+		//ImGui::SameLine();
+		//if (ImGui::Button("Reset Transform"))
+		//{
+		//	UpdateTransformFromActor();
+		//	ResetChangeFlags();
+		//}
 		
 		// TODO(KHJ): 테스트용, 완료 후 지울 것
 		if (ImGui::Button("Duplicate Test Button"))
 		{
-			DuplicateTarget();
+			DuplicateTarget(SelectedActor);
 		}
 		
 		ImGui::Spacing();
@@ -710,6 +723,14 @@ void UTargetActorTransformWidget::RenderWidget()
 
 				ImGui::Separator();
 
+				int32 SortOrder = DecalComponent->GetSortOrder();
+				if (ImGui::DragInt("Sort Order", &SortOrder));
+				{
+					DecalComponent->SetSortOrder(SortOrder);
+				}
+
+				ImGui::Separator();
+
 				// Decal Fade In/Out
 				float FadeScreenSize = DecalComponent->GetFadeScreenSize();
 				if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.01f, 0.0f, 100.0f))
@@ -773,10 +794,12 @@ void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* Scen
 		return;
 	}
 
-	if (!SelectedActor || !SelectedComponent)
+	/*if (!SelectedActor || !SelectedComponent)
 	{
 		return;
-	}
+	}*/
+	AActor* SelectedActor = SelectionManager->GetSelectedActor();
+	USceneComponent* SelectedComponent = SelectionManager->GetSelectedComponent();
 
 	const bool bIsRootComponent = SelectedActor->GetRootComponent() == SceneComponent;
 	const FString ComponentName = SceneComponent->GetName() + (bIsRootComponent ? " (Root)" : "");
@@ -829,18 +852,15 @@ void UTargetActorTransformWidget::PostProcess()
 	// 자동 적용이 활성화된 경우 변경사항을 즉시 적용
 	if (bPositionChanged || bRotationChanged || bScaleChanged)
 	{
-		ApplyTransformToActor();
+		ApplyTransformToComponent(SelectionManager->GetSelectedComponent());
 		ResetChangeFlags(); // 적용 후 플래그 리셋
 	}
 }
 
 void UTargetActorTransformWidget::UpdateTransformFromActor()
 {
-	USelectionManager& SelectionManager = USelectionManager::GetInstance();
-	SelectedActor = SelectionManager.GetSelectedActor();
-	SelectedComponent = SelectionManager.GetSelectedComponent();
-	if (!SelectedActor)
-		return;
+	
+	USceneComponent* SelectedComponent = SelectionManager->GetSelectedComponent();
 
 	if (SelectedComponent)
 	{
@@ -858,9 +878,9 @@ void UTargetActorTransformWidget::UpdateTransformFromActor()
 	ResetChangeFlags();
 }
 
-void UTargetActorTransformWidget::ApplyTransformToActor() const
+void UTargetActorTransformWidget::ApplyTransformToComponent(USceneComponent* SelectedComponent) const
 {
-	if (!SelectedActor || !SelectedComponent)
+	if (!SelectedComponent)
 		return;
 	 
 	// 변경사항이 있는 경우에만 적용
@@ -885,9 +905,8 @@ void UTargetActorTransformWidget::ApplyTransformToActor() const
 		UE_LOG("Transform: Applied scale (%.2f, %.2f, %.2f)",
 			EditScale.X, EditScale.Y, EditScale.Z);
 	}
-
-	// 플래그 리셋은 const 메서드에서 할 수 없으므로 PostProcess에서 처리
 }
+
 
 void UTargetActorTransformWidget::ResetChangeFlags()
 {

@@ -222,19 +222,18 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         if (ComponentPicked)
         {
             USelectionManager::GetInstance().SelectComponent(ComponentPicked);
-            UUIManager::GetInstance().SetPickedActor(ComponentPicked->GetOwner());
+           // UUIManager::GetInstance().SetPickedActor(ComponentPicked->GetOwner());
             AGizmoActor* GizmoActor = World->GetGizmoActor();
            
 
             if (GizmoActor)
             {
                 GizmoActor->SetTargetActor(ComponentPicked->GetOwner());
-                GizmoActor->SetActorLocation(ComponentPicked->GetOwner()->GetActorLocation());
             }
         }
         else
         {
-            UUIManager::GetInstance().ResetPickedActor();
+           // UUIManager::GetInstance().ResetPickedActor();
             // Clear selection if nothing was picked
             USelectionManager::GetInstance().ClearSelection();
         }

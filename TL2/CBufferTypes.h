@@ -49,7 +49,7 @@ MACRO(DecalAlphaBufferType)					\
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, false)
-CBUFFER_INFO(BillboardBufferType, 0, true, false)
+CBUFFER_INFO(BillboardBufferType, 2, true, false)
 CBUFFER_INFO(FPixelConstBufferType, 4, false, true)
 CBUFFER_INFO(HighLightBufferType, 2, true, true)
 CBUFFER_INFO(ColorBufferType, 3, false, true)
