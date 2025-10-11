@@ -10,6 +10,7 @@ cbuffer ModelBuffer : register(b0)
 cbuffer CameraInfo : register(b2)
 {
     float3 textWorldPos;
+    float padding;
     row_major matrix viewMatrix;
     row_major matrix projectionMatrix;
     row_major matrix viewInverse;

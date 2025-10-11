@@ -81,10 +81,11 @@ struct ViewProjBufferType
     FMatrix Proj;
 };
 
-//VS : b0
+//VS : b2
 struct BillboardBufferType
 {
     FVector pos;
+    float padding;
     FMatrix View;
     FMatrix Proj;
     FMatrix InverseViewMat;

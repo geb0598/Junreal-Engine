@@ -168,7 +168,6 @@
     <ClCompile Include="BoundingVolume.cpp" />
     <ClCompile Include="BoundingVolumeHierarchy.cpp" />
     <ClCompile Include="BVH.cpp" />
-    <ClCompile Include="CBufferTypes.cpp" />
     <ClCompile Include="DecalActor.cpp" />
     <ClCompile Include="DecalComponent.cpp" />
     <ClCompile Include="DecalComponentScreen.cpp">
