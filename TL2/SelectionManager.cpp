@@ -41,17 +41,19 @@ void USelectionManager::SelectComponent(USceneComponent* Component)
 {
     if (!Component)
     {
+
         return;
     }
     AActor* SelectedActor = Component->GetOwner();
-    //이미 엑터가 피킹되어 있는 상황, 어느 컴포넌트든 선택 가능
+    //이미 컴포넌트의 오너 엑터가 피킹되어 있는 상황, 어느 컴포넌트든 선택 가능
     if (IsActorSelected(SelectedActor))
     {
         SelectedComponent = Component;
     }
-    //엑터가 선택 안돼있음, 루트 컴포넌트 피킹
+    //오너 엑터가 선택 안돼있음, 루트 컴포넌트 피킹
     else
     {
+        ClearSelection();
         SelectedActors.Add(SelectedActor);
         SelectedComponent = SelectedActor->GetRootComponent();
     }
