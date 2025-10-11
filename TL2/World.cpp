@@ -369,65 +369,68 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
 
     // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
-    for (AActor* Actor : LevelActors)
+    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
     {
-        if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+        for (AActor* Actor : LevelActors)
         {
-            continue;
-        }
-        if (!Actor)
-        {
-            continue;
-        }
-        if (Actor->GetActorHiddenInGame())
-        {
-            continue;
-        }
-
-        for (UActorComponent* Component : Actor->GetComponents())
-        {
-            if (!Component)
+            if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+            {
+                continue;
+            }
+            if (!Actor)
+            {
+                continue;
+            }
+            if (Actor->GetActorHiddenInGame())
             {
                 continue;
             }
 
-            if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
+            for (UActorComponent* Component : Actor->GetComponents())
             {
-                if (!DecalComp->IsActive())
+                if (!Component)
                 {
                     continue;
                 }
 
-                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                if (UDecalComponent* DecalComp = Cast<UDecalComponent>(Component))
                 {
-                    const FOBB WorldOBB = DecalComp->GetWorldOBB();
-                    const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
-                    int WireLineSize = WireLine.Num();
-                    for (int i = 0; i < WireLineSize; i += 2)
+                    if (!DecalComp->IsActive())
                     {
-                        Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
+                        continue;
                     }
-                }
 
-                const FOBB DecalOBB = DecalComp->GetWorldOBB();
-                TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
-                for (auto VisiblePrimitive : VisiblePrimitives)
-                {
-                    if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
+                    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                     {
-                        if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
+                        const FOBB WorldOBB = DecalComp->GetWorldOBB();
+                        const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
+                        int WireLineSize = WireLine.Num();
+                        for (int i = 0; i < WireLineSize; i += 2)
                         {
-                            StaticMeshCompsInDecal.Push(StaticMeshComp);
+                            Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
                         }
                     }
-                    
-                }
 
-                for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
-                {
-                    bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
-                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
-                    DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
+                    const FOBB DecalOBB = DecalComp->GetWorldOBB();
+                    TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
+                    for (auto VisiblePrimitive : VisiblePrimitives)
+                    {
+                        if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
+                        {
+                            if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
+                            {
+                                StaticMeshCompsInDecal.Push(StaticMeshComp);
+                            }
+                        }
+
+                    }
+
+                    for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
+                    {
+                        bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
+                        Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                        DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
+                    }
                 }
             }
         }

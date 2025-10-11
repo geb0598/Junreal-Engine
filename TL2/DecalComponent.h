@@ -15,10 +15,6 @@ public:
     void TickComponent(float DeltaSeconds) override;
     void Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj, FViewport* Viewport) ;
 
-    // 데칼 크기 설정 (박스 볼륨의 크기)
-    void SetDecalSize(const FVector& InSize);
-    FVector GetDecalSize() const { return DecalSize; }
-
     // UV 타일링 설정
     void SetUVTiling(const FVector2D& InTiling) { UVTiling = InTiling; UpdateDecalProjectionMatrix(); }
     FVector2D GetUVTiling() const { return UVTiling; }
@@ -58,7 +54,6 @@ protected:
 
     // 데칼 크기
     FString TexturePath;
-    FVector DecalSize = FVector(1.0f, 1.0f, 1.0f);
 
     // UV 타일링
     FVector2D UVTiling = FVector2D(2.0f, 2.0f);
