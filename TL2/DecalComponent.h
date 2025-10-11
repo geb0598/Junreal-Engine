@@ -86,7 +86,7 @@ private:
     
     int32 SortOrder = 0;
     float FadeScreenSize = 0.01f;
-    float FadeStartDelay = 30.0f;
+    float FadeStartDelay = 10.0f;
     float FadeDuration = 10.0f;
     float FadeInStartDelay = 10.0f;
     float FadeInDuration = 10.0f;

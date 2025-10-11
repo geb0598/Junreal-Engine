@@ -58,6 +58,9 @@ void UDecalComponent::TickComponent(float DeltaSeconds)
 {
     LifetimeTimer += DeltaSeconds;
 
+    const float FadeInEndTime = FadeInStartDelay + FadeInDuration;
+    const float FadeOutStartTime = FadeInEndTime + FadeStartDelay;
+
     float FadeInAlpha = 1.0f;
     if (FadeInDuration > 0.0f)
     {
@@ -68,7 +71,7 @@ void UDecalComponent::TickComponent(float DeltaSeconds)
     float FadeOutAlpha = 1.0f;
     if (FadeDuration > 0.0f)
     {
-        float FadeOutProgress = (LifetimeTimer - FadeStartDelay) / FadeDuration;
+        float FadeOutProgress = (LifetimeTimer - FadeOutStartTime) / FadeDuration;
         FadeOutAlpha = 1.0f - std::max(0.0f, std::min(1.0f, FadeOutProgress));
     }
 
