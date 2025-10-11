@@ -421,9 +421,8 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             }
 
             UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
-            if (DecalComp)
+            if (DecalComp && Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
             {
-
                 TArray<AActor*> ActorsInDecal;
                 for (auto VisibleActor : VisibleActors)
                 {
