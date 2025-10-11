@@ -717,7 +717,7 @@ void UTargetActorTransformWidget::RenderWidget()
 
 				// Decal Fade In/Out
 				float FadeScreenSize = DecalComponent->GetFadeScreenSize();
-				if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.001f, -1.0f, 1.0f));
+				if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.01f, 0.0f, 100.0f))
 				{
 					DecalComponent->SetFadeScreenSize(FadeScreenSize);
 				}
