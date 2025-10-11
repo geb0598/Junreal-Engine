@@ -20,6 +20,13 @@ struct PS_INPUT
 {
     float4 pos_screenspace : SV_POSITION;
     float2 tex : TEXCOORD0;
+    uint UUID : UUID;
+};
+
+struct PS_OUTPUT
+{
+    float4 Color : SV_Target0;
+    uint UUID : SV_Target1;
 };
 
 Texture2D fontAtlas : register(t0);
@@ -45,15 +52,18 @@ PS_INPUT mainVS(VS_INPUT input)
     float u = input.uvRect.x + ((corner == 1 || corner == 3) ? input.uvRect.z : 0.0f);
     float v = input.uvRect.y + ((corner == 2 || corner == 3) ? input.uvRect.w : 0.0f);
     output.tex = float2(u, v);
-
+    output.UUID = 0;
     return output;
 }
 
-float4 mainPS(PS_INPUT input) : SV_Target
+PS_OUTPUT mainPS(PS_INPUT input) : SV_Target
 {
+    PS_OUTPUT Result;
     float4 color = fontAtlas.Sample(linearSampler, input.tex);
 
     clip(color.a - 0.5f); // alpha - 0.5f < 0 이면 해당픽셀 렌더링 중단
 
-    return color;
+    Result.Color = color;
+    Result.UUID = input.UUID;
+    return Result;
 }

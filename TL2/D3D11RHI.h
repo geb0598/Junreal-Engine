@@ -43,9 +43,10 @@ public:
 
 
 
-    void UpdateConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
+    void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
     void UpdateViewConstantBuffers( const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) ;
     void UpdateModelConstantBuffers(const FMatrix& ModelMatrix) ;
+    void UpdateModelConstantBuffers(const ModelBufferType& ModelConstant);
     void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp) override;
     void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture) override;
     void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
@@ -96,6 +97,14 @@ public:
     {
         return DepthSRV;
     }
+    inline ID3D11Texture2D* GetIdBuffer()
+    {
+        return IdBuffer;
+    }
+    inline ID3D11Texture2D* GetIdStagingBuffer()
+    {
+        return IdStagingBuffer;
+    }
 
 private:
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다
@@ -104,6 +113,7 @@ private:
     void CreateConstantBuffer() override;
     void CreateDepthStencilState() override;
 	void CreateSamplerState();
+    void CreateIdBuffer();
 
     // release
 	void ReleaseSamplerState();
@@ -111,6 +121,7 @@ private:
     void ReleaseRasterizerState(); // rs
     void ReleaseFrameBuffer(); // fb, rtv
     void ReleaseDeviceAndSwapChain();
+    void ReleaseIdBuffer();
  
 	void OmSetDepthStencilState(EComparisonFunc Func) override;
     
@@ -136,12 +147,20 @@ private:
     ID3D11DepthStencilState* DepthStencilStateDisable = nullptr;              // 깊이 테스트/쓰기 모두 끔
     ID3D11DepthStencilState* DepthStencilStateGreaterEqualWrite = nullptr;   // 선택사항
 
-    ID3D11BlendState* BlendState{};
+    ID3D11BlendState* BlendStateOpaque{};
+    ID3D11BlendState* BlendStateTransparent{};
 
     ID3D11Texture2D* FrameBuffer{};//
+    ID3D11Texture2D* IdBuffer = nullptr;
+    ID3D11Texture2D* IdStagingBuffer = nullptr;
+
+    ID3D11RenderTargetView* IdBufferRTV = nullptr;
     ID3D11RenderTargetView* RenderTargetView{};//
+
     ID3D11DepthStencilView* DepthStencilView{};//
     ID3D11ShaderResourceView* DepthSRV{}; // Depth buffer를 셰이더에서 읽기 위한 SRV
+
+
 
     // 버퍼 핸들
     ID3D11Buffer* ModelCB{};

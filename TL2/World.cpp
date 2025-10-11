@@ -508,6 +508,7 @@ void UWorld::RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& Projec
 
 void UWorld::Tick(float DeltaSeconds)
 {
+    Renderer->Update(DeltaSeconds);
     // Level의 Actors Tick
     if (Level)
     {

@@ -204,7 +204,7 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
     // X, Y are already local coordinates within the viewport, convert to global coordinates for picking
     FVector2D ViewportMousePos(static_cast<float>(X) + ViewportOffset.X,
                                static_cast<float>(Y) + ViewportOffset.Y);
-    AActor* PickedActor = nullptr;
+  
     TArray<AActor*> AllActors = World->GetActors();
     AGizmoActor* GizmoActor = World->GetGizmoActor();
     if (Button == 0)
@@ -217,20 +217,19 @@ void FViewportClient::MouseButtonDown(FViewport* Viewport, int32 X, int32 Y, int
         {
             return;
         }
-        PickedActor = CPickingSystem::PerformGlobalBVHPicking(
-            AllActors, Camera, ViewportMousePos, ViewportSize, ViewportOffset, PickingAspectRatio,
-            Viewport);
+        UPrimitiveComponent* ComponentPicked = GEngine->GetWorld()->GetRenderer()->GetCollidedPrimitive(ViewportMousePos.X, ViewportMousePos.Y);
 
-
-        if (PickedActor)
+        if (ComponentPicked)
         {
-            USelectionManager::GetInstance().SelectActor(PickedActor);
-            UUIManager::GetInstance().SetPickedActor(PickedActor);
+            USelectionManager::GetInstance().SelectComponent(ComponentPicked);
+            UUIManager::GetInstance().SetPickedActor(ComponentPicked->GetOwner());
             AGizmoActor* GizmoActor = World->GetGizmoActor();
+           
+
             if (GizmoActor)
             {
-                GizmoActor->SetTargetActor(PickedActor);
-                GizmoActor->SetActorLocation(PickedActor->GetActorLocation());
+                GizmoActor->SetTargetActor(ComponentPicked->GetOwner());
+                GizmoActor->SetActorLocation(ComponentPicked->GetOwner()->GetActorLocation());
             }
         }
         else

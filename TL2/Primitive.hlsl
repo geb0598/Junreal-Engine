@@ -48,7 +48,7 @@ PS_INPUT mainVS(VS_INPUT input)
     
     float4x4 MVP = mul(mul(WorldMatrix, ViewMatrix), ProjectionMatrix);
     
-    output.position = mul(float4(input.position, 1.0f), MVP);    
+    output.position = mul(float4(input.position, 1.0f), MVP);
     
     
     // change color
@@ -70,9 +70,9 @@ PS_INPUT mainVS(VS_INPUT input)
       //  c.a = 0.5;
     }
     
-    if(GIzmo == 1)
+    if (GIzmo == 1)
     {
-        if(Y == 1)
+        if (Y == 1)
         {
             c = float4(1.0, 1.0, 0.0, c.a); // Yellow
         }

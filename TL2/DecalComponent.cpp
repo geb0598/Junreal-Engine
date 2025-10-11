@@ -95,6 +95,10 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
         return;
     }
     UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
+    if (!StaticMesh)
+    {
+        return;
+    }
     
     float LifeTimeAlpha = CurrentAlpha;
     float ScreenFadeAlpha = 1.0f;

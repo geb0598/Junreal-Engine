@@ -1,6 +1,8 @@
 cbuffer ModelBuffer : register(b0)
 {
     row_major float4x4 WorldMatrix;
+    uint UUID;
+    float3 Padding;
 }
 
 cbuffer ViewProjBuffer : register(b1)
@@ -21,6 +23,13 @@ struct PS_INPUT
 {
     float4 PosScreenspace : SV_POSITION;
     float2 Tex : TEXCOORD0;
+    uint UUID : UUID;
+};
+
+struct PS_OUTPUT
+{
+    float4 Color : SV_Target0;
+    uint UUID : SV_Target1;
 };
 
 Texture2D FontAtlas : register(t0);
@@ -36,12 +45,13 @@ PS_INPUT mainVS(VS_INPUT Input)
     Output.PosScreenspace = mul(float4(Input.CenterPos, 1.0f), MVP);
     
     Output.Tex = Input.UVRect.xy; // UV는 C++에서 계산했으므로 그대로 전달
-        
+    Output.UUID = UUID;
     return Output;
 }
 
-float4 mainPS(PS_INPUT Input) : SV_Target
+PS_OUTPUT mainPS(PS_INPUT Input) : SV_Target
 {
+    PS_OUTPUT Result;
     float4 Color = FontAtlas.Sample(LinearSampler, Input.Tex);
 
     // alpha - 0.5f < 0 이면 해당픽셀 렌더링 중단
@@ -50,5 +60,7 @@ float4 mainPS(PS_INPUT Input) : SV_Target
         discard;
     }
 
-    return Color;
+    Result.Color = Color;
+    Result.UUID = Input.UUID;
+    return Result;
 }

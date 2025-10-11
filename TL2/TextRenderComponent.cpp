@@ -138,7 +138,7 @@ void UTextRenderComponent::Render(URenderer* InRenderer, const FMatrix& InView, 
 	}
 
 	// 일반 씬 컴포넌트처럼 월드 행렬로 트랜스폼 지정
-	InRenderer->UpdateConstantBuffer(GetWorldMatrix(), InView, InProj);
+	InRenderer->UpdateConstantBuffer(ModelBufferType(GetWorldMatrix(),this->InternalIndex) , InView, InProj);
 
 	InRenderer->PrepareShader(Material->GetShader());
 
