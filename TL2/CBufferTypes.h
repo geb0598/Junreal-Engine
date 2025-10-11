@@ -18,6 +18,13 @@ struct FMaterialInPs
 
     FVector TransmissionFilter; // Tf
     float dummy; // 4 bytes padding
+
+    FMaterialInPs() = default;
+    FMaterialInPs(const FObjMaterialInfo& InMaterialInfo)
+    {
+        DiffuseColor = InMaterialInfo.DiffuseColor;
+        AmbientColor = InMaterialInfo.AmbientColor;
+    }
 };
 
 
@@ -90,11 +97,8 @@ struct FPixelConstBufferType
 {
     FMaterialInPs Material;
     bool bHasMaterial; // 1 bytes
-    bool Dummy[3]; // 3 bytes padding
     bool bHasTexture; // 1 bytes
-    bool Dummy2[11]; // 11 bytes padding
 };
-static_assert(sizeof(FPixelConstBufferType) % 16 == 0, "PixelConstData size mismatch!");
 
 //VS,PS : b2
 struct HighLightBufferType

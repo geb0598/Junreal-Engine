@@ -229,8 +229,6 @@ HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mes
 
     return device->CreateBuffer(&ibd, &iinitData, outBuffer);
 }
-
-
 void D3D11RHI::IASetPrimitiveTopology()
 {
     DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -418,7 +416,6 @@ void D3D11RHI::CreateConstantBuffer()
 {
     CBUFFER_TYPE_LIST(CREATE_CBUFFER)
 }
-
 
 void D3D11RHI::ReleaseSamplerState()
 {

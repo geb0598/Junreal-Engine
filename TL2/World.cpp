@@ -351,7 +351,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
                 {
                     VisiblePrimitives.Push(Primitive);
-                    Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                    Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
                     Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
                 }
 
@@ -428,7 +428,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
                     {
                         bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
-                        Renderer->UpdateHighLightConstantBuffer(bIsSelected, rgb, 0, 0, 0, 0);
+                        Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
                         DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
                     }
                 }

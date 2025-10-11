@@ -129,12 +129,13 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
 
     // 상수 버퍼 업데이트
     //MeshWorldMatrix = 데칼을 투영할 Component의 WorldMatrix
-    Renderer->UpdateConstantBuffer(MeshWorldMatrix, View, Proj);
+    Renderer->UpdateSetCBuffer(ModelBufferType({ MeshWorldMatrix }));
+    Renderer->UpdateSetCBuffer(ViewProjBufferType({ View, Proj }));
     //DecalWorldMatrix = 데칼의 원본 월드 행렬
     //DecalWorldMatrixInverse = 데칼의 역 월드 행렬
     //DecalProjectionMatrix = 데칼 투영 행렬
-    Renderer->UpdateInvWorldBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
-    Renderer->UpdateDecalBuffer(FinalAlpha);
+    Renderer->UpdateSetCBuffer(DecalMatrixCB({ DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix }));
+    Renderer->UpdateSetCBuffer(DecalAlphaBufferType({ FinalAlpha }));
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());

@@ -117,7 +117,7 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     FVector BillboardPos = GetWorldLocation();
 
     // 상수 버퍼 업데이트
-    Renderer->UpdateBillboardConstantBuffers(BillboardPos, View, Proj, CamRight, CamUp);
+    Renderer->UpdateSetCBuffer(BillboardBufferType({ BillboardPos, View, Proj, View.InverseAffine()}));
 
     // 셰이더 준비
     Renderer->PrepareShader(Material->GetShader());

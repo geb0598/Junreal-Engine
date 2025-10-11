@@ -170,7 +170,7 @@ TArray<USceneComponent*>* Components = GetGizmoComponents();
 
 
 
-	for (int32 i = 0; i < Components->Num(); ++i)
+	for (uint32 i = 0; i < Components->Num(); ++i)
 	{
 		USceneComponent* Component = (*Components)[i];
 		if (!Component) continue;
@@ -181,16 +181,17 @@ TArray<USceneComponent*>* Components = GetGizmoComponents();
 		}
 
 		ModelMatrix = Component->GetWorldMatrix();
-		Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+		Renderer->UpdateSetCBuffer(ModelBufferType{ ModelMatrix });
+		Renderer->UpdateSetCBuffer(ViewProjBufferType{ ViewMatrix, ProjectionMatrix });
 
 		
 			if (GizmoAxis== i + 1)
 			{
-				Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+				Renderer->UpdateSetCBuffer(HighLightBufferType{ true, rgb, i + 1, 1, 0, 1 });
 			}
 			else
 			{
-				Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+				Renderer->UpdateSetCBuffer(HighLightBufferType{ true, rgb, i + 1, 0, 0, 1 });
 			}
 		
 

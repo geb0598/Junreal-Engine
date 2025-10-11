@@ -175,7 +175,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
                 RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
             }
             
-            RHIDevice->UpdatePixelConstantBuffers(MaterialInfo, true, bHasTexture); // PSSet도 해줌
+            RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(MaterialInfo), true, bHasTexture)); // PSSet도 해줌
             
             // DrawCall 수실행 및 통계 추가
             RHIDevice->GetDeviceContext()->DrawIndexed(MeshGroupInfos[i].IndexCount, MeshGroupInfos[i].StartIndex, 0);
@@ -185,7 +185,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     else
     {
         FObjMaterialInfo ObjMaterialInfo;
-        RHIDevice->UpdatePixelConstantBuffers(ObjMaterialInfo, false, false); // PSSet도 해줌
+        RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(ObjMaterialInfo), false, false)); // PSSet도 해줌
         RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
         StatsCollector.IncrementDrawCalls();
     }
@@ -302,9 +302,9 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 {
     RHIDevice->RSSetState(ViewModeIndex);
     if(ViewModeIndex == EViewModeIndex::VMI_Wireframe)
-        RHIDevice->UpdateColorConstantBuffers(FVector4{ 1.f, 0.f, 0.f, 1.f });
+        RHIDevice->UpdateSetCBuffer(ColorBufferType{ FVector4(1.f, 0.f, 0.f, 1.f) });
     else
-        RHIDevice->UpdateColorConstantBuffers(FVector4{ 1.f, 1.f, 1.f, 0.f });
+        RHIDevice->UpdateSetCBuffer(ColorBufferType{ FVector4(1.f, 1.f, 1.f, 0.f) });
 }
 
 void URenderer::EndFrame()
@@ -435,7 +435,8 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     }
     
     // Set up rendering state
-    UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+    UpdateSetCBuffer(ModelBufferType(ModelMatrix));
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
     PrepareShader(LineShader);
     
     // Render using dynamic mesh
