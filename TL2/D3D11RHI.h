@@ -23,23 +23,12 @@
     CBufferSet(TYPE##uffer, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
 }
 
+#define CREATE_CBUFFER(TYPE)\
+CreateCBuffer(TYPE##uffer, sizeof(TYPE));
 
-//example
-//ID3D11Buffer* TestCBuffer{};
-//
-//void UpdateCBuffer(const TestCB& CBufferData) override
-//{
-//    CBufferUpdate(TestCBuffer, CBufferData);
-//}
-//
-//void UpdateSetCBuffer(const TestCB& CBufferData) override
-//{
-//    CBufferUpdateSet(TestCBuffer, CBufferData, TestCBSlotNum, TestCBSetVS, TestCBSetPS);
-//}
-//void SetCBuffer() override
-//{
-//    CBufferSet(TestCBuffer, TestCBSlotNum, TestCBSetVS, TestCBSetPS);
-//}
+#define RELEASE_CBUFFER(TYPE)\
+if(TYPE##uffer) {TYPE##uffer->Release(); TYPE##uffer = nullptr;}
+
 
 class D3D11RHI : public URHIDevice
 {
@@ -81,8 +70,8 @@ public:
     static HRESULT CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mesh, ID3D11Buffer** outBuffer);
 
     CBUFFER_TYPE_LIST(UPDATE_CBUFFER_FUNC)
-    CBUFFER_TYPE_LIST(UPDATE_SET_CBUFFER_FUNC)
-    CBUFFER_TYPE_LIST(SET_CBUFFER_FUNC)
+        CBUFFER_TYPE_LIST(UPDATE_SET_CBUFFER_FUNC)
+        CBUFFER_TYPE_LIST(SET_CBUFFER_FUNC)
 
     void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
     void UpdateViewConstantBuffers( const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) ;
@@ -178,6 +167,16 @@ private:
     {
         CBufferUpdate(CBuffer, CBufferData);
         CBufferSet(CBuffer, SlotNum, bSetVS, bSetPS);
+    }
+
+    void CreateCBuffer(ID3D11Buffer* CBuffer, const uint32 Size)
+    {
+        D3D11_BUFFER_DESC CBufferDesc = {};
+        CBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        CBufferDesc.ByteWidth = (Size + 15) & ~15;
+        CBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        CBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        Device->CreateBuffer(&CBufferDesc, nullptr, &CBuffer);
     }
 
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다

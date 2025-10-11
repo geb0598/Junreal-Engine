@@ -11,12 +11,7 @@
 #define SET_CBUFFER_VIRTUAL_FUNC(TYPE)\
     virtual void SetCBuffer(const TYPE& CBufferData) = 0;
 
-struct ModelBufferType
-{
-    FMatrix Model;
-    uint32 UUID = 0;
-    FVector Padding;
-};
+
 enum class EComparisonFunc
 {
     Always,

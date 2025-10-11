@@ -2,89 +2,6 @@
 #include "UI/StatsOverlayD2D.h"
 #include "D3D11RHI.h"
 
-struct FConstants
-{
-    FVector WorldPosition;
-    float Scale;
-};
-// b0 in VS
-
-
-// b0 in PS
-struct FMaterialInPs
-{
-    FVector DiffuseColor; // Kd
-    float OpticalDensity; // Ni
-
-    FVector AmbientColor; // Ka
-    float Transparency; // Tr Or d
-
-    FVector SpecularColor; // Ks
-    float SpecularExponent; // Ns
-
-    FVector EmissiveColor; // Ke
-    uint32 IlluminationModel; // illum. Default illumination model to Phong for non-Pbr materials
-
-    FVector TransmissionFilter; // Tf
-    float dummy; // 4 bytes padding
-};
-
-struct FPixelConstBufferType
-{
-    FMaterialInPs Material;
-    bool bHasMaterial; // 1 bytes
-    bool Dummy[3]; // 3 bytes padding
-    bool bHasTexture; // 1 bytes
-    bool Dummy2[11]; // 11 bytes padding
-};
-
-static_assert(sizeof(FPixelConstBufferType) % 16 == 0, "PixelConstData size mismatch!");
-
-// b1
-struct ViewProjBufferType
-{
-    FMatrix View;
-    FMatrix Proj;
-};
-
-// b2
-struct HighLightBufferType
-{
-    uint32 Picked;
-    FVector Color;
-    uint32 X;
-    uint32 Y;
-    uint32 Z;
-    uint32 Gizmo;
-};
-
-struct ColorBufferType
-{
-    FVector4 Color;
-};
-
-// b5: Viewport 정보 (데칼용 Screen-Space UV 계산)
-struct ViewportBufferType
-{
-    FVector4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
-};
-
-struct DecalAlphaBufferType
-{
-    float CurrentAlpha;
-    float pad[3];
-};
-
-struct BillboardBufferType
-{
-    FVector pos;
-    FMatrix View;
-    FMatrix Proj;
-    FMatrix InverseViewMat;
-    /*FVector cameraRight;
-    FVector cameraUp;*/
-};
-
 void D3D11RHI::Initialize(HWND hWindow)
 {
     // 이곳에서 Device, DeviceContext, viewport, swapchain를 초기화한다
@@ -120,17 +37,8 @@ void D3D11RHI::Release()
     ReleaseSamplerState();
 
     // 상수버퍼
-    if (HighLightCB) { HighLightCB->Release(); HighLightCB = nullptr; }
-    if (ModelCB) { ModelCB->Release(); ModelCB = nullptr; }
-    if (ColorCB) { ColorCB->Release(); ColorCB = nullptr; }
-    if (ViewProjCB) { ViewProjCB->Release(); ViewProjCB = nullptr; }
-    if (BillboardCB) { BillboardCB->Release(); BillboardCB = nullptr; }
-    if (PixelConstCB) { PixelConstCB->Release(); PixelConstCB = nullptr; }
-    if (UVScrollCB) { UVScrollCB->Release(); UVScrollCB = nullptr; }
-    if (InvWorldCB) { InvWorldCB->Release(); InvWorldCB = nullptr; }
-    if (ViewportCB) { ViewportCB->Release(); ViewportCB = nullptr; }
-    if (DecalCB) { DecalCB->Release(); DecalCB = nullptr; }
-    if (ConstantBuffer) { ConstantBuffer->Release(); ConstantBuffer = nullptr; }
+    CBUFFER_TYPE_LIST(RELEASE_CBUFFER)
+
 
     // 상태 객체
     if (DepthStencilState) { DepthStencilState->Release(); DepthStencilState = nullptr; }
@@ -644,95 +552,7 @@ void D3D11RHI::CreateRasterizerState()
 
 void D3D11RHI::CreateConstantBuffer()
 {
-    D3D11_BUFFER_DESC modelDesc = {};
-    modelDesc.Usage = D3D11_USAGE_DYNAMIC;
-    modelDesc.ByteWidth = sizeof(ModelBufferType);
-    modelDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    modelDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&modelDesc, nullptr, &ModelCB);
-
-    // b0 in StaticMeshPS
-    D3D11_BUFFER_DESC pixelConstDesc = {};
-    pixelConstDesc.Usage = D3D11_USAGE_DYNAMIC;
-    pixelConstDesc.ByteWidth = sizeof(FPixelConstBufferType);
-    pixelConstDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    pixelConstDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    HRESULT hr = Device->CreateBuffer(&pixelConstDesc, nullptr, &PixelConstCB);
-    if (FAILED(hr))
-    {
-        assert(FAILED(hr));
-    }
-
-    // b1 : ViewProjBuffer
-    D3D11_BUFFER_DESC vpDesc = {};
-    vpDesc.Usage = D3D11_USAGE_DYNAMIC;
-    vpDesc.ByteWidth = sizeof(ViewProjBufferType);
-    vpDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    vpDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&vpDesc, nullptr, &ViewProjCB);
-
-    // b2 : HighLightBuffer  (← 기존 코드에서 vpDesc를 다시 써서 버그났던 부분)
-    D3D11_BUFFER_DESC hlDesc = {};
-    hlDesc.Usage = D3D11_USAGE_DYNAMIC;
-    hlDesc.ByteWidth = sizeof(HighLightBufferType);
-    hlDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    hlDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&hlDesc, nullptr, &HighLightCB);
-
-    D3D11_BUFFER_DESC billboardDesc = {};
-    billboardDesc.Usage = D3D11_USAGE_DYNAMIC;
-    billboardDesc.ByteWidth = sizeof(BillboardBufferType);
-    billboardDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    billboardDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&billboardDesc, nullptr, &BillboardCB);
-
-    D3D11_BUFFER_DESC ColorDesc = {};
-    ColorDesc.Usage = D3D11_USAGE_DYNAMIC;
-    ColorDesc.ByteWidth = sizeof(ColorBufferType);
-    ColorDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    ColorDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&ColorDesc, nullptr, &ColorCB);
-
-    D3D11_BUFFER_DESC uvScrollDesc = {};
-    uvScrollDesc.Usage = D3D11_USAGE_DYNAMIC;
-    uvScrollDesc.ByteWidth = sizeof(float) * 4; // float2 speed + float time + pad
-    uvScrollDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    uvScrollDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&uvScrollDesc, nullptr, &UVScrollCB);
-    if (UVScrollCB)
-    {
-        D3D11_MAPPED_SUBRESOURCE mapped{};
-        if (SUCCEEDED(DeviceContext->Map(UVScrollCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
-        {
-            float init[4] = { 0,0,0,0 };
-            memcpy(mapped.pData, init, sizeof(init));
-            DeviceContext->Unmap(UVScrollCB, 0);
-        }
-        DeviceContext->PSSetConstantBuffers(5, 1, &UVScrollCB);
-    }
-
-    // b4 : InvWorldBuffer (데칼용 - DecalWorld + DecalWorldInverse + DecalProjection)
-    D3D11_BUFFER_DESC invWorldDesc = {};
-    invWorldDesc.Usage = D3D11_USAGE_DYNAMIC;
-    invWorldDesc.ByteWidth = sizeof(FMatrix) * 3; // DecalWorldMatrix + DecalWorldMatrixInverse + DecalProjectionMatrix
-    invWorldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    invWorldDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&invWorldDesc, nullptr, &InvWorldCB);
-
-    // b5 : ViewportBuffer (데칼용 - Viewport 정보)
-    D3D11_BUFFER_DESC viewportDesc = {};
-    viewportDesc.Usage = D3D11_USAGE_DYNAMIC;
-    viewportDesc.ByteWidth = sizeof(ViewportBufferType);
-    viewportDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    viewportDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&viewportDesc, nullptr, &ViewportCB);
-
-    D3D11_BUFFER_DESC decalDesc = {};
-    decalDesc.Usage = D3D11_USAGE_DYNAMIC;
-    decalDesc.ByteWidth = sizeof(DecalAlphaBufferType);
-    decalDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    decalDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-    Device->CreateBuffer(&decalDesc, nullptr, &DecalCB);
+    CBUFFER_TYPE_LIST(CREATE_CBUFFER)
 }
 
 void D3D11RHI::UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec)
