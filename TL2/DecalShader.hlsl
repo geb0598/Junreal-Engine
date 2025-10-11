@@ -25,7 +25,7 @@ cbuffer DecalTransformBuffer : register(b4)
     row_major float4x4 DecalProjectionMatrix;
 }
 
-cbuffer DecalFXBuffer : register(b5)
+cbuffer DecalFXBuffer : register(b8)
 {
     float CurrentAlpha;
 }

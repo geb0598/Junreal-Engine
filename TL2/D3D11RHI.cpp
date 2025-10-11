@@ -803,7 +803,7 @@ void D3D11RHI::UpdateDecalConstantBuffer(float InFadeAlpha)
     {
         memcpy(mapped.pData, &data, sizeof(DecalAlphaBufferType));
         DeviceContext->Unmap(DecalCB, 0);
-        DeviceContext->PSSetConstantBuffers(5, 1, &DecalCB);
+        DeviceContext->PSSetConstantBuffers(8, 1, &DecalCB);
     }
 }
 
