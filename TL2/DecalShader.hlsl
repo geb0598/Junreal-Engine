@@ -82,9 +82,9 @@ PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
     float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);
 
     // 데칼 로컬 공간에서 범위 체크 (타일링과 무관)
-    if (abs(DecalPosition.x) > 0.5f ||
-        abs(DecalPosition.y) > 0.5f ||
-        abs(DecalPosition.z) > 0.5f)
+    if (abs(DecalPosition.x) > 0.50001f ||
+        abs(DecalPosition.y) > 0.50001f ||
+        abs(DecalPosition.z) > 0.50001f)
     {
         discard;
     }
@@ -136,6 +136,6 @@ PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
     
     Result.Color = DecalColor;
     //SV_DEPTH 시멘틱을 쓰는 경우 z값을 정규화 하지 않고 그대로 넘어옴.
-    Result.Depth = input.position.z/input.position.w - 0.0001f;
+    Result.Depth = input.position.z/input.position.w - 0.011f;
     return Result;
 }
