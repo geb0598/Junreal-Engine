@@ -361,6 +361,10 @@ void AGizmoActor::OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, f
 	FVector Axis{};
 	FVector GizmoPosition = GetActorLocation();
 
+	if (GizmoAxis == 0)
+	{
+		return;
+	}
 	// ────────────── World / Local 축 선택 ──────────────
 	if (CurrentSpace == EGizmoSpace::World)
 	{
@@ -415,7 +419,7 @@ worldPerPixel *= zoomFactor;*/
 
         float Movement = px * worldPerPixel;
         FVector CurrentLocation = SelectedComponent->GetWorldLocation();
-		SelectedComponent->SetWorldLocation(CurrentLocation + Axis * Movement);
+ 		SelectedComponent->SetWorldLocation(CurrentLocation + Axis * Movement);
 
 		break;
 	}
