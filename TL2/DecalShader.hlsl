@@ -126,7 +126,7 @@ PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
     float2 uvFrac = frac(DecalUV); // 0~1 범위로 반복
     float2 edgeDistance = abs(uvFrac - 0.5f) * 2.0f; // 0(중심) ~ 1(가장자리)
     float edgeFade = saturate(1.0f - max(edgeDistance.x, edgeDistance.y));
-    edgeFade = pow(edgeFade, 1.0f); // 가장자리에서 부드럽게 페이드
+    edgeFade = pow(edgeFade, 0.05f); // 가장자리에서 부드럽게 페이드
 
     float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
 

@@ -14,7 +14,10 @@ UEngine::~UEngine() {}
 
 UWorld* UEngine::GetWorld()
 {
-    return GWorld;
+    if (!WorldContexts.empty())
+        return WorldContexts.back().World();
+    return nullptr;
+   // return GWorld;쓰지마세요
 }
 
 UWorld* UEngine::GetWorld(EWorldType InWorldType)
