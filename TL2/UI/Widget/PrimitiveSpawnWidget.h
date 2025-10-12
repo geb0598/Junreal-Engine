@@ -5,6 +5,15 @@
 class UUIManager;
 class UWorld;
 
+struct FSpawnInfo
+{
+	// Display name for UI and logs
+	const char* TypeName;
+
+	// Function for actual spawn logic
+	std::function<AActor* (UWorld*, const FTransform&)> Spawner;
+};
+
 class UPrimitiveSpawnWidget
 	:public UWidget
 {
@@ -22,9 +31,13 @@ public:
 
 private:
 	UUIManager* UIManager = nullptr;
+	TMap<ESpawnActorType, FSpawnInfo> SpawnRegistry;
+
+	// Spawn Actor 관리
+	template<typename ActorType>
+	void RegisterSpawnInfo(ESpawnActorType SpawnType, const char* TypeName);
 	
 	// Spawn 설정
-	int32 SelectedPrimitiveType = 0;
 	int32 NumberOfSpawn = 1;
 	float SpawnRangeMin = -5.0f;
 	float SpawnRangeMax = 5.0f;

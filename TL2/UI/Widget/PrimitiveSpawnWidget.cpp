@@ -56,11 +56,30 @@ void UPrimitiveSpawnWidget::Initialize()
 {
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
+    
+    if (SpawnRegistry.empty())
+    {
+        RegisterSpawnInfo<AActor>(ESpawnActorType::Actor, "Actor");
+        RegisterSpawnInfo<AStaticMeshActor>(ESpawnActorType::StaticMesh, "Static Mesh");
+        RegisterSpawnInfo<ADecalActor>(ESpawnActorType::Decal, "Decal");
+        RegisterSpawnInfo<ASpotLightActor>(ESpawnActorType::SpotLight, "Spot Light");
+    }
 }
 
 void UPrimitiveSpawnWidget::Update()
 {
 	// 필요시 업데이트 로직 추가
+}
+
+template<typename ActorType>
+void UPrimitiveSpawnWidget::RegisterSpawnInfo(ESpawnActorType SpawnType, const char* TypeName)
+{
+    SpawnRegistry.Add(SpawnType, {
+        TypeName,
+        [](UWorld* World, const FTransform& Transform) -> AActor* {
+            return World->SpawnActor<ActorType>(Transform);
+        }
+    });
 }
 
 UWorld* UPrimitiveSpawnWidget::GetCurrentWorld() const
@@ -308,123 +327,76 @@ void UPrimitiveSpawnWidget::RenderWidget()
 
 void UPrimitiveSpawnWidget::SpawnActors(ESpawnActorType SpawnType) const
 {
-    
     UWorld* World = GetCurrentWorld();
     if (!World)
     {
         UE_LOG("PrimitiveSpawn: No World available for spawning");
         return;
     }
-
-    UE_LOG("PrimitiveSpawn: Spawning %d %s actors", NumberOfSpawn, GetPrimitiveTypeName(SelectedPrimitiveType));
+    
+    const FSpawnInfo* Info = SpawnRegistry.Find(SpawnType);
+    if (!Info || !Info->Spawner)
+    {
+        UE_LOG("ActorSpawn: Failed - No registered spawn information");
+        return;
+    }
+    UE_LOG("ActorSpawn: Spawning %d %s actors", NumberOfSpawn, Info->TypeName);
 
     int32 SuccessCount = 0;
-
     for (int32 i = 0; i < NumberOfSpawn; i++)
     {
         FVector SpawnLocation = FVector(0, 0, 0); //GenerateRandomLocation();
         FQuat   SpawnRotation = FQuat::Identity(); //GenerateRandomRotation();
         float   SpawnScale = 1.0f;//GenerateRandomScale();
         FVector SpawnScaleVec(SpawnScale, SpawnScale, SpawnScale);
-
         FTransform SpawnTransform(SpawnLocation, SpawnRotation, SpawnScaleVec);
 
-        AActor* SpawnedActor = nullptr;
+        AActor* NewActor = Info->Spawner(World, SpawnTransform);
+        if (NewActor)
+        {
+            FString ActorName;
 
-        switch (SpawnType)
-        {
-        case ESpawnActorType::Actor:
-        {
-            AActor* NewActor = World->SpawnActor<AActor>(SpawnTransform);
-            if (NewActor)
+            // Only for Static Mesh 
+            if (SpawnType == ESpawnActorType::StaticMesh)
             {
-                FString ActorName = World->GenerateUniqueActorName("Actor");
-                NewActor->SetName(ActorName);
-
-                SpawnedActor = NewActor;
-
-                UE_LOG("ActorSpawn: Created empty Actor at (%.2f, %.2f, %.2f)",
-                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
-            }
-            break;
-        }
-        case ESpawnActorType::StaticMesh:
-        {
-            AStaticMeshActor* NewMeshActor = World->SpawnActor<AStaticMeshActor>(SpawnTransform);
-            if (NewMeshActor)
-            {
-                // 드롭다운에서 선택한 리소스가 있으면 그걸 사용, 아니면 Cube로 기본 설정
-                FString MeshPath = "Data/Cube.obj";
-                const bool bHasResourceSelection =
-                    (SelectedMeshIndex >= 0) &&
-                    (SelectedMeshIndex < static_cast<int32>(CachedMeshFilePaths.size()));
-
-                if (bHasResourceSelection)
+                if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(NewActor))
                 {
-                    MeshPath = CachedMeshFilePaths[SelectedMeshIndex];
+                    // 드롭다운에서 선택한 리소스가 있으면 그걸 사용, 아니면 Cube로 기본 설정
+                    FString MeshPath = "Data/Cube.obj";
+                    const bool bHasResourceSelection =
+                        (SelectedMeshIndex >= 0) &&
+                        (SelectedMeshIndex < static_cast<int32>(CachedMeshFilePaths.size()));
+
+                    if (bHasResourceSelection)
+                    {
+                        MeshPath = CachedMeshFilePaths[SelectedMeshIndex];
+                    }
+
+                    if (auto* StaticMeshComp = MeshActor->GetStaticMeshComponent())
+                    {
+                        StaticMeshComp->SetStaticMesh(MeshPath);
+                    }
+
+                    ActorName = World->GenerateUniqueActorName(
+                        bHasResourceSelection ? GetBaseNameNoExt(MeshPath).c_str() : Info->TypeName
+                    );
                 }
-
-                if (auto* StaticMeshComp = NewMeshActor->GetStaticMeshComponent())
-                {
-                    StaticMeshComp->SetStaticMesh(MeshPath);
-                }
-
-                FString ActorName = World->GenerateUniqueActorName(
-                    bHasResourceSelection ? GetBaseNameNoExt(MeshPath).c_str() : "StaticMesh"
-                );
-                NewMeshActor->SetName(ActorName);
-
-                SpawnedActor = NewMeshActor;
-                
-                UE_LOG("ActorSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f using %s",
-                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale, MeshPath.c_str());
             }
-            break;
-        }
-        case ESpawnActorType::Decal:
-        {
-            ADecalActor* NewDecalActor = World->SpawnActor<ADecalActor>(SpawnTransform);
-            if (NewDecalActor)
+            // all other actor types
+            else
             {
-                FString ActorName = World->GenerateUniqueActorName("Decal");
-                NewDecalActor->SetName(ActorName);
-
-                SpawnedActor = NewDecalActor;
-
-                UE_LOG("ActorSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f",
-                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale);
+                ActorName = World->GenerateUniqueActorName(Info->TypeName);
             }
-            break;
-        }
-        case ESpawnActorType::SpotLight:
-        {
-            ASpotLightActor* NewSpotLightActor = World->SpawnActor<ASpotLightActor>(SpawnTransform);
-            if (NewSpotLightActor)
-            {
-                FString ActorName = World->GenerateUniqueActorName("SpotLight");
-                NewSpotLightActor->SetName(ActorName);
 
-                SpawnedActor = NewSpotLightActor;
-
-                UE_LOG("ActorSpawn: Created SpotLight at (%.2f, %.2f, %.2f)",
-                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
-            }
-            break;
-        }
-        }
-        if (SpawnedActor)
-        {
+            // Common logic
+            NewActor->SetName(ActorName);
+            UE_LOG("ActorSpawn: Created %s at (%.2f, %.2f, %.2f)", Info->TypeName, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
             SuccessCount++;
         }
         else
         {
-            const char* TypeName = "Unknown";
-            if (SpawnType < ESpawnActorType::Count)
-            {
-                UE_LOG("ActorSpawn: Failed to spawn actor %d of type %d", i, TypeName);
-            }
+            UE_LOG("ActorSpawn: Failed - World->SpawnActor returned nullptr for type %s.", Info->TypeName);
         }
-
-        UE_LOG("ActorSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
     }
+    UE_LOG("ActorSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
 }
