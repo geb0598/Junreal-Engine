@@ -88,13 +88,28 @@ PS_OUTPUT mainPS(PS_INPUT input)
     {
         discard;
     }
-
-    // 타일링이 적용된 NDC 좌표 계산
-    float3 NDCPosition = mul(DecalPosition, DecalProjectionMatrix).xyz;
+        
+    // +-+-+ Perspective Projection +-+-+
+    float4 ProjPos = mul(DecalPosition, DecalProjectionMatrix);
+    ProjPos.xyz /= ProjPos.w;
+    
+    // SpotLight Frustum 내부 판정
+    if (ProjPos.x < -1.0f || ProjPos.x > 1.0f ||
+        ProjPos.y < -1.0f || ProjPos.y > 1.0f ||
+        ProjPos.z < 0.0f || ProjPos.z > 1.0f)
+    {
+        discard;
+    }
+    
+    // +-+-+ UV Calculation +-+-+
+    float2 DecalUV = float2(
+        ProjPos.x * 0.5f + 0.5f,
+        1.0f - (ProjPos.z * 0.5f + 0.5f)
+    );
+    
+    // +-+-+ Surface Normal, Fade Angle, etc +-+-+
     float3 dpdx = ddx(input.WorldPosition);
-  
     float3 dpdy = ddy(input.WorldPosition);
-
     float3 surfaceNormal = normalize(cross(dpdy, dpdx));
     
     // 데칼 방향(전방) - 데칼의 X축 방향 (투영 방향)
@@ -120,7 +135,6 @@ PS_OUTPUT mainPS(PS_INPUT input)
     angleFade = pow(angleFade, 1.0f); // 비선형 감쇠로 더 자연스럽게
 
     // UV 계산 (DecalProjectionMatrix에 이미 타일링 스케일 적용됨)
-    float2 DecalUV = float2(NDCPosition.x * 0.5f + 0.5f, 1.0f - (NDCPosition.z * 0.5f + 0.5f));
 
     // 4. 가장자리 페이드: frac를 사용하여 타일마다 페이드 적용
     float2 uvFrac = frac(DecalUV); // 0~1 범위로 반복

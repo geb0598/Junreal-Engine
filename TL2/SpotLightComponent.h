@@ -9,19 +9,14 @@ public:
 
     USpotLightComponent();
 
-    // Spotlight specific properties
-    void SetSpotlightAngle(float Angle) { SpotlightAngle = Angle; UpdateDecalProjectionMatrix(); }
-    float GetSpotlightAngle() const { return SpotlightAngle; }
-    void SetAspectRatio(float Ratio) { AspectRatio = Ratio; UpdateDecalProjectionMatrix(); }
-    float GetAspectRatio() const { return AspectRatio; }
+    // Spotlight frustum properties, calculated from the component's extents
+    float Radius = 0.0f;
+    float Height = 0.0f;
+    float Near = 0.0f;
+    float Far = 0.0f;
+    float Fov = 0.0f; // in radians
+    float Aspect = 0.0f;
 
 protected:
     void UpdateDecalProjectionMatrix() override;
-
-    // Spotlight-specific properties
-    float SpotlightAngle = 45.0f; // degrees
-    float AspectRatio = 1.0f;
-    
-    // Note: All other variables like DecalBoxMesh, TexturePath, Material, etc.,
-    // are now inherited from UDecalComponent and don't need to be redeclared.
 };
