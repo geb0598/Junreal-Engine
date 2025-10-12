@@ -29,20 +29,26 @@ void ASpotLightActor::Tick(float DeltaTime)
 
 UObject* ASpotLightActor::Duplicate()
 {
+    // 부모 클래스의 Duplicate 호출 (RootComponent와 모든 자식 컴포넌트 복제)
     ASpotLightActor* NewActor = static_cast<ASpotLightActor*>(AActor::Duplicate());
-    if (NewActor)
-    {
-        // SpotLightComponent는 부모의 Duplicate에서 처리됨
-        NewActor->SpotLightComponent = static_cast<USpotLightComponent*>(NewActor->GetRootComponent());
-        NewActor->SpriteComponent = static_cast<UBillboardComponent*>(NewActor->GetRootComponent());
-    }
     return NewActor;
 }
 
 void ASpotLightActor::DuplicateSubObjects()
 {
+    // 부모 클래스가 OwnedComponents를 재구성
     AActor::DuplicateSubObjects();
 
-    // SpotLightComponent 재설정
-    SpotLightComponent = Cast<USpotLightComponent>(RootComponent);
+    // OwnedComponents를 순회하면서 각 타입의 컴포넌트를 찾아 포인터 재설정
+    for (UActorComponent* Component : OwnedComponents)
+    {
+        if (USpotLightComponent* SpotLight = Cast<USpotLightComponent>(Component))
+        {
+            SpotLightComponent = SpotLight;
+        }
+        else if (UBillboardComponent* Billboard = Cast<UBillboardComponent>(Component))
+        {
+            SpriteComponent = Billboard;
+        }
+    }
 }
