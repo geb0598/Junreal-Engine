@@ -55,7 +55,7 @@ UObject* UBillboardComponent::Duplicate()
     if (DuplicatedComponent)
     {
         CopyCommonProperties(DuplicatedComponent);
-
+		DuplicatedComponent->TexturePath = TexturePath;
         DuplicatedComponent->DuplicateSubObjects();
     }
     return DuplicatedComponent;

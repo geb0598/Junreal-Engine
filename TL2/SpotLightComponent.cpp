@@ -7,6 +7,7 @@ IMPLEMENT_CLASS(USpotLightComponent)
 
 USpotLightComponent::USpotLightComponent()
 {
+    bCanEverTick = false;
     // The parent UDecalComponent constructor has already run and handled:
     // - Loading the default DecalBoxMesh
     // - Setting the default TexturePath
@@ -19,6 +20,7 @@ USpotLightComponent::USpotLightComponent()
 
     // 3. Call our overridden update function to create the initial perspective matrix.
     UpdateDecalProjectionMatrix();
+    
 }
 
 void USpotLightComponent::UpdateDecalProjectionMatrix()
@@ -40,5 +42,28 @@ void USpotLightComponent::UpdateDecalProjectionMatrix()
     DecalProjectionMatrix = FMatrix::PerspectiveFovLH(Fov, Aspect, Near, Far);
 }
 
-// Note: All other methods like Tick, Render, Duplicate, SetDecalTexture, etc., 
-// are automatically inherited from UDecalComponent. We don't need to rewrite them here.
+UObject* USpotLightComponent::Duplicate()
+{
+    USpotLightComponent* DuplicatedComponent = Cast<USpotLightComponent>(UDecalComponent::Duplicate());
+    if (DuplicatedComponent)
+    {
+        DuplicatedComponent->TexturePath = TexturePath;
+        //DuplicatedComponent->LocalAABB = LocalAABB;
+        // SpotLightComponent 특유의 프로퍼티 복사
+        DuplicatedComponent->Radius = Radius;
+        DuplicatedComponent->Height = Height;
+        DuplicatedComponent->Near = Near;
+        DuplicatedComponent->Far = Far;
+        DuplicatedComponent->Fov = Fov;
+        DuplicatedComponent->Aspect = Aspect;
+    }
+    return DuplicatedComponent;
+}
+
+void USpotLightComponent::DuplicateSubObjects()
+{
+    UDecalComponent::DuplicateSubObjects();
+}
+
+// Note: All other methods like Tick, Render, SetDecalTexture, etc.,
+// are automatically inherited from UDecalComponent.

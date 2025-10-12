@@ -80,9 +80,9 @@ void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
     double BuildTimeMs = FPlatformTime::ToMilliseconds(BuildCycles);
 
     char buf[256];
-    sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
+    /*sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
         PrimitiveBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
-    UE_LOG(buf);
+    UE_LOG(buf);*/
 }
 
 

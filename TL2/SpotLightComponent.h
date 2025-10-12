@@ -9,6 +9,9 @@ public:
 
     USpotLightComponent();
 
+    UObject* Duplicate() override;
+    void DuplicateSubObjects() override;
+
     // Spotlight frustum properties, calculated from the component's extents
     float Radius = 0.0f;
     float Height = 0.0f;
