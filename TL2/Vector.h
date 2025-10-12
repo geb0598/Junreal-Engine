@@ -841,7 +841,7 @@ struct FTransform
         FTransform Result;
 
         // 회전 결합
-        Result.Rotation = Other.Rotation * Rotation;
+        Result.Rotation = Rotation * Other.Rotation;
         Result.Rotation.Normalize();
 
         // 스케일 결합 (component-wise)
@@ -865,8 +865,9 @@ struct FTransform
     {
         FTransform Result;
 
+        //this = InverseParent, Other = ChildWorld
         // 회전 결합
-        Result.Rotation = Other.Rotation * Rotation;
+        Result.Rotation = Rotation * Other.Rotation;
         Result.Rotation.Normalize();
 
         // 스케일 결합 (component-wise)

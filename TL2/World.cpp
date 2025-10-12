@@ -481,6 +481,10 @@ void UWorld::RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& Projec
 
 void UWorld::Tick(float DeltaSeconds)
 {
+    //FVector UnitX = FVector(1, 0, 0);
+    //float Radian = DegreeToRadian(45);
+    //FQuat Quat = FQuat::FromAxisAngle(FVector(1, -1, 0), Radian) * FQuat::FromAxisAngle(FVector(0, 0, 1), Radian) * FQuat::FromAxisAngle(FVector(0, -1, 0), Radian);
+    //FVector Rot = Quat.RotateVector(UnitX);
     Renderer->Update(DeltaSeconds);
     // Level의 Actors Tick
     if (Level)
