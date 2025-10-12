@@ -770,6 +770,11 @@ void UTargetActorTransformWidget::RenderWidget()
 				{
 					DecalComponent->SetUVTiling(Tiling);
 				}
+				FVector DecalSize = DecalComponent->GetDecalSize();
+				if (ImGui::DragFloat3("Decal Size", &DecalSize.X, 0.1f, 1.0f, 10.0f))
+				{
+					DecalComponent->SetDecalSize(DecalSize);
+				}
 			}
 			else
 			{
