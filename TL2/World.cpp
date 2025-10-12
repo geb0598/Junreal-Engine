@@ -1003,27 +1003,20 @@ void UWorld::SaveSceneV2(const FString& SceneName)
             else
                 CompData.ParentComponentUUID = 0;
 
-            // Transform
-            CompData.RelativeLocation = Comp->GetRelativeLocation();
-            CompData.RelativeRotation = Comp->GetRelativeRotation().ToEuler();
-            CompData.RelativeScale = Comp->GetRelativeScale();
-
             // Type 자동 가져오기
             CompData.Type = Comp->GetClass()->Name;
 
-            // Type별 속성
-            if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Comp))
+            // Serialize를 통해 Transform 및 Type별 속성 저장
+            if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
             {
-                if (StaticMeshComponent->GetStaticMesh())
-                {
-                    CompData.StaticMesh = StaticMeshComponent->GetStaticMesh()->GetAssetPathFileName();
-                    UE_LOG("SaveScene: StaticMesh saved: %s", CompData.StaticMesh.c_str());
-                }
-                else
-                {
-                    UE_LOG("SaveScene: StaticMeshComponent has no StaticMesh assigned");
-                }
-                // TODO: Materials 수집
+                Prim->Serialize(false, CompData);
+            }
+            else
+            {
+                // PrimitiveComponent가 아닌 경우 Transform만 저장
+                CompData.RelativeLocation = Comp->GetRelativeLocation();
+                CompData.RelativeRotation = Comp->GetRelativeRotation().ToEuler();
+                CompData.RelativeScale = Comp->GetRelativeScale();
             }
 
             SceneData.Components.push_back(CompData);
@@ -1094,7 +1087,7 @@ void UWorld::LoadSceneV2(const FString& SceneName)
     TMap<uint32, USceneComponent*> ComponentMap;
 
     // ========================================
-    // Pass 1: Actor 및 Component 생성
+    // Pass 1: Actor 생성 및 기존 컴포넌트 수집
     // ========================================
     for (const FActorData& ActorData : SceneData.Actors)
     {
@@ -1110,42 +1103,93 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         NewActor->SetName(ActorData.Name);
         NewActor->SetWorld(this);
 
+        // 생성자에서 만든 기존 컴포넌트들을 ComponentMap에 등록
+        for (UActorComponent* ExistingComp : NewActor->GetComponents())
+        {
+            if (USceneComponent* SceneComp = Cast<USceneComponent>(ExistingComp))
+            {
+                // 기존 컴포넌트의 UUID를 임시로 저장 (나중에 씬 데이터의 UUID로 덮어씀)
+                ComponentMap.Add(SceneComp->UUID, SceneComp);
+            }
+        }
+
         ActorMap.Add(ActorData.UUID, NewActor);
     }
 
-    // Component 생성
-    for (const FComponentData& CompData : SceneData.Components)
+    // Component 생성 또는 재활용
+    for (FComponentData& CompData : SceneData.Components)
     {
-        USceneComponent* NewComp = Cast<USceneComponent>(NewObject(CompData.Type));
+        USceneComponent* TargetComp = nullptr;
 
-        if (!NewComp)
+        // 1. Owner Actor 찾기
+        AActor** OwnerActorPtr = ActorMap.Find(CompData.OwnerActorUUID);
+        if (!OwnerActorPtr)
         {
-            UE_LOG("Failed to create Component: %s", CompData.Type.c_str());
+            UE_LOG("Failed to find owner actor for component UUID: %u", CompData.UUID);
             continue;
         }
+        AActor* OwnerActor = *OwnerActorPtr;
 
-        NewComp->UUID = CompData.UUID;
-        NewComp->SetRelativeLocation(CompData.RelativeLocation);
-        NewComp->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
-        NewComp->SetRelativeScale(CompData.RelativeScale);
-
-        // Type별 속성 복원
-        if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(NewComp))
+        // 2. Owner Actor의 기존 컴포넌트 중에서 같은 타입의 컴포넌트 찾기
+        for (UActorComponent* ExistingComp : OwnerActor->GetComponents())
         {
-            if (!CompData.StaticMesh.empty())
+            if (USceneComponent* SceneComp = Cast<USceneComponent>(ExistingComp))
             {
-                SMC->SetStaticMesh(CompData.StaticMesh);
+                // 타입이 일치하고 아직 매핑되지 않은 컴포넌트 찾기
+                if (SceneComp->GetClass()->Name == CompData.Type)
+                {
+                    // 이미 다른 CompData에 매핑되었는지 확인
+                    bool bAlreadyMapped = false;
+                    for (const auto& Pair : ComponentMap)
+                    {
+                        if (Pair.second == SceneComp)
+                        {
+                            bAlreadyMapped = true;
+                            break;
+                        }
+                    }
+
+                    if (!bAlreadyMapped)
+                    {
+                        TargetComp = SceneComp;
+                        break;
+                    }
+                }
             }
-            // TODO: Materials 복원
         }
 
-        // Owner Actor 설정
-        if (AActor** OwnerActor = ActorMap.Find(CompData.OwnerActorUUID))
+        // 3. 기존 컴포넌트가 없으면 새로 생성
+        if (!TargetComp)
         {
-            NewComp->SetOwner(*OwnerActor);
+            TargetComp = Cast<USceneComponent>(NewObject(CompData.Type));
+
+            if (!TargetComp)
+            {
+                UE_LOG("Failed to create Component: %s", CompData.Type.c_str());
+                continue;
+            }
+
+            TargetComp->SetOwner(OwnerActor);
+            OwnerActor->OwnedComponents.Add(TargetComp);
         }
 
-        ComponentMap.Add(CompData.UUID, NewComp);
+        // 4. UUID 설정 및 Serialize
+        TargetComp->UUID = CompData.UUID;
+
+        // Serialize를 통해 Transform 및 Type별 속성 로드
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(TargetComp))
+        {
+            Prim->Serialize(true, CompData);
+        }
+        else
+        {
+            // PrimitiveComponent가 아닌 경우 Transform만 로드
+            TargetComp->SetRelativeLocation(CompData.RelativeLocation);
+            TargetComp->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
+            TargetComp->SetRelativeScale(CompData.RelativeScale);
+        }
+
+        ComponentMap.Add(CompData.UUID, TargetComp);
     }
 
     // ========================================

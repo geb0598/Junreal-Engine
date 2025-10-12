@@ -357,3 +357,35 @@ void AActor::DuplicateSubObjects()
     //RootComponent = NewRootComponent;
 }
 
+void AActor::DestroyAllComponents()
+{
+    if (!RootComponent)
+        return;
+
+    // 재귀적으로 Attach 트리를 삭제
+    std::function<void(USceneComponent*)> DestroyRecursive = [&](USceneComponent* Comp)
+        {
+            if (!Comp) return;
+
+            // 자식 목록을 복사해서 순회 (Detach 중 원본 수정 방지)
+            const TArray<USceneComponent*> Children = Comp->GetAttachChildren();
+            for (USceneComponent* Child : Children)
+            {
+                DestroyRecursive(Child);
+            }
+
+            // 부모로부터 분리
+            Comp->DetachFromParent();
+
+            // OwnedComponents에서 제거
+            OwnedComponents.Remove(Comp);
+
+            // 객체 소멸 (ObjectFactory 관리 하에 안전하게 삭제)
+            ObjectFactory::DeleteObject(Comp);
+        };
+
+    // 루트부터 전체 삭제
+    DestroyRecursive(RootComponent);
+    RootComponent = nullptr;
+}
+

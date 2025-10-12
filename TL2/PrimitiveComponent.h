@@ -4,6 +4,7 @@
 
 // 전방 선언
 struct FPrimitiveData;
+struct FComponentData;
 
 class URenderer;
 
@@ -20,6 +21,9 @@ public:
 
     // 트랜스폼 직렬화/역직렬화 (월드 트랜스폼 기준)
     virtual void Serialize(bool bIsLoading, FPrimitiveData& InOut);
+
+    // 컴포넌트 직렬화/역직렬화 (상대 트랜스폼 기준, V2용)
+    virtual void Serialize(bool bIsLoading, FComponentData& InOut);
 
     virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) {}
 

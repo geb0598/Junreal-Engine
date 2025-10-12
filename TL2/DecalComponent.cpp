@@ -237,6 +237,9 @@ UObject* UDecalComponent::Duplicate()
         {
             DuplicatedComponent->SetDecalTexture(TexturePath);
         }
+
+        // 자식 컴포넌트 복제
+        DuplicatedComponent->DuplicateSubObjects();
     }
     return DuplicatedComponent;
 }

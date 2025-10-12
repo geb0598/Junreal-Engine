@@ -46,9 +46,14 @@ void UBillboardComponent::SetUVCoords(float U, float V, float UL, float VL)
 
 UObject* UBillboardComponent::Duplicate()
 {
-    UBillboardComponent* DuplicatedComponent = NewObject<UBillboardComponent>(*this);
-    DuplicatedComponent->DuplicateSubObjects();
+  
+    UBillboardComponent* DuplicatedComponent = Cast<UBillboardComponent>(NewObject(GetClass()));
+    if (DuplicatedComponent)
+    {
+        CopyCommonProperties(DuplicatedComponent);
 
+        DuplicatedComponent->DuplicateSubObjects();
+    }
     return DuplicatedComponent;
 }
 
