@@ -251,6 +251,13 @@ void UEditorEngine::ProcessAltDragDuplication()
     bool bLeftButtonDown = InputManager.IsMouseButtonDown(LeftButton);
     bool bGizmoDragging = GizmoActor->GetbIsDragging();
 
+    // 디버깅: 조건 체크
+    if (bGizmoDragging)
+    {
+        UE_LOG("Alt: %d, LeftBtn: %d, Dragging: %d, Handled: %d",
+               bAltDown, bLeftButtonDown, bGizmoDragging, bAltDragDuplicationHandled);
+    }
+
     // Alt+드래그가 시작되었을 때 (드래그 중이고 아직 복제하지 않았을 때)
     if (bAltDown && bLeftButtonDown && bGizmoDragging && !bAltDragDuplicationHandled)
     {

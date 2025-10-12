@@ -3,6 +3,7 @@
 #include "ResourceManager.h"
 #include "VertexData.h"
 #include "CameraActor.h"
+#include "SceneLoader.h"
 
 UBillboardComponent::UBillboardComponent()
 {
@@ -64,7 +65,26 @@ UObject* UBillboardComponent::Duplicate()
 void UBillboardComponent::DuplicateSubObjects()
 {
     Super_t::DuplicateSubObjects();
+}
 
+void UBillboardComponent::Serialize(bool bIsLoading, FComponentData& InOut)
+{
+    // 0) 트랜스폼 직렬화/역직렬화는 상위(UPrimitiveComponent)에서 처리
+    UPrimitiveComponent::Serialize(bIsLoading, InOut);
+
+    if (bIsLoading)
+    {
+        // TexturePath 로드
+        if (!InOut.TexturePath.empty())
+        {
+            SetTexture(InOut.TexturePath);
+        }
+    }
+    else
+    {
+        // TexturePath 저장
+        InOut.TexturePath = TexturePath;
+    }
 }
 
 void UBillboardComponent::CreateBillboardVertices()

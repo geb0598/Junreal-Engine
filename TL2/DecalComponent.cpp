@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "StaticMeshComponent.h"
+#include "SceneLoader.h"
 
 IMPLEMENT_CLASS(UDecalComponent)
 
@@ -268,4 +269,24 @@ void UDecalComponent::DuplicateSubObjects()
 {
     UPrimitiveComponent::DuplicateSubObjects();
     // DecalBoxMesh는 공유 리소스이므로 복사하지 않음
+}
+
+void UDecalComponent::Serialize(bool bIsLoading, FComponentData& InOut)
+{
+    // 0) 트랜스폼 직렬화/역직렬화는 상위(UPrimitiveComponent)에서 처리
+    UPrimitiveComponent::Serialize(bIsLoading, InOut);
+
+    if (bIsLoading)
+    {
+        // TexturePath 로드
+        if (!InOut.TexturePath.empty())
+        {
+            SetDecalTexture(InOut.TexturePath);
+        }
+    }
+    else
+    {
+        // TexturePath 저장
+        InOut.TexturePath = TexturePath;
+    }
 }

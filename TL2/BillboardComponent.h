@@ -41,6 +41,9 @@ public:
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
+    // Serialize (V2용)
+    void Serialize(bool bIsLoading, FComponentData& InOut) override;
+
 private:
     void CreateBillboardVertices();
 

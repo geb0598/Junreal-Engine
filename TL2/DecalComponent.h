@@ -29,6 +29,9 @@ public:
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
+    // Serialize (V2용)
+    void Serialize(bool bIsLoading, FComponentData& InOut) override;
+
     UStaticMesh* GetDecalBoxMesh() const { return DecalBoxMesh; }
 
     const FAABB GetWorldAABB() const override;
@@ -60,7 +63,7 @@ protected:
     FString TexturePath;
 
     // UV 타일링
-    FVector2D UVTiling = FVector2D(2.0f, 2.0f);
+    FVector2D UVTiling = FVector2D(1.0f, 1.0f);
 
     // 데칼 블렌드 모드
     enum class EDecalBlendMode
