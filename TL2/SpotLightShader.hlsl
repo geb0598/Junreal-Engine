@@ -104,14 +104,19 @@ PS_OUTPUT mainPS(PS_INPUT input)
     float3 surfaceNormal = -normalize(cross(dpdy, dpdx));
     
     // 데칼 방향(전방) - 데칼의 X축 방향 (투영 방향)
-    float3 decalForward = -normalize(DecalWorldMatrix._m10_m11_m12);
+    float3 decalForward = normalize(DecalWorldMatrix._m20_m21_m22);
 
     // 표면이 데칼 중심을 향하는지 판단
     float3 spotPosition = DecalWorldMatrix[3].xyz;
     float3 toPixel = normalize(input.WorldPosition - spotPosition);
-    float facing = dot(surfaceNormal, toPixel);
-    if (facing > 0.0f)
+    float facing = dot(decalForward, toPixel);
+    //Radian
+    float fov = atan(1.0f / DecalProjectionMatrix._m11);
+    
+    if (facing < cos(fov) || dot(surfaceNormal, toPixel) > 0.0f)
+    {
         discard;
+    }
     
     // +-+-+ Edge Fade +-+-+
     float2 uvFrac = frac(DecalUV); // 0~1 범위로 반복
