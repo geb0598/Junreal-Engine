@@ -183,7 +183,7 @@ void UStatsOverlayD2D::Draw()
     const float margin = 12.0f;
     const float panelWidth = 200.0f;
     const float panelHeight = 48.0f;
-    float nextY = margin;
+    float nextY = margin + 48;
 
     if (bShowFPS)
     {
@@ -289,7 +289,7 @@ void UStatsOverlayD2D::Draw()
             D2D1::ColorF(0, 0, 0, 0.6f),
             D2D1::ColorF(D2D1::ColorF::Cyan));
 
-        nextY += 100;
+        nextY += 60;
         const TArray<FString>& TimeProfileKeys = FScopeCycleCounter::GetTimeProfileKeys();
         for (const FString& Key : TimeProfileKeys)
         {
