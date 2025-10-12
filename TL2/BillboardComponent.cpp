@@ -135,6 +135,8 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     Renderer->UpdateSetCBuffer(ViewProjBufferType( FMatrix(), FMatrix()));
     Renderer->UpdateSetCBuffer(BillboardBufferType(BillboardPos,0, View, Proj, View.InverseAffine()));
 
+    Renderer->OMSetDepthStencilState(EComparisonFunc::Disable);
+    Renderer->OMSetBlendState(false);
     // 셰이더 준비
     Renderer->PrepareShader(Material->GetShader());
 
@@ -142,8 +144,7 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     CreateBillboardVertices();
 
     // 렌더링
-    Renderer->OMSetBlendState(true);
+    
     Renderer->RSSetState(EViewModeIndex::VMI_Unlit);
     Renderer->DrawIndexedPrimitiveComponent(this, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    Renderer->OMSetBlendState(false);
 }

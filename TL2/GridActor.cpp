@@ -41,10 +41,10 @@ namespace
     FVector4 GetGridLineColor(int index)
     {
         if (index % 10 == 0)
-            return FVector4(1.0f, 1.0f, 1.0f, 1.0f); // 흰색
+            return FVector4(1.0f, 1.0f, 1.0f, 0.2f); // 흰색
         if (index % 5 == 0)
-            return FVector4(0.4f, 0.4f, 0.4f, 1.0f); // 밝은 회색
-        return FVector4(0.1f, 0.1f, 0.1f, 1.0f);     // 어두운 회색
+            return FVector4(0.4f, 0.4f, 0.4f, 0.2f); // 밝은 회색
+        return FVector4(0.1f, 0.1f, 0.1f, 0.2f);     // 어두운 회색
     }
 }
 
