@@ -127,9 +127,12 @@ void UTextRenderComponent::DuplicateSubObjects()
 	Super_t::DuplicateSubObjects();
 }
 
-void UTextRenderComponent::Render(URenderer* InRenderer, const FMatrix& InView, const FMatrix& InProj)
+void UTextRenderComponent::Render(URenderer* InRenderer, const FMatrix& InView, const FMatrix& InProj, const EEngineShowFlags ShowFlags)
 {
-
+	if (HasShowFlag(ShowFlags, EEngineShowFlags::SF_BillboardText) == false)
+	{
+		return;
+	}
 	// Text가 변경되었다면 버퍼를 업데이트
 	if (bIsDirty)
 	{

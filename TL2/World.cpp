@@ -279,174 +279,80 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
 
-    TArray<UPrimitiveComponent*> VisiblePrimitives;
     //특수 처리가 필요한 경우 아래에 추가
-    TArray<UTextRenderComponent*> Texts;
-    TArray<UStaticMeshComponent*> StaticMeshes;
     TArray<UDecalComponent*> Decals;
+    TArray<UStaticMeshComponent*> RenderStaticMeshes;
 
-    //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
+    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives) == false)
+    {
+        return;
+    }
 
-    // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
     for (AActor* Actor : LevelActors)
     {
-        // 일반 액터들 렌더링
-        if (!Actor)
-        {
-            continue;
-        }
-        if (Actor->GetActorHiddenInGame())
+        if (!Actor || Actor->GetActorHiddenInGame())
         {
             continue;
         }
         AllActorCount++;
-        for (UActorComponent* Component : Actor->GetComponents())
+
+        bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+
+        for (UActorComponent* ActorComp : Actor->GetComponents())
         {
-            if (!Component)
+            if (!ActorComp)
             {
                 continue;
             }
 
-            //Billboard Showflag Check
-            if (Cast<UTextRenderComponent>(Component) &&
-                !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BillboardText))
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
             {
-                continue;
-            }
-
-            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(Component))
-            {
-                //BoundingBox Showflag Check
+                //바운딩 박스 추가
                 if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
-                    const TArray<FVector>& WireLine = StaticMeshComp->GetWorldAABB().GetWireLine();
-                    int WireLineSize = WireLine.Num();
-                    for (int i = 0; i < WireLineSize; i += 2)
-                    {
-                        Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 1, 0, 1));
-                    }
+                    Renderer->AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
                 }
-                //StaticMesh Showflag Check
-                if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_StaticMeshes))
-                {
-                    continue;
-                }
-            }
-            // 데칼 컴포넌트는 Pass 2에서 렌더링
-            if (Cast<UDecalComponent>(Component))
-            {
-                continue;
-            }
 
-            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
-            {
-                if (!Primitive->IsActive())
+                // 데칼 컴포넌트는 Pass 2에서 렌더링
+                if (UDecalComponent* Decal = Cast<UDecalComponent>(ActorComp))
                 {
+                    Decals.Add(Decal);
                     continue;
                 }
 
-                bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-
-                //// 선택된 액터는 항상 앞에 보이도록 depth test를 Always로 설정
-                //if (bIsSelected)//나중에 추가구현
-                //{
-                //    Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
-                //}
-
-                //Primitive Showflag Check
-                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+                if (UStaticMeshComponent* StaticMesh = Cast<UStaticMeshComponent>(Primitive))
                 {
-                    VisiblePrimitives.Push(Primitive);
-                    Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
-                    Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                    RenderStaticMeshes.Add(StaticMesh);
                 }
 
-                //// depth test 원래대로 복원
-                //if (bIsSelected)
-                //{
-                //    Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
-                //}
+                Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
             }
         }
-        Renderer->OMSetBlendState(false);
     }
 
-    // 엔진 액터들 (그리드 등) 렌더링
+    Renderer->OMSetBlendState(false);
     RenderEngineActors(ViewMatrix, ProjectionMatrix, Viewport);
 
-    // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
-    // +-+-+ Collect +-+-+
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
     {
-        for (AActor* Actor : LevelActors)
+        Decals.Sort([](const UDecalComponent* A, const UDecalComponent* B)
         {
-            if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-            {
-                continue;
-            }
-            if (!Actor)
-            {
-                continue;
-            }
-            if (Actor->GetActorHiddenInGame())
-            {
-                continue;
-            }
+            return A->GetSortOrder() < B->GetSortOrder();
+        });
 
-            for (UActorComponent* Component : Actor->GetComponents())
-            {
-                if (!Component || !Component->IsActive())
-                {
-                    continue;
-                }
+        for (UDecalComponent* Decal : Decals)
+        {
+            FOBB DecalWorldOBB = Decal->GetWorldOBB();
+            Renderer->AddLines(DecalWorldOBB.GetWireLine(), FVector4(1, 0, 1, 1));
 
-                UDecalComponent* DecalComp = Cast<UDecalComponent>(Component);
-                if (DecalComp && Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
+            for (UStaticMeshComponent* StaticMesh : RenderStaticMeshes)
+            {
+                if (IntersectOBBAABB(DecalWorldOBB, StaticMesh->GetWorldAABB()))
                 {
-                    DecalsToRender.Add(DecalComp);
+                    Decal->Render(Renderer, StaticMesh, ViewMatrix, ProjectionMatrix, Viewport);
                 }
             }
-        }
-    }
-
-    // +-+-+ Sort +-+-+
-    DecalsToRender.Sort([](const UDecalComponent* A, const UDecalComponent* B)
-    {
-        return A->GetSortOrder() < B->GetSortOrder();
-    });
-
-    // +-+-+ Render +-+-+
-    for (UDecalComponent* DecalComp : DecalsToRender)
-    {
-        if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-        {
-            const FOBB WorldOBB = DecalComp->GetWorldOBB();
-            const TArray<FVector>& WireLine = DecalComp->GetWorldOBB().GetWireLine();
-            int WireLineSize = WireLine.Num();
-            for (int i = 0; i < WireLineSize; i += 2)
-            {
-                Renderer->AddLine(WireLine[i], WireLine[i + 1], FVector4(1, 0, 1, 1));
-            }
-        }
-
-        const FOBB DecalOBB = DecalComp->GetWorldOBB();
-        TArray<UStaticMeshComponent*> StaticMeshCompsInDecal;
-        for (auto VisiblePrimitive : VisiblePrimitives)
-        {
-            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(VisiblePrimitive))
-            {
-                if (IntersectOBBAABB(DecalOBB, StaticMeshComp->GetWorldAABB()))
-                {
-                    StaticMeshCompsInDecal.Push(StaticMeshComp);
-                }
-            }
-        }
-
-        for (UStaticMeshComponent* StatieMeshCompInDecal : StaticMeshCompsInDecal)
-        {
-            bool bIsSelected = SelectionManager.IsActorSelected(StatieMeshCompInDecal->GetOwner());
-            Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
-            DecalComp->Render(Renderer, StatieMeshCompInDecal, ViewMatrix, ProjectionMatrix, Viewport);
         }
     }
 
@@ -490,7 +396,7 @@ void UWorld::RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& Projec
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Renderer->SetViewModeType(ViewModeIndex);
-                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+                Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
                 Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
             }
         }

@@ -72,6 +72,7 @@ public:
     void BeginLineBatch();
     void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f));
     void AddLines(const TArray<FVector>& StartPoints, const TArray<FVector>& EndPoints, const TArray<FVector4>& Colors);
+    void AddLines(const TArray<FVector>& LineList, const FVector4& Color);
     void EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);
     UPrimitiveComponent* GetCollidedPrimitive(int MouseX, int MouseY) const;
     void ClearLineBatch();

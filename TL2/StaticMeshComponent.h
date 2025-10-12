@@ -2,6 +2,7 @@
 #include "MeshComponent.h"
 #include "Enums.h"
 #include "StaticMesh.h"
+#include "FViewport.h"
 
 class UStaticMesh;
 class UShader;
@@ -24,7 +25,7 @@ protected:
     ~UStaticMeshComponent() override;
 
 public:
-    void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
+    void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlags) override;
 
     void SetStaticMesh(const FString& PathFileName);
     UStaticMesh* GetStaticMesh() const { return StaticMesh; }

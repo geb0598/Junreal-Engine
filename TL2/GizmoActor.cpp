@@ -199,7 +199,7 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport)
 			Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
 			Renderer->OMSetBlendState(true); // 필요 시
 
-			Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix);
+			Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
 			// 상태 복구
 			Renderer->OMSetBlendState(false);
 			Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);

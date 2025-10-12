@@ -419,6 +419,34 @@ void URenderer::AddLines(const TArray<FVector>& StartPoints, const TArray<FVecto
     }
 }
 
+void URenderer::AddLines(const TArray<FVector>& LineList, const FVector4& Color)
+{
+    if (!bLineBatchActive || !LineBatchData) return;
+
+    // Validate input arrays have same size
+    if (LineList.size() < 2)
+        return;
+
+    uint32 StartIdx = static_cast<uint32>(LineBatchData->Vertices.size());
+    size_t AddLineCount = LineList.size();
+    LineBatchData->Vertices.reserve(LineBatchData->Vertices.size() + AddLineCount);
+    LineBatchData->Color.reserve(LineBatchData->Color.size() + AddLineCount);
+    LineBatchData->Indices.reserve(LineBatchData->Indices.size() + AddLineCount);
+
+    for (int i = 0; i < AddLineCount; i++)
+    {
+        uint32 currentIndex = StartIdx + static_cast<uint32>(i);
+
+        // Add vertices
+        LineBatchData->Vertices.push_back(LineList[i]);
+
+        // Add colors
+        LineBatchData->Color.push_back(Color);
+
+        // Add indices for line (2 vertices per line)
+        LineBatchData->Indices.push_back(currentIndex);
+    }
+}
 void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
     if (!bLineBatchActive || !LineBatchData || !DynamicLineMesh || LineBatchData->Vertices.empty())

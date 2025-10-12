@@ -86,7 +86,7 @@ const FAABB ULineComponent::GetWorldAABB() const
     return FAABB(Vertices);
 }
 
-void ULineComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+void ULineComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, const EEngineShowFlags ShowFlag)
 {
     if (!HasVisibleLines() || !Renderer)
         return;
