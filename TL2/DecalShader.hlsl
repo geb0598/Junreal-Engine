@@ -110,7 +110,7 @@ PS_OUTPUT mainPS(PS_INPUT input)
     float facing = dot(surfaceNormal, decalForward);//X축과 노멀값 내적 
 
     // 뒷면은 완전히 제거
-    if (facing < 0.0f)
+    if (facing <= 0.001f)
     {
         discard;
     }
