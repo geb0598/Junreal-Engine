@@ -81,13 +81,13 @@ PS_OUTPUT mainPS(PS_INPUT input)
     PS_OUTPUT Result;
     float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);
 
-    // 데칼 로컬 공간에서 범위 체크 (타일링과 무관)
-    if (abs(DecalPosition.x) > 0.50001f ||
-        abs(DecalPosition.y) > 0.50001f ||
-        abs(DecalPosition.z) > 0.50001f)
-    {
-        discard;
-    }
+    //// 데칼 로컬 공간에서 범위 체크 (타일링과 무관)
+    //if (abs(DecalPosition.x) > 0.50001f ||
+    //    abs(DecalPosition.y) > 0.50001f ||
+    //    abs(DecalPosition.z) > 0.50001f)
+    //{
+    //    discard;
+    //}
         
     // +-+-+ Perspective Projection +-+-+
     float4 ProjPos = mul(DecalPosition, DecalProjectionMatrix);
@@ -104,7 +104,7 @@ PS_OUTPUT mainPS(PS_INPUT input)
     // +-+-+ UV Calculation +-+-+
     float2 DecalUV = float2(
         ProjPos.x * 0.5f + 0.5f,
-        1.0f - (ProjPos.z * 0.5f + 0.5f)
+        1.0f - (ProjPos.y * 0.5f + 0.5f)
     );
     
     // +-+-+ Surface Normal, Fade Angle, etc +-+-+
@@ -119,20 +119,20 @@ PS_OUTPUT mainPS(PS_INPUT input)
     // facing > 0: 앞면 (데칼 방향과 같은 방향)
     // facing < 0: 뒷면 (데칼 방향과 반대 방향)
     // facing ≈ 0: 수직면 (90도)
-    float facing = dot(surfaceNormal, decalForward); //X축과 노멀값 내적 
+    //float facing = dot(surfaceNormal, decalForward); //X축과 노멀값 내적 
 
-    // 뒷면은 완전히 제거
-    if (facing < 0.3f)
-    {
-        discard;
-    }
+    //// 뒷면은 완전히 제거
+    //if (facing < 0.3f)
+    //{
+    //    discard;
+    //}
 
     // 2. 각도 기반 페이드: 0.10 ~ 1.0 범위를 0 ~ 1 알파로 매핑
     // facing < 0.10: 거의 투명
     // facing = 0.5: 중간 투명도
     // facing = 1.0: 완전 불투명
-    float angleFade = saturate((facing - 0.10f) / (1.0f - 0.10f));
-    angleFade = pow(angleFade, 1.0f); // 비선형 감쇠로 더 자연스럽게
+    //float angleFade = saturate((facing - 0.10f) / (1.0f - 0.10f));
+    //angleFade = pow(angleFade, 1.0f); // 비선형 감쇠로 더 자연스럽게
 
     // UV 계산 (DecalProjectionMatrix에 이미 타일링 스케일 적용됨)
 
