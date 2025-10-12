@@ -25,7 +25,14 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
     }
     if (StaticMesh)
     {
-        Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+        if (Cast<AGizmoActor>(this->GetOwner()))
+        {
+            Renderer->OMSetDepthStencilState(EComparisonFunc::Always);
+        }
+        else
+        {
+            Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqual);
+        }
 
         Renderer->UpdateSetCBuffer(ModelBufferType(GetWorldMatrix(), this->InternalIndex));
         Renderer->UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));

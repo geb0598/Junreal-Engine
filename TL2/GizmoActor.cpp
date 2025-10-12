@@ -19,6 +19,10 @@ AGizmoActor::AGizmoActor()
 	ArrowY = NewObject<UGizmoArrowComponent>();
 	ArrowZ = NewObject<UGizmoArrowComponent>();
 
+	ArrowX->SetOwner(this);
+	ArrowY->SetOwner(this);
+	ArrowZ->SetOwner(this);
+
 	ArrowX->SetDirection(FVector(1.0f, 0.0f, 0.0f));//빨 
 	ArrowY->SetDirection(FVector(0.0f, 1.0f, 0.0f));//초
 	ArrowZ->SetDirection(FVector(0.0f, 0.0f, 1.0f));//파
@@ -37,7 +41,7 @@ AGizmoActor::AGizmoActor()
 
 	if (ArrowX) ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0)));
 	if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90)));
-	if (ArrowZ) ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, -90, 0)));
+	if (ArrowZ) ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0)));
 
 
 	AddComponent(ArrowX);
@@ -51,6 +55,10 @@ AGizmoActor::AGizmoActor()
 	RotateX = NewObject<UGizmoRotateComponent>();
 	RotateY = NewObject<UGizmoRotateComponent>();
 	RotateZ = NewObject<UGizmoRotateComponent>();
+
+	RotateX->SetOwner(this);
+	RotateY->SetOwner(this);
+	RotateZ->SetOwner(this);
 
 	RotateX->SetDirection(FVector(1.0f, 0.0f, 0.0f));
 	RotateY->SetDirection(FVector(0.0f, 1.0f, 0.0f));
@@ -83,6 +91,10 @@ AGizmoActor::AGizmoActor()
 	ScaleX = NewObject<UGizmoScaleComponent>();
 	ScaleY = NewObject<UGizmoScaleComponent>();
 	ScaleZ = NewObject<UGizmoScaleComponent>();
+
+	ScaleX->SetOwner(this);
+	ScaleY->SetOwner(this);
+	ScaleZ->SetOwner(this);
 
 	ScaleX->SetDirection(FVector(1.0f, 0.0f, 0.0f));
 	ScaleY->SetDirection(FVector(0.0f, 1.0f, 0.0f));
