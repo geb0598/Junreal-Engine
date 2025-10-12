@@ -56,32 +56,32 @@ void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
     TStatId BVHBuildStatId;
     FScopeCycleCounter BVHBuildTimer(BVHBuildStatId);
     // 1. 액터들의 AABB 정보 수집
-    MeshBounds.Reserve(Primitives.Num());
-    MeshIndices.Reserve(Primitives.Num());
+    PrimitiveBounds.Reserve(Primitives.Num());
+    PrimitiveIndices.Reserve(Primitives.Num());
 
     for (int i = 0; i < Primitives.Num(); ++i)
     {
         UPrimitiveComponent* Primitive = Primitives[i];
-        const FAABB* MeshBounds_Local = nullptr;
+        const FAABB* PrimitiveBounds_Local = nullptr;
         bool bHasBounds = false;
 
-        MeshBounds.emplace_back(FBVHPtimitive(Primitive, Primitive->GetWorldAABB()));
-        MeshIndices.Add(MeshBounds.Num() - 1);
+        PrimitiveBounds.emplace_back(FBVHPtimitive(Primitive, Primitive->GetWorldAABB()));
+        PrimitiveIndices.Add(PrimitiveBounds.Num() - 1);
     }
 
     // 2. 노드 배열 예약 (최악의 경우 2*N-1개 노드)
-    Nodes.Reserve(MeshBounds.Num() * 2);
+    Nodes.Reserve(PrimitiveBounds.Num() * 2);
 
     // 3. 재귀적으로 BVH 구축
     MaxDepth = 0;
-    int RootIndex = BuildRecursive(0, MeshBounds.Num(), 0);
+    int RootIndex = BuildRecursive(0, PrimitiveBounds.Num(), 0);
 
     uint64_t BuildCycles = BVHBuildTimer.Finish();
     double BuildTimeMs = FPlatformTime::ToMilliseconds(BuildCycles);
 
     char buf[256];
     sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
-        MeshBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
+        PrimitiveBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
     UE_LOG(buf);
 }
 
@@ -89,19 +89,54 @@ void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
 void FBVH::Clear()
 {
     Nodes.Empty();
-    MeshBounds.Empty();
-    MeshIndices.Empty();
+    PrimitiveBounds.Empty();
+    PrimitiveIndices.Empty();
     MaxDepth = 0;
 }
 
-TArray<FVector> FBVH::GetBVHBoundsWire()
+TArray<FVector> FBVH::GetBVHBoundsWire() const
 {
     TArray<FVector> BoundsWire;
-    for (FBVHNode& Node : Nodes)
+    for (const FBVHNode& Node : Nodes)
     {
         BoundsWire.Append(Node.BoundingBox.GetWireLine());
     }
     return BoundsWire;
+}
+TArray<UPrimitiveComponent*> FBVH::GetCollisionWithOBB(const FOBB& OBB) const
+{
+    TArray<UPrimitiveComponent*> Primitives;
+
+    if (Nodes.Num() > 0)
+    {
+        GetCollisionWithOBBRecursive(OBB, 0, Primitives);
+    }
+    return Primitives;
+}
+void FBVH::GetCollisionWithOBBRecursive(const FOBB& OBB, int NodeIdx, TArray<UPrimitiveComponent*>& HitPrimitives) const
+{
+    const FBVHNode& Node = Nodes[NodeIdx];
+
+    //Node AABB, OBB 충돌 체크
+    if (IntersectOBBAABB(OBB, Node.BoundingBox)) 
+    {
+        if (Node.IsLeaf())
+        {
+            for (int i = 0; i < Node.PrimitiveCount; i++)
+            {
+                int CurIdx = PrimitiveIndices[Node.FirstPrimitive + i];
+                if (IntersectOBBAABB(OBB, PrimitiveBounds[CurIdx].AABB))
+                {
+                    HitPrimitives.Push(PrimitiveBounds[CurIdx].Primitive);
+                }
+            }
+        }
+        else
+        {
+            GetCollisionWithOBBRecursive(OBB, Node.LeftChild, HitPrimitives);
+            GetCollisionWithOBBRecursive(OBB, Node.RightChild, HitPrimitives);
+        }
+    }
 }
 
 UPrimitiveComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const
@@ -139,7 +174,7 @@ UPrimitiveComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& Ra
     }
 }
 
-int FBVH::BuildRecursive(int FirstMeshBound, int MeshBoundCount, int Depth)
+int FBVH::BuildRecursive(int FirstPrimitive, int PrimitiveCount, int Depth)
 {
     MaxDepth = FMath::Max(MaxDepth, Depth);
 
@@ -148,54 +183,54 @@ int FBVH::BuildRecursive(int FirstMeshBound, int MeshBoundCount, int Depth)
     Nodes.Add(NewNode);
     FBVHNode& Node = Nodes[NodeIndex];
 
-    Node.BoundingBox = CalculateBounds(FirstMeshBound, MeshBoundCount);
+    Node.BoundingBox = CalculateBounds(FirstPrimitive, PrimitiveCount);
 
-    if (MeshBoundCount <= MaxActorsPerLeaf || Depth >= MaxBVHDepth)
+    if (PrimitiveCount <= MaxActorsPerLeaf || Depth >= MaxBVHDepth)
     {
-        Node.FirstMeshBound = FirstMeshBound;
-        Node.MeshBoundCount = MeshBoundCount;
+        Node.FirstPrimitive = FirstPrimitive;
+        Node.PrimitiveCount = PrimitiveCount;
         return NodeIndex;
     }
 
     int BestAxis;
     float BestSplitPos;
-    int SplitIndex = FindBestSplit(FirstMeshBound, MeshBoundCount, BestAxis, BestSplitPos);
+    int SplitIndex = FindBestSplit(FirstPrimitive, PrimitiveCount, BestAxis, BestSplitPos);
 
-    if (SplitIndex == FirstMeshBound || SplitIndex == FirstMeshBound + MeshBoundCount)
+    if (SplitIndex == FirstPrimitive || SplitIndex == FirstPrimitive + PrimitiveCount)
     {
-        Node.FirstMeshBound = FirstMeshBound;
-        Node.MeshBoundCount = MeshBoundCount;
+        Node.FirstPrimitive = FirstPrimitive;
+        Node.PrimitiveCount = PrimitiveCount;
         return NodeIndex;
     }
 
-    int ActualSplit = PartitionActors(FirstMeshBound, MeshBoundCount, BestAxis, BestSplitPos);
+    int ActualSplit = PartitionActors(FirstPrimitive, PrimitiveCount, BestAxis, BestSplitPos);
 
-    int LeftCount = ActualSplit - FirstMeshBound;
-    int RightCount = MeshBoundCount - LeftCount;
+    int LeftCount = ActualSplit - FirstPrimitive;
+    int RightCount = PrimitiveCount - LeftCount;
 
     if (LeftCount == 0 || RightCount == 0)
     {
-        Node.FirstMeshBound = FirstMeshBound;
-        Node.MeshBoundCount = MeshBoundCount;
+        Node.FirstPrimitive = FirstPrimitive;
+        Node.PrimitiveCount = PrimitiveCount;
         return NodeIndex;
     }
 
-    Node.LeftChild = BuildRecursive(FirstMeshBound, LeftCount, Depth + 1);
+    Node.LeftChild = BuildRecursive(FirstPrimitive, LeftCount, Depth + 1);
     Node.RightChild = BuildRecursive(ActualSplit, RightCount, Depth + 1);
 
     return NodeIndex;
 }
 
 
-FAABB FBVH::CalculateBounds(int FirstMeshBound, int MeshBoundCount) const
+FAABB FBVH::CalculateBounds(int FirstPrimitive, int PrimitiveCount) const
 {
     FAABB Bounds;
     bool bFirst = true;
 
-    for (int i = 0; i < MeshBoundCount; ++i)
+    for (int i = 0; i < PrimitiveCount; ++i)
     {
-        int ActorIndex = MeshIndices[FirstMeshBound + i];
-        const FAABB& ActorBound = MeshBounds[ActorIndex].AABB;
+        int ActorIndex = PrimitiveIndices[FirstPrimitive + i];
+        const FAABB& ActorBound = PrimitiveBounds[ActorIndex].AABB;
 
         if (bFirst)
         {
@@ -217,15 +252,15 @@ FAABB FBVH::CalculateBounds(int FirstMeshBound, int MeshBoundCount) const
     return Bounds;
 }
 
-FAABB FBVH::CalculateCentroidBounds(int FirstMeshBound, int MeshBoundCount) const
+FAABB FBVH::CalculateCentroidBounds(int FirstPrimitive, int PrimitiveCount) const
 {
     FAABB Bounds;
     bool bFirst = true;
 
-    for (int i = 0; i < MeshBoundCount; ++i)
+    for (int i = 0; i < PrimitiveCount; ++i)
     {
-        int ActorIndex = MeshIndices[FirstMeshBound + i];
-        const FVector& Center = MeshBounds[ActorIndex].Center;
+        int ActorIndex = PrimitiveIndices[FirstPrimitive + i];
+        const FVector& Center = PrimitiveBounds[ActorIndex].Center;
 
         if (bFirst)
         {
@@ -247,10 +282,10 @@ FAABB FBVH::CalculateCentroidBounds(int FirstMeshBound, int MeshBoundCount) cons
     return Bounds;
 }
 
-int FBVH::FindBestSplit(int FirstMeshBound, int MeshBoundCount, int& OutAxis, float& OutSplitPos)
+int FBVH::FindBestSplit(int FirstPrimitive, int PrimitiveCount, int& OutAxis, float& OutSplitPos)
 {
-    FAABB CentroidBounds = CalculateCentroidBounds(FirstMeshBound, MeshBoundCount);
-    FAABB ParentBounds = CalculateBounds(FirstMeshBound, MeshBoundCount);
+    FAABB CentroidBounds = CalculateCentroidBounds(FirstPrimitive, PrimitiveCount);
+    FAABB ParentBounds = CalculateBounds(FirstPrimitive, PrimitiveCount);
 
     FVector Extent = CentroidBounds.Max - CentroidBounds.Min;
     OutAxis = 0;
@@ -260,55 +295,55 @@ int FBVH::FindBestSplit(int FirstMeshBound, int MeshBoundCount, int& OutAxis, fl
     if (Extent[OutAxis] < KINDA_SMALL_NUMBER)
     {
         OutSplitPos = CentroidBounds.Min[OutAxis];
-        return FirstMeshBound + MeshBoundCount / 2;
+        return FirstPrimitive + PrimitiveCount / 2;
     }
 
     // 1) 정렬 - TArray의 Sort 사용
     // 임시 배열 생성 후 정렬
     TArray<int> TempIndices;
-    TempIndices.Reserve(MeshBoundCount);
-    for (int i = 0; i < MeshBoundCount; ++i)
+    TempIndices.Reserve(PrimitiveCount);
+    for (int i = 0; i < PrimitiveCount; ++i)
     {
-        TempIndices.Add(MeshIndices[FirstMeshBound + i]);
+        TempIndices.Add(PrimitiveIndices[FirstPrimitive + i]);
     }
 
     TempIndices.Sort([&](int A, int B)
     {
-        return MeshBounds[A].Center[OutAxis] < MeshBounds[B].Center[OutAxis];
+        return PrimitiveBounds[A].Center[OutAxis] < PrimitiveBounds[B].Center[OutAxis];
     });
 
     // 정렬된 결과를 다시 복사
-    for (int i = 0; i < MeshBoundCount; ++i)
+    for (int i = 0; i < PrimitiveCount; ++i)
     {
-        MeshIndices[FirstMeshBound + i] = TempIndices[i];
+        PrimitiveIndices[FirstPrimitive + i] = TempIndices[i];
     }
     // 2) Prefix/Suffix AABB 계산
     TArray<FAABB> Prefix;
     TArray<FAABB> Suffix;
-    Prefix.SetNum(MeshBoundCount);
-    Suffix.SetNum(MeshBoundCount);
+    Prefix.SetNum(PrimitiveCount);
+    Suffix.SetNum(PrimitiveCount);
 
-    Prefix[0] = MeshBounds[MeshIndices[FirstMeshBound]].AABB;
-    for (int i = 1; i < MeshBoundCount; i++)
+    Prefix[0] = PrimitiveBounds[PrimitiveIndices[FirstPrimitive]].AABB;
+    for (int i = 1; i < PrimitiveCount; i++)
     {
-        Prefix[i] = Prefix[i - 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB;
+        Prefix[i] = Prefix[i - 1] + PrimitiveBounds[PrimitiveIndices[FirstPrimitive + i]].AABB;
     }
 
-    Suffix[MeshBoundCount - 1] = MeshBounds[MeshIndices[FirstMeshBound + MeshBoundCount - 1]].AABB;
-    for (int i = MeshBoundCount - 2; i >= 0; i--)
+    Suffix[PrimitiveCount - 1] = PrimitiveBounds[PrimitiveIndices[FirstPrimitive + PrimitiveCount - 1]].AABB;
+    for (int i = PrimitiveCount - 2; i >= 0; i--)
     {
-        Suffix[i] = Suffix[i + 1] + MeshBounds[MeshIndices[FirstMeshBound + i]].AABB;
+        Suffix[i] = Suffix[i + 1] + PrimitiveBounds[PrimitiveIndices[FirstPrimitive + i]].AABB;
     }
 
     // 3) SAH 비용 평가
     float BestCost = FLT_MAX;
-    int BestSplit = FirstMeshBound + MeshBoundCount / 2;
+    int BestSplit = FirstPrimitive + PrimitiveCount / 2;
     float SA_P = ParentBounds.GetSurfaceArea() + 1e-6f;
 
-    for (int i = 0; i < MeshBoundCount - 1; i++)
+    for (int i = 0; i < PrimitiveCount - 1; i++)
     {
         int LeftCount = i + 1;
-        int RightCount = MeshBoundCount - LeftCount;
+        int RightCount = PrimitiveCount - LeftCount;
 
         float SA_L = Prefix[i].GetSurfaceArea();
         float SA_R = Suffix[i + 1].GetSurfaceArea();
@@ -318,8 +353,8 @@ int FBVH::FindBestSplit(int FirstMeshBound, int MeshBoundCount, int& OutAxis, fl
         if (Cost < BestCost)
         {
             BestCost = Cost;
-            BestSplit = FirstMeshBound + LeftCount;
-            OutSplitPos = MeshBounds[MeshIndices[BestSplit]].Center[OutAxis];
+            BestSplit = FirstPrimitive + LeftCount;
+            OutSplitPos = PrimitiveBounds[PrimitiveIndices[BestSplit]].Center[OutAxis];
         }
     }
 
@@ -332,10 +367,10 @@ int FBVH::FindBestSplit(int FirstMeshBound, int MeshBoundCount, int& OutAxis, fl
 //    return 2.0f * (s.X * s.Y + s.Y * s.Z + s.Z * s.X);
 //}
 
-float FBVH::CalculateSAH(int FirstMeshBound, int LeftCount, int RightCount, const FAABB& Parent) const
+float FBVH::CalculateSAH(int FirstPrimitive, int LeftCount, int RightCount, const FAABB& Parent) const
 {
-    FAABB LB = CalculateBounds(FirstMeshBound, LeftCount);
-    FAABB RB = CalculateBounds(FirstMeshBound + LeftCount, RightCount);
+    FAABB LB = CalculateBounds(FirstPrimitive, LeftCount);
+    FAABB RB = CalculateBounds(FirstPrimitive + LeftCount, RightCount);
 
     float SA_P = Parent.GetSurfaceArea() + 1e-6f;
     float SA_L = LB.GetSurfaceArea();
@@ -346,17 +381,17 @@ float FBVH::CalculateSAH(int FirstMeshBound, int LeftCount, int RightCount, cons
     return Ct + Ci * ((SA_L / SA_P) * LeftCount + (SA_R / SA_P) * RightCount);
 }
 
-int FBVH::PartitionActors(int FirstMeshBound, int MeshBoundCount, int Axis, float SplitPos)
+int FBVH::PartitionActors(int FirstPrimitive, int PrimitiveCount, int Axis, float SplitPos)
 {
-    int Left = FirstMeshBound;
-    int Right = FirstMeshBound + MeshBoundCount - 1;
+    int Left = FirstPrimitive;
+    int Right = FirstPrimitive + PrimitiveCount - 1;
 
     while (Left <= Right)
     {
         while (Left <= Right)
         {
-            int LeftActorIndex = MeshIndices[Left];
-            const FVector& LeftCenter = MeshBounds[LeftActorIndex].Center;
+            int LeftActorIndex = PrimitiveIndices[Left];
+            const FVector& LeftCenter = PrimitiveBounds[LeftActorIndex].Center;
             if (LeftCenter[Axis] >= SplitPos)
                 break;
             Left++;
@@ -364,8 +399,8 @@ int FBVH::PartitionActors(int FirstMeshBound, int MeshBoundCount, int Axis, floa
 
         while (Left <= Right)
         {
-            int RightActorIndex = MeshIndices[Right];
-            const FVector& RightCenter = MeshBounds[RightActorIndex].Center;
+            int RightActorIndex = PrimitiveIndices[Right];
+            const FVector& RightCenter = PrimitiveBounds[RightActorIndex].Center;
             if (RightCenter[Axis] < SplitPos)
                 break;
             Right--;
@@ -373,9 +408,9 @@ int FBVH::PartitionActors(int FirstMeshBound, int MeshBoundCount, int Axis, floa
 
         if (Left < Right)
         {
-            int Temp = MeshIndices[Left];
-            MeshIndices[Left] = MeshIndices[Right];
-            MeshIndices[Right] = Temp;
+            int Temp = PrimitiveIndices[Left];
+            PrimitiveIndices[Left] = PrimitiveIndices[Right];
+            PrimitiveIndices[Right] = Temp;
             Left++;
             Right--;
         }
@@ -405,10 +440,10 @@ bool FBVH::IntersectNode(int NodeIndex,
         float Closest = InOutDistance;
         UPrimitiveComponent* ClosetPrimitive = nullptr;
 
-        for (int i = 0; i < Node.MeshBoundCount; ++i)
+        for (int i = 0; i < Node.PrimitiveCount; ++i)
         {
-            int ActorIndex = MeshIndices[Node.FirstMeshBound + i];
-            UPrimitiveComponent* Primitive = MeshBounds[ActorIndex].Primitive;
+            int ActorIndex = PrimitiveIndices[Node.FirstPrimitive + i];
+            UPrimitiveComponent* Primitive = PrimitiveBounds[ActorIndex].Primitive;
 
             float Dist;
             if (IntersectRayAABB(Ray, Primitive->GetWorldAABB(), Dist))

@@ -161,8 +161,8 @@ void UWorld::Initialize()
 
     // 액터 간 참조 설정
     SetupActorReferences();
-    ADecalActor* DecalActor = SpawnActor<ADecalActor>();
-    Level->AddActor(DecalActor);
+    /*ADecalActor* DecalActor = SpawnActor<ADecalActor>();
+    Level->AddActor(DecalActor);*/
 }
 
 void UWorld::InitializeMainCamera()
@@ -281,7 +281,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     //특수 처리가 필요한 경우 아래에 추가
     TArray<UDecalComponent*> Decals;
-    TArray<UStaticMeshComponent*> RenderStaticMeshes;
+    TArray<UPrimitiveComponent*> RenderPrimitivesWithOutDecal;
 
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives) == false)
     {
@@ -320,10 +320,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     continue;
                 }
 
-                if (UStaticMeshComponent* StaticMesh = Cast<UStaticMeshComponent>(Primitive))
-                {
-                    RenderStaticMeshes.Add(StaticMesh);
-                }
+                RenderPrimitivesWithOutDecal.Add(Primitive);
 
                 Renderer->UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
                 Primitive->Render(Renderer, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
@@ -346,13 +343,26 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             FOBB DecalWorldOBB = Decal->GetWorldOBB();
             Renderer->AddLines(DecalWorldOBB.GetWireLine(), FVector4(1, 0, 1, 1));
 
-            for (UStaticMeshComponent* StaticMesh : RenderStaticMeshes)
+            if (BVH == nullptr)
             {
-                if (IntersectOBBAABB(DecalWorldOBB, StaticMesh->GetWorldAABB()))
+                //BVH 껐을때
+                for (UPrimitiveComponent* Primitive : RenderPrimitivesWithOutDecal)
                 {
-                    Decal->Render(Renderer, StaticMesh, ViewMatrix, ProjectionMatrix, Viewport);
+                    if (IntersectOBBAABB(DecalWorldOBB, Primitive->GetWorldAABB()))
+                    {
+                        Decal->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                    }
                 }
             }
+            else
+            {
+                TArray<UPrimitiveComponent*> CollisionPrimitives = BVH->GetCollisionWithOBB(DecalWorldOBB);
+                for (UPrimitiveComponent* Primitive : CollisionPrimitives)
+                {
+                    Decal->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                }
+            }
+
         }
     }
 
