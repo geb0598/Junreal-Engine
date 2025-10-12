@@ -309,6 +309,10 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     {
                         Renderer->AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
                     }
+                    else
+                    {
+                        int a = 0;
+                    }
                 }
 
                 // 데칼 컴포넌트는 Pass 2에서 렌더링
