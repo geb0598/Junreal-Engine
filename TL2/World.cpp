@@ -356,6 +356,11 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
         }
     }
 
+    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH))
+    {
+        Renderer->AddLines(BVH->GetBVHBoundsWire(), FVector4(0.5f, 0.5f, 1, 1));
+    }
+
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 }
 
