@@ -26,6 +26,43 @@ namespace fs = std::filesystem;
 //// UE_LOG 대체 매크로
 //#define UE_LOG(fmt, ...)
 
+// ★ 고정 오더: ZYX (Yaw-Pitch-Roll) - 기즈모의 Delta 곱(Z * Y * X)과 동일
+static inline FQuat QuatFromEulerZYX_Deg(const FVector& Deg)
+{
+	const float Rx = DegreeToRadian(Deg.X); // Roll (X)
+	const float Ry = DegreeToRadian(Deg.Y); // Pitch (Y)
+	const float Rz = DegreeToRadian(Deg.Z); // Yaw (Z)
+
+	const FQuat Qx = MakeQuatFromAxisAngle(FVector(1, 0, 0), Rx);
+	const FQuat Qy = MakeQuatFromAxisAngle(FVector(0, 1, 0), Ry);
+	const FQuat Qz = MakeQuatFromAxisAngle(FVector(0, 0, 1), Rz);
+	return Qz * Qy * Qx; // ZYX
+}
+
+static inline FVector EulerZYX_DegFromQuat(const FQuat& Q)
+{
+	// ZYX Euler 변환: Quat → (Roll, Pitch, Yaw)
+	// atan2를 사용하여 전체 360도 범위 지원
+	const float w = Q.W, x = Q.X, y = Q.Y, z = Q.Z;
+
+	// Roll (X축 회전): -180 ~ 180도
+	const float sinr_cosp = 2.0f * (w * x + y * z);
+	const float cosr_cosp = 1.0f - 2.0f * (x * x + y * y);
+	float roll = std::atan2(sinr_cosp, cosr_cosp);
+
+	// Pitch (Y축 회전): atan2 사용으로 전체 범위 지원
+	const float sinp = 2.0f * (w * y - z * x);
+	const float cosp = std::sqrt(1.0f - sinp * sinp);
+	float pitch = std::atan2(sinp, cosp);
+
+	// Yaw (Z축 회전): -180 ~ 180도
+	const float siny_cosp = 2.0f * (w * z + x * y);
+	const float cosy_cosp = 1.0f - 2.0f * (y * y + z * z);
+	float yaw = std::atan2(siny_cosp, cosy_cosp);
+
+	return FVector(RadianToDegree(roll), RadianToDegree(pitch), RadianToDegree(yaw));
+}
+
 // 파일명 스템(Cube 등) 추출 + .obj 확장자 제거
 static inline FString GetBaseNameNoExt(const FString& Path)
 {
@@ -864,30 +901,45 @@ void UTargetActorTransformWidget::PostProcess()
 
 void UTargetActorTransformWidget::UpdateTransformFromActor()
 {
-	
+
 	USceneComponent* SelectedComponent = SelectionManager->GetSelectedComponent();
 
 	if (SelectedComponent)
 	{
+		// 컴포넌트 선택이 바뀌었는지 확인
+		bool bComponentChanged = (LastReadComponent != SelectedComponent);
+		if (bComponentChanged)
+		{
+			LastReadComponent = SelectedComponent;
+		}
+
 		// 액터의 현재 트랜스폼을 UI 변수로 복사
 		EditLocation = SelectedComponent->GetRelativeLocation();
-		EditRotation = SelectedComponent->GetRelativeRotation().ToEuler();
+
+		// Rotation: 컴포넌트가 바뀌었을 때만 Quat에서 Euler로 변환
+		// (같은 컴포넌트라면 사용자 입력값 유지하여 짐벌락 회피)
+		if (bComponentChanged)
+		{
+			EditRotation = EulerZYX_DegFromQuat(SelectedComponent->GetRelativeRotation());
+			PrevEditRotation = EditRotation;
+		}
+
 		EditScale = SelectedComponent->GetRelativeScale();
 	}
-
-	// 균등 스케일 여부 판단
-	// uniform scale이 한번이라도 적용되면 이후 false로 되돌릴 수가 없음. 필요 시 수정해서 사용
-	/*bUniformScale = (abs(EditScale.X - EditScale.Y) < 0.01f &&
-		abs(EditScale.Y - EditScale.Z) < 0.01f);*/
+	else
+	{
+		// 컴포넌트가 없으면 초기화
+		LastReadComponent = nullptr;
+	}
 
 	ResetChangeFlags();
 }
 
-void UTargetActorTransformWidget::ApplyTransformToComponent(USceneComponent* SelectedComponent) const
+void UTargetActorTransformWidget::ApplyTransformToComponent(USceneComponent* SelectedComponent)
 {
 	if (!SelectedComponent)
 		return;
-	 
+
 	// 변경사항이 있는 경우에만 적용
 	if (bPositionChanged)
 	{
@@ -898,8 +950,10 @@ void UTargetActorTransformWidget::ApplyTransformToComponent(USceneComponent* Sel
 
 	if (bRotationChanged)
 	{
-		FQuat NewRotation = FQuat::MakeFromEuler(EditRotation);
+		// 커스텀 ZYX Euler → Quat 변환 사용 (기즈모 회전 순서와 일치)
+		FQuat NewRotation = QuatFromEulerZYX_Deg(EditRotation);
 		SelectedComponent->SetRelativeRotation(NewRotation);
+		PrevEditRotation = EditRotation; // 적용 후 이전 값 갱신
 		UE_LOG("Transform: Applied rotation (%.1f, %.1f, %.1f)",
 			EditRotation.X, EditRotation.Y, EditRotation.Z);
 	}

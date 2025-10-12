@@ -25,7 +25,7 @@ public:
 	void PostProcess() override;
 
 	void UpdateTransformFromActor();
-	void ApplyTransformToComponent(USceneComponent* SelectedComponent) const;
+	void ApplyTransformToComponent(USceneComponent* SelectedComponent);
 
 	void RenderComponentHierarchy(USceneComponent* SceneComponent) ;
 
@@ -43,7 +43,13 @@ private:
 	FVector EditLocation = {0.0f, 0.0f, 0.0f};
 	FVector EditRotation = {0.0f, 0.0f, 0.0f};
 	FVector EditScale = {1.0f, 1.0f, 1.0f};
-	
+
+	// 이전 UI 값 저장 (Quat↔Euler 변환으로 인한 값 튐 방지)
+	FVector PrevEditRotation = {0.0f, 0.0f, 0.0f};
+
+	// 마지막으로 읽어온 컴포넌트 (선택이 바뀔 때만 Quat에서 Euler 읽기)
+	USceneComponent* LastReadComponent = nullptr;
+
 	// UI 변경 플래그
 	bool bScaleChanged = false;
 	bool bRotationChanged = false;
