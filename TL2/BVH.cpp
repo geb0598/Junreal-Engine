@@ -25,7 +25,7 @@ void FBVH::Build(const TArray<AActor*>& Actors)
         return;
 
     //전체 액터 순회하며 StaticMeshComponent 추출
-    TArray<UStaticMeshComponent*> StaticMeshComponents;
+    TArray<UPrimitiveComponent*> Primitives;
     for (const AActor* Actor : Actors)
     {
         if (!Actor || Actor->GetActorHiddenInGame())
@@ -35,37 +35,37 @@ void FBVH::Build(const TArray<AActor*>& Actors)
 
         for (auto Component : Actor->GetComponents())
         {
-            if (UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(Component))
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
-                StaticMeshComponents.Push(StaticMeshComp);
+                Primitives.Push(Primitive);
             }
         }
     }
 
-    if (StaticMeshComponents.Num() == 0)
+    if (Primitives.Num() == 0)
     {
         return;
     }
-    Build(StaticMeshComponents);
+    Build(Primitives);
    
 }
 
-void FBVH::Build(const TArray<UStaticMeshComponent*>& StaticMeshComps)
+void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
 {
     Clear();
     TStatId BVHBuildStatId;
     FScopeCycleCounter BVHBuildTimer(BVHBuildStatId);
     // 1. 액터들의 AABB 정보 수집
-    MeshBounds.Reserve(StaticMeshComps.Num());
-    MeshIndices.Reserve(StaticMeshComps.Num());
+    MeshBounds.Reserve(Primitives.Num());
+    MeshIndices.Reserve(Primitives.Num());
 
-    for (int i = 0; i < StaticMeshComps.Num(); ++i)
+    for (int i = 0; i < Primitives.Num(); ++i)
     {
-        UStaticMeshComponent* StaticMeshComp = StaticMeshComps[i];
+        UPrimitiveComponent* Primitive = Primitives[i];
         const FAABB* MeshBounds_Local = nullptr;
         bool bHasBounds = false;
 
-        MeshBounds.emplace_back(FBVHStaticMeshAABB(StaticMeshComp, StaticMeshComp->GetWorldAABB()));
+        MeshBounds.emplace_back(FBVHPtimitive(Primitive, Primitive->GetWorldAABB()));
         MeshIndices.Add(MeshBounds.Num() - 1);
     }
 
@@ -104,7 +104,7 @@ TArray<FVector> FBVH::GetBVHBoundsWire()
     return BoundsWire;
 }
 
-UStaticMeshComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const
+UPrimitiveComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const
 {
     if (Nodes.Num() == 0)
         return nullptr;
@@ -113,11 +113,11 @@ UStaticMeshComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& R
     FScopeCycleCounter BVHIntersectTimer(BVHIntersectStatId);
 
     OutDistance = FLT_MAX;
-    UStaticMeshComponent* HitStaticMeshComponent = nullptr;
+    UPrimitiveComponent* HitPrimitive = nullptr;
 
     // 최적화된 Ray 생성 (InverseDirection과 Sign 미리 계산)
     FOptimizedRay OptRay(RayOrigin, RayDirection);
-    bool bHit = IntersectNode(0, OptRay, OutDistance, HitStaticMeshComponent);
+    bool bHit = IntersectNode(0, OptRay, OutDistance, HitPrimitive);
 
     uint64_t IntersectCycles = BVHIntersectTimer.Finish();
     double IntersectTimeMs = FPlatformTime::ToMilliseconds(IntersectCycles);
@@ -128,7 +128,7 @@ UStaticMeshComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& R
         sprintf_s(buf, "[BVH Pick] Hit actor at distance %.3f (Time: %.3fms)\n",
             OutDistance, IntersectTimeMs);
         UE_LOG(buf);
-        return HitStaticMeshComponent;
+        return HitPrimitive;
     }
     else
     {
@@ -387,7 +387,7 @@ int FBVH::PartitionActors(int FirstMeshBound, int MeshBoundCount, int Axis, floa
 bool FBVH::IntersectNode(int NodeIndex,
     const FOptimizedRay& Ray,
     float& InOutDistance,
-    UStaticMeshComponent*& OutStaticMeshComp) const
+    UPrimitiveComponent*& OutPrimitive) const
 {
     const FBVHNode& Node = Nodes[NodeIndex];
 
@@ -403,20 +403,20 @@ bool FBVH::IntersectNode(int NodeIndex,
     {
         bool bHit = false;
         float Closest = InOutDistance;
-        UStaticMeshComponent* ClosetMesh = nullptr;
+        UPrimitiveComponent* ClosetPrimitive = nullptr;
 
         for (int i = 0; i < Node.MeshBoundCount; ++i)
         {
             int ActorIndex = MeshIndices[Node.FirstMeshBound + i];
-            UStaticMeshComponent* StaticMeshComp = MeshBounds[ActorIndex].StaticMeshComp;
+            UPrimitiveComponent* Primitive = MeshBounds[ActorIndex].Primitive;
 
             float Dist;
-            if (CPickingSystem::CheckStaticMeshPicking(StaticMeshComp, Ray, Dist))
+            if (IntersectRayAABB(Ray, Primitive->GetWorldAABB(), Dist))
             {
                 if (Dist < Closest)
                 {
                     Closest = Dist;
-                    ClosetMesh = StaticMeshComp;
+                    ClosetPrimitive = Primitive;
                     bHit = true;
                 }
             }
@@ -425,7 +425,7 @@ bool FBVH::IntersectNode(int NodeIndex,
         if (bHit)
         {
             InOutDistance = Closest;
-            OutStaticMeshComp = ClosetMesh;
+            OutPrimitive = ClosetPrimitive;
         }
 
         return bHit;
@@ -457,23 +457,23 @@ bool FBVH::IntersectNode(int NodeIndex,
         const ChildHit First = (L.tNear < R.tNear) ? L : R;
         const ChildHit Second = (L.tNear < R.tNear) ? R : L;
 
-        if (IntersectNode(First.Index, Ray, InOutDistance, OutStaticMeshComp))
+        if (IntersectNode(First.Index, Ray, InOutDistance, OutPrimitive))
             bHit = true;
 
         if (InOutDistance > Second.tNear)
         {
-            if (IntersectNode(Second.Index, Ray, InOutDistance, OutStaticMeshComp))
+            if (IntersectNode(Second.Index, Ray, InOutDistance, OutPrimitive))
                 bHit = true;
         }
     }
     else if (L.bValid)
     {
-        if (IntersectNode(L.Index, Ray, InOutDistance, OutStaticMeshComp))
+        if (IntersectNode(L.Index, Ray, InOutDistance, OutPrimitive))
             bHit = true;
     }
     else if (R.bValid)
     {
-        if (IntersectNode(R.Index, Ray, InOutDistance, OutStaticMeshComp))
+        if (IntersectNode(R.Index, Ray, InOutDistance, OutPrimitive))
             bHit = true;
     }
 

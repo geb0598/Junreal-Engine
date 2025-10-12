@@ -1194,18 +1194,18 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
     //}
 }
 
-bool CPickingSystem::CheckStaticMeshPicking(const UStaticMeshComponent* StaticMeshComp, const FRay& Ray, float& OutDistance)
-{
-    // AABB 검사
-    FAABB WorldBound = StaticMeshComp->GetWorldAABB();
-    float distance;
-    if (IntersectRayAABB(Ray, WorldBound, distance))
-    {
-        OutDistance = distance;
-        return true;
-    } 
-    return false;  
-}
+//bool CPickingSystem::CheckStaticMeshPicking(const UPrimitiveComponent* StaticMeshComp, const FRay& Ray, float& OutDistance)
+//{
+//    // AABB 검사
+//    FAABB WorldBound = StaticMeshComp->GetWorldAABB();
+//    float distance;
+//    if (IntersectRayAABB(Ray, WorldBound, distance))
+//    {
+//        OutDistance = distance;
+//        return true;
+//    } 
+//    return false;  
+//}
 
 
 float CPickingSystem::GetAdaptiveThreshold(float cameraDistance)

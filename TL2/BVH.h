@@ -31,15 +31,15 @@ struct FBVHNode
 };
 
 // 액터의 AABB와 포인터를 저장
-struct FBVHStaticMeshAABB
+struct FBVHPtimitive
 {
     FAABB AABB;
-    UStaticMeshComponent* StaticMeshComp;
+    UPrimitiveComponent* Primitive;
     FVector Center;
 
-    FBVHStaticMeshAABB() : StaticMeshComp(nullptr) {}
-    FBVHStaticMeshAABB(UStaticMeshComponent* InStaticMeshComp, const FAABB& InBounds)
-        : StaticMeshComp(InStaticMeshComp), AABB(InBounds)
+    FBVHPtimitive() : Primitive(nullptr) {}
+    FBVHPtimitive(UPrimitiveComponent* InPrimitive, const FAABB& InBounds)
+        : Primitive(InPrimitive), AABB(InBounds)
     {
         Center = InBounds.GetCenter();
     }
@@ -54,11 +54,11 @@ public:
 
     // 액터 배열로부터 BVH 구축
     void Build(const TArray<AActor*>& Actors);
-    void Build(const TArray<UStaticMeshComponent*>& StaticMeshComps);
+    void Build(const TArray<UPrimitiveComponent*>& Primitives);
     void Clear();
 
     // 빠른 레이 교차 검사 - 가장 가까운 액터 반환
-    UStaticMeshComponent* Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const;
+    UPrimitiveComponent* Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const;
 
     // 통계 정보
     int GetNodeCount() const { return Nodes.Num(); }
@@ -73,7 +73,7 @@ public:
 
 private:
     TArray<FBVHNode> Nodes;
-    TArray<FBVHStaticMeshAABB> MeshBounds;
+    TArray<FBVHPtimitive> MeshBounds;
     TArray<int> MeshIndices; // 정렬된 액터 인덱스
 
     int MaxDepth;
@@ -92,7 +92,7 @@ private:
     // 액터 분할
     int PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitPos);
 
-    bool IntersectNode(int NodeIndex, const FOptimizedRay& Ray, float& InOutDistance, UStaticMeshComponent*& OutStaticMeshComp) const;
+    bool IntersectNode(int NodeIndex, const FOptimizedRay& Ray, float& InOutDistance, UPrimitiveComponent*& OutPrimitive) const;
 
     //// 재귀 교차 검사 (깊이 제한 추가)
     //bool IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector& RayDirection,
