@@ -112,19 +112,26 @@ FQuat UPrimitiveSpawnWidget::GenerateRandomRotation() const
 
 void UPrimitiveSpawnWidget::RenderWidget()
 {
-    ImGui::Text("Primitive Actor Spawner");
+    ImGui::Text("Actor Spawner");
     ImGui::Spacing();
 
     // Primitive 타입 선택: StaticMesh만 노출
-    const char* SpawnTypes[] = { "Static Mesh", "Decal", "Actor", "Spot Light" };
-    ImGui::Text("Primitive Type:");
+    const char* SpawnTypes[] = { "Actor", "Static Mesh", "Decal", "Spot Light" };
+    static ESpawnActorType SelectedSpawnType = ESpawnActorType::StaticMesh;
+    
+    ImGui::Text("Actor Types:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(120);
-    ImGui::Combo("##Primitive Type", &SelectedPrimitiveType, SpawnTypes, IM_ARRAYSIZE(SpawnTypes));
+    ImGui::Combo("##Actor Type", (int*)&SelectedSpawnType, SpawnTypes, (int)ESpawnActorType::Count);
 
-    switch (SelectedPrimitiveType)
+    switch (SelectedSpawnType)
     {
-    case 0:
+    case ESpawnActorType::Actor:
+    {
+        ImGui::Text("Actor does not require additional resources to spawn.");
+        break;
+    }
+    case ESpawnActorType::StaticMesh:
     {
         auto& ResourceManager = UResourceManager::GetInstance();
 
@@ -179,17 +186,12 @@ void UPrimitiveSpawnWidget::RenderWidget()
         }
         break;
     }
-    case 1:
+    case ESpawnActorType::Decal:
     {
         ImGui::Text("Decal does not require additional resources to spawn.");
         break;
     }
-    case 2:
-    {
-        ImGui::Text("Actor does not require additional resources to spawn.");
-        break;
-    }
-    case 3:
+    case ESpawnActorType::SpotLight:
     {
         ImGui::Text("SpotLight does not require additional resources to spawn.");
         break;
@@ -209,7 +211,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::SameLine();
     if (ImGui::Button("Spawn Actors"))
     {
-        SpawnActors(SelectedPrimitiveType);
+        SpawnActors(SelectedSpawnType);
     }
 
 	////Obj Parser 테스트용
@@ -277,7 +279,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::Text("Quick Spawn:");
     if (ImGui::Button("Spawn 1 Cube"))
     {
-        SelectedPrimitiveType = 0;
+        SelectedSpawnType = ESpawnActorType::StaticMesh;
         NumberOfSpawn = 1;
         // 기본 선택을 Cube로 강제
         if (!CachedMeshFilePaths.empty())
@@ -293,18 +295,18 @@ void UPrimitiveSpawnWidget::RenderWidget()
                 }
             }
         }
-        SpawnActors(SelectedPrimitiveType);
+        SpawnActors(SelectedSpawnType);
     }
     ImGui::SameLine();
     if (ImGui::Button("Spawn 5 Random"))
     {
-        SelectedPrimitiveType = 0;
+        SelectedSpawnType = ESpawnActorType::StaticMesh;
         NumberOfSpawn = 5;
-        SpawnActors(SelectedPrimitiveType);
+        SpawnActors(SelectedSpawnType);
     }
 }
 
-void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
+void UPrimitiveSpawnWidget::SpawnActors(ESpawnActorType SpawnType) const
 {
     
     UWorld* World = GetCurrentWorld();
@@ -329,9 +331,24 @@ void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
 
         AActor* SpawnedActor = nullptr;
 
-        switch (PrimitiveTypeIdx)
+        switch (SpawnType)
         {
-        case 0:
+        case ESpawnActorType::Actor:
+        {
+            AActor* NewActor = World->SpawnActor<AActor>(SpawnTransform);
+            if (NewActor)
+            {
+                FString ActorName = World->GenerateUniqueActorName("Actor");
+                NewActor->SetName(ActorName);
+
+                SpawnedActor = NewActor;
+
+                UE_LOG("ActorSpawn: Created empty Actor at (%.2f, %.2f, %.2f)",
+                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
+            }
+            break;
+        }
+        case ESpawnActorType::StaticMesh:
         {
             AStaticMeshActor* NewMeshActor = World->SpawnActor<AStaticMeshActor>(SpawnTransform);
             if (NewMeshActor)
@@ -359,12 +376,12 @@ void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
 
                 SpawnedActor = NewMeshActor;
                 
-                UE_LOG("PrimitiveSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f using %s",
+                UE_LOG("ActorSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f using %s",
                     SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale, MeshPath.c_str());
             }
             break;
         }
-        case 1:
+        case ESpawnActorType::Decal:
         {
             ADecalActor* NewDecalActor = World->SpawnActor<ADecalActor>(SpawnTransform);
             if (NewDecalActor)
@@ -374,27 +391,12 @@ void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
 
                 SpawnedActor = NewDecalActor;
 
-                UE_LOG("PrimitiveSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f",
+                UE_LOG("ActorSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f",
                     SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale);
             }
             break;
         }
-        case 2:
-        {
-            AActor* NewActor = World->SpawnActor<AActor>(SpawnTransform);
-            if (NewActor)
-            {
-                FString ActorName = World->GenerateUniqueActorName("Actor");
-                NewActor->SetName(ActorName);
-
-                SpawnedActor = NewActor;
-
-                UE_LOG("PrimitiveSpawn: Created empty Actor at (%.2f, %.2f, %.2f)",
-                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
-            }
-            break;
-        }
-        case 3:
+        case ESpawnActorType::SpotLight:
         {
             ASpotLightActor* NewSpotLightActor = World->SpawnActor<ASpotLightActor>(SpawnTransform);
             if (NewSpotLightActor)
@@ -404,14 +406,9 @@ void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
 
                 SpawnedActor = NewSpotLightActor;
 
-                UE_LOG("PrimitiveSpawn: Created SpotLight at (%.2f, %.2f, %.2f)",
+                UE_LOG("ActorSpawn: Created SpotLight at (%.2f, %.2f, %.2f)",
                     SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
             }
-            break;
-        }
-        default:
-        {
-            UE_LOG("PrimitiveSpawn: Invalid PrimitiveTypeIdx: %d", PrimitiveTypeIdx);
             break;
         }
         }
@@ -421,9 +418,13 @@ void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
         }
         else
         {
-            UE_LOG("PrimitiveSpawn: Failed to spawn actor %d of type %d", i, PrimitiveTypeIdx);
+            const char* TypeName = "Unknown";
+            if (SpawnType < ESpawnActorType::Count)
+            {
+                UE_LOG("ActorSpawn: Failed to spawn actor %d of type %d", i, TypeName);
+            }
         }
 
-        UE_LOG("PrimitiveSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
+        UE_LOG("ActorSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
     }
 }

@@ -14,7 +14,7 @@ public:
 	void Initialize() override;
 	void Update() override;
 	void RenderWidget() override;
-	void SpawnActors(int PrimitiveTypeIdx) const;
+	void SpawnActors(ESpawnActorType SpawnType) const;
 
 	// Special Member Function
 	UPrimitiveSpawnWidget();
