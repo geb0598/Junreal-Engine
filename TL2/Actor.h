@@ -85,6 +85,8 @@ public:
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
 
+    void DestroyAllComponents();
+
 public:
 
     // Visibility properties

@@ -13,8 +13,8 @@ struct FBVHNode
     FAABB BoundingBox;
 
     // 리프 노드용 데이터
-    int FirstMeshBound;  // 리프인 경우: 첫 번째 액터 인덱스, 내부 노드인 경우: -1
-    int MeshBoundCount;  // 리프인 경우: 액터 개수, 내부 노드인 경우: -1
+    int FirstPrimitive;  // 리프인 경우: 첫 번째 액터 인덱스, 내부 노드인 경우: -1
+    int PrimitiveCount;  // 리프인 경우: 액터 개수, 내부 노드인 경우: -1
 
     // 내부 노드용 데이터
     int LeftChild;   // 왼쪽 자식 노드 인덱스
@@ -22,24 +22,24 @@ struct FBVHNode
 
     // 생성자
     FBVHNode()
-        : FirstMeshBound(-1), MeshBoundCount(-1), LeftChild(-1), RightChild(-1)
+        : FirstPrimitive(-1), PrimitiveCount(-1), LeftChild(-1), RightChild(-1)
     {
     }
 
     // 리프 노드인지 확인
-    bool IsLeaf() const { return FirstMeshBound >= 0 && MeshBoundCount > 0; }
+    bool IsLeaf() const { return FirstPrimitive >= 0 && PrimitiveCount > 0; }
 };
 
 // 액터의 AABB와 포인터를 저장
-struct FBVHStaticMeshAABB
+struct FBVHPtimitive
 {
     FAABB AABB;
-    UStaticMeshComponent* StaticMeshComp;
+    UPrimitiveComponent* Primitive;
     FVector Center;
 
-    FBVHStaticMeshAABB() : StaticMeshComp(nullptr) {}
-    FBVHStaticMeshAABB(UStaticMeshComponent* InStaticMeshComp, const FAABB& InBounds)
-        : StaticMeshComp(InStaticMeshComp), AABB(InBounds)
+    FBVHPtimitive() : Primitive(nullptr) {}
+    FBVHPtimitive(UPrimitiveComponent* InPrimitive, const FAABB& InBounds)
+        : Primitive(InPrimitive), AABB(InBounds)
     {
         Center = InBounds.GetCenter();
     }
@@ -54,30 +54,36 @@ public:
 
     // 액터 배열로부터 BVH 구축
     void Build(const TArray<AActor*>& Actors);
-    void Build(const TArray<UStaticMeshComponent*>& StaticMeshComps);
+    void Build(const TArray<UPrimitiveComponent*>& Primitives);
     void Clear();
 
     // 빠른 레이 교차 검사 - 가장 가까운 액터 반환
-    UStaticMeshComponent* Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const;
+    UPrimitiveComponent* Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const;
 
     // 통계 정보
     int GetNodeCount() const { return Nodes.Num(); }
-    int GetMeshCount() const { return MeshBounds.Num(); }
+    int GetMeshCount() const { return PrimitiveBounds.Num(); }
     int GetMaxDepth() const { return MaxDepth; }
 
     // 렌더링을 위한 노드 접근
     const TArray<FBVHNode>& GetNodes() const { return Nodes; }
 
+    TArray<FVector> GetBVHBoundsWire() const;
+
+    TArray<UPrimitiveComponent*> GetCollisionWithOBB(const FOBB& OBB) const;
+
+    bool IsBuild() { return Nodes.Num() > 0; }
 private:
     TArray<FBVHNode> Nodes;
-    TArray<FBVHStaticMeshAABB> MeshBounds;
-    TArray<int> MeshIndices; // 정렬된 액터 인덱스
+    TArray<FBVHPtimitive> PrimitiveBounds;
+    TArray<int> PrimitiveIndices; // 정렬된 액터 인덱스
 
     int MaxDepth;
 
     // 재귀 구축 함수
     int BuildRecursive(int FirstActor, int ActorCount, int Depth = 0);
 
+    void GetCollisionWithOBBRecursive(const FOBB& OBB, int NodeIdx, TArray<UPrimitiveComponent*>& HitPrimitives) const;
     // 경계 박스 계산
     FAABB CalculateBounds(int FirstActor, int ActorCount) const;
     FAABB CalculateCentroidBounds(int FirstActor, int ActorCount) const;
@@ -89,7 +95,7 @@ private:
     // 액터 분할
     int PartitionActors(int FirstActor, int ActorCount, int Axis, float SplitPos);
 
-    bool IntersectNode(int NodeIndex, const FOptimizedRay& Ray, float& InOutDistance, UStaticMeshComponent*& OutStaticMeshComp) const;
+    bool IntersectNode(int NodeIndex, const FOptimizedRay& Ray, float& InOutDistance, UPrimitiveComponent*& OutPrimitive) const;
 
     //// 재귀 교차 검사 (깊이 제한 추가)
     //bool IntersectNode(int NodeIndex, const FVector& RayOrigin, const FVector& RayDirection,

@@ -298,7 +298,6 @@
     <ClCompile Include="UI\Widget\PrimitiveSpawnWidget.cpp" />
     <ClCompile Include="UI\Widget\SceneIOWidget.cpp" />
     <ClCompile Include="UI\Widget\SceneManagerWidget.cpp" />
-    <ClCompile Include="UI\Widget\ShowFlagWidget.cpp" />
     <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp" />
     <ClCompile Include="UI\Widget\Widget.cpp" />
     <ClCompile Include="UI\Window\ConsoleWindow.cpp" />
@@ -476,7 +475,6 @@
     <ClInclude Include="UI\Widget\PrimitiveSpawnWidget.h" />
     <ClInclude Include="UI\Widget\SceneIOWidget.h" />
     <ClInclude Include="UI\Widget\SceneManagerWidget.h" />
-    <ClInclude Include="UI\Widget\ShowFlagWidget.h" />
     <ClInclude Include="UI\Widget\TargetActorTransformWidget.h" />
     <ClInclude Include="UI\Widget\Widget.h" />
     <ClInclude Include="UI\Window\ConsoleWindow.h" />

@@ -88,6 +88,35 @@ void UStaticMeshComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
     }
 }
 
+void UStaticMeshComponent::Serialize(bool bIsLoading, FComponentData& InOut)
+{
+    // 0) 트랜스폼 직렬화/역직렬화는 상위(UPrimitiveComponent)에서 처리
+    UPrimitiveComponent::Serialize(bIsLoading, InOut);
+
+    if (bIsLoading)
+    {
+        // StaticMesh 로드
+        if (!InOut.StaticMesh.empty())
+        {
+            SetStaticMesh(InOut.StaticMesh);
+        }
+        // TODO: Materials 로드
+    }
+    else
+    {
+        // StaticMesh 저장
+        if (UStaticMesh* Mesh = GetStaticMesh())
+        {
+            InOut.StaticMesh = Mesh->GetAssetPathFileName();
+        }
+        else
+        {
+            InOut.StaticMesh.clear();
+        }
+        // TODO: Materials 저장
+    }
+}
+
 void UStaticMeshComponent::SetMaterialByUser(const uint32 InMaterialSlotIndex, const FString& InMaterialName)
 {
     assert((0 <= InMaterialSlotIndex && InMaterialSlotIndex < MaterailSlots.size()) && "out of range InMaterialSlotIndex");

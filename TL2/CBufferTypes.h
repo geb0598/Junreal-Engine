@@ -133,6 +133,8 @@ struct DecalMatrixCB
     FMatrix DecalWorldMatrix;
     FMatrix DecalWorldMatrixInv;
     FMatrix DecalProjectionMatrix;
+    FVector DecalSize;
+    float Padding;
 };
 
 //PS : b6
@@ -145,7 +147,8 @@ struct ViewportBufferType
 struct DecalAlphaBufferType
 {
     float CurrentAlpha;
-    float pad[3];
+    FVector2D UVTiling;
+    float pad;
 };
 
 //---//

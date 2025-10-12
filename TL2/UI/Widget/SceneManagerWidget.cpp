@@ -439,7 +439,7 @@ void USceneManagerWidget::HandleActorSelection(AActor* Actor)
         // If there's a gizmo actor, position it at the selected actor
         if (UIManager->GetGizmoActor() && Actor)
         {
-            UIManager->GetGizmoActor()->SetActorLocation(Actor->GetActorLocation());
+            //UIManager->GetGizmoActor()->SetActorLocation(Actor->GetActorLocation());
         }
     }
     

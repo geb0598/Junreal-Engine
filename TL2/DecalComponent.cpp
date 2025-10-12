@@ -32,26 +32,27 @@ UDecalComponent::~UDecalComponent()
 
 void UDecalComponent::UpdateDecalProjectionMatrix()
 {
-    FOBB WorldOBB = GetWorldOBB();
-    float Right = WorldOBB.Extents.Y;
-    float Left = -WorldOBB.Extents.Y;
-    float Top = WorldOBB.Extents.Z;
-    float Bottom = -WorldOBB.Extents.Z;
+    //스케일을 그대로 프로젝션에 적용하면 스케일과 데칼 사이즈를 바꾸면서 타일링이 같이 되버림.(역행렬 곱하면서 데칼 스케일의 역을 곱했는데 그 이후에
+    //프로젝션 하면서 원상태로 복구시킴. )
+    float Right = DecalSize.Y/2.0f;
+    float Left = -DecalSize.Y/2.0f;
+    float Top = DecalSize.Z/2.0f;
+    float Bottom = -DecalSize.Z/2.0f;
     float Near = 0.0f;
-    float Far = WorldOBB.Extents.X * 2;
+    float Far = DecalSize.X * 2;
 
     FMatrix OrthoMatrix = FMatrix::OffCenterOrthoLH(Left, Right, Top, Bottom, Near, Far);
 
-    // UV 타일링을 위한 스케일 행렬 생성
-    FMatrix UVScale = FMatrix::Identity();
-    UVScale.M[0][0] =  UVTiling.X;
-    UVScale.M[1][1] =  UVTiling.Y;
-    UVScale.M[2][2] = 1.0f;
-    // 중심 보정 (짝수일 때 반 픽셀 밀림 방지)
-    // 중심 보정 - 타일링된 텍스처를 중앙에 배치
-    UVScale.M[3][0] = -(UVTiling.X - 1.0f) / 2.0f;
-    UVScale.M[3][1] = -(UVTiling.Y - 1.0f) / 2.0f;
-    DecalProjectionMatrix = UVScale*OrthoMatrix ;
+    //// UV 타일링을 위한 스케일 행렬 생성
+    //FMatrix UVScale = FMatrix::Identity();
+    //UVScale.M[0][0] =  UVTiling.X;
+    //UVScale.M[1][1] =  UVTiling.Y;
+    //UVScale.M[2][2] = 1.0f;
+    //// 중심 보정 (짝수일 때 반 픽셀 밀림 방지)
+    //// 중심 보정 - 타일링된 텍스처를 중앙에 배치
+    //UVScale.M[3][0] = -(UVTiling.X - 1.0f) / 2.0f;
+    //UVScale.M[3][1] = -(UVTiling.Y - 1.0f) / 2.0f;
+    DecalProjectionMatrix = OrthoMatrix ;
 }
 
 void UDecalComponent::TickComponent(float DeltaSeconds)
@@ -101,7 +102,6 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     
     float LifeTimeAlpha = CurrentAlpha;
     float ScreenFadeAlpha = 1.0f;
-    UpdateDecalProjectionMatrix();
     if (FadeScreenSize > 0.0f)
     {
         // Calculate an approximate bounding sphere radius from the decal's size
@@ -137,29 +137,30 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     //DecalWorldMatrix = 데칼의 원본 월드 행렬
     //DecalWorldMatrixInverse = 데칼의 역 월드 행렬
     //DecalProjectionMatrix = 데칼 투영 행렬
-    Renderer->UpdateSetCBuffer(DecalMatrixCB({ DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix }));
-    Renderer->UpdateSetCBuffer(DecalAlphaBufferType({ FinalAlpha }));
+    Renderer->UpdateSetCBuffer(DecalMatrixCB({ DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix , DecalSize}));
+    Renderer->UpdateSetCBuffer(DecalAlphaBufferType({ FinalAlpha, UVTiling}));
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
     Renderer->OMSetBlendState(true);                  // (SrcAlpha, InvSrcAlpha)인지 내부 확인
 
     // =========================
-    // RTV 유지 + DSV 언바인드
+    // RTV와 DSV 모두 유지
     // =========================
-    // FIX: 현재 RTV를 조회해서 DSV만 떼고 다시 바인딩
     ID3D11RenderTargetView* currentRTV = nullptr;
+    ID3D11DepthStencilView* currentDSV = nullptr;
     ID3D11DeviceContext* ctx = Renderer->GetRHIDevice()->GetDeviceContext();
 
-    ctx->OMGetRenderTargets(1, &currentRTV, nullptr);            // 현재 RTV 핸들 얻고
-    ctx->OMSetRenderTargets(1, &currentRTV, nullptr);            // RTV 유지 + DSV 해제
+    ctx->OMGetRenderTargets(1, &currentRTV, &currentDSV);        // 현재 RTV와 DSV 핸들 얻고
+    ctx->OMSetRenderTargets(1, &currentRTV, currentDSV);         // RTV와 DSV 모두 유지
     if (currentRTV) currentRTV->Release();                       // 로컬 ref release
+    if (currentDSV) currentDSV->Release();                       // 로컬 ref release
 
     // 데칼은 깊이 "읽기"만 (LessEqual + DepthWrite Off)
     Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqualReadOnly);
 
-    // 컬링 끄기(양면)
-    Renderer->RSSetDefaultState();
+    // DepthBias 적용된 데칼 Rasterizer State 사용
+    Renderer->GetRHIDevice()->RSSetDecalState();
 
     // 입력 어셈블러
     UINT stride = sizeof(FVertexDynamic);
@@ -206,9 +207,18 @@ void UDecalComponent::SetDecalTexture( FString NewTexturePath)
     // TextRenderComponent와 동일한 방식으로 텍스처 로드
     Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
 }
+
+void UDecalComponent::SetDecalSize(FVector InDecalSize)
+{
+    DecalSize = InDecalSize;
+    UpdateDecalProjectionMatrix();
+}
 const FOBB UDecalComponent::GetWorldOBB() const
 {
-    return FOBB(LocalAABB, GetWorldTransform());
+    FAABB SizeApplied = LocalAABB;
+    SizeApplied.Max = SizeApplied.Max * DecalSize;
+    SizeApplied.Min = SizeApplied.Min * DecalSize;
+    return FOBB(SizeApplied, GetWorldTransform());
 }
 const FAABB UDecalComponent::GetWorldAABB() const
 {
@@ -247,6 +257,9 @@ UObject* UDecalComponent::Duplicate()
         {
             DuplicatedComponent->SetDecalTexture(TexturePath);
         }
+
+        // 자식 컴포넌트 복제
+        DuplicatedComponent->DuplicateSubObjects();
     }
     return DuplicatedComponent;
 }

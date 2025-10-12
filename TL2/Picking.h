@@ -109,7 +109,7 @@ public:
 
     /** === 헬퍼 함수들 === */
     static bool CheckActorPicking(const AActor* Actor, const FRay& Ray, float& OutDistance);
-    static bool CheckStaticMeshPicking(const UStaticMeshComponent* StaticMeshComp, const FRay& Ray, float& OutDistance);
+    //static bool CheckStaticMeshPicking(const UStaticMeshComponent* StaticMeshComp, const FRay& Ray, float& OutDistance);
 
     // 거리 기반 적응형 조기 종료 임계값
     static float GetAdaptiveThreshold(float cameraDistance);

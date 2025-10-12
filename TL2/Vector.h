@@ -1212,11 +1212,12 @@ inline FTransform FTransform::Inverse() const
     FQuat InvRot(-Rotation.X, -Rotation.Y, -Rotation.Z, Rotation.W);
 
     // InvTrans = -(InvRot * (InvScale * T))
-    FVector Scaled(Translation.X * InvScale.X,
-                   Translation.Y * InvScale.Y,
-                   Translation.Z * InvScale.Z);
-    FVector Rotated = InvRot.RotateVector(Scaled);
-    FVector InvTrans(-Rotated.X, -Rotated.Y, -Rotated.Z);
+    FVector Rotated = InvRot.RotateVector(Translation);
+    FVector Scaled(Rotated.X * InvScale.X,
+                   Rotated.Y * InvScale.Y,
+                   Rotated.Z * InvScale.Z);
+   
+    FVector InvTrans(-Scaled.X, -Scaled.Y, -Scaled.Z);
 
     FTransform Out;
     Out.Rotation = InvRot;

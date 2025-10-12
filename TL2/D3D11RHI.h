@@ -78,6 +78,7 @@ public:
     void RSSetFrontCullState() override;
     void RSSetNoCullState() override;
     void RSSetDefaultState() override;
+    void RSSetDecalState() override;
     void RSSetViewport() override;
     void OMSetRenderTargets() override;
     void OMSetBlendState(bool bIsBlendMode) override;
@@ -195,6 +196,7 @@ private:
     ID3D11RasterizerState* WireFrameRasterizerState{};//
     ID3D11RasterizerState* FrontCullRasterizerState{};//
     ID3D11RasterizerState* NoCullRasterizerState{};//
+    ID3D11RasterizerState* DecalRasterizerState{};// DepthBias 적용된 데칼용 state
 
     ID3D11DepthStencilState* DepthStencilState{};
 

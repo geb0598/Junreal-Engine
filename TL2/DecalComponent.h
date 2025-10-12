@@ -13,15 +13,18 @@ public:
     virtual ~UDecalComponent() override;
 
     void TickComponent(float DeltaSeconds) override;
-    void Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj, FViewport* Viewport) ;
+    void Render(URenderer* Renderer, UPrimitiveComponent* Component, const FMatrix& View, const FMatrix& Proj, FViewport* Viewport);
 
     // UV 타일링 설정
     void SetUVTiling(const FVector2D& InTiling) { UVTiling = InTiling; UpdateDecalProjectionMatrix(); }
     FVector2D GetUVTiling() const { return UVTiling; }
 
     // 데칼 텍스처 설정
-    void SetDecalTexture( FString NewTexturePath);
+    void SetDecalTexture(FString NewTexturePath);
+    void SetDecalSize(FVector InDecalSize);
+    FVector GetDecalSize() const { return DecalSize; }
     const FString& GetTexturePath() const { return TexturePath; }
+
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
@@ -38,12 +41,12 @@ public:
     float GetFadeDuration() const { return FadeDuration; }
     float GetFadeInStartDelay() const { return FadeInStartDelay; }
     float GetFadeInDuration() const { return FadeInDuration; }
-    
+
     void SetSortOrder(int32 InSortOrder) { SortOrder = InSortOrder; }
     void SetFadeScreenSize(float InFadeScreenSize) { FadeScreenSize = InFadeScreenSize; }
-    void SetFadeStartDelay (float InFadeStartDelay ) { FadeStartDelay = InFadeStartDelay; }
-    void SetFadeDuration (float InFadeDuration ) { FadeDuration = InFadeDuration; }
-    void SetFadeInStartDelay (float InFadeInStartDelay ) { FadeInStartDelay = InFadeInStartDelay; }
+    void SetFadeStartDelay(float InFadeStartDelay) { FadeStartDelay = InFadeStartDelay; }
+    void SetFadeDuration(float InFadeDuration) { FadeDuration = InFadeDuration; }
+    void SetFadeInStartDelay(float InFadeInStartDelay) { FadeInStartDelay = InFadeInStartDelay; }
     void SetFadeInDuration(float InFadeInDuration) { FadeInDuration = InFadeInDuration; }
 
 protected:
@@ -84,13 +87,14 @@ private:
 
     float CurrentAlpha = 1.0f;
     float LifetimeTimer = 0.0f;
-    
+
     int32 SortOrder = 0;
     float FadeScreenSize = 0.01f;
     float FadeStartDelay = 5.0f;
     float FadeDuration = 0.0f;
     float FadeInStartDelay = 5.0f;
     float FadeInDuration = 5.0f;
+    FVector DecalSize{ 1.0f,1.0f,1.0f };
 
     bool bIsDirty = true;
 };

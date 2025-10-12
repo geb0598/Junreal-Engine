@@ -30,6 +30,24 @@ void UPrimitiveComponent::Serialize(bool bIsLoading, FPrimitiveData& InOut)
     }
 }
 
+void UPrimitiveComponent::Serialize(bool bIsLoading, FComponentData& InOut)
+{
+    if (bIsLoading)
+    {
+        // FComponentData -> 컴포넌트 상대 트랜스폼
+        SetRelativeLocation(InOut.RelativeLocation);
+        SetRelativeRotation(FQuat::MakeFromEuler(InOut.RelativeRotation));
+        SetRelativeScale(InOut.RelativeScale);
+    }
+    else
+    {
+        // 컴포넌트 상대 트랜스폼 -> FComponentData
+        InOut.RelativeLocation = GetRelativeLocation();
+        InOut.RelativeRotation = GetRelativeRotation().ToEuler();
+        InOut.RelativeScale = GetRelativeScale();
+    }
+}
+
 UObject* UPrimitiveComponent::Duplicate()
 {
     UPrimitiveComponent* DuplicatedComponent = NewObject<UPrimitiveComponent>(*this);

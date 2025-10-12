@@ -23,11 +23,14 @@ cbuffer DecalTransformBuffer : register(b7)
     row_major float4x4 DecalWorldMatrix;
     row_major float4x4 DecalWorldMatrixInverse;
     row_major float4x4 DecalProjectionMatrix;
+    float3 DecalSize;
+    float Padding;
 }
 
 cbuffer DecalFXBuffer : register(b8)
 {
     float CurrentAlpha;
+    float2 UVTiling;
 }
 
 //------------------------------------------------------
@@ -56,7 +59,6 @@ struct PS_INPUT
 struct PS_OUTPUT
 {
     float4 Color : SV_TARGET;
-    float Depth : SV_Depth;
 };
 
 PS_INPUT mainVS(VS_INPUT input)
@@ -81,10 +83,11 @@ PS_OUTPUT mainPS(PS_INPUT input)
     PS_OUTPUT Result;
     float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);
 
-    // 데칼 로컬 공간에서 범위 체크 (타일링과 무관)
-    if (abs(DecalPosition.x) > 0.50001f ||
-        abs(DecalPosition.y) > 0.50001f ||
-        abs(DecalPosition.z) > 0.50001f)
+    float3 DecalSizeHalf = DecalSize / 2.0f;
+    // 데칼 로컬 공간에서 범위 체크 (NDC에서 클리핑하면 타일링이 잘려서 여기서 해야함)
+    if (abs(DecalPosition.x) > DecalSizeHalf.y ||
+        abs(DecalPosition.y) > DecalSizeHalf.z ||
+        abs(DecalPosition.z) > DecalSizeHalf.x)
     {
         discard;
     }
@@ -107,35 +110,31 @@ PS_OUTPUT mainPS(PS_INPUT input)
     float facing = dot(surfaceNormal, decalForward);//X축과 노멀값 내적 
 
     // 뒷면은 완전히 제거
-    if (facing < 0.3f)
+    if (facing < 0.0f)
     {
         discard;
     }
 
-    // 2. 각도 기반 페이드: 0.10 ~ 1.0 범위를 0 ~ 1 알파로 매핑
-    // facing < 0.10: 거의 투명
-    // facing = 0.5: 중간 투명도
-    // facing = 1.0: 완전 불투명
-    float angleFade = saturate((facing - 0.10f) / (1.0f - 0.10f));
+    // 2. 각도 기반 페이드: 0.00 ~ 1.0 범위를 0.2 ~ 1 알파로 매핑
+    float angleFade = saturate(facing + 0.2f);
     angleFade = pow(angleFade, 1.0f); // 비선형 감쇠로 더 자연스럽게
 
     // UV 계산 (DecalProjectionMatrix에 이미 타일링 스케일 적용됨)
     float2 DecalUV = float2(NDCPosition.x * 0.5f + 0.5f, 1.0f - (NDCPosition.y * 0.5f + 0.5f));
 
+    float2 FinalUV = (DecalUV * UVTiling);
     // 4. 가장자리 페이드: frac를 사용하여 타일마다 페이드 적용
     float2 uvFrac = frac(DecalUV); // 0~1 범위로 반복
     float2 edgeDistance = abs(uvFrac - 0.5f) * 2.0f; // 0(중심) ~ 1(가장자리)
     float edgeFade = saturate(1.0f - max(edgeDistance.x, edgeDistance.y));
     edgeFade = pow(edgeFade, 0.05f); // 가장자리에서 부드럽게 페이드
 
-    float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
+    float4 DecalColor = g_DecalTexture.Sample(g_Sample, FinalUV);
 
     // 최종 알파 = 텍스처 알파 * 각도 페이드 * 가장자리 페이드
     DecalColor.a *= angleFade * edgeFade;
     DecalColor.a *= CurrentAlpha;
-    
+
     Result.Color = DecalColor;
-    //SV_DEPTH 시멘틱을 쓰는 경우 z값을 정규화 하지 않고 그대로 넘어옴.
-    Result.Depth = input.position.z/input.position.w - 0.011f;
     return Result;
 }

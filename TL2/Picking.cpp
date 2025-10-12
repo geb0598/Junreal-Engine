@@ -503,26 +503,26 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     AActor* finalHitActor = nullptr;
     float finalClosestHitDistance = FLT_MAX;
 
-    FBVH* BVH = GetEngine()->GetWorld()->GetBVH();
-    if (BVH)
-    {
-        // 3. BVH로 Ray와 가장 가까운 Actor 반환
-        float hitDistance = 0;
-        // Ray와 충돌하는 가장 가까운 액터를 정밀 검사까지 마쳐서 찾아줌.
-        AActor* HitActor = nullptr;// BVH->Intersect(WorldRay.Origin, WorldRay.Direction, hitDistance);
+    //FBVH* BVH = GetEngine()->GetWorld()->GetBVH();
+    //if (BVH)
+    //{
+    //    // 3. BVH로 Ray와 가장 가까운 Actor 반환
+    //    float hitDistance = 0;
+    //    // Ray와 충돌하는 가장 가까운 액터를 정밀 검사까지 마쳐서 찾아줌.
+    //    AActor* HitActor = nullptr;// BVH->Intersect(WorldRay.Origin, WorldRay.Direction, hitDistance);
 
-        //if (CheckActorPicking(HitActor, WorldRay, hitDistance))
-        if(HitActor)
-        {
-            // 충돌했고, 기존에 찾은 것보다 더 가깝다면 최종 후보를 교체
-            if (hitDistance < finalClosestHitDistance)
-            {
-                finalClosestHitDistance = hitDistance;
-                finalHitActor = HitActor;
-               
-            }
-        }
-    }
+    //    //if (CheckActorPicking(HitActor, WorldRay, hitDistance))
+    //    if(HitActor)
+    //    {
+    //        // 충돌했고, 기존에 찾은 것보다 더 가깝다면 최종 후보를 교체
+    //        if (hitDistance < finalClosestHitDistance)
+    //        {
+    //            finalClosestHitDistance = hitDistance;
+    //            finalHitActor = HitActor;
+    //           
+    //        }
+    //    }
+    //}
     //else
     //{
     //    // 옥트리가 없을 경우를 대비한 Fallback 로직 (예: 전역 BVH 또는 전체 순회)
@@ -1194,18 +1194,18 @@ bool CPickingSystem::CheckActorPicking(const AActor* Actor, const FRay& Ray, flo
     //}
 }
 
-bool CPickingSystem::CheckStaticMeshPicking(const UStaticMeshComponent* StaticMeshComp, const FRay& Ray, float& OutDistance)
-{
-    // AABB 검사
-    FAABB WorldBound = StaticMeshComp->GetWorldAABB();
-    float distance;
-    if (IntersectRayAABB(Ray, WorldBound, distance))
-    {
-        OutDistance = distance;
-        return true;
-    } 
-    return false;  
-}
+//bool CPickingSystem::CheckStaticMeshPicking(const UPrimitiveComponent* StaticMeshComp, const FRay& Ray, float& OutDistance)
+//{
+//    // AABB 검사
+//    FAABB WorldBound = StaticMeshComp->GetWorldAABB();
+//    float distance;
+//    if (IntersectRayAABB(Ray, WorldBound, distance))
+//    {
+//        OutDistance = distance;
+//        return true;
+//    } 
+//    return false;  
+//}
 
 
 float CPickingSystem::GetAdaptiveThreshold(float cameraDistance)
