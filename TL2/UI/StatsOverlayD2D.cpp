@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "StatsOverlayD2D.h"
 #include "RenderingStats.h"
+#include "TimeProfile.h"
 
 #include <d2d1_1.h>
 #include <dwrite.h>
@@ -287,6 +288,19 @@ void UStatsOverlayD2D::Draw()
             d2dCtx, dwrite, Buffer, rc, 14.0f,
             D2D1::ColorF(0, 0, 0, 0.6f),
             D2D1::ColorF(D2D1::ColorF::Cyan));
+
+        nextY += 100;
+        const TArray<FString>& TimeProfileKeys = FScopeCycleCounter::GetTimeProfileKeys();
+        for (const FString& Key : TimeProfileKeys)
+        {
+            nextY += 20;
+            const FTimeProfile& TimeProfile = FScopeCycleCounter::GetTimeProfile(Key);
+            D2D1_RECT_F rc = D2D1::RectF(margin, nextY, margin + panelWidth, nextY + 20);
+            DrawTextBlock(d2dCtx, dwrite, TimeProfile.GetConstWChar_tWithKey(Key), rc, 14.0f, D2D1::ColorF(0, 0, 0, 0.6f),
+                D2D1::ColorF(D2D1::ColorF::Cyan));
+        }
+        FScopeCycleCounter::TimeProfileInit();
+
     }
 
    

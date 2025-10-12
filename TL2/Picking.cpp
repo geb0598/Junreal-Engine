@@ -18,7 +18,6 @@
 #include "UI/GlobalConsole.h"
 #include "ObjManager.h"
 #include"stdio.h"
-#include "PickingTimer.h"
 #include "Octree.h"
 #include "BVH.h"
 #include "BoundingVolumeHierarchy.h"
@@ -359,8 +358,6 @@ bool IntersectTriangleBVH(const FRay& LocalRay, FNarrowPhaseBVHNode* Node, const
 // PickingSystem 구현
 AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraActor* Camera)
 {
-    TStatId PickingStatId;
-    FScopeCycleCounter PickingTimer(PickingStatId);
 
     if (!Camera) return nullptr;
 
@@ -396,10 +393,7 @@ AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraAct
         }
     }
 
-    uint64_t CycleDiff = PickingTimer.Finish();
-    double PickingTimeMs = FPlatformTime::ToMilliseconds(CycleDiff);
-
-    if (pickedIndex >= 0)
+    /*if (pickedIndex >= 0)
     {
         char buf[256];
         sprintf_s(buf, "[Pick] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, PickingTimeMs);
@@ -412,7 +406,7 @@ AActor* CPickingSystem::PerformPicking(const TArray<AActor*>& Actors, ACameraAct
         sprintf_s(buf, "[Pick] No hit (Time: %.3fms)\n", PickingTimeMs);
         UE_LOG(buf);
         return nullptr;
-    }
+    }*/
 }
 
 AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
@@ -438,8 +432,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
 
     int pickedIndex = -1;
     float pickedT = 1e9f;
-    TStatId ViewportPickingStatId;
-    FScopeCycleCounter ViewportPickingTimer(ViewportPickingStatId);
+   
     // 모든 액터에 대해 피킹 테스트
     for (int i = 0; i < Actors.Num(); ++i)
     {
@@ -460,10 +453,9 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
         }
     }
 
-    uint64_t ViewportCycleDiff = ViewportPickingTimer.Finish();
-    double ViewportPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportCycleDiff);
+  
 
-    if (pickedIndex >= 0)
+    /*if (pickedIndex >= 0)
     {
         char buf[256];
         sprintf_s(buf, "[Viewport Pick] Hit primitive %d at t=%.3f (Time: %.3fms)\n", pickedIndex, pickedT, ViewportPickingTimeMs);
@@ -476,7 +468,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
         sprintf_s(buf, "[Viewport Pick] No hit (Time: %.3fms)\n", ViewportPickingTimeMs);
         UE_LOG(buf);
         return nullptr;
-    }
+    }*/
 }
 
 AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
@@ -486,8 +478,7 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
                                                const FVector2D& ViewportOffset,
                                                float ViewportAspectRatio, FViewport*  Viewport)
 {
-    TStatId ViewportAspectPickingStatId;
-    FScopeCycleCounter ViewportAspectPickingTimer(ViewportAspectPickingStatId);
+   
 
 
     if (!Camera) return nullptr;
@@ -542,23 +533,21 @@ AActor* CPickingSystem::PerformViewportPicking(const TArray<AActor*>& Actors,
     //        }
     //    }
     //}
-    uint64_t ViewportAspectCycleDiff = ViewportAspectPickingTimer.Finish();
-    double ViewportAspectPickingTimeMs = FPlatformTime::ToMilliseconds(ViewportAspectCycleDiff);
-    URenderingStatsCollector::GetInstance().UpdatePickingStats(ViewportAspectPickingTimeMs);
+   
     // 4. 모든 후보 검사가 끝난 후, 최종 결과를 반환
-    if (finalHitActor)
-    {
-        char buf[256];
-      /*  sprintf_s(buf, "[Precision Pick] Hit actor '%s' at distance %.3f\n",
-            finalHitActor->GetName().ToString(), finalClosestHitDistance);*/
-        sprintf_s(buf, "[Viewport Pick] Hit %s at t=%.3f (Time: %.3fms)\n",
-            finalHitActor->GetName().ToString().c_str(), finalClosestHitDistance, ViewportAspectPickingTimeMs);
-        UE_LOG(buf);
-    }
-    else
-    {
-        UE_LOG("[Precision Pick] No hit found\n");
-    }
+    //if (finalHitActor)
+    //{
+    //    char buf[256];
+    //  /*  sprintf_s(buf, "[Precision Pick] Hit actor '%s' at distance %.3f\n",
+    //        finalHitActor->GetName().ToString(), finalClosestHitDistance);*/
+    //    sprintf_s(buf, "[Viewport Pick] Hit %s at t=%.3f (Time: %.3fms)\n",
+    //        finalHitActor->GetName().ToString().c_str(), finalClosestHitDistance, ViewportAspectPickingTimeMs);
+    //    UE_LOG(buf);
+    //}
+    //else
+    //{
+    //    UE_LOG("[Precision Pick] No hit found\n");
+    //}
 
     return finalHitActor;
     //TStatId ViewportAspectPickingStatId;
@@ -1225,8 +1214,6 @@ AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
                                                   const FVector2D& ViewportOffset,
                                                   float ViewportAspectRatio, FViewport* Viewport)
 {
-    TStatId OctreePickingStatId;
-    FScopeCycleCounter OctreePickingTimer(OctreePickingStatId);
 
     if (!Camera) return nullptr;
 
@@ -1275,19 +1262,18 @@ AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
                 }
             }
 
-            uint64_t OctreeCycleDiff = OctreePickingTimer.Finish();
-            double OctreePickingTimeMs = FPlatformTime::ToMilliseconds(OctreeCycleDiff);
+        
 
             if (closestActor)
             {
                 char buf[256];
-                sprintf_s(buf, "[Octree Pick] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, OctreePickingTimeMs);
+                //sprintf_s(buf, "[Octree Pick] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, OctreePickingTimeMs);
                 UE_LOG(buf);
                 return closestActor;
             }
 
             char buf[256];
-            sprintf_s(buf, "[Octree Pick] No hit found (Time: %.3fms)\n", OctreePickingTimeMs);
+            //sprintf_s(buf, "[Octree Pick] No hit found (Time: %.3fms)\n", OctreePickingTimeMs);
             UE_LOG(buf);
             return nullptr;
         }
@@ -1312,10 +1298,9 @@ AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
         }
     }
 
-    uint64_t OctreeCycleDiff = OctreePickingTimer.Finish();
-    double OctreePickingTimeMs = FPlatformTime::ToMilliseconds(OctreeCycleDiff);
+ 
 
-    if (closestActor)
+  /*  if (closestActor)
     {
         char buf[256];
         sprintf_s(buf, "[Octree Pick Fallback] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, OctreePickingTimeMs);
@@ -1328,7 +1313,7 @@ AActor* CPickingSystem::PerformOctreeBasedPicking(const TArray<AActor*>& Actors,
         sprintf_s(buf, "[Octree Pick] No hit (Time: %.3fms)\n", OctreePickingTimeMs);
         UE_LOG(buf);
         return nullptr;
-    }
+    }*/
 }
 
 AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
@@ -1338,8 +1323,6 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
                                                const FVector2D& ViewportOffset,
                                                float ViewportAspectRatio, FViewport* Viewport)
 {
-    TStatId GlobalBVHPickingStatId;
-    FScopeCycleCounter GlobalBVHPickingTimer(GlobalBVHPickingStatId);
 
     if (!Camera) return nullptr;
 
@@ -1398,10 +1381,7 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
         }
     }
 
-    uint64_t GlobalBVHCycleDiff = GlobalBVHPickingTimer.Finish();
-    double GlobalBVHPickingTimeMs = FPlatformTime::ToMilliseconds(GlobalBVHCycleDiff);
-
-    if (closestActor)
+   /* if (closestActor)
     {
         char buf[256];
         sprintf_s(buf, "[Global BVH Pick Fallback] Hit actor at distance %.3f (Time: %.3fms)\n", closestDistance, GlobalBVHPickingTimeMs);
@@ -1414,5 +1394,5 @@ AActor* CPickingSystem::PerformGlobalBVHPicking(const TArray<AActor*>& Actors,
         sprintf_s(buf, "[Global BVH Pick] No hit (Time: %.3fms)\n", GlobalBVHPickingTimeMs);
         UE_LOG(buf);
         return nullptr;
-    }
+    }*/
 }

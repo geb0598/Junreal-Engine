@@ -210,7 +210,6 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Object.cpp" />
-    <ClCompile Include="PickingTimer.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="RenderingStats.cpp" />
     <ClCompile Include="RenderViewportSwitcherWidget.cpp" />
@@ -284,6 +283,7 @@
     <ClCompile Include="TextQuad.cpp" />
     <ClCompile Include="TextRenderComponent.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TimeProfile.cpp" />
     <ClCompile Include="UEContainer.cpp" />
     <ClCompile Include="UI\Factory\UIWindowFactory.cpp" />
     <ClCompile Include="UI\GlobalConsole.cpp" />
@@ -452,6 +452,7 @@
     <ClInclude Include="TextRenderComponent.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="ObjectIterator.h" />
+    <ClInclude Include="TimeProfile.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="UEContainer.h" />
     <ClInclude Include="UI\Factory\UIWindowFactory.h" />

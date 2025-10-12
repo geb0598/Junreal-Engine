@@ -166,6 +166,8 @@ private:
 
 	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 
+
+	bool BUseBVH;
 	//UOctree* Octree;
 	FBVH BVH;
 };
