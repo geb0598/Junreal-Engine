@@ -90,9 +90,9 @@ private:
 
     int32 SortOrder = 0;
     float FadeScreenSize = 0.01f;
-    float FadeStartDelay = 5.0f;
-    float FadeDuration = 0.0f;
-    float FadeInStartDelay = 5.0f;
+    float FadeStartDelay = 2.0f;
+    float FadeDuration = 5.0f;
+    float FadeInStartDelay = 2.0f;
     float FadeInDuration = 5.0f;
     FVector DecalSize{ 1.0f,1.0f,1.0f };
 

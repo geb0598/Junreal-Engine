@@ -11,6 +11,14 @@ public:
 	ASpotLightActor();
 	virtual ~ASpotLightActor() override;
 
+	void Tick(float DeltaTime) override;
+
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
+
+	USpotLightComponent* GetSpotLightComponent() const { return SpotLightComponent; }
+	UBillboardComponent* GetSpriteComponent() const { return SpriteComponent; }
+
 protected:
 	UBillboardComponent* SpriteComponent;
 	USpotLightComponent* SpotLightComponent;

@@ -1101,16 +1101,6 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         NewActor->SetName(ActorData.Name);
         NewActor->SetWorld(this);
 
-        // 생성자에서 만든 기존 컴포넌트들을 ComponentMap에 등록
-        for (UActorComponent* ExistingComp : NewActor->GetComponents())
-        {
-            if (USceneComponent* SceneComp = Cast<USceneComponent>(ExistingComp))
-            {
-                // 기존 컴포넌트의 UUID를 임시로 저장 (나중에 씬 데이터의 UUID로 덮어씀)
-                ComponentMap.Add(SceneComp->UUID, SceneComp);
-            }
-        }
-
         ActorMap.Add(ActorData.UUID, NewActor);
     }
 
@@ -1224,11 +1214,8 @@ void UWorld::LoadSceneV2(const FString& SceneName)
             }
         }
 
-        // Actor의 OwnedComponents에 추가
-        if (AActor** OwnerActorPtr = ActorMap.Find(CompData.OwnerActorUUID))
-        {
-            (*OwnerActorPtr)->OwnedComponents.Add(Comp);
-        }
+        // 참고: OwnedComponents는 생성자(CreateDefaultSubobject) 또는
+        // 새로 생성 시(Line 1154)에 이미 추가되므로 여기서는 추가하지 않음
     }
 
     // Actor를 Level에 추가
