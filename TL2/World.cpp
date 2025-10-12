@@ -308,13 +308,63 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
                     // SpotlightComponent는 바운딩 박스 안그림
-                    if (Cast<USpotLightComponent>(Primitive) == nullptr)
+                    if (USpotLightComponent* SpotLight = Cast<USpotLightComponent>(Primitive))
                     {
-                        Renderer->AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
+                        // 멤버 변수에서 절두체 파라미터를 직접 가져옵니다.
+                        float Fov = SpotLight->Fov;
+                        float Aspect = SpotLight->Aspect;
+                        float Near = SpotLight->Near;
+                        float Far = SpotLight->Far;
+
+                        float halfFov = tanf(Fov / 2.0f);
+                        float nearHalfH = Near * halfFov;
+                        float nearHalfW = nearHalfH * Aspect;
+                        float farHalfH = Far * halfFov;
+                        float farHalfW = farHalfH * Aspect;
+
+                        FVector Corners[8];
+                        // Near Plane
+                        Corners[0] = FVector(nearHalfW, nearHalfH, Near);
+                        Corners[1] = FVector(-nearHalfW, nearHalfH, Near);
+                        Corners[2] = FVector(-nearHalfW, -nearHalfH, Near);
+                        Corners[3] = FVector(nearHalfW, -nearHalfH, Near);
+                        // Far Plane
+                        Corners[4] = FVector(farHalfW, farHalfH, Far);
+                        Corners[5] = FVector(-farHalfW, farHalfH, Far);
+                        Corners[6] = FVector(-farHalfW, -farHalfH, Far);
+                        Corners[7] = FVector(farHalfW, -farHalfH, Far);
+
+                        FMatrix WorldMatrix = SpotLight->GetWorldMatrix();
+                        for (int i = 0; i < 8; ++i)
+                        {
+                            FVector4 Transformed = WorldMatrix.TransformPosition(FVector4(Corners[i], 1.0f));
+                            Corners[i] = FVector(Transformed.X, Transformed.Y, Transformed.Z);
+                        }
+
+                        FVector4 Color(1, 1, 0, 1); // Yellow
+                        // Near Plane lines
+                        Renderer->AddLine(Corners[0], Corners[1], Color);
+                        Renderer->AddLine(Corners[1], Corners[2], Color);
+                        Renderer->AddLine(Corners[2], Corners[3], Color);
+                        Renderer->AddLine(Corners[3], Corners[0], Color);
+                        // Far Plane lines
+                        Renderer->AddLine(Corners[4], Corners[5], Color);
+                        Renderer->AddLine(Corners[5], Corners[6], Color);
+                        Renderer->AddLine(Corners[6], Corners[7], Color);
+                        Renderer->AddLine(Corners[7], Corners[4], Color);
+                        // Connecting lines
+                        Renderer->AddLine(Corners[0], Corners[4], Color);
+                        Renderer->AddLine(Corners[1], Corners[5], Color);
+                        Renderer->AddLine(Corners[2], Corners[6], Color);
+                        Renderer->AddLine(Corners[3], Corners[7], Color);
+                    }
+                    else if (UDecalComponent* Decal = Cast<UDecalComponent>(Primitive))
+                    {
+                        Renderer->AddLines(Decal->GetWorldOBB().GetWireLine(), FVector4(1, 0, 1, 1));
                     }
                     else
                     {
-                        int a = 0;
+                        Renderer->AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
                     }
                 }
 
@@ -352,62 +402,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
         for (UDecalComponent* Decal : Decals)
         {
             FOBB DecalWorldOBB = Decal->GetWorldOBB();
-
-            // 만약 SpotLightComponent라면 절두체를, 아니라면 일반 박스를 그립니다.
-            if (USpotLightComponent* SpotLight = Cast<USpotLightComponent>(Decal))
-            {
-                // 멤버 변수에서 절두체 파라미터를 직접 가져옵니다.
-                float Fov = SpotLight->Fov;
-                float Aspect = SpotLight->Aspect;
-                float Near = SpotLight->Near;
-                float Far = SpotLight->Far;
-
-                float halfFov = tanf(Fov / 2.0f);
-                float nearHalfH = Near * halfFov;
-                float nearHalfW = nearHalfH * Aspect;
-                float farHalfH = Far * halfFov;
-                float farHalfW = farHalfH * Aspect;
-
-                FVector Corners[8];
-                // Near Plane
-                Corners[0] = FVector(nearHalfW, nearHalfH, Near);
-                Corners[1] = FVector(-nearHalfW, nearHalfH, Near);
-                Corners[2] = FVector(-nearHalfW, -nearHalfH, Near);
-                Corners[3] = FVector(nearHalfW, -nearHalfH, Near);
-                // Far Plane
-                Corners[4] = FVector(farHalfW, farHalfH, Far);
-                Corners[5] = FVector(-farHalfW, farHalfH, Far);
-                Corners[6] = FVector(-farHalfW, -farHalfH, Far);
-                Corners[7] = FVector(farHalfW, -farHalfH, Far);
-
-                FMatrix WorldMatrix = SpotLight->GetWorldMatrix();
-                for (int i = 0; i < 8; ++i)
-                {
-                    FVector4 Transformed = WorldMatrix.TransformPosition(FVector4(Corners[i], 1.0f));
-                    Corners[i] = FVector(Transformed.X, Transformed.Y, Transformed.Z);
-                }
-
-                FVector4 Color(1, 1, 0, 1); // Yellow
-                // Near Plane lines
-                Renderer->AddLine(Corners[0], Corners[1], Color);
-                Renderer->AddLine(Corners[1], Corners[2], Color);
-                Renderer->AddLine(Corners[2], Corners[3], Color);
-                Renderer->AddLine(Corners[3], Corners[0], Color);
-                // Far Plane lines
-                Renderer->AddLine(Corners[4], Corners[5], Color);
-                Renderer->AddLine(Corners[5], Corners[6], Color);
-                Renderer->AddLine(Corners[6], Corners[7], Color);
-                Renderer->AddLine(Corners[7], Corners[4], Color);
-                // Connecting lines
-                Renderer->AddLine(Corners[0], Corners[4], Color);
-                Renderer->AddLine(Corners[1], Corners[5], Color);
-                Renderer->AddLine(Corners[2], Corners[6], Color);
-                Renderer->AddLine(Corners[3], Corners[7], Color);
-            }
-            else
-            {
-                Renderer->AddLines(DecalWorldOBB.GetWireLine(), FVector4(1, 0, 1, 1));
-            }
 
             if (bUseBVH == true && BVH.IsBuild())
             {

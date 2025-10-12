@@ -347,7 +347,7 @@ struct FQuat
 
     static FQuat Identity() { return FQuat(0, 0, 0, 1); }
 
-    // 곱 (회전 누적)
+    //Quat1 * Quat2 = Quat2로 회전 후 Quat1로 회전
     FQuat operator*(const FQuat& Q) const
     {
         return FQuat(
@@ -839,7 +839,8 @@ struct FTransform
     FTransform GetWorldTransform(const FTransform& Other) const
     {
         FTransform Result;
-
+        //Quat1 * Quat2 = Quat2로 회전 후 Quat1로 회전
+        //Other = 자식 로컬, this = 부모 월드
         // 회전 결합
         Result.Rotation = Rotation * Other.Rotation;
         Result.Rotation.Normalize();
@@ -864,7 +865,7 @@ struct FTransform
     FTransform GetRelativeTransform(const FTransform& Other) const
     {
         FTransform Result;
-
+        //Quat1 * Quat2 = Quat2로 회전 후 Quat1로 회전
         //this = InverseParent, Other = ChildWorld
         // 회전 결합
         Result.Rotation = Rotation * Other.Rotation;
