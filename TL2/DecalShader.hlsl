@@ -18,7 +18,7 @@ cbuffer ColorBuffer : register(b3)
     float4 LerpColor;
 }
 
-cbuffer DecalTransformBuffer : register(b4)
+cbuffer DecalTransformBuffer : register(b7)
 {
     row_major float4x4 DecalWorldMatrix;
     row_major float4x4 DecalWorldMatrixInverse;

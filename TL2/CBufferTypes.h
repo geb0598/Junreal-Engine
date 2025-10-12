@@ -54,7 +54,7 @@ CBUFFER_INFO(FPixelConstBufferType, 4, false, true)
 CBUFFER_INFO(HighLightBufferType, 2, true, true)
 CBUFFER_INFO(ColorBufferType, 3, false, true)
 CBUFFER_INFO(UVScrollCB, 5, false, true)
-CBUFFER_INFO(DecalMatrixCB, 4, false, true)
+CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
 
@@ -97,8 +97,9 @@ struct BillboardBufferType
 struct FPixelConstBufferType
 {
     FMaterialInPs Material;
-    bool bHasMaterial; // 1 bytes
-    bool bHasTexture; // 1 bytes
+    uint32 bHasMaterial; // 4 bytes (HLSL bool is 4 bytes)
+    uint32 bHasTexture;  // 4 bytes (HLSL bool is 4 bytes)
+    float pad[2];        // 8 bytes padding for 16-byte alignment
 };
 
 //VS,PS : b2
@@ -126,7 +127,7 @@ struct UVScrollCB
     float Pad;
 };
 
-//PS : b4
+//PS : b7
 struct DecalMatrixCB
 {
     FMatrix DecalWorldMatrix;
