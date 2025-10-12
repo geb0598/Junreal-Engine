@@ -24,6 +24,7 @@ void UShowFlagWidget::Initialize()
     bGrid = true;
     bLighting = true;
     bDecals = true;
+    bBVH = true;
 }
 
 void UShowFlagWidget::Update()
@@ -80,6 +81,8 @@ void UShowFlagWidget::RenderWidget()
                 RenderShowFlagCheckbox("Wireframe", EEngineShowFlags::SF_Wireframe, Viewport);
 
                 RenderShowFlagCheckbox("Decals", EEngineShowFlags::SF_Decals, Viewport);
+
+                RenderShowFlagCheckbox("BVH", EEngineShowFlags::SF_BVH, Viewport);
             }
             else
             {
@@ -125,6 +128,7 @@ void UShowFlagWidget::SyncWithViewport(FViewport* Viewport)
     bGrid = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Grid);
     bLighting = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Lighting);
     bDecals = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals);
+    bBVH = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH);
 }
 
 void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags Flag, FViewport* Viewport)
@@ -191,6 +195,8 @@ void UShowFlagWidget::RenderShowFlagCheckbox(const char* Label, EEngineShowFlags
         case EEngineShowFlags::SF_Decals:
             ImGui::Text("데칼(Decal) 컴포넌트 표시/숨김");
             ImGui::Text("월드 내 데칼 효과들을 켜거나 끕니다.");
+        case EEngineShowFlags::SF_BVH:
+            ImGui::Text("월드 내 BoundingVolumeHierachy Bound 영역 표시를 켜거나 끕니다.");
         default:
             ImGui::Text("Show Flag 설정");
             break;

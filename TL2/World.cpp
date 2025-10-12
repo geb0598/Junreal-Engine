@@ -445,6 +445,15 @@ void UWorld::Tick(float DeltaSeconds)
 
     //InputManager.Update();
     UIManager.Update(DeltaSeconds);
+
+
+    //월드 틱이 끝난 후 BVH Build
+    const TArray<AActor*> LevelActors = Level->GetActors();
+    if (BVH == nullptr)
+    {
+        BVH = new FBVH();
+    }
+    BVH->Build(LevelActors);
 }
 
 float UWorld::GetTimeSeconds() const

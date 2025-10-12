@@ -94,6 +94,16 @@ void FBVH::Clear()
     MaxDepth = 0;
 }
 
+TArray<FVector> FBVH::GetBVHBoundsWire()
+{
+    TArray<FVector> BoundsWire;
+    for (FBVHNode& Node : Nodes)
+    {
+        BoundsWire.Append(Node.BoundingBox.GetWireLine());
+    }
+    return BoundsWire;
+}
+
 UStaticMeshComponent* FBVH::Intersect(const FVector& RayOrigin, const FVector& RayDirection, float& OutDistance) const
 {
     if (Nodes.Num() == 0)

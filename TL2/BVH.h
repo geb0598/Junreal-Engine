@@ -68,6 +68,9 @@ public:
     // 렌더링을 위한 노드 접근
     const TArray<FBVHNode>& GetNodes() const { return Nodes; }
 
+    TArray<FVector> GetBVHBoundsWire();
+
+
 private:
     TArray<FBVHNode> Nodes;
     TArray<FBVHStaticMeshAABB> MeshBounds;

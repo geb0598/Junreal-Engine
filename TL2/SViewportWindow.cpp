@@ -288,6 +288,11 @@ void SViewportWindow::RenderToolbar()
 				Viewport->ToggleShowFlag(EEngineShowFlags::SF_Decals);
 			}
 
+			bool bBVHEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH);
+			if (ImGui::Checkbox("BVH", &bBVHEnabled))
+			{
+				Viewport->ToggleShowFlag(EEngineShowFlags::SF_BVH);
+			}
 			//// Wireframe
 			//bool bWireframeEnabled = Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Wireframe);
 			//if (ImGui::Checkbox("Wireframe", &bWireframeEnabled))
