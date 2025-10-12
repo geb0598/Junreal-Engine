@@ -345,7 +345,7 @@ enum class EEngineShowFlags : uint64
     SF_Decals = 1ull << 7,         // Show/hide all decal components
 
     // Default enabled flags
-    SF_DefaultEnabled = SF_Primitives | SF_StaticMeshes | SF_Grid | SF_Decals,
+    SF_DefaultEnabled = SF_Primitives | SF_StaticMeshes | SF_Grid | SF_Decals | SF_BoundingBoxes,
     
     // All flags (for initialization/reset)
     SF_All = 0xFFFFFFFFFFFFFFFFull

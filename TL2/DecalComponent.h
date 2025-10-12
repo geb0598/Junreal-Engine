@@ -27,7 +27,6 @@ public:
     void DuplicateSubObjects() override;
 
     UStaticMesh* GetDecalBoxMesh() const { return DecalBoxMesh; }
-
     const FOBB GetWorldOBB();
 
     // Fade Effect Getter/Setter Func

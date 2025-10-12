@@ -463,6 +463,9 @@
     <ClCompile Include="SpotLightActor.cpp">
       <Filter>Actors</Filter>
     </ClCompile>
+    <ClCompile Include="SpotLightComponent.cpp">
+      <Filter>Components\Decal</Filter>
+    </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
   <ItemGroup>
@@ -844,6 +847,10 @@
     <ClInclude Include="DecalComponentScreen.h" />
     <ClInclude Include="SpotLightActor.h">
       <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="CBufferTypes.h" />
+    <ClInclude Include="SpotLightComponent.h">
+      <Filter>Components\Decal</Filter>
     </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
