@@ -75,14 +75,6 @@ void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
     // 3. 재귀적으로 BVH 구축
     MaxDepth = 0;
     int RootIndex = BuildRecursive(0, PrimitiveBounds.Num(), 0);
-
-    uint64_t BuildCycles = BVHBuildTimer.Finish();
-    double BuildTimeMs = FPlatformTime::ToMilliseconds(BuildCycles);
-
-    char buf[256];
-    sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
-        PrimitiveBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
-    UE_LOG(buf);
 }
 
 
