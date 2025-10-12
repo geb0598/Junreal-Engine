@@ -17,8 +17,12 @@ UStaticMeshComponent::~UStaticMeshComponent()
 
 }
 
-void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, const EEngineShowFlags ShowFlags)
 {
+    if (HasShowFlag(ShowFlags, EEngineShowFlags::SF_StaticMeshes) == false)
+    {
+        return;
+    }
     if (StaticMesh)
     {
         Renderer->UpdateSetCBuffer(ModelBufferType(GetWorldMatrix(), this->InternalIndex));

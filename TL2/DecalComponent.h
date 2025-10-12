@@ -28,7 +28,8 @@ public:
 
     UStaticMesh* GetDecalBoxMesh() const { return DecalBoxMesh; }
 
-    const FOBB GetWorldOBB();
+    const FAABB GetWorldAABB() const override;
+    const FOBB GetWorldOBB() const;
 
     // Fade Effect Getter/Setter Func
     int32 GetSortOrder() const { return SortOrder; }

@@ -206,9 +206,19 @@ void UDecalComponent::SetDecalTexture( FString NewTexturePath)
     // TextRenderComponent와 동일한 방식으로 텍스처 로드
     Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
 }
-const FOBB UDecalComponent::GetWorldOBB()
+const FOBB UDecalComponent::GetWorldOBB() const
 {
     return FOBB(LocalAABB, GetWorldTransform());
+}
+const FAABB UDecalComponent::GetWorldAABB() const
+{
+    FOBB WorldOBB = GetWorldOBB();
+    TArray<FVector> OBBVertices;
+    for (int i = 0; i < 8; i++)
+    {
+        OBBVertices.Add(WorldOBB.GetVertex(i));
+    }
+    return FAABB(OBBVertices);
 }
 
 UObject* UDecalComponent::Duplicate()

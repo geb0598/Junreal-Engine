@@ -11,7 +11,7 @@ protected:
     ~UBillboardComponent() override;
 
 public:
-    void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
+    void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlags) override;
     
     // Size settings
     void SetBillboardSize(float Width, float Height) { BillboardWidth = Width; BillboardHeight = Height; }
@@ -36,6 +36,7 @@ public:
     float GetScreenSize() const { return ScreenSize; }
 
     UTextQuad* GetStaticMesh() const { return BillboardQuad; }
+    const FAABB GetWorldAABB() const override;
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
