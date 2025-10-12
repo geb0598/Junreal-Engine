@@ -29,9 +29,9 @@ void USpotLightComponent::UpdateDecalProjectionMatrix()
 
     // 1. Calculate and update member variables from the OBB extents
     Radius = WorldOBB.Extents.X;
-    Height = WorldOBB.Extents.Y;
+    Height = WorldOBB.Extents.Y * 2.0f;
     Near = 1e-2f;
-    Far = Height * 1.2f;
+    Far = WorldOBB.Extents.Z;
 
     if (Height < KINDA_SMALL_NUMBER) return;
 
