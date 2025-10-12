@@ -50,7 +50,7 @@ public:
     void SetFadeInDuration(float InFadeInDuration) { FadeInDuration = InFadeInDuration; }
 
 protected:
-    void UpdateDecalProjectionMatrix();
+    virtual void UpdateDecalProjectionMatrix();
 
     // 데칼 박스 메쉬 (큐브)
     UStaticMesh* DecalBoxMesh = nullptr;
@@ -90,11 +90,11 @@ private:
 
     int32 SortOrder = 0;
     float FadeScreenSize = 0.01f;
-    float FadeStartDelay = 10.0f;
+    float FadeStartDelay = 5.0f;
     float FadeDuration = 0.0f;
-    float FadeInStartDelay = 10.0f;
-    float FadeInDuration = 10.0f;
-    FVector DecalSize{ 2.0f,1.0f,1.0f };
+    float FadeInStartDelay = 5.0f;
+    float FadeInDuration = 5.0f;
+    FVector DecalSize{ 1.0f,1.0f,1.0f };
 
     bool bIsDirty = true;
 };

@@ -463,6 +463,9 @@
     <ClCompile Include="SpotLightActor.cpp">
       <Filter>Actors</Filter>
     </ClCompile>
+    <ClCompile Include="SpotLightComponent.cpp">
+      <Filter>Components\Decal</Filter>
+    </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
   <ItemGroup>
@@ -845,6 +848,10 @@
     <ClInclude Include="SpotLightActor.h">
       <Filter>Actors</Filter>
     </ClInclude>
+    <ClInclude Include="CBufferTypes.h" />
+    <ClInclude Include="SpotLightComponent.h">
+      <Filter>Components\Decal</Filter>
+    </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
   <ItemGroup>
@@ -873,6 +880,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DecalShaderScreen.hlsl" />
+    <FxCompile Include="SpotLightShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <!-- ==================== 리소스 파일 ==================== -->
   <ItemGroup>

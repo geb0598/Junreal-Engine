@@ -131,6 +131,8 @@ public:
 	void CleanupWorld();
 
 	bool IsPIEWorld() const { return WorldType == EWorldType::PIE; }
+	void SetUseBVH(const bool InUseBVH) { bUseBVH = InUseBVH; }
+	bool GetUseBVH() { return bUseBVH; }
 private:
 	// 싱글톤 매니저 참조
 	UResourceManager& ResourceManager;
@@ -167,7 +169,7 @@ private:
 	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 
 
-	bool BUseBVH;
+	bool bUseBVH;
 	//UOctree* Octree;
 	FBVH BVH;
 };

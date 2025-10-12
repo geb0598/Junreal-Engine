@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Actor.h"
-#include "DecalComponent.h"
+#include "BillboardComponent.h"
+#include "SpotLightComponent.h"
 
 class ASpotLightActor : public AActor
 {
@@ -11,5 +12,6 @@ public:
 	virtual ~ASpotLightActor() override;
 
 protected:
-	UDecalComponent* SpotLightComponent;
+	UBillboardComponent* SpriteComponent;
+	USpotLightComponent* SpotLightComponent;
 };
