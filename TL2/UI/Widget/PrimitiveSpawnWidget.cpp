@@ -4,6 +4,8 @@
 #include "../../ImGui/imgui.h"
 #include "../../World.h"
 #include "../../StaticMeshActor.h"
+#include "../../DecalActor.h"
+#include "../../SpotLightActor.h"
 #include "../../Vector.h"
 #include "ObjManager.h"
 #include <algorithm>
@@ -114,15 +116,15 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::Spacing();
 
     // Primitive 타입 선택: StaticMesh만 노출
-    const char* PrimitiveTypes[] = { "StaticMesh" };
-
+    const char* SpawnTypes[] = { "Static Mesh", "Decal", "Actor", "Spot Light" };
     ImGui::Text("Primitive Type:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(120);
-    ImGui::Combo("##PrimitiveType", &SelectedPrimitiveType, PrimitiveTypes, 1);
+    ImGui::Combo("##Primitive Type", &SelectedPrimitiveType, SpawnTypes, IM_ARRAYSIZE(SpawnTypes));
 
-    // StaticMesh 타입일 때만 리소스 메쉬 선택 UI 표시
-    if (SelectedPrimitiveType == 0)
+    switch (SelectedPrimitiveType)
+    {
+    case 0:
     {
         auto& ResourceManager = UResourceManager::GetInstance();
 
@@ -175,6 +177,25 @@ void UPrimitiveSpawnWidget::RenderWidget()
                 ImGui::BulletText("%s", Path.c_str());
             ImGui::TreePop();
         }
+        break;
+    }
+    case 1:
+    {
+        ImGui::Text("Decal does not require additional resources to spawn.");
+        break;
+    }
+    case 2:
+    {
+        ImGui::Text("Actor does not require additional resources to spawn.");
+        break;
+    }
+    case 3:
+    {
+        ImGui::Text("SpotLight does not require additional resources to spawn.");
+        break;
+    }
+    default:
+        break;
     }
 
     // 스폰 개수 설정
@@ -188,7 +209,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::SameLine();
     if (ImGui::Button("Spawn Actors"))
     {
-        SpawnActors();
+        SpawnActors(SelectedPrimitiveType);
     }
 
 	////Obj Parser 테스트용
@@ -272,19 +293,20 @@ void UPrimitiveSpawnWidget::RenderWidget()
                 }
             }
         }
-        SpawnActors();
+        SpawnActors(SelectedPrimitiveType);
     }
     ImGui::SameLine();
     if (ImGui::Button("Spawn 5 Random"))
     {
         SelectedPrimitiveType = 0;
         NumberOfSpawn = 5;
-        SpawnActors();
+        SpawnActors(SelectedPrimitiveType);
     }
 }
 
-void UPrimitiveSpawnWidget::SpawnActors() const
+void UPrimitiveSpawnWidget::SpawnActors(int PrimitiveTypeIdx) const
 {
+    
     UWorld* World = GetCurrentWorld();
     if (!World)
     {
@@ -298,47 +320,110 @@ void UPrimitiveSpawnWidget::SpawnActors() const
 
     for (int32 i = 0; i < NumberOfSpawn; i++)
     {
-        FVector SpawnLocation = FVector(0, 0 ,0); //GenerateRandomLocation();
+        FVector SpawnLocation = FVector(0, 0, 0); //GenerateRandomLocation();
         FQuat   SpawnRotation = FQuat::Identity(); //GenerateRandomRotation();
         float   SpawnScale = 1.0f;//GenerateRandomScale();
         FVector SpawnScaleVec(SpawnScale, SpawnScale, SpawnScale);
 
         FTransform SpawnTransform(SpawnLocation, SpawnRotation, SpawnScaleVec);
 
-        AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(SpawnTransform);
+        AActor* SpawnedActor = nullptr;
 
-        if (NewActor)
+        switch (PrimitiveTypeIdx)
         {
-            // 드롭다운에서 선택한 리소스가 있으면 그걸 사용, 아니면 Cube로 기본 설정
-            FString MeshPath = "Data/Cube.obj";
-            const bool bHasResourceSelection =
-                (SelectedMeshIndex >= 0) &&
-                (SelectedMeshIndex < static_cast<int32>(CachedMeshFilePaths.size()));
-
-            if (bHasResourceSelection)
+        case 0:
+        {
+            AStaticMeshActor* NewMeshActor = World->SpawnActor<AStaticMeshActor>(SpawnTransform);
+            if (NewMeshActor)
             {
-                MeshPath = CachedMeshFilePaths[SelectedMeshIndex];
-            }
+                // 드롭다운에서 선택한 리소스가 있으면 그걸 사용, 아니면 Cube로 기본 설정
+                FString MeshPath = "Data/Cube.obj";
+                const bool bHasResourceSelection =
+                    (SelectedMeshIndex >= 0) &&
+                    (SelectedMeshIndex < static_cast<int32>(CachedMeshFilePaths.size()));
 
-            if (auto* StaticMeshComp = NewActor->GetStaticMeshComponent())
+                if (bHasResourceSelection)
+                {
+                    MeshPath = CachedMeshFilePaths[SelectedMeshIndex];
+                }
+
+                if (auto* StaticMeshComp = NewMeshActor->GetStaticMeshComponent())
+                {
+                    StaticMeshComp->SetStaticMesh(MeshPath);
+                }
+
+                FString ActorName = World->GenerateUniqueActorName(
+                    bHasResourceSelection ? GetBaseNameNoExt(MeshPath).c_str() : "StaticMesh"
+                );
+                NewMeshActor->SetName(ActorName);
+
+                SpawnedActor = NewMeshActor;
+                
+                UE_LOG("PrimitiveSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f using %s",
+                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale, MeshPath.c_str());
+            }
+            break;
+        }
+        case 1:
+        {
+            ADecalActor* NewDecalActor = World->SpawnActor<ADecalActor>(SpawnTransform);
+            if (NewDecalActor)
             {
-                StaticMeshComp->SetStaticMesh(MeshPath);
+                FString ActorName = World->GenerateUniqueActorName("Decal");
+                NewDecalActor->SetName(ActorName);
+
+                SpawnedActor = NewDecalActor;
+
+                UE_LOG("PrimitiveSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f",
+                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale);
             }
+            break;
+        }
+        case 2:
+        {
+            AActor* NewActor = World->SpawnActor<AActor>(SpawnTransform);
+            if (NewActor)
+            {
+                FString ActorName = World->GenerateUniqueActorName("Actor");
+                NewActor->SetName(ActorName);
 
-            FString ActorName = World->GenerateUniqueActorName(
-                bHasResourceSelection ? GetBaseNameNoExt(MeshPath).c_str() : "StaticMesh"
-            );
-            NewActor->SetName(ActorName);
+                SpawnedActor = NewActor;
 
+                UE_LOG("PrimitiveSpawn: Created empty Actor at (%.2f, %.2f, %.2f)",
+                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
+            }
+            break;
+        }
+        case 3:
+        {
+            ASpotLightActor* NewSpotLightActor = World->SpawnActor<ASpotLightActor>(SpawnTransform);
+            if (NewSpotLightActor)
+            {
+                FString ActorName = World->GenerateUniqueActorName("SpotLight");
+                NewSpotLightActor->SetName(ActorName);
+
+                SpawnedActor = NewSpotLightActor;
+
+                UE_LOG("PrimitiveSpawn: Created SpotLight at (%.2f, %.2f, %.2f)",
+                    SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
+            }
+            break;
+        }
+        default:
+        {
+            UE_LOG("PrimitiveSpawn: Invalid PrimitiveTypeIdx: %d", PrimitiveTypeIdx);
+            break;
+        }
+        }
+        if (SpawnedActor)
+        {
             SuccessCount++;
-            UE_LOG("PrimitiveSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f using %s",
-                SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale, MeshPath.c_str());
         }
         else
         {
-            UE_LOG("PrimitiveSpawn: Failed to spawn actor %d", i);
+            UE_LOG("PrimitiveSpawn: Failed to spawn actor %d of type %d", i, PrimitiveTypeIdx);
         }
-    }
 
-    UE_LOG("PrimitiveSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
+        UE_LOG("PrimitiveSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
+    }
 }

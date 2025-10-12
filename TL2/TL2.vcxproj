@@ -271,6 +271,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SMultiViewportWindow.cpp" />
     <ClCompile Include="SpatialDataStructure.cpp" />
+    <ClCompile Include="SpotLightActor.cpp" />
     <ClCompile Include="SSplitter.cpp" />
     <ClCompile Include="SSplitterH.cpp" />
     <ClCompile Include="SSplitterV.cpp" />
@@ -437,6 +438,7 @@
     <ClInclude Include="SMultiViewportWindow.h" />
     <ClInclude Include="SpatialDataStructure.h" />
     <ClInclude Include="Sphere.h" />
+    <ClInclude Include="SpotLightActor.h" />
     <ClInclude Include="SSplitter.h" />
     <ClInclude Include="SSplitterH.h" />
     <ClInclude Include="SSplitterV.h" />
