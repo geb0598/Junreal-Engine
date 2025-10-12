@@ -123,7 +123,7 @@ void USceneManagerWidget::Update()
 
 void USceneManagerWidget::RenderWidget()
 {
-    UWorld* World = GetCurrentWorld();
+    UWorld* World = GEngine->GetWorld();
 
     ImGui::Text("Scene Manager");
     bool UseBVH = World->GetUseBVH();

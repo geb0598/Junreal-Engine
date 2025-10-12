@@ -524,6 +524,10 @@ void UWorld::Tick(float DeltaSeconds)
         const TArray<AActor*> LevelActors = Level->GetActors();
         BVH.Build(LevelActors);
     }
+    else
+    {
+        BVH.Clear();
+    }
 }
 
 float UWorld::GetTimeSeconds() const
