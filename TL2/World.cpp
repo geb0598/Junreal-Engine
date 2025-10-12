@@ -276,6 +276,9 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     //특수 처리가 필요한 경우 아래에 추가
     TArray<UDecalComponent*> Decals;
     TArray<UPrimitiveComponent*> RenderPrimitivesWithOutDecal;
+    //빌보드는 뎁스 쓰지도 않고 테스트도 안 함, 마지막에 렌더링되어야함.
+    //스테이트 정렬이 안돼서 일단 특수처리
+    TArray<UBillboardComponent*> BillboardComponentList;
 
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives) == false)
     {
@@ -319,6 +322,11 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 if (UDecalComponent* Decal = Cast<UDecalComponent>(ActorComp))
                 {
                     Decals.Add(Decal);
+                    continue;
+                }
+                if (UBillboardComponent* Billboard = Cast<UBillboardComponent>(ActorComp))
+                {
+                    BillboardComponentList.Add(Billboard);
                     continue;
                 }
 
@@ -426,12 +434,17 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
         }
     }
 
+    
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH))
     {
         Renderer->AddLines(BVH.GetBVHBoundsWire(), FVector4(0.5f, 0.5f, 1, 1));
     }
 
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+    for (auto& Billboard : BillboardComponentList)
+    {
+        Billboard->Render(Renderer, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+    }
 }
 
 void UWorld::RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
