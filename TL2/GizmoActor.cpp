@@ -244,47 +244,42 @@ EGizmoMode  AGizmoActor::GetMode()
 void AGizmoActor::SetSpaceWorldMatrix(EGizmoSpace NewSpace, USceneComponent* SelectedComponent)
 {
 	SetSpace(NewSpace);
+	//어디선가 누군가가 기즈모액터 루트컴포넌트를 돌리고있다...
+
+	if (!SelectedComponent)
+		return;
+	// 타겟 컴포넌트 회전
+	FQuat TargetRot = SelectedComponent->GetWorldRotation();
+	float Radian = DegreeToRadian(90);
 
 	if (NewSpace == EGizmoSpace::World)
 	{
-
 		// 월드 고정 → 기즈모 축은 항상 X/Y/Z
 		   // 월드 고정 → 기즈모 축은 항상 X/Y/Z
-		if (ArrowX) ArrowX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0)));
-		if (ArrowY) ArrowY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 90)));
-		if (ArrowZ) ArrowZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, -90, 0)));
+		if (ArrowX) ArrowX->SetRelativeRotation(FQuat::FromAxisAngle(FVector(0, 1, 0), -Radian));
+		if (ArrowY) ArrowY->SetRelativeRotation(FQuat::FromAxisAngle(FVector(1, 0, 0), Radian));
+		if (ArrowZ) ArrowZ->SetRelativeRotation(FQuat::FromAxisAngle(FVector(0, 1, 0), -Radian * 2));
 
-		if (ScaleX) ScaleX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0)));
-		if (ScaleY) ScaleY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(-90, 0, 0)));
-		if (ScaleZ) ScaleZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0)));
-
-		if (RotateX) RotateX->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0)));
-		if (RotateY) RotateY->SetRelativeRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
-		if (RotateZ) RotateZ->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 0, 0)));
+		if (RotateX) RotateX->SetRelativeRotation(FQuat::FromAxisAngle(FVector(0, 0, 0), Radian));
+		if (RotateY) RotateY->SetRelativeRotation(FQuat::FromAxisAngle(FVector(0, 0, 1), Radian));
+		if (RotateZ) RotateZ->SetRelativeRotation(FQuat::FromAxisAngle(FVector(0, 1, 0), Radian));
 	}
 	else if (NewSpace == EGizmoSpace::Local)
 	{
-		if (!SelectedComponent)
-			return;
-
-		// 타겟 컴포넌트 회전 
-		FQuat TargetRot = SelectedComponent->GetWorldRotation();
-
 		 // ───────── Translate Gizmo ─────────
 		// ArrowX->AddRelativeRotation(AC);
 			// 월드 고정 → 기즈모 축은 항상 X/Y/Z
-		if (ArrowX) ArrowX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0)));
-		if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 90)));
-		if (ArrowZ) ArrowZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, -90, 0)));
+		if (ArrowX) ArrowX->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 1, 0), -Radian));
+		if (ArrowY) ArrowY->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(1, 0, 0), Radian));
+		if (ArrowZ) ArrowZ->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 1, 0), -Radian * 2));
 
-		if (ScaleX) ScaleX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0)));
-		if (ScaleY) ScaleY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(-90, 0, 0)));
-		if (ScaleZ) ScaleZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0)));
-
-		if (RotateX) RotateX->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 90, 0)));
-		if (RotateY) RotateY->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(90, 0, 0)));
-		if (RotateZ) RotateZ->SetRelativeRotation(TargetRot * FQuat::MakeFromEuler(FVector(0, 0, 0)));
+		if (RotateX) RotateX->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 0, 0), Radian));
+		if (RotateY) RotateY->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 0, 1), Radian));
+		if (RotateZ) RotateZ->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 1, 0), Radian));
 	}
+	if (ScaleX) ScaleX->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 0, 0), Radian));
+	if (ScaleY) ScaleY->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 0, 1), Radian));
+	if (ScaleZ) ScaleZ->SetRelativeRotation(TargetRot * FQuat::FromAxisAngle(FVector(0, 1, 0), -Radian));
 
 }
 

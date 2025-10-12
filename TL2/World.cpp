@@ -185,7 +185,7 @@ void UWorld::InitializeGizmo()
     GizmoActor = NewObject<AGizmoActor>();
     GizmoActor->SetWorld(this);
     GizmoActor->SetActorTransform(FTransform(FVector{0, 0, 0},
-                                             FQuat::MakeFromEuler(FVector{0, -90, 0}),
+                                             FQuat::MakeFromEuler(FVector{0, 0, 0}),
                                              FVector{1, 1, 1}));
     // 기즈모에 카메라 참조 설정
     if (MainCameraActor)
