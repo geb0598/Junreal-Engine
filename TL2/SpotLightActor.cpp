@@ -13,6 +13,7 @@ ASpotLightActor::ASpotLightActor()
 
     SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(FName("SpotLightComponent"));
     SpotLightComponent->SetupAttachment(RootComponent);
+    SpotLightComponent->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 90, 0)));
 }
 
 ASpotLightActor::~ASpotLightActor()

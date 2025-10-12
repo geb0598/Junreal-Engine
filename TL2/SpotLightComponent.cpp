@@ -29,7 +29,7 @@ void USpotLightComponent::UpdateDecalProjectionMatrix()
     Radius = WorldOBB.Extents.X;
     Height = WorldOBB.Extents.Y;
     Near = 1e-2f;
-    Far = Height * 1.1f;
+    Far = Height * 1.2f;
 
     if (Height < KINDA_SMALL_NUMBER) return;
 

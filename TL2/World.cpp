@@ -310,7 +310,11 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 //바운딩 박스 추가
                 if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
-                    Renderer->AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
+                    // SpotlightComponent는 바운딩 박스 안그림
+                    if (Cast<USpotLightComponent>(Primitive) == nullptr)
+                    {
+                        Renderer->AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
+                    }
                 }
 
                 // 데칼 컴포넌트는 Pass 2에서 렌더링
