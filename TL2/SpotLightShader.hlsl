@@ -85,12 +85,15 @@ PS_OUTPUT mainPS(PS_INPUT input)
     ProjPos.xyz /= ProjPos.w;
     
     // SpotLight Frustum 내부 판정
-    if (ProjPos.x < -1.0f || ProjPos.x > 1.0f ||
-        ProjPos.y < -1.0f || ProjPos.y > 1.0f ||
-        ProjPos.z < 0.0f || ProjPos.z > 1.0f)
+    float r = sqrt(ProjPos.x * ProjPos.x + ProjPos.y * ProjPos.y);
+    
+    // ndc에서 원형으로 클리핑
+    if (r > 1.0f || ProjPos.z < 0.0f || ProjPos.z > 1.0f)
     {
         discard;
     }
+    // edge fade-out 효과 추가
+    float edgeFade = saturate(1.0f - pow(r, 3.0f));
     
     // +-+-+ UV Calculation +-+-+
     float2 DecalUV = float2(
@@ -102,22 +105,21 @@ PS_OUTPUT mainPS(PS_INPUT input)
     float3 dpdx = ddx(input.WorldPosition);
     float3 dpdy = ddy(input.WorldPosition);
     float3 surfaceNormal = -normalize(cross(dpdy, dpdx));
-    
-    // 데칼 방향(전방) - 데칼의 X축 방향 (투영 방향)
-    float3 decalForward = -normalize(DecalWorldMatrix._m10_m11_m12);
 
     // 표면이 데칼 중심을 향하는지 판단
     float3 spotPosition = DecalWorldMatrix[3].xyz;
     float3 toPixel = normalize(input.WorldPosition - spotPosition);
     float facing = dot(surfaceNormal, toPixel);
     if (facing > 0.0f)
+    {
         discard;
+    }
     
     // +-+-+ Edge Fade +-+-+
-    float2 uvFrac = frac(DecalUV); // 0~1 범위로 반복
-    float2 edgeDistance = abs(uvFrac - 0.5f) * 2.0f; // 0(중심) ~ 1(가장자리)
-    float edgeFade = saturate(1.0f - max(edgeDistance.x, edgeDistance.y));
-    edgeFade = pow(edgeFade, 0.05f); // 가장자리에서 부드럽게 페이드
+    //float2 uvFrac = frac(DecalUV); // 0~1 범위로 반복
+    //float2 edgeDistance = abs(uvFrac - 0.5f) * 2.0f; // 0(중심) ~ 1(가장자리)
+    //float edgeFade = saturate(1.0f - max(edgeDistance.x, edgeDistance.y));
+    //edgeFade = pow(edgeFade, 0.05f); // 가장자리에서 부드럽게 페이드
 
     float4 DecalColor = g_DecalTexture.Sample(g_Sample, DecalUV);
 
