@@ -36,6 +36,7 @@ public:
     float GetScreenSize() const { return ScreenSize; }
 
     UTextQuad* GetStaticMesh() const { return BillboardQuad; }
+    const FAABB GetWorldAABB() const override;
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;

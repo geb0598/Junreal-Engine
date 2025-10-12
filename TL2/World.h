@@ -159,9 +159,6 @@ private:
 	/** === 액터 관리 === */
 	TArray<AActor*> Actors;
 
-	/** === 렌더링 되는 StaticMeshComponent 리스트 === **/
-	TArray<UPrimitiveComponent*> VisiblePrimitives;
-
 	// Object naming system
 	TMap<FString, int32> ObjectTypeCounts;
 

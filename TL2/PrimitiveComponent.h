@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "SceneComponent.h"
+#include "BoundingVolume.h"
 #include "Material.h"
 
 // 전방 선언
@@ -22,6 +23,8 @@ public:
     virtual void Serialize(bool bIsLoading, FPrimitiveData& InOut);
 
     virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) {}
+
+    virtual const FAABB GetWorldAABB() const = 0;
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;

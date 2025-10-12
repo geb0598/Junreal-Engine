@@ -74,6 +74,17 @@ void ULineComponent::ClearLines()
     }
     Lines.Empty();
 }
+const FAABB ULineComponent::GetWorldAABB() const
+{
+    TArray<FVector> OutStart;
+    TArray<FVector> OutEnd;
+    TArray<FVector4> OutColor;
+    GetWorldLineData(OutStart, OutEnd, OutColor);
+    TArray<FVector> Vertices;
+    Vertices.Append(OutStart);
+    Vertices.Append(OutEnd);
+    return FAABB(Vertices);
+}
 
 void ULineComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {

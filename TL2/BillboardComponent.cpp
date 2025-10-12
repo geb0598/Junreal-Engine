@@ -43,6 +43,10 @@ void UBillboardComponent::SetUVCoords(float U, float V, float UL, float VL)
     ULength = UL;
     VLength = VL;
 }
+const FAABB UBillboardComponent::GetWorldAABB() const
+{
+    return FAABB();
+}
 
 UObject* UBillboardComponent::Duplicate()
 {

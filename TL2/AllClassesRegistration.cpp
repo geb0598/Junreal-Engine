@@ -53,7 +53,7 @@
 IMPLEMENT_CLASS(UWorld)
 
 
-IMPLEMENT_CLASS(UPrimitiveComponent)
+//IMPLEMENT_CLASS(UPrimitiveComponent)
 IMPLEMENT_CLASS(UActorComponent)
 IMPLEMENT_CLASS(USceneComponent)
 IMPLEMENT_CLASS(UCameraComponent)

@@ -278,8 +278,14 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
     int FrustumCullCount = 0;
 
     const TArray<AActor*>& LevelActors = Level ? Level->GetActors() : TArray<AActor*>();
+
+    TArray<UPrimitiveComponent*> VisiblePrimitives;
+    //특수 처리가 필요한 경우 아래에 추가
+    TArray<UTextRenderComponent*> Texts;
+    TArray<UStaticMeshComponent*> StaticMeshes;
+    TArray<UDecalComponent*> Decals;
+
     //데칼 셰이더를 통해 primitive들을 렌더링 해야되서 따로 저장
-    VisiblePrimitives.clear();
 
     // Pass 1: 데칼을 제외한 모든 오브젝트 렌더링 (Depth 버퍼 채우기)
     for (AActor* Actor : LevelActors)
@@ -370,7 +376,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     // Pass 2: 데칼 렌더링 (Depth 버퍼를 읽어서 다른 오브젝트 위에 투영)
     // +-+-+ Collect +-+-+
-    TArray<UDecalComponent*> DecalsToRender;
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
     {
         for (AActor* Actor : LevelActors)

@@ -22,6 +22,7 @@ public:
 
 	UObject* Duplicate() override;
 	void DuplicateSubObjects() override;
+	const FAABB GetWorldAABB() const override;
 
 private:
 	static const uint32 MaxQuads = 100; // capacity
