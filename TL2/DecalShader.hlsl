@@ -76,7 +76,7 @@ PS_INPUT mainVS(VS_INPUT input)
 //------------------------------------------------------
 // Pixel Shader
 //------------------------------------------------------
-PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
+PS_OUTPUT mainPS(PS_INPUT input)
 {
     PS_OUTPUT Result;
     float4 DecalPosition = mul(float4(input.WorldPosition, 1.0f), DecalWorldMatrixInverse);

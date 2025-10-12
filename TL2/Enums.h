@@ -309,6 +309,16 @@ enum class EPrimitiveType : uint32
 
     End,
 };
+
+enum class ESpawnActorType : uint32
+{
+    Actor,
+    StaticMesh,
+    Decal,
+    SpotLight,
+
+    Count
+};
 /**
  * Show Flag system for toggling rendering features globally
  * Uses bit flags for efficient storage and checking
