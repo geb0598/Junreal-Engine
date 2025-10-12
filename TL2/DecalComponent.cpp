@@ -145,21 +145,22 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     Renderer->OMSetBlendState(true);                  // (SrcAlpha, InvSrcAlpha)인지 내부 확인
 
     // =========================
-    // RTV 유지 + DSV 언바인드
+    // RTV와 DSV 모두 유지
     // =========================
-    // FIX: 현재 RTV를 조회해서 DSV만 떼고 다시 바인딩
     ID3D11RenderTargetView* currentRTV = nullptr;
+    ID3D11DepthStencilView* currentDSV = nullptr;
     ID3D11DeviceContext* ctx = Renderer->GetRHIDevice()->GetDeviceContext();
 
-    ctx->OMGetRenderTargets(1, &currentRTV, nullptr);            // 현재 RTV 핸들 얻고
-    ctx->OMSetRenderTargets(1, &currentRTV, nullptr);            // RTV 유지 + DSV 해제
+    ctx->OMGetRenderTargets(1, &currentRTV, &currentDSV);        // 현재 RTV와 DSV 핸들 얻고
+    ctx->OMSetRenderTargets(1, &currentRTV, currentDSV);         // RTV와 DSV 모두 유지
     if (currentRTV) currentRTV->Release();                       // 로컬 ref release
+    if (currentDSV) currentDSV->Release();                       // 로컬 ref release
 
     // 데칼은 깊이 "읽기"만 (LessEqual + DepthWrite Off)
     Renderer->OMSetDepthStencilState(EComparisonFunc::LessEqualReadOnly);
 
-    // 컬링 끄기(양면)
-    Renderer->RSSetDefaultState();
+    // DepthBias 적용된 데칼 Rasterizer State 사용
+    Renderer->GetRHIDevice()->RSSetDecalState();
 
     // 입력 어셈블러
     UINT stride = sizeof(FVertexDynamic);

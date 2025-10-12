@@ -56,7 +56,6 @@ struct PS_INPUT
 struct PS_OUTPUT
 {
     float4 Color : SV_TARGET;
-    float Depth : SV_Depth;
 };
 
 PS_INPUT mainVS(VS_INPUT input)
@@ -133,9 +132,7 @@ PS_OUTPUT mainPS(PS_INPUT input)
     // 최종 알파 = 텍스처 알파 * 각도 페이드 * 가장자리 페이드
     DecalColor.a *= angleFade * edgeFade;
     DecalColor.a *= CurrentAlpha;
-    
+
     Result.Color = DecalColor;
-    //SV_DEPTH 시멘틱을 쓰는 경우 z값을 정규화 하지 않고 그대로 넘어옴.
-    Result.Depth = input.position.z/input.position.w - 0.011f;
     return Result;
 }
