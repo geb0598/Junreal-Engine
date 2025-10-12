@@ -4,6 +4,8 @@
 #include "../../ImGui/imgui.h"
 #include "../../World.h"
 #include "../../StaticMeshActor.h"
+#include "../../DecalActor.h"
+#include "../../SpotLightActor.h"
 #include "../../Vector.h"
 #include "ObjManager.h"
 #include <algorithm>
@@ -54,11 +56,30 @@ void UPrimitiveSpawnWidget::Initialize()
 {
 	// UIManager 참조 확보
 	UIManager = &UUIManager::GetInstance();
+    
+    if (SpawnRegistry.empty())
+    {
+        RegisterSpawnInfo<AActor>(ESpawnActorType::Actor, "Actor");
+        RegisterSpawnInfo<AStaticMeshActor>(ESpawnActorType::StaticMesh, "Static Mesh");
+        RegisterSpawnInfo<ADecalActor>(ESpawnActorType::Decal, "Decal");
+        RegisterSpawnInfo<ASpotLightActor>(ESpawnActorType::SpotLight, "Spot Light");
+    }
 }
 
 void UPrimitiveSpawnWidget::Update()
 {
 	// 필요시 업데이트 로직 추가
+}
+
+template<typename ActorType>
+void UPrimitiveSpawnWidget::RegisterSpawnInfo(ESpawnActorType SpawnType, const char* TypeName)
+{
+    SpawnRegistry.Add(SpawnType, {
+        TypeName,
+        [](UWorld* World, const FTransform& Transform) -> AActor* {
+            return World->SpawnActor<ActorType>(Transform);
+        }
+    });
 }
 
 UWorld* UPrimitiveSpawnWidget::GetCurrentWorld() const
@@ -110,19 +131,26 @@ FQuat UPrimitiveSpawnWidget::GenerateRandomRotation() const
 
 void UPrimitiveSpawnWidget::RenderWidget()
 {
-    ImGui::Text("Primitive Actor Spawner");
+    ImGui::Text("Actor Spawner");
     ImGui::Spacing();
 
     // Primitive 타입 선택: StaticMesh만 노출
-    const char* PrimitiveTypes[] = { "StaticMesh" };
-
-    ImGui::Text("Primitive Type:");
+    const char* SpawnTypes[] = { "Actor", "Static Mesh", "Decal", "Spot Light" };
+    static ESpawnActorType SelectedSpawnType = ESpawnActorType::StaticMesh;
+    
+    ImGui::Text("Actor Types:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(120);
-    ImGui::Combo("##PrimitiveType", &SelectedPrimitiveType, PrimitiveTypes, 1);
+    ImGui::Combo("##Actor Type", (int*)&SelectedSpawnType, SpawnTypes, (int)ESpawnActorType::Count);
 
-    // StaticMesh 타입일 때만 리소스 메쉬 선택 UI 표시
-    if (SelectedPrimitiveType == 0)
+    switch (SelectedSpawnType)
+    {
+    case ESpawnActorType::Actor:
+    {
+        ImGui::Text("Actor does not require additional resources to spawn.");
+        break;
+    }
+    case ESpawnActorType::StaticMesh:
     {
         auto& ResourceManager = UResourceManager::GetInstance();
 
@@ -175,6 +203,20 @@ void UPrimitiveSpawnWidget::RenderWidget()
                 ImGui::BulletText("%s", Path.c_str());
             ImGui::TreePop();
         }
+        break;
+    }
+    case ESpawnActorType::Decal:
+    {
+        ImGui::Text("Decal does not require additional resources to spawn.");
+        break;
+    }
+    case ESpawnActorType::SpotLight:
+    {
+        ImGui::Text("SpotLight does not require additional resources to spawn.");
+        break;
+    }
+    default:
+        break;
     }
 
     // 스폰 개수 설정
@@ -188,7 +230,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::SameLine();
     if (ImGui::Button("Spawn Actors"))
     {
-        SpawnActors();
+        SpawnActors(SelectedSpawnType);
     }
 
 	////Obj Parser 테스트용
@@ -256,7 +298,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::Text("Quick Spawn:");
     if (ImGui::Button("Spawn 1 Cube"))
     {
-        SelectedPrimitiveType = 0;
+        SelectedSpawnType = ESpawnActorType::StaticMesh;
         NumberOfSpawn = 1;
         // 기본 선택을 Cube로 강제
         if (!CachedMeshFilePaths.empty())
@@ -272,18 +314,18 @@ void UPrimitiveSpawnWidget::RenderWidget()
                 }
             }
         }
-        SpawnActors();
+        SpawnActors(SelectedSpawnType);
     }
     ImGui::SameLine();
     if (ImGui::Button("Spawn 5 Random"))
     {
-        SelectedPrimitiveType = 0;
+        SelectedSpawnType = ESpawnActorType::StaticMesh;
         NumberOfSpawn = 5;
-        SpawnActors();
+        SpawnActors(SelectedSpawnType);
     }
 }
 
-void UPrimitiveSpawnWidget::SpawnActors() const
+void UPrimitiveSpawnWidget::SpawnActors(ESpawnActorType SpawnType) const
 {
     UWorld* World = GetCurrentWorld();
     if (!World)
@@ -291,54 +333,70 @@ void UPrimitiveSpawnWidget::SpawnActors() const
         UE_LOG("PrimitiveSpawn: No World available for spawning");
         return;
     }
-
-    UE_LOG("PrimitiveSpawn: Spawning %d %s actors", NumberOfSpawn, GetPrimitiveTypeName(SelectedPrimitiveType));
+    
+    const FSpawnInfo* Info = SpawnRegistry.Find(SpawnType);
+    if (!Info || !Info->Spawner)
+    {
+        UE_LOG("ActorSpawn: Failed - No registered spawn information");
+        return;
+    }
+    UE_LOG("ActorSpawn: Spawning %d %s actors", NumberOfSpawn, Info->TypeName);
 
     int32 SuccessCount = 0;
-
     for (int32 i = 0; i < NumberOfSpawn; i++)
     {
-        FVector SpawnLocation = FVector(0, 0 ,0); //GenerateRandomLocation();
+        FVector SpawnLocation = FVector(0, 0, 0); //GenerateRandomLocation();
         FQuat   SpawnRotation = FQuat::Identity(); //GenerateRandomRotation();
         float   SpawnScale = 1.0f;//GenerateRandomScale();
         FVector SpawnScaleVec(SpawnScale, SpawnScale, SpawnScale);
-
         FTransform SpawnTransform(SpawnLocation, SpawnRotation, SpawnScaleVec);
 
-        AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(SpawnTransform);
-
+        AActor* NewActor = Info->Spawner(World, SpawnTransform);
         if (NewActor)
         {
-            // 드롭다운에서 선택한 리소스가 있으면 그걸 사용, 아니면 Cube로 기본 설정
-            FString MeshPath = "Data/Cube.obj";
-            const bool bHasResourceSelection =
-                (SelectedMeshIndex >= 0) &&
-                (SelectedMeshIndex < static_cast<int32>(CachedMeshFilePaths.size()));
+            FString ActorName;
 
-            if (bHasResourceSelection)
+            // Only for Static Mesh 
+            if (SpawnType == ESpawnActorType::StaticMesh)
             {
-                MeshPath = CachedMeshFilePaths[SelectedMeshIndex];
+                if (AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(NewActor))
+                {
+                    // 드롭다운에서 선택한 리소스가 있으면 그걸 사용, 아니면 Cube로 기본 설정
+                    FString MeshPath = "Data/Cube.obj";
+                    const bool bHasResourceSelection =
+                        (SelectedMeshIndex >= 0) &&
+                        (SelectedMeshIndex < static_cast<int32>(CachedMeshFilePaths.size()));
+
+                    if (bHasResourceSelection)
+                    {
+                        MeshPath = CachedMeshFilePaths[SelectedMeshIndex];
+                    }
+
+                    if (auto* StaticMeshComp = MeshActor->GetStaticMeshComponent())
+                    {
+                        StaticMeshComp->SetStaticMesh(MeshPath);
+                    }
+
+                    ActorName = World->GenerateUniqueActorName(
+                        bHasResourceSelection ? GetBaseNameNoExt(MeshPath).c_str() : Info->TypeName
+                    );
+                }
+            }
+            // all other actor types
+            else
+            {
+                ActorName = World->GenerateUniqueActorName(Info->TypeName);
             }
 
-            if (auto* StaticMeshComp = NewActor->GetStaticMeshComponent())
-            {
-                StaticMeshComp->SetStaticMesh(MeshPath);
-            }
-
-            FString ActorName = World->GenerateUniqueActorName(
-                bHasResourceSelection ? GetBaseNameNoExt(MeshPath).c_str() : "StaticMesh"
-            );
+            // Common logic
             NewActor->SetName(ActorName);
-
+            UE_LOG("ActorSpawn: Created %s at (%.2f, %.2f, %.2f)", Info->TypeName, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
             SuccessCount++;
-            UE_LOG("PrimitiveSpawn: Created at (%.2f, %.2f, %.2f) scale %.2f using %s",
-                SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z, SpawnScale, MeshPath.c_str());
         }
         else
         {
-            UE_LOG("PrimitiveSpawn: Failed to spawn actor %d", i);
+            UE_LOG("ActorSpawn: Failed - World->SpawnActor returned nullptr for type %s.", Info->TypeName);
         }
     }
-
-    UE_LOG("PrimitiveSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
+    UE_LOG("ActorSpawn: Successfully spawned %d/%d actors", SuccessCount, NumberOfSpawn);
 }
