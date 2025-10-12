@@ -1,0 +1,207 @@
+{
+  "Version" : 2,
+  "NextUUID" : 707,
+  "PerspectiveCamera" : {
+    "FOV" : [60.000000],
+    "FarClip" : [4000.000000],
+    "Location" : [-7.799441, -3.148737, 2.458003],
+    "NearClip" : [0.100000],
+    "Rotation" : [0.000000, 8.699990, -6.700008]
+  },
+  "Actors" : [
+    {
+      "UUID" : 506,
+      "Type" : "ADecalActor",
+      "Name" : "DefaultActor",
+      "RootComponentUUID" : 507
+    },
+    {
+      "UUID" : 538,
+      "Type" : "AStaticMeshActor",
+      "Name" : "Cube_0",
+      "RootComponentUUID" : 540
+    },
+    {
+      "UUID" : 542,
+      "Type" : "AStaticMeshActor",
+      "Name" : "Cube_1",
+      "RootComponentUUID" : 544
+    }
+  ],
+  "Components" : [
+    {
+      "UUID" : 681,
+      "OwnerActorUUID" : 506,
+      "ParentComponentUUID" : 680,
+      "Type" : "UDecalComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 680,
+      "OwnerActorUUID" : 506,
+      "ParentComponentUUID" : 0,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 507,
+      "OwnerActorUUID" : 506,
+      "ParentComponentUUID" : 0,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [0.000000, 2.353549, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 508,
+      "OwnerActorUUID" : 506,
+      "ParentComponentUUID" : 507,
+      "Type" : "UDecalComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 684,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 0,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 695,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 677,
+      "Type" : "UTextRenderComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 1.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 541,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 540,
+      "Type" : "UDecalComponent",
+      "RelativeLocation" : [0.000000, -0.094040, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 540,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 0,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, -5.279648, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "StaticMesh" : "Data/Cube.obj"
+    },
+    {
+      "UUID" : 700,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 541,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 677,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 541,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 1.597713, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "StaticMesh" : "Data/bitten_apple_mid.obj"
+    },
+    {
+      "UUID" : 694,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 677,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 699,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 541,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 701,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 541,
+      "Type" : "UTextRenderComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 1.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 703,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 541,
+      "Type" : "UDecalComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 704,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 699,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 705,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 699,
+      "Type" : "UDecalComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 706,
+      "OwnerActorUUID" : 538,
+      "ParentComponentUUID" : 700,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 687,
+      "OwnerActorUUID" : 542,
+      "ParentComponentUUID" : 0,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 544,
+      "OwnerActorUUID" : 542,
+      "ParentComponentUUID" : 0,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "StaticMesh" : "Data/Cube.obj"
+    }
+  ]
+}
