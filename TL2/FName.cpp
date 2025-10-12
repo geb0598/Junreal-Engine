@@ -21,5 +21,6 @@ uint32 FNamePool::Add(const FString& InStr)
 
 const FNameEntry& FNamePool::Get(uint32 Index)
 {
+    if (Index == UINT32_MAX) return { "", "" };
     return Entries[Index];
 }

@@ -465,7 +465,9 @@ FTextureData* UResourceManager::CreateOrGetTextureData(const FName& FileName)
 
     OutWstring.resize(RequiredSize - 1);
     FWideString FilePath = OutWstring;
-
+    if (FilePath.empty() ) {
+		return nullptr;
+    }
     FTextureData* Data = new FTextureData();
 
     const FWideString& FileExtension = FilePath.substr(FilePath.size() - 3);
