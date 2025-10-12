@@ -43,6 +43,10 @@ void UBillboardComponent::SetUVCoords(float U, float V, float UL, float VL)
     ULength = UL;
     VLength = VL;
 }
+const FAABB UBillboardComponent::GetWorldAABB() const
+{
+    return FAABB();
+}
 
 UObject* UBillboardComponent::Duplicate()
 {
@@ -108,8 +112,12 @@ void UBillboardComponent::CreateBillboardVertices()
     UResourceManager::GetInstance().UpdateDynamicVertexBuffer("Billboard", vertices);
 }
 
-void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj)
+void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlags)
 {
+    if (HasShowFlag(ShowFlags, EEngineShowFlags::SF_BillboardText) == false)
+    {
+        return;
+    }
     // 텍스처 로드
     Material->Load(TexturePath, Renderer->GetRHIDevice()->GetDevice());
 

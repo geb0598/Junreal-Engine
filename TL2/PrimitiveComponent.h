@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "SceneComponent.h"
+#include "BoundingVolume.h"
 #include "Material.h"
+#include "FViewport.h"
 
 // 전방 선언
 struct FPrimitiveData;
@@ -24,8 +26,9 @@ public:
 
     // 컴포넌트 직렬화/역직렬화 (상대 트랜스폼 기준, V2용)
     virtual void Serialize(bool bIsLoading, FComponentData& InOut);
+    virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlags) {}
 
-    virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) {}
+    virtual const FAABB GetWorldAABB() const = 0;
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;

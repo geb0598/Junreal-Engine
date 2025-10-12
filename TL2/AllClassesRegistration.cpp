@@ -40,20 +40,21 @@
 #include "DynamicMesh.h"
 #include "LineDynamicMesh.h"
 #include "TextQuad.h"
-#include"RenderViewportSwitcherWidget.h"
+#include "RenderViewportSwitcherWidget.h"
 #include "MenuBarWidget.h"
-#include"Octree.h"
-#include"Engine.h"
-#include"EditorEngine.h"
-#include"GameEngine.h"
-#include"Level.h"
-#include"DecalComponent.h"
-#include"DecalActor.h"
+#include "Octree.h"
+#include "Engine.h"
+#include "EditorEngine.h"
+#include "GameEngine.h"
+#include "Level.h"
+#include "DecalComponent.h"
+#include "DecalActor.h"
+#include "SpotLightActor.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
 
-IMPLEMENT_CLASS(UPrimitiveComponent)
+//IMPLEMENT_CLASS(UPrimitiveComponent)
 IMPLEMENT_CLASS(UActorComponent)
 IMPLEMENT_CLASS(USceneComponent)
 IMPLEMENT_CLASS(UCameraComponent)
@@ -66,6 +67,7 @@ IMPLEMENT_CLASS(AStaticMeshActor)
 IMPLEMENT_CLASS(AGizmoActor)
 IMPLEMENT_CLASS(AGridActor)
 IMPLEMENT_CLASS(ADecalActor)
+IMPLEMENT_CLASS(ASpotLightActor)
 
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)

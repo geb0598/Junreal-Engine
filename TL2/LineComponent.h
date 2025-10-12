@@ -19,7 +19,7 @@ public:
     void RemoveLine(ULine* Line);
     void ClearLines();
 
-    virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj) override;
+    virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlag) override;
 
     // Properties
     void SetLineVisible(bool bVisible) { bLinesVisible = bVisible; }
@@ -31,6 +31,7 @@ public:
     // Efficient world coordinate line data extraction
     void GetWorldLineData(TArray<FVector>& OutStartPoints, TArray<FVector>& OutEndPoints, TArray<FVector4>& OutColors) const;
     bool HasVisibleLines() const { return bLinesVisible && !Lines.empty(); }
+    const FAABB GetWorldAABB() const override;
 
 private:
     TArray<ULine*> Lines;
