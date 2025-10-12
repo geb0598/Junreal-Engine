@@ -2,6 +2,34 @@
 #include "RHIDevice.h"
 #include "ResourceManager.h"
 
+#define DECLARE_CBUFFER(TYPE)\
+    ID3D11Buffer* TYPE##uffer{};
+
+#define DECLARE_CBUFFER_UPDATE_FUNC(TYPE)\
+    void UpdateCBuffer(const TYPE& CBufferData) override \
+{\
+    CBufferUpdate(TYPE##uffer, CBufferData);\
+}
+
+#define DECLARE_CBUFFER_UPDATE_SET_FUNC(TYPE)\
+    void UpdateSetCBuffer(const TYPE& CBufferData) override\
+{\
+    CBufferUpdateSet(TYPE##uffer, CBufferData, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
+}
+
+#define DECLARE_CBUFFER_SET_FUNC(TYPE)\
+    void SetCBuffer(const TYPE& CBufferData) override\
+{\
+    CBufferSet(TYPE##uffer, TYPE##SlotNum, TYPE##SetVS, TYPE##SetPS);\
+}
+
+#define CREATE_CBUFFER(TYPE)\
+CreateCBuffer(&TYPE##uffer, sizeof(TYPE));
+
+#define RELEASE_CBUFFER(TYPE)\
+if(TYPE##uffer) {TYPE##uffer->Release(); TYPE##uffer = nullptr;}
+
+
 class D3D11RHI : public URHIDevice
 {
 public:
@@ -41,20 +69,9 @@ public:
 
     static HRESULT CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mesh, ID3D11Buffer** outBuffer);
 
-
-
-    void UpdateConstantBuffers(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) override;
-    void UpdateViewConstantBuffers( const FMatrix& ViewMatrix, const FMatrix& ProjMatrix) ;
-    void UpdateModelConstantBuffers(const FMatrix& ModelMatrix) ;
-    void UpdateModelConstantBuffers(const ModelBufferType& ModelConstant);
-    void UpdateBillboardConstantBuffers(const FVector& pos, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp) override;
-    void UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture) override;
-    void UpdateHighLightConstantBuffers(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo) override;
-    void UpdateColorConstantBuffers(const FVector4& InColor) override;
-    void UpdateUVScrollConstantBuffers(const FVector2D& Speed, float TimeSec) override;
-    void UpdateInvWorldConstantBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix) override;
-    void UpdateViewportConstantBuffer(float StartX, float StartY, float SizeX, float SizeY);
-    void UpdateDecalConstantBuffer(float InFadeAlpha) override;
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
+        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
+        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
 
     void IASetPrimitiveTopology() override;
     void RSSetState(EViewModeIndex ViewModeIndex) override;
@@ -105,6 +122,48 @@ public:
     }
 
 private:
+
+    template <typename T>
+    void CBufferUpdate(ID3D11Buffer* CBuffer, T& CBufferData)
+    {
+        D3D11_MAPPED_SUBRESOURCE MSR;
+
+        //gpu메모리를 cpu가 접근할 수 있도록 잠금
+        //D3D11_MAP_WRITE_DISCARD : gpu안의 데이터를 버리고 cpu에서 넣는 데이터로 덮어씌움 
+        //gpu내용을 버림으로써 gpu안의 메모리를 읽는 과정 생략
+        DeviceContext->Map(CBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MSR);
+        memcpy(MSR.pData, &CBufferData, sizeof(T));
+        DeviceContext->Unmap(CBuffer, 0);
+    }
+    void CBufferSet(ID3D11Buffer* CBuffer, const uint32 SlotNum, const bool bSetVS, const  bool bSetPS)
+    {
+        if (bSetVS)
+        {
+            DeviceContext->VSSetConstantBuffers(SlotNum, 1, &CBuffer);
+        }
+        if (bSetPS)
+        {
+            DeviceContext->PSSetConstantBuffers(SlotNum, 1, &CBuffer);
+        }
+    }
+
+    template <typename T>
+    void CBufferUpdateSet(ID3D11Buffer* CBuffer, T& CBufferData, const uint32 SlotNum, const bool bSetVS, const bool bSetPS)
+    {
+        CBufferUpdate(CBuffer, CBufferData);
+        CBufferSet(CBuffer, SlotNum, bSetVS, bSetPS);
+    }
+
+    void CreateCBuffer(ID3D11Buffer** CBuffer, const uint32 Size)
+    {
+        D3D11_BUFFER_DESC CBufferDesc = {};
+        CBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        CBufferDesc.ByteWidth = (Size + 15) & ~15;
+        CBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        CBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        Device->CreateBuffer(&CBufferDesc, nullptr, CBuffer);
+    }
+
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다
     void CreateFrameBuffer() override;
     void CreateRasterizerState() override;
@@ -159,6 +218,7 @@ private:
     ID3D11ShaderResourceView* DepthSRV{}; // Depth buffer를 셰이더에서 읽기 위한 SRV
 
 
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER)
 
     // 버퍼 핸들
     ID3D11Buffer* ModelCB{};

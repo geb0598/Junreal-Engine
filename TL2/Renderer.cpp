@@ -101,62 +101,6 @@ void URenderer::RSSetDefaultState()
     RHIDevice->RSSetDefaultState();
 }
 
-void URenderer::UpdateConstantBuffer(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-{
-    RHIDevice->UpdateConstantBuffers(ModelBufferType(ModelMatrix, 0), ViewMatrix, ProjMatrix);
-}
-
-void URenderer::UpdateConstantBuffer(const ModelBufferType& ModelConstant, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-{
-    RHIDevice->UpdateConstantBuffers(ModelConstant, ViewMatrix, ProjMatrix);
-}
-
-void URenderer::UpdateHighLightConstantBuffer(const uint32 InPicked, const FVector& InColor, const uint32 X, const uint32 Y, const uint32 Z, const uint32 Gizmo)
-{
-    RHIDevice->UpdateHighLightConstantBuffers(InPicked, InColor, X, Y, Z, Gizmo);
-}
-
-void URenderer::UpdateBillboardConstantBuffers(const FVector& pos,const FMatrix& ViewMatrix, const FMatrix& ProjMatrix, const FVector& CameraRight, const FVector& CameraUp)
-{
-    RHIDevice->UpdateBillboardConstantBuffers(pos,ViewMatrix, ProjMatrix, CameraRight, CameraUp);
-}
-
-//void URenderer::UpdateTextConstantBuffers(const FMatrix& ModelMatrix, const FMatrix& ViewMatrix, const FMatrix& ProjMatrix)
-//{
-//    RHIDevice->UpdateTextConstantBuffers(ModelMatrix, ViewMatrix, ProjMatrix);
-//}
-
-void URenderer::UpdatePixelConstantBuffers(const FObjMaterialInfo& InMaterialInfo, bool bHasMaterial, bool bHasTexture)
-{
-    RHIDevice->UpdatePixelConstantBuffers(InMaterialInfo, bHasMaterial, bHasTexture);
-}
-
-void URenderer::UpdateColorBuffer(const FVector4& Color)
-{
-    RHIDevice->UpdateColorConstantBuffers(Color);
-}
-
-void URenderer::UpdateInvWorldBuffer(const FMatrix& DecalWorldMatrix, const FMatrix& DecalWorldMatrixInverse, const FMatrix& DecalProjectionMatrix)
-{
-    RHIDevice->UpdateInvWorldConstantBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
-}
-
-void URenderer::UpdateViewportBuffer(float StartX, float StartY, float SizeX, float SizeY)
-{
-    static_cast<D3D11RHI*>(RHIDevice)->UpdateViewportConstantBuffer(StartX, StartY, SizeX, SizeY);
-}
-
-void URenderer::UpdateDecalBuffer(float InFadeAlpha)
-{
-    RHIDevice->UpdateDecalConstantBuffer(InFadeAlpha);
-}
-
-void URenderer::UpdateUVScroll(const FVector2D& Speed, float TimeSec)
-{
-    RHIDevice->UpdateUVScrollConstantBuffers(Speed, TimeSec);
-}
-
-
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
 {
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();
@@ -231,7 +175,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
                 RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
             }
             
-            RHIDevice->UpdatePixelConstantBuffers(MaterialInfo, true, bHasTexture); // PSSet도 해줌
+            RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(MaterialInfo), true, bHasTexture)); // PSSet도 해줌
             
             // DrawCall 수실행 및 통계 추가
             RHIDevice->GetDeviceContext()->DrawIndexed(MeshGroupInfos[i].IndexCount, MeshGroupInfos[i].StartIndex, 0);
@@ -241,7 +185,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     else
     {
         FObjMaterialInfo ObjMaterialInfo;
-        RHIDevice->UpdatePixelConstantBuffers(ObjMaterialInfo, false, false); // PSSet도 해줌
+        RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(ObjMaterialInfo), false, false)); // PSSet도 해줌
         RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
         StatsCollector.IncrementDrawCalls();
     }
@@ -358,9 +302,9 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 {
     RHIDevice->RSSetState(ViewModeIndex);
     if(ViewModeIndex == EViewModeIndex::VMI_Wireframe)
-        RHIDevice->UpdateColorConstantBuffers(FVector4{ 1.f, 0.f, 0.f, 1.f });
+        RHIDevice->UpdateSetCBuffer(ColorBufferType{ FVector4(1.f, 0.f, 0.f, 1.f) });
     else
-        RHIDevice->UpdateColorConstantBuffers(FVector4{ 1.f, 1.f, 1.f, 0.f });
+        RHIDevice->UpdateSetCBuffer(ColorBufferType{ FVector4(1.f, 1.f, 1.f, 0.f) });
 }
 
 void URenderer::EndFrame()
@@ -491,7 +435,8 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     }
     
     // Set up rendering state
-    UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+    UpdateSetCBuffer(ModelBufferType(ModelMatrix));
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
     PrepareShader(LineShader);
     
     // Render using dynamic mesh

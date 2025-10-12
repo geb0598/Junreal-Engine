@@ -168,7 +168,7 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport)
 
 
 
-	for (int32 i = 0; i < Components->Num(); ++i)
+	for (uint32 i = 0; i < Components->Num(); ++i)
 	{
 		USceneComponent* Component = (*Components)[i];
 		if (!Component) continue;
@@ -179,16 +179,17 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport)
 		}
 
 		ModelMatrix = Component->GetWorldMatrix();
-		Renderer->UpdateConstantBuffer(ModelMatrix, ViewMatrix, ProjectionMatrix);
+		Renderer->UpdateSetCBuffer(ModelBufferType{ ModelMatrix });
+		Renderer->UpdateSetCBuffer(ViewProjBufferType{ ViewMatrix, ProjectionMatrix });
 
 		
 			if (GizmoAxis== i + 1)
 			{
-				Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 1, 0, 1);
+				Renderer->UpdateSetCBuffer(HighLightBufferType{ true, rgb, i + 1, 1, 0, 1 });
 			}
 			else
 			{
-				Renderer->UpdateHighLightConstantBuffer(true, rgb, i + 1, 0, 0, 1);
+				Renderer->UpdateSetCBuffer(HighLightBufferType{ true, rgb, i + 1, 0, 0, 1 });
 			}
 		
 
@@ -360,6 +361,10 @@ void AGizmoActor::OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, f
 	FVector Axis{};
 	FVector GizmoPosition = GetActorLocation();
 
+	if (GizmoAxis == 0)
+	{
+		return;
+	}
 	// ────────────── World / Local 축 선택 ──────────────
 	if (CurrentSpace == EGizmoSpace::World)
 	{
@@ -414,7 +419,7 @@ worldPerPixel *= zoomFactor;*/
 
         float Movement = px * worldPerPixel;
         FVector CurrentLocation = SelectedComponent->GetWorldLocation();
-		SelectedComponent->SetWorldLocation(CurrentLocation + Axis * Movement);
+ 		SelectedComponent->SetWorldLocation(CurrentLocation + Axis * Movement);
 
 		break;
 	}

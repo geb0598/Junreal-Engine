@@ -9,7 +9,6 @@
 #include "UEContainer.h"
 
 
-
 // 혹시 다른 헤더에서 새어 들어온 매크로 방지
 #ifdef min
 #undef min
@@ -825,8 +824,60 @@ struct FTransform
 
     FMatrix ToMatrixWithScaleLocalXYZ() const;
     // 합성 (this * Other)
-    FTransform operator*(const FTransform& Other) const;
+    //FTransform operator*(const FTransform& Other) const;
+    // FTransform 합성 (this * Other)
+    FTransform GetWorldTransform(const FTransform& Other) const
+    {
+        FTransform Result;
 
+        // 회전 결합
+        Result.Rotation = Other.Rotation * Rotation;
+        Result.Rotation.Normalize();
+
+        // 스케일 결합 (component-wise)
+        Result.Scale3D = FVector(
+            Scale3D.X * Other.Scale3D.X,
+            Scale3D.Y * Other.Scale3D.Y,
+            Scale3D.Z * Other.Scale3D.Z
+        );
+
+        // 위치 결합: R*(S*Other.T) + T
+        FVector Scaled(Other.Translation.X * Scale3D.X,
+            Other.Translation.Y * Scale3D.Y,
+            Other.Translation.Z * Scale3D.Z);
+        FVector Rotated = Rotation.RotateVector(Scaled);
+        Result.Translation = Translation + Rotated;
+
+        return Result;
+    }
+    // FTransform 합성 (this * Other)
+    FTransform GetRelativeTransform(const FTransform& Other) const
+    {
+        FTransform Result;
+
+        // 회전 결합
+        Result.Rotation = Other.Rotation * Rotation;
+        Result.Rotation.Normalize();
+
+        // 스케일 결합 (component-wise)
+        Result.Scale3D = FVector(
+            Scale3D.X * Other.Scale3D.X,
+            Scale3D.Y * Other.Scale3D.Y,
+            Scale3D.Z * Other.Scale3D.Z
+        );
+
+        // 위치 결합: R*(S*Other.T) + T
+        FVector Scaled(Other.Translation.X,
+            Other.Translation.Y,
+            Other.Translation.Z);
+        FVector Rotated = Rotation.RotateVector(Scaled);
+        Rotated.X *= Scale3D.X;
+        Rotated.Y *= Scale3D.Y;
+        Rotated.Z *= Scale3D.Z;
+        Result.Translation = Translation + Rotated;
+
+        return Result;
+    }
     // 역변환
     FTransform Inverse() const;
 
@@ -1106,31 +1157,34 @@ inline FMatrix FTransform::ToMatrixWithScaleLocalXYZ() const
 }
 
 
-// FTransform 합성 (this * Other)
-inline FTransform FTransform::operator*(const FTransform& Other) const
-{
-    FTransform Result;
-
-    // 회전 결합
-    Result.Rotation =  Other.Rotation*Rotation;
-    Result.Rotation.Normalize();
-
-    // 스케일 결합 (component-wise)
-    Result.Scale3D = FVector(
-        Scale3D.X * Other.Scale3D.X,
-        Scale3D.Y * Other.Scale3D.Y,
-        Scale3D.Z * Other.Scale3D.Z
-    );
-
-    // 위치 결합: R*(S*Other.T) + T
-    FVector Scaled(Other.Translation.X * Scale3D.X,
-                   Other.Translation.Y * Scale3D.Y,
-                   Other.Translation.Z * Scale3D.Z);
-    FVector Rotated = Rotation.RotateVector(Scaled);
-    Result.Translation = Translation + Rotated;
-
-    return Result;
-}
+//// FTransform 합성 (this * Other)
+//inline FTransform FTransform::operator*(const FTransform& Other) const
+//{
+//    FTransform Result;
+//
+//    // 회전 결합
+//    Result.Rotation =  Other.Rotation*Rotation;
+//    Result.Rotation.Normalize();
+//
+//    // 스케일 결합 (component-wise)
+//    Result.Scale3D = FVector(
+//        Scale3D.X * Other.Scale3D.X,
+//        Scale3D.Y * Other.Scale3D.Y,
+//        Scale3D.Z * Other.Scale3D.Z
+//    );
+//
+//    // 위치 결합: R*(S*Other.T) + T
+//    FVector Scaled(Other.Translation.X ,
+//                   Other.Translation.Y ,
+//                   Other.Translation.Z);
+//    FVector Rotated = Rotation.RotateVector(Scaled);
+//    Rotated.X *= Scale3D.X;
+//    Rotated.Y *= Scale3D.Y;
+//    Rotated.Z *= Scale3D.Z;
+//    Result.Translation = Translation + Rotated;
+//
+//    return Result;
+//}
 
 
 

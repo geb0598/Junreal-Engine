@@ -16,7 +16,11 @@ void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice)
 
     HRESULT hr;
     ID3DBlob* errorBlob = nullptr;
-    hr = D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &VSBlob, &errorBlob);
+    UINT Flag = 0;
+#ifdef _DEBUG
+    Flag = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+    hr = D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainVS", "vs_5_0", Flag, 0, &VSBlob, &errorBlob);
     if (FAILED(hr))
     {
         char* msg = (char*)errorBlob->GetBufferPointer();
@@ -27,7 +31,7 @@ void UShader::Load(const FString& InShaderPath, ID3D11Device* InDevice)
 
     hr = InDevice->CreateVertexShader(VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), nullptr, &VertexShader);
 
-    hr = D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &PSBlob, nullptr);
+    hr = D3DCompileFromFile(WFilePath.c_str(), nullptr, nullptr, "mainPS", "ps_5_0", Flag, 0, &PSBlob, nullptr);
 
     hr = InDevice->CreatePixelShader(PSBlob->GetBufferPointer(), PSBlob->GetBufferSize(), nullptr, &PixelShader);
 

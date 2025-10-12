@@ -4,13 +4,13 @@
 #include "PrimitiveComponent.h"
 #include "StaticMesh.h"
 
-class UDecalComponent : public UPrimitiveComponent
+class UDecalComponentScreen : public UPrimitiveComponent
 {
 public:
-    DECLARE_CLASS(UDecalComponent, UPrimitiveComponent)
+    DECLARE_CLASS(UDecalComponentScreen, UPrimitiveComponent)
 
-    UDecalComponent();
-    virtual ~UDecalComponent() override;
+    UDecalComponentScreen();
+    virtual ~UDecalComponentScreen() override;
 
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, FViewport* Viewport) ;
 
@@ -21,7 +21,7 @@ public:
 
 
     // 데칼 텍스처 설정
-    void SetDecalTexture(const FString& TexturePath);
+    void SetDecalTexture( FString TexturePath);
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;

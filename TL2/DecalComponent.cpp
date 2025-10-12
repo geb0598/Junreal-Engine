@@ -15,14 +15,14 @@ UDecalComponent::UDecalComponent()
     DecalBoxMesh = UResourceManager::GetInstance().Load<UStaticMesh>("Data/Cube.obj");
     // 기본 데칼 텍스처 로드
     LocalAABB = FAABB(FVector(-0.5f, -0.5f, -0.5f), FVector(0.5f, 0.5f, 0.5f));
-    TexturePath = "Editor/Decal/SpotLight_64x.dds";
+    TexturePath = "Editor/Decal/BattleGround.dds";
 
     SetMaterial("DecalShader.hlsl");
+  
     if (Material)
     {
         Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
     }
-  
     UpdateDecalProjectionMatrix();
 }
 
@@ -83,7 +83,10 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
 {
     if (!DecalBoxMesh || !Material)
         return;
-
+    if (Material)
+    {
+        Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
+    }
     //일단 프로젝션 데칼 테스트용으로 StaticMesh만 처리
     UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Component);
     if (!StaticMeshComponent)
@@ -129,12 +132,13 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
 
     // 상수 버퍼 업데이트
     //MeshWorldMatrix = 데칼을 투영할 Component의 WorldMatrix
-    Renderer->UpdateConstantBuffer(MeshWorldMatrix, View, Proj);
+    Renderer->UpdateSetCBuffer(ModelBufferType({ MeshWorldMatrix }));
+    Renderer->UpdateSetCBuffer(ViewProjBufferType({ View, Proj }));
     //DecalWorldMatrix = 데칼의 원본 월드 행렬
     //DecalWorldMatrixInverse = 데칼의 역 월드 행렬
     //DecalProjectionMatrix = 데칼 투영 행렬
-    Renderer->UpdateInvWorldBuffer(DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix);
-    Renderer->UpdateDecalBuffer(FinalAlpha);
+    Renderer->UpdateSetCBuffer(DecalMatrixCB({ DecalWorldMatrix, DecalWorldMatrixInverse, DecalProjectionMatrix }));
+    Renderer->UpdateSetCBuffer(DecalAlphaBufferType({ FinalAlpha }));
 
     // 셰이더/블렌드 셋업
     Renderer->PrepareShader(Material->GetShader());
@@ -190,10 +194,14 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
 }
 
 
-void UDecalComponent::SetDecalTexture(const FString& TexturePath)
+void UDecalComponent::SetDecalTexture( FString NewTexturePath)
 {
+
     if (!Material)
         return;
+
+    // 멤버 변수 업데이트
+    TexturePath = NewTexturePath;
 
     // TextRenderComponent와 동일한 방식으로 텍스처 로드
     Material->Load(TexturePath, UResourceManager::GetInstance().GetDevice());
@@ -208,8 +216,27 @@ UObject* UDecalComponent::Duplicate()
     UDecalComponent* DuplicatedComponent = Cast<UDecalComponent>(NewObject(GetClass()));
     if (DuplicatedComponent)
     {
+        CopyCommonProperties(DuplicatedComponent);
         DuplicatedComponent->UVTiling = UVTiling;
         DuplicatedComponent->BlendMode = BlendMode;
+        DuplicatedComponent->TexturePath = TexturePath;
+        DuplicatedComponent->LocalAABB = LocalAABB;
+
+        // 페이드 관련 속성들
+        DuplicatedComponent->FadeInStartDelay = FadeInStartDelay;
+        DuplicatedComponent->FadeInDuration = FadeInDuration;
+        DuplicatedComponent->FadeStartDelay = FadeStartDelay;
+        DuplicatedComponent->FadeDuration = FadeDuration;
+        DuplicatedComponent->FadeScreenSize = FadeScreenSize;
+
+        // 메쉬 (공유 리소스)
+        DuplicatedComponent->DecalBoxMesh = DecalBoxMesh;
+
+        // 머티리얼 재설정
+        if (!TexturePath.empty())
+        {
+            DuplicatedComponent->SetDecalTexture(TexturePath);
+        }
     }
     return DuplicatedComponent;
 }
