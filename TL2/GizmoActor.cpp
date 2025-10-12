@@ -379,9 +379,9 @@ void AGizmoActor::OnDrag(USceneComponent* SelectedComponent, uint32 GizmoAxis, f
 	{
 		switch (GizmoAxis)
 		{
-		case 1: Axis = SelectedComponent->GetOwner()->GetActorRight();   break; // Local X
-		case 2: Axis = SelectedComponent->GetOwner()->GetActorForward(); break; // Local Y
-		case 3: Axis = SelectedComponent->GetOwner()->GetActorUp();      break; // Local Z
+		case 1: Axis = SelectedComponent->GetWorldRotation().RotateVector(FVector(1, 0, 0));   break; // Local X
+		case 2: Axis = SelectedComponent->GetWorldRotation().RotateVector(FVector(0, 1, 0)); break; // Local Y
+		case 3: Axis = SelectedComponent->GetWorldRotation().RotateVector(FVector(0, 0, 1));      break; // Local Z
 		}
 	}
 
@@ -591,12 +591,12 @@ worldPerPixel *= zoomFactor;*/
 
 
 
-void AGizmoActor::UpdateGizmoPosition()
-{
-	if (!TargetActor) return;
-
-	SetActorLocation(TargetActor->GetActorLocation());
-}
+//void AGizmoActor::UpdateGizmoPosition()
+//{
+//	if (!TargetActor) return;
+//
+//	SetActorLocation(TargetActor->GetActorLocation());
+//}
 
 void AGizmoActor::ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY)
 {
@@ -648,7 +648,7 @@ void AGizmoActor::ProcessGizmoDragging(ACameraActor* Camera, USceneComponent* Se
 		{
             OnDrag(SelectedComponent, GizmoAxis, MouseDelta.X, MouseDelta.Y, CameraActor, Viewport);
 			bIsDragging = true;
-			SetActorLocation(SelectedComponent->GetWorldLocation());
+			//SetActorLocation(SelectedComponent->GetWorldLocation());
 		}
 	}
 	if (InputManager->IsMouseButtonReleased(LeftButton))

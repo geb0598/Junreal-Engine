@@ -108,7 +108,7 @@ protected:
     void ProcessGizmoHovering(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY);
     void ProcessGizmoDragging(ACameraActor* Camera, USceneComponent* SelectedComponent, FViewport* Viewport, float MousePositionX, float MousePositionY);
     void ProcessGizmoModeSwitch();
-    void UpdateGizmoPosition();
+   // void UpdateGizmoPosition();
     void UpdateComponentVisibility();
 
 
