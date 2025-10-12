@@ -16,10 +16,13 @@
 #include "Frustum.h"
 #include "Octree.h"
 #include "BVH.h"
-#include "UEContainer.h"
-#include "DecalComponent.h"
-#include "DecalActor.h"
+
+#include"UEContainer.h"
+#include"DecalComponent.h"
+#include"DecalActor.h"
+#include "TimeProfile.h"
 #include "SpotLightComponent.h"
+
 
 extern float CLIENTWIDTH;
 extern float CLIENTHEIGHT;
@@ -328,6 +331,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
     {
+        TIME_PROFILE(DecalTotal)
         Decals.Sort([](const UDecalComponent* A, const UDecalComponent* B)
         {
             return A->GetSortOrder() < B->GetSortOrder();
@@ -393,7 +397,17 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                 Renderer->AddLines(DecalWorldOBB.GetWireLine(), FVector4(1, 0, 1, 1));
             }
 
-            if (BVH.IsBuild() == false)
+            if (bUseBVH == true && BVH.IsBuild())
+            {
+                TIME_PROFILE(DecalBVHIntersect)
+                TArray<UPrimitiveComponent*> CollisionPrimitives = BVH.GetCollisionWithOBB(DecalWorldOBB);
+                TIME_PROFILE_END(DecalBVHIntersect)
+                for (UPrimitiveComponent* Primitive : CollisionPrimitives)
+                {
+                    Decal->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                }              
+            }
+            else
             {
                 //BVH 껐을때
                 for (UPrimitiveComponent* Primitive : RenderPrimitivesWithOutDecal)
@@ -402,14 +416,6 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
                     {
                         Decal->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
                     }
-                }
-            }
-            else
-            {
-                TArray<UPrimitiveComponent*> CollisionPrimitives = BVH.GetCollisionWithOBB(DecalWorldOBB);
-                for (UPrimitiveComponent* Primitive : CollisionPrimitives)
-                {
-                    Decal->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
                 }
             }
 
@@ -513,8 +519,15 @@ void UWorld::Tick(float DeltaSeconds)
 
 
     //월드 틱이 끝난 후 BVH Build
-    const TArray<AActor*> LevelActors = Level->GetActors();
-    BVH.Build(LevelActors);
+    if (bUseBVH) 
+    {
+        const TArray<AActor*> LevelActors = Level->GetActors();
+        BVH.Build(LevelActors);
+    }
+    else
+    {
+        BVH.Clear();
+    }
 }
 
 float UWorld::GetTimeSeconds() const
@@ -1255,6 +1268,8 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* EditorWorld)
     {
         return nullptr;
     }
+    PIEWorld->bUseBVH = EditorWorld->bUseBVH;
+
     PIEWorld->Renderer = EditorWorld->Renderer;
     PIEWorld->MainViewport = EditorWorld->MainViewport;
     PIEWorld->MultiViewport = EditorWorld->MultiViewport;
