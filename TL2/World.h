@@ -8,6 +8,7 @@
 #include"Level.h"
 #include"Frustum.h"
 #include "BoundingVolume.h"
+#include "BVH.h"
 
 // Forward Declarations
 class UResourceManager;
@@ -24,7 +25,6 @@ struct FTransform;
 struct FPrimitiveData;
 class SViewportWindow;
 //class UOctree;
-class FBVH;
 class ULevel;
 
 struct FFrustum;
@@ -112,7 +112,6 @@ public:
 	AGridActor* GetGridActor() { return GridActor; }
 
 	//UOctree* GetOctree() { return Octree; }
-	FBVH* GetBVH() { return BVH; }
 
 	ULevel* GetLevel() { return Level; };
 
@@ -168,7 +167,7 @@ private:
 	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
 
 	//UOctree* Octree;
-	FBVH* BVH;
+	FBVH BVH;
 };
 template<class T>
 inline T* UWorld::SpawnActor()

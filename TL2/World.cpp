@@ -44,7 +44,6 @@ UWorld::UWorld() : ResourceManager(UResourceManager::GetInstance())
                    , UIManager(UUIManager::GetInstance())
                    , InputManager(UInputManager::GetInstance())
                    , SelectionManager(USelectionManager::GetInstance())
-                   , BVH(nullptr)
 {
     Level = NewObject<ULevel>();
 }
@@ -79,13 +78,6 @@ UWorld::~UWorld()
         ObjectFactory::DeleteObject(GizmoActor);
         GizmoActor = nullptr;
 
-        // BVH 정리
-        if (BVH)
-        {
-            delete BVH;
-            BVH = nullptr;
-        }
-
         // ObjManager 정리
         FObjManager::Clear();
     }
@@ -95,7 +87,6 @@ UWorld::~UWorld()
         MainCameraActor = nullptr;
         GridActor = nullptr;
         GizmoActor = nullptr;
-        BVH = nullptr;
         Renderer = nullptr;
         MainViewport = nullptr;
         MultiViewport = nullptr;
@@ -343,7 +334,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             FOBB DecalWorldOBB = Decal->GetWorldOBB();
             Renderer->AddLines(DecalWorldOBB.GetWireLine(), FVector4(1, 0, 1, 1));
 
-            if (BVH == nullptr)
+            if (BVH.IsBuild() == false)
             {
                 //BVH 껐을때
                 for (UPrimitiveComponent* Primitive : RenderPrimitivesWithOutDecal)
@@ -356,7 +347,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
             }
             else
             {
-                TArray<UPrimitiveComponent*> CollisionPrimitives = BVH->GetCollisionWithOBB(DecalWorldOBB);
+                TArray<UPrimitiveComponent*> CollisionPrimitives = BVH.GetCollisionWithOBB(DecalWorldOBB);
                 for (UPrimitiveComponent* Primitive : CollisionPrimitives)
                 {
                     Decal->Render(Renderer, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
@@ -368,7 +359,7 @@ void UWorld::RenderViewports(ACameraActor* Camera, FViewport* Viewport)
 
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH))
     {
-        Renderer->AddLines(BVH->GetBVHBoundsWire(), FVector4(0.5f, 0.5f, 1, 1));
+        Renderer->AddLines(BVH.GetBVHBoundsWire(), FVector4(0.5f, 0.5f, 1, 1));
     }
 
     Renderer->EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
@@ -464,11 +455,7 @@ void UWorld::Tick(float DeltaSeconds)
 
     //월드 틱이 끝난 후 BVH Build
     const TArray<AActor*> LevelActors = Level->GetActors();
-    if (BVH == nullptr)
-    {
-        BVH = new FBVH();
-    }
-    BVH->Build(LevelActors);
+    BVH.Build(LevelActors);
 }
 
 float UWorld::GetTimeSeconds() const
@@ -571,10 +558,10 @@ void UWorld::CreateNewScene()
     //{
     //    Octree->Release();//새로운 씬이 생기면 Octree를 지워준다.
     //}
-    if (BVH)
-    {
-        BVH->Clear();//새로운 씬이 생기면 BVH를 지워준다.
-    }
+    //if (BVH)
+    //{
+    //    BVH->Clear();//새로운 씬이 생기면 BVH를 지워준다.
+    //}
     // 이름 카운터 초기화: 씬을 새로 시작할 때 각 BaseName 별 suffix를 0부터 다시 시작
     ObjectTypeCounts.clear();
 }

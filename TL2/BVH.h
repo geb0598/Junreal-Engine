@@ -72,6 +72,7 @@ public:
 
     TArray<UPrimitiveComponent*> GetCollisionWithOBB(const FOBB& OBB) const;
 
+    bool IsBuild() { return Nodes.Num() > 0; }
 private:
     TArray<FBVHNode> Nodes;
     TArray<FBVHPtimitive> PrimitiveBounds;
