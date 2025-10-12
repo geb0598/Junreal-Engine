@@ -2,7 +2,7 @@
 #include "BVH.h"
 #include "StaticMeshActor.h"
 #include "Picking.h"
-#include "PickingTimer.h"
+#include "TimeProfile.h"
 #include "UI/GlobalConsole.h"
 #include <algorithm>
 #include <cfloat>
@@ -19,6 +19,7 @@ FBVH::~FBVH()
 
 void FBVH::Build(const TArray<AActor*>& Actors)
 {
+    TIME_PROFILE(BVHBuild)
     Clear();
 
     if (Actors.Num() == 0)
@@ -47,7 +48,6 @@ void FBVH::Build(const TArray<AActor*>& Actors)
         return;
     }
     Build(Primitives);
-   
 }
 
 void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
@@ -75,14 +75,6 @@ void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)
     // 3. 재귀적으로 BVH 구축
     MaxDepth = 0;
     int RootIndex = BuildRecursive(0, PrimitiveBounds.Num(), 0);
-
-    uint64_t BuildCycles = BVHBuildTimer.Finish();
-    double BuildTimeMs = FPlatformTime::ToMilliseconds(BuildCycles);
-
-    char buf[256];
-    sprintf_s(buf, "[BVH] Built for %d actors, %d nodes, depth %d (Time: %.3fms)\n",
-        PrimitiveBounds.Num(), Nodes.Num(), MaxDepth, BuildTimeMs);
-    UE_LOG(buf);
 }
 
 
