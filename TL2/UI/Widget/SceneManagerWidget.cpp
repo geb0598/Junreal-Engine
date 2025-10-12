@@ -123,7 +123,14 @@ void USceneManagerWidget::Update()
 
 void USceneManagerWidget::RenderWidget()
 {
+    UWorld* World = GEngine->GetWorld();
+
     ImGui::Text("Scene Manager");
+    bool UseBVH = World->GetUseBVH();
+    if (ImGui::Checkbox("BVH", &UseBVH))
+    {
+        World->SetUseBVH(UseBVH);
+    }
     ImGui::Spacing();
     
     // Toolbar
@@ -131,7 +138,6 @@ void USceneManagerWidget::RenderWidget()
     ImGui::Separator();
     
     // World status
-    UWorld* World = GetCurrentWorld();
     if (!World)
     {
         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "No World Available");

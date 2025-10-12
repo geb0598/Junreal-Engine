@@ -2,7 +2,7 @@
 #include "BVH.h"
 #include "StaticMeshActor.h"
 #include "Picking.h"
-#include "PickingTimer.h"
+#include "TimeProfile.h"
 #include "UI/GlobalConsole.h"
 #include <algorithm>
 #include <cfloat>
@@ -19,6 +19,7 @@ FBVH::~FBVH()
 
 void FBVH::Build(const TArray<AActor*>& Actors)
 {
+    TIME_PROFILE(BVHBuild)
     Clear();
 
     if (Actors.Num() == 0)
@@ -47,7 +48,6 @@ void FBVH::Build(const TArray<AActor*>& Actors)
         return;
     }
     Build(Primitives);
-   
 }
 
 void FBVH::Build(const TArray<UPrimitiveComponent*>& Primitives)

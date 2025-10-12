@@ -466,6 +466,7 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     UpdateSetCBuffer(ModelBufferType(ModelMatrix));
     UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
     PrepareShader(LineShader);
+    OMSetBlendState(true);
     
     // Render using dynamic mesh
     if (DynamicLineMesh->GetCurrentVertexCount() > 0 && DynamicLineMesh->GetCurrentIndexCount() > 0)
