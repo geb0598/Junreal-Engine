@@ -275,9 +275,12 @@ void FSceneLoader::SaveV2(const FSceneData& SceneData, const FString& SceneName)
         writeVec3("RelativeScale", Comp.RelativeScale, 6);
 
         // Type별 속성
+        bool bHasTypeSpecificData = false;
+
+        // StaticMeshComponent
         if (Comp.Type.find("StaticMeshComponent") != std::string::npos && !Comp.StaticMesh.empty())
         {
-            oss << ",\n";
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
             FString AssetPath = NormalizePath(Comp.StaticMesh);
             oss << "      \"StaticMesh\" : \"" << AssetPath << "\"";
 
@@ -292,6 +295,18 @@ void FSceneLoader::SaveV2(const FSceneData& SceneData, const FString& SceneName)
                 }
                 oss << "]";
             }
+        }
+
+        // DecalComponent, BillboardComponent, SpotLightComponent
+        if ((Comp.Type.find("DecalComponent") != std::string::npos ||
+             Comp.Type.find("BillboardComponent") != std::string::npos ||
+             Comp.Type.find("SpotLightComponent") != std::string::npos) &&
+            !Comp.TexturePath.empty())
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+            FString TexturePath = NormalizePath(Comp.TexturePath);
+            oss << "      \"TexturePath\" : \"" << TexturePath << "\"";
         }
 
         oss << "\n";
@@ -440,6 +455,9 @@ FSceneData FSceneLoader::ParseV2(const JSON& Json)
                     Comp.Materials.push_back(matsJson.at(m).ToString());
                 }
             }
+
+            if (CompJson.hasKey("TexturePath"))
+                Comp.TexturePath = CompJson.at("TexturePath").ToString();
 
             Data.Components.push_back(Comp);
         }

@@ -36,9 +36,10 @@ struct FComponentData
     FVector RelativeRotation;
     FVector RelativeScale;
 
-    // Type별 속성 (StaticMeshComponent 전용)
-    FString StaticMesh;  // Asset path
-    TArray<FString> Materials;
+    // Type별 속성
+    FString StaticMesh;  // StaticMeshComponent: Asset path
+    TArray<FString> Materials;  // StaticMeshComponent: Materials
+    FString TexturePath;  // DecalComponent, BillboardComponent: Texture path
 };
 
 struct FActorData
