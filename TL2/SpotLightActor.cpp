@@ -3,7 +3,7 @@
 
 ASpotLightActor::ASpotLightActor()
 {
-   SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
+    SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
     if (SpriteComponent)
     {
         SpriteComponent->SetTexture(FString("Editor/Icon/SpotLight_64x.dds"));

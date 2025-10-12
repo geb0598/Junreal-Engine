@@ -16,6 +16,8 @@ public:
     float GetAspectRatio() const { return AspectRatio; }
 
 protected:
+    void UpdateDecalProjectionMatrix() override;
+
     // Spotlight-specific properties
     float SpotlightAngle = 45.0f; // degrees
     float AspectRatio = 1.0f;
