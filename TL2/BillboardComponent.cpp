@@ -50,9 +50,14 @@ const FAABB UBillboardComponent::GetWorldAABB() const
 
 UObject* UBillboardComponent::Duplicate()
 {
-    UBillboardComponent* DuplicatedComponent = NewObject<UBillboardComponent>(*this);
-    DuplicatedComponent->DuplicateSubObjects();
+  
+    UBillboardComponent* DuplicatedComponent = Cast<UBillboardComponent>(NewObject(GetClass()));
+    if (DuplicatedComponent)
+    {
+        CopyCommonProperties(DuplicatedComponent);
 
+        DuplicatedComponent->DuplicateSubObjects();
+    }
     return DuplicatedComponent;
 }
 

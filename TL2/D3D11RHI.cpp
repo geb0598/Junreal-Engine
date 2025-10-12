@@ -52,6 +52,7 @@ void D3D11RHI::Release()
     if (WireFrameRasterizerState) { WireFrameRasterizerState->Release();   WireFrameRasterizerState = nullptr; }
     if (NoCullRasterizerState) { NoCullRasterizerState->Release();   NoCullRasterizerState = nullptr; }
     if (FrontCullRasterizerState) { FrontCullRasterizerState->Release();   FrontCullRasterizerState = nullptr; }
+    if (DecalRasterizerState) { DecalRasterizerState->Release();   DecalRasterizerState = nullptr; }
 
     ReleaseIdBuffer();
     ReleaseBlendState();
@@ -262,6 +263,11 @@ void D3D11RHI::RSSetDefaultState()
     DeviceContext->RSSetState(DefaultRasterizerState);
 }
 
+void D3D11RHI::RSSetDecalState()
+{
+    DeviceContext->RSSetState(DecalRasterizerState);
+}
+
 void D3D11RHI::RSSetViewport()
 {
     DeviceContext->RSSetViewports(1, &ViewportInfo);
@@ -411,6 +417,17 @@ void D3D11RHI::CreateRasterizerState()
     nocullrasterizerdesc.DepthClipEnable = TRUE; // 근/원거리 평면 클리핑
 
     Device->CreateRasterizerState(&nocullrasterizerdesc, &NoCullRasterizerState);
+
+    // 데칼용 DepthBias 적용된 state
+    D3D11_RASTERIZER_DESC decalrasterizerdesc = {};
+    decalrasterizerdesc.FillMode = D3D11_FILL_SOLID;
+    decalrasterizerdesc.CullMode = D3D11_CULL_NONE;
+    decalrasterizerdesc.DepthClipEnable = TRUE;
+    decalrasterizerdesc.DepthBias = -100; // z-fighting 방지용 bias
+    decalrasterizerdesc.DepthBiasClamp = 0.0f;
+    decalrasterizerdesc.SlopeScaledDepthBias = -1.0f;
+
+    Device->CreateRasterizerState(&decalrasterizerdesc, &DecalRasterizerState);
 }
 
 void D3D11RHI::CreateConstantBuffer()
@@ -454,6 +471,11 @@ void D3D11RHI::ReleaseRasterizerState()
     {
         NoCullRasterizerState->Release();
         NoCullRasterizerState = nullptr;
+    }
+    if (DecalRasterizerState)
+    {
+        DecalRasterizerState->Release();
+        DecalRasterizerState = nullptr;
     }
     DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 }
