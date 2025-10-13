@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "pch.h"
 #include "Actor.h"
 
 //물리적 실체가 없고 월드의 세팅 데이터를 조작하는 Actor, AActor가 기본적으로 가지는 기본 프로퍼티 변수들을 조작해서 
