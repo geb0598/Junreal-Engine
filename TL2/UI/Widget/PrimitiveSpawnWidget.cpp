@@ -7,6 +7,7 @@
 #include "../../DecalActor.h"
 #include "../../SpotLightActor.h"
 #include "../../Vector.h"
+#include "ExponentialHeightFog.h"
 #include "ObjManager.h"
 #include <algorithm>
 #include <cstdlib>
@@ -63,6 +64,7 @@ void UPrimitiveSpawnWidget::Initialize()
         RegisterSpawnInfo<AStaticMeshActor>(ESpawnActorType::StaticMesh, "Static Mesh");
         RegisterSpawnInfo<ADecalActor>(ESpawnActorType::Decal, "Decal");
         RegisterSpawnInfo<ASpotLightActor>(ESpawnActorType::SpotLight, "Spot Light");
+        RegisterSpawnInfo<AExponentialHeightFog>(ESpawnActorType::HeightFog, "HeightFog");
     }
 }
 
@@ -136,13 +138,13 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::Spacing();
 
     // Primitive 타입 선택: StaticMesh만 노출
-    const char* SpawnTypes[] = { "Actor", "Static Mesh", "Decal", "Spot Light" };
+    const char* SpawnTypes[] = { "Actor", "Static Mesh", "Decal", "Spot Light", "ExponentialHeightFog"};
     static ESpawnActorType SelectedSpawnType = ESpawnActorType::StaticMesh;
     
     ImGui::Text("Actor Types:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(120);
-    ImGui::Combo("##Actor Type", (int*)&SelectedSpawnType, SpawnTypes, (int)ESpawnActorType::Count);
+    ImGui::Combo("##Actor Type", (int*)&SelectedSpawnType, SpawnTypes, ARRAYSIZE(SpawnTypes));
 
     switch (SelectedSpawnType)
     {

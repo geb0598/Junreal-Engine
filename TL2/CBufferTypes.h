@@ -46,6 +46,7 @@ MACRO(UVScrollCB)					\
 MACRO(DecalMatrixCB)					\
 MACRO(ViewportBufferType)					\
 MACRO(DecalAlphaBufferType)					\
+MACRO(HeightFogBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, false)
@@ -57,6 +58,7 @@ CBUFFER_INFO(UVScrollCB, 5, false, true)
 CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
+CBUFFER_INFO(HeightFogBufferType, 8, false, true)
 
 
 //Create 
@@ -149,6 +151,20 @@ struct DecalAlphaBufferType
     float CurrentAlpha;
     FVector2D UVTiling;
     float pad;
+};
+
+//PS : b8
+struct HeightFogBufferType
+{
+    FLinearColor FogInscatteringColor;
+
+    float FogDensity;
+    float FogHeightFalloff;
+    float StartDistance;
+    float FogCutoffDistance;
+    float FogMaxOpacity;
+    float FogActorHeight;
+    float Padding[2];
 };
 
 //---//

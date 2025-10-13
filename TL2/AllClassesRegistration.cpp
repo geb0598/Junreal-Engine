@@ -49,6 +49,7 @@
 #include "DecalComponent.h"
 #include "DecalActor.h"
 #include "SpotLightActor.h"
+#include "ExponentialHeightFog.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -67,6 +68,7 @@ IMPLEMENT_CLASS(AGizmoActor)
 IMPLEMENT_CLASS(AGridActor)
 IMPLEMENT_CLASS(ADecalActor)
 IMPLEMENT_CLASS(ASpotLightActor)
+IMPLEMENT_CLASS(AExponentialHeightFog)
 
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)
