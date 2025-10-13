@@ -310,9 +310,6 @@
     <ClCompile Include="UI\Widget\SceneManagerWidget.cpp">
       <Filter>UI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="UI\Widget\ShowFlagWidget.cpp">
-      <Filter>UI\Widgets</Filter>
-    </ClCompile>
     <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp">
       <Filter>UI\Widgets</Filter>
     </ClCompile>
@@ -418,9 +415,6 @@
     <ClCompile Include="Picking.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="PickingTimer.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="FName.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
@@ -465,6 +459,10 @@
     </ClCompile>
     <ClCompile Include="SpotLightComponent.cpp">
       <Filter>Components\Decal</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeProfile.cpp" />
+    <ClCompile Include="Info.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
@@ -660,9 +658,6 @@
     <ClInclude Include="UI\Widget\SceneManagerWidget.h">
       <Filter>UI\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="UI\Widget\ShowFlagWidget.h">
-      <Filter>UI\Widgets</Filter>
-    </ClInclude>
     <ClInclude Include="UI\Widget\TargetActorTransformWidget.h">
       <Filter>UI\Widgets</Filter>
     </ClInclude>
@@ -851,6 +846,10 @@
     <ClInclude Include="CBufferTypes.h" />
     <ClInclude Include="SpotLightComponent.h">
       <Filter>Components\Decal</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeProfile.h" />
+    <ClInclude Include="Info.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->

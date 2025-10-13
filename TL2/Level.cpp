@@ -14,6 +14,11 @@ void ULevel::AddActor(AActor* InActor)
 {
 	if (InActor)	
 	{
+		if (InActor->GetClass()->Name == AActor::StaticClass()->Name)
+		{
+			InActor->InitEmptyActor();
+
+		}
 		Actors.Add(InActor);
 	}
 }

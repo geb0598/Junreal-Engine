@@ -4,19 +4,17 @@
 
 ASpotLightActor::ASpotLightActor()
 {
-   
+    SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(FName("SpotLightComponent"));
+    RootComponent = SpotLightComponent;
+
     SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
     if (SpriteComponent)
     {
         SpriteComponent->SetTexture(FString("Editor/Icon/SpotLight_64x.dds"));
-        SpriteComponent->SetupAttachment(RootComponent);
         SpriteComponent->SetRelativeLocation(RootComponent->GetWorldLocation());
+        SpriteComponent->SetEditable(false);
+        SpriteComponent->SetupAttachment(RootComponent);
     }
-
-    SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(FName("SpotLightComponent"));
-    SpotLightComponent->SetupAttachment(RootComponent);
-    SpotLightComponent->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0, 89.5, 0)));
-    SetActorRotation(FVector(0, 90, 0));//빅이슈!!!!!!!!!!!!!!!!!!!!!
 }
 
 ASpotLightActor::~ASpotLightActor()

@@ -80,6 +80,7 @@ void UPrimitiveSpawnWidget::RegisterSpawnInfo(ESpawnActorType SpawnType, const c
             return World->SpawnActor<ActorType>(Transform);
         }
     });
+
 }
 
 UWorld* UPrimitiveSpawnWidget::GetCurrentWorld() const
@@ -354,6 +355,10 @@ void UPrimitiveSpawnWidget::SpawnActors(ESpawnActorType SpawnType) const
         FVector SpawnScaleVec(SpawnScale, SpawnScale, SpawnScale);
         FTransform SpawnTransform(SpawnLocation, SpawnRotation, SpawnScaleVec);
 
+        if (SpawnType == ESpawnActorType::SpotLight)
+        {
+            SpawnTransform.Rotation = FQuat::MakeFromEuler(FVector(0,89.5,0));
+        }
         AActor* NewActor = Info->Spawner(World, SpawnTransform);
         if (NewActor)
         {

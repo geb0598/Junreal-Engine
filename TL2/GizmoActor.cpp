@@ -14,6 +14,7 @@ AGizmoActor::AGizmoActor()
 {
 	Name = "Gizmo Actor";
 
+	RootComponent = CreateDefaultSubobject<USceneComponent>(FName("DefaultSceneComponent"));
 	//======= Arrow Component 생성 =======
 	ArrowX = NewObject<UGizmoArrowComponent>();
 	ArrowY = NewObject<UGizmoArrowComponent>();
