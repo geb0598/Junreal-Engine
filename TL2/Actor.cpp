@@ -231,6 +231,27 @@ USceneComponent* AActor::CreateAndAttachComponent(USceneComponent* ParentCompone
     return NewComponent;
 }
 
+UActorComponent* AActor::AddComponentByClass(UClass* ComponentClass)
+{
+    if (!ComponentClass)
+    {
+        return nullptr;
+    }
+    
+    if (ComponentClass->IsChildOf(USceneComponent::StaticClass()))
+    {
+        return nullptr;
+    }
+
+    UActorComponent* NewComp = Cast<UActorComponent>(NewObject(ComponentClass));
+    if (NewComp)
+    {
+        OwnedComponents.Add(NewComp);
+        NewComp->SetOwner(this);
+    }
+    return NewComp;
+}
+
 bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
 {
     // 1. [유효성 검사] nullptr이거나 이 액터가 소유한 컴포넌트가 아니면 실패 처리합니다.

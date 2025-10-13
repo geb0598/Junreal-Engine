@@ -115,6 +115,9 @@
     <Filter Include="ThirdParty\ImGui">
       <UniqueIdentifier>{340a9369-98be-4580-af67-945e0e2bcbef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\Movement">
+      <UniqueIdentifier>{74aac7c3-b3d4-4cb4-8aea-6bec9fe600ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <!-- ==================== 소스 파일 (.cpp) ==================== -->
   <ItemGroup>
@@ -310,9 +313,6 @@
     <ClCompile Include="UI\Widget\SceneManagerWidget.cpp">
       <Filter>UI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="UI\Widget\ShowFlagWidget.cpp">
-      <Filter>UI\Widgets</Filter>
-    </ClCompile>
     <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp">
       <Filter>UI\Widgets</Filter>
     </ClCompile>
@@ -418,9 +418,6 @@
     <ClCompile Include="Picking.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="PickingTimer.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="FName.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
@@ -465,6 +462,16 @@
     </ClCompile>
     <ClCompile Include="SpotLightComponent.cpp">
       <Filter>Components\Decal</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeProfile.cpp" />
+    <ClCompile Include="ProjectileMovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationMovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="MovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
     </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
@@ -660,9 +667,6 @@
     <ClInclude Include="UI\Widget\SceneManagerWidget.h">
       <Filter>UI\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="UI\Widget\ShowFlagWidget.h">
-      <Filter>UI\Widgets</Filter>
-    </ClInclude>
     <ClInclude Include="UI\Widget\TargetActorTransformWidget.h">
       <Filter>UI\Widgets</Filter>
     </ClInclude>
@@ -851,6 +855,16 @@
     <ClInclude Include="CBufferTypes.h" />
     <ClInclude Include="SpotLightComponent.h">
       <Filter>Components\Decal</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeProfile.h" />
+    <ClInclude Include="ProjectileMovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="RotationMovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="MovementComponent.h">
+      <Filter>Components\Movement</Filter>
     </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->

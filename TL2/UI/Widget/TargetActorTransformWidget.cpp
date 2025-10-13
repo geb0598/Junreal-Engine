@@ -17,6 +17,9 @@
 #include "SceneComponent.h"    
 #include "TextRenderComponent.h"    
 #include "DecalComponent.h"
+#include "MeshComponent.h"
+#include "RotationMovementComponent.h"
+#include "ProjectileMovementComponent.h"
 #include <filesystem>
 #include <vector>
 
@@ -225,12 +228,18 @@ void UTargetActorTransformWidget::RenderWidget()
 		ImGui::Spacing();
 
 		// 추가 가능한 컴포넌트 타입 목록 (임시 하드코딩)
-		static const TArray<TPair<FString, UClass*>> AddableComponentTypes = {
+		static const TArray<TPair<FString, UClass*>> AddableSceneComponentTypes = {
 			{ "StaticMesh Component", UStaticMeshComponent::StaticClass() },
 			{ "Text Component", UTextRenderComponent::StaticClass() },
 			{ "Scene Component", USceneComponent::StaticClass() },
 			{ "Billboard Component", UBillboardComponent::StaticClass() },
 			{ "Decal Component", UDecalComponent::StaticClass() }
+		};
+
+		static const TArray<TPair<FString, UClass*>> AddableActorComponentTypes = {
+			{ "Movement Component", UMovementComponent::StaticClass() },
+			{ "Rotation Movement Component", URotationMovementComponent::StaticClass() },
+			{ "Projectile Movement Component", UProjectileMovementComponent::StaticClass() }
 		};
 
 		// 컴포넌트 추가 메뉴
@@ -273,10 +282,13 @@ void UTargetActorTransformWidget::RenderWidget()
 			// "Add Component" 버튼에 대한 팝업 메뉴 정의
 			if (ImGui::BeginPopup("AddComponentPopup"))
 			{
-				ImGui::BeginChild("ComponentListScroll", ImVec2(200.0f, 150.0f), true);
+				ImGui::BeginChild("ComponentListScroll", ImVec2(240.0f, 200.0f), true);
 
-				// 추가 가능한 컴포넌트 타입 목록 메뉴 표시
-				for (const TPair<FString, UClass*>& Item : AddableComponentTypes)
+				// +-+-+ Show Scene Component List +-+-+
+				ImGui::SetWindowFontScale(0.8f);
+				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Scene Components");
+				ImGui::SetWindowFontScale(1.0f);
+				for (const TPair<FString, UClass*>& Item : AddableSceneComponentTypes)
 				{
 					if (ImGui::Selectable(Item.first.c_str()))
 					{
@@ -287,9 +299,25 @@ void UTargetActorTransformWidget::RenderWidget()
 						ImGui::CloseCurrentPopup();
 					}
 				}
+				
+				//ImGui::Dummy(ImVec2(0.0f, 5.0f));
+				ImGui::Separator();
+				ImGui::Dummy(ImVec2(0.0f, 0.1f));
+
+				// +-+-+ Show Actor Component List +-+-+
+				ImGui::SetWindowFontScale(0.8f);
+				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Actor Components");
+				ImGui::SetWindowFontScale(1.0f);
+				for (const TPair<FString, UClass*>& Item : AddableActorComponentTypes)
+				{
+					if (ImGui::Selectable(Item.first.c_str()))
+					{
+						SelectedActor->AddComponentByClass(Item.second);
+						ImGui::CloseCurrentPopup();
+					}
+				}
 
 				ImGui::EndChild();
-
 				ImGui::EndPopup();
 			}
 		}
@@ -309,11 +337,26 @@ void UTargetActorTransformWidget::RenderWidget()
 			// 2. 수동으로 들여쓰기를 추가합니다.
 			ImGui::Indent();
 
-			// 3. 하위 컴포넌트를 조건 없이 항상 그립니다.
+			// +-+-+ Scene Components (Tree) +-+-+
 			USceneComponent* RootComponent = SelectedActor->GetRootComponent();
 			if (RootComponent)
 			{
 				RenderComponentHierarchy(RootComponent);
+			}
+			ImGui::Separator();
+
+			// +-+-+ Actor Components (Ownedlist) +-+-+
+			for (UActorComponent* Comp : SelectedActor->GetComponents())
+			{
+				if (!Comp->IsA(USceneComponent::StaticClass()))
+				{
+					ImGui::Text("%s", Comp->GetName().c_str());
+					//if (ImGui::IsItemClicked)
+					if (ImGui::IsItemClicked())
+					{
+						//USelectionManager::GetInstance().SelectComponent(Comp);
+					}
+				}
 			}
 
 			// 4. 들여쓰기를 해제합니다.
