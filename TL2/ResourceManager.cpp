@@ -40,6 +40,7 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     CreateBillboardMesh();//"Billboard"
 
     CreateTextBillboardTexture();
+    CreateScreenQuatMesh();
     
 }
 
@@ -363,6 +364,24 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
     UMeshLoader::GetInstance().AddMeshData(FilePath, MeshData);
 }
 
+void UResourceManager::CreateScreenQuatMesh()
+{
+    TArray<FVector> Vertices = { FVector(-1.0f,-1.0f,0.0f),FVector(-1.0f,1.0f,0.0f) ,FVector(1.0f,1.0f,0.0f) ,FVector(1.0f,-1.0f,0.0f) };
+    TArray<FVector2D> UVs = { FVector2D(0.0f,1.0f),FVector2D(0.0f,0.0f) ,FVector2D(1.0f,0.0f) ,FVector2D(1.0f,1.0f) };
+    TArray<uint32> Indices = { 0,1,2,0,2,3 };
+    // ─────────────────────────────
+    // MeshData 생성 및 등록
+    // ─────────────────────────────
+    FMeshData* MeshData = new FMeshData();
+    MeshData->Vertices = Vertices;
+    MeshData->UV = UVs;
+    MeshData->Indices = Indices;
+    UStaticMesh* Mesh = NewObject<UStaticMesh>();
+    Mesh->Load(MeshData, Device, EVertexLayoutType::PositionUV);
+    //Mesh->SetTopology(EPrimitiveTopology::LineList); // :흰색_확인_표시: 꼭 LineList로 설정
+    Add<UStaticMesh>("ScreenQuad", Mesh);
+    UMeshLoader::GetInstance().AddMeshData("ScreenQuad", MeshData);
+}
 
 
 void UResourceManager::InitShaderILMap()

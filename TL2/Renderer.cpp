@@ -117,17 +117,14 @@ void URenderer::RenderFrame(UWorld* World)
     UUIManager::GetInstance().Render();
 
     // 렌더 패스 구조:
-    // 1. Depth Pre-pass (옵션)
-    RenderSceneDepthPass(World);
-
-    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
+    // 1. Base Pass (Opaque geometry - 각 뷰포트별로)
     RenderBasePass(World);
 
-    // 3. Post-processing passes
+    // 2. Post-processing passes
     RenderFogPass();
     RenderFireBallPass(World);
-
-    // 4. Overlay (UI, debug visualization)
+    RenderFXAA();
+    // 3. Overlay (UI, debug visualization)
     RenderOverlayPass(World);
 
     UUIManager::GetInstance().EndFrame();
@@ -152,6 +149,8 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     case EVertexLayoutType::PositionBillBoard:
         stride = sizeof(FBillboardVertexInfo_GPU);
         break;
+    case EVertexLayoutType::PositionUV:
+        stride = sizeof(FVertexUV);
     default:
         // Handle unknown or unsupported vertex types
         assert(false && "Unknown vertex type!");
@@ -369,11 +368,6 @@ void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
     RHIDevice->OmSetDepthStencilState(Func);
 }
 
-void URenderer::RenderSceneDepthPass(UWorld* World)
-{
-    // TODO: Early-Z 최적화를 위한 깊이 프리패스 구현
-}
-
 void URenderer::RenderBasePass(UWorld* World)
 {
     // 멀티 뷰포트 시스템을 통해 각 뷰포트별로 렌더링
@@ -576,6 +570,14 @@ void URenderer::RenderEngineActors(const TArray<AActor*>& EngineActors, const FM
         }
         OMSetBlendState(false);
     }
+}
+
+void URenderer::RenderPostProcessing(UShader* Shader)
+{
+    OMSetBlendState(false);
+    OMSetDepthStencilState(EComparisonFunc::Disable);
+
+    
 }
 
 void URenderer::RenderFogPass()

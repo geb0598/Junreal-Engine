@@ -52,6 +52,7 @@ public:
     void CreateBillboardMesh();
     void CreateGridMesh(int N, const FString& FilePath);
     void CreateBoxWireframeMesh(const FVector& Min, const FVector& Max, const FString& FilePath);
+    void CreateScreenQuatMesh();
     void InitShaderILMap();
 
 

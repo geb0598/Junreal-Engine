@@ -178,6 +178,7 @@
     <ClCompile Include="EditorEngine.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="ExponentialHeightFog.cpp" />
+    <ClCompile Include="FXAA.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
@@ -413,6 +414,7 @@
     <ClInclude Include="ExponentialHeightFog.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
+    <ClInclude Include="FXAA.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="ExponentialHeightFogComponent.h" />
     <ClInclude Include="Info.h" />
