@@ -21,14 +21,6 @@ cbuffer HighLightBuffer : register(b2)
     int GIzmo;
 }
 
-struct VS_INPUT
-{
-    float3 position : POSITION; // Input position from vertex buffer
-    float3 normal : NORMAL0;
-    float4 color : COLOR; // Input color from vertex buffer
-    float2 texCoord : TEXCOORD0;
-};
-
 
 Texture2D g_DiffuseTexColor : register(t0);
 SamplerState g_Sample : register(s0);
@@ -68,16 +60,57 @@ cbuffer PSScrollCB : register(b5)
     float  UVScrollTime;
     float  _pad_scrollcb;
 }
+#define MAX_PointLight 100
+
+// C++ 구조체와 동일한 레이아웃
+struct FPointLightData
+{
+    float4 Position;   // xyz=위치, w=반경
+    float4 Color;      // rgb=색상, a=Intensity
+    float FallOff;     // 감쇠
+    float3 _pad;       // 패딩 (16바이트 정렬)
+};
+
+cbuffer PointLightBuffer : register(b9)
+{
+    int PointLightCount;
+    float3 _pad;
+    FPointLightData PointLights[MAX_PointLight];
+}
+
+float3 ComputePointLights(float3 worldPos)
+{
+    float3 totalLight = 0;
+    for (int i = 0; i < PointLightCount; ++i)
+    {
+        float3 toLight = worldPos - PointLights[i].Position.xyz;
+        float dist = length(toLight);
+        float atten = saturate(1.0 - dist / PointLights[i].Position.w);
+        atten = pow(atten, PointLights[i].FallOff);
+        totalLight += PointLights[i].Color.rgb * PointLights[i].Color.a * atten;
+    }
+    return totalLight;
+}
+
+
+
+struct VS_INPUT
+{
+    float3 position : POSITION; // Input position from vertex buffer
+    float3 normal : NORMAL0;
+    float4 color : COLOR; // Input color from vertex buffer
+    float2 texCoord : TEXCOORD0;
+};
 
 struct PS_INPUT
 {
-    float4 position : SV_POSITION; // Transformed position to pass to the pixel shader
-    float3 normal : NORMAL0;
-    float4 color : COLOR; // Color to pass to the pixel shader
-    float2 texCoord : TEXCOORD0;
+    float4 position : SV_POSITION;
+    float3 worldPosition : TEXCOORD0;
+    float3 worldNormal : TEXCOORD1;
+    float4 color : COLOR;
+    float2 texCoord : TEXCOORD2;
     uint UUID : UUID;
 };
-
 struct PS_OUTPUT
 {
     float4 Color : SV_Target0;
@@ -91,6 +124,12 @@ PS_INPUT mainVS(VS_INPUT input)
     // 상수버퍼를 통해 넘겨 받은 Offset을 더해서 버텍스를 이동 시켜 픽셀쉐이더로 넘김
     // float3 scaledPosition = input.position.xyz * Scale;
     // output.position = float4(Offset + scaledPosition, 1.0);
+        // World 변환
+    float4 worldPos = mul(float4(input.position, 1.0f), WorldMatrix);
+    output.worldPosition = worldPos.xyz;
+
+    // 노멀 변환 (정규화)
+    output.worldNormal = normalize(mul(input.normal, (float3x3) WorldMatrix));
     
     float4x4 MVP = mul(mul(WorldMatrix, ViewMatrix), ProjectionMatrix);
     
@@ -121,8 +160,6 @@ PS_INPUT mainVS(VS_INPUT input)
     
     // Pass the color to the pixel shader
     output.color = c;
-    
-    output.normal = input.normal;
     output.texCoord = input.texCoord;
     output.UUID = UUID;
     return output;
@@ -132,23 +169,30 @@ PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
 {
     PS_OUTPUT Result;
     // Lerp the incoming color with the global LerpColor
-    float4 finalColor = input.color;
-    finalColor.rgb = lerp(finalColor.rgb, LerpColor.rgb, LerpColor.a) * (1.0f - HasMaterial);
+    float4 baseColor = input.color;
+    baseColor.rgb = lerp(baseColor.rgb, LerpColor.rgb, LerpColor.a) * (1.0f - HasMaterial);
     //finalColor.rgb += Material.DiffuseColor * HasMaterial;
     
     if (HasMaterial && HasTexture)
     {
         float2 uv = input.texCoord + UVScrollSpeed * UVScrollTime;
-        finalColor.rgb = g_DiffuseTexColor.Sample(g_Sample, uv);
+        baseColor.rgb = g_DiffuseTexColor.Sample(g_Sample, uv);
     }
     if (Picked == 1)
     {
         // 노란색 하이라이트를 50% 블렌딩
         float3 highlightColor = float3(1.0, 1.0, 0.0); // 노란색
-        finalColor.rgb = lerp(finalColor.rgb, highlightColor, 0.5);
+        baseColor.rgb = lerp(baseColor.rgb, highlightColor, 0.5);
     }
-    
-    Result.Color = finalColor;
+      // 🔥 FireBall(PointLight) lighting
+    float3 lightAccum = ComputePointLights(input.worldPosition);
+
+    // 약간의 기본 환경광 (ambient)
+    float3 ambient = 0.25 * baseColor.rgb;
+
+    float3 finalLit = baseColor.rgb * (lightAccum + ambient);
+
+    Result.Color = float4(finalLit.rgb, 1.0f);
     Result.UUID = input.UUID;
     return Result;
 }

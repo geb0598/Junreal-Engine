@@ -233,14 +233,49 @@ void UTargetActorTransformWidget::RenderWidget()
 	ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));	// Show Selected Actor UUID (Global Unique ID)
 	ImGui::Spacing();
 
+		// 추가 가능한 컴포넌트 타입 목록 (자동 수집)
+		static TArray<TPair<FString, UClass*>> AddableSceneComponentTypes;
+		static bool bComponentTypesInitialized = false;
+
+		if (!bComponentTypesInitialized)
+		{
+			// USceneComponent를 상속받은 모든 클래스를 자동으로 수집
+			TArray<UClass*> DerivedClasses = UClassRegistry::Get().GetDerivedClasses(USceneComponent::StaticClass());
+
+			for (UClass* Class : DerivedClasses)
+			{
+				// 추상 클래스(인스턴스 생성 불가) 제외
+				if (Class->CreateInstance == nullptr)
+				{
+					continue;
+				}
+
+				// Gizmo 컴포넌트와 같은 에디터 전용 컴포넌트 제외
+				FString ClassName = Class->Name;
+				if (ClassName.find("Gizmo") == FString::npos &&
+				    ClassName.find("Grid") == FString::npos &&
+				    ClassName.find("Line") == FString::npos &&
+				    ClassName.find("Shape") == FString::npos &&
+				    ClassName.find("Cube") == FString::npos &&
+				    ClassName.find("Sphere") == FString::npos &&
+				    ClassName.find("Triangle") == FString::npos &&
+				    ClassName.find("BoundingBox") == FString::npos)
+				{
+					AddableSceneComponentTypes.push_back({ ClassName, Class });
+				}
+			}
+
+			// 이름순 정렬
+			std::sort(AddableSceneComponentTypes.begin(), AddableSceneComponentTypes.end(),
+				[](const TPair<FString, UClass*>& A, const TPair<FString, UClass*>& B)
+				{
+					return A.first < B.first;
+				});
+
+			bComponentTypesInitialized = true;
+		}
 	// 추가 가능한 컴포넌트 타입 목록 (임시 하드코딩)
-	static const TArray<TPair<FString, UClass*>> AddableSceneComponentTypes = {
-		{ "StaticMesh Component", UStaticMeshComponent::StaticClass() },
-		{ "Text Component", UTextRenderComponent::StaticClass() },
-		{ "Scene Component", USceneComponent::StaticClass() },
-		{ "Billboard Component", UBillboardComponent::StaticClass() },
-		{ "Decal Component", UDecalComponent::StaticClass() }
-	};
+	
 	static const TArray<TPair<FString, UClass*>> AddableActorComponentTypes = {
 		{ "Rotation Movement Component", URotationMovementComponent::StaticClass() },
 		{ "Projectile Movement Component", UProjectileMovementComponent::StaticClass() }

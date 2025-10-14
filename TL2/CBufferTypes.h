@@ -47,6 +47,7 @@ MACRO(DecalMatrixCB)					\
 MACRO(ViewportBufferType)					\
 MACRO(DecalAlphaBufferType)					\
 MACRO(HeightFogBufferType)                  \
+MACRO(FPointLightBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, false)
@@ -57,8 +58,10 @@ CBUFFER_INFO(ColorBufferType, 3, false, true)
 CBUFFER_INFO(UVScrollCB, 5, false, true)
 CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
+
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
 CBUFFER_INFO(HeightFogBufferType, 8, false, true)
+CBUFFER_INFO(FPointLightBufferType, 9, false, true)
 
 
 //Create 
@@ -144,7 +147,22 @@ struct ViewportBufferType
 {
     FVector4 ViewportRect; // x=StartX, y=StartY, z=SizeX, w=SizeY
 };
-
+//PS : b6
+struct FPointLightData
+{
+    FVector4 Position;   // xyz=위치, w=반경
+    FVector4 Color;      // rgb=색상, a=Intensity
+    float FallOff;       // 감쇠 정도
+    FVector Padding;    // 16바이트 정렬 맞추기용
+};
+#define MAX_POINT_LIGHTS 100
+// 전체 버퍼 (cbuffer b6 대응)
+struct FPointLightBufferType
+{
+    int PointLightCount;                    // 현재 활성 조명 개수
+    FVector _Padding;                      // 16바이트 정렬용 (HLSL의 float3 pad)
+    FPointLightData PointLights[MAX_POINT_LIGHTS]; // 배열 (최대 100개)
+};
 //PS : b8
 struct DecalAlphaBufferType
 {
@@ -168,6 +186,8 @@ struct HeightFogBufferType
 };
 
 //---//
+
+
 
 
 

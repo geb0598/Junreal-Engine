@@ -18,6 +18,7 @@
 #include "Frustum.h"
 #include "BoundingVolume.h"
 #include "GizmoActor.h"
+#include "FireballComponent.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -117,17 +118,18 @@ void URenderer::RenderFrame(UWorld* World)
     UUIManager::GetInstance().Render();
 
     // +-+-+ Render Pass Structure +-+-+
-    
-    // [ Pre-Processing Phase ]
+
     if (CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
     {
-        // Depth Pre-Pass
-        RenderSceneDepthPass(World);
+        // [ Pre-Processing Phase ]
+        RenderSceneDepthPass(World);    // only depth
     }
-    else
-    {
-        // Base Pass (Opaque geometry - 각 뷰포트별로)
-        RenderBasePass(World);
+    else {
+        // [ Pre-Processing Phase ]
+        RenderFireBallPass(World);
+
+        // [ Main Rendering Pass ]
+        RenderBasePass(World);  // (Opaque geometry - 각 뷰포트별로)
     }
 
     // [ Post-Processing Phase ]
@@ -138,7 +140,6 @@ void URenderer::RenderFrame(UWorld* World)
     case EViewModeIndex::VMI_Wireframe:
     {
         RenderFogPass();
-        RenderFireBallPass(World);
         break;
     }
     case EViewModeIndex::VMI_SceneDepth:
@@ -607,7 +608,38 @@ void URenderer::RenderFogPass()
 
 void URenderer::RenderFireBallPass(UWorld* World)
 {
-    // TODO: FireBall 광원 효과 구현
+    if (!World) return;
+
+    // 1️⃣ 라이트 컴포넌트 수집 (FireBall, PointLight 등)
+    FPointLightBufferType PointLightCB{};
+    const TArray<AActor*>& Actors = World->GetLevel()->GetActors();
+
+    for (AActor* Actor : Actors)
+    {
+        if (!Actor) continue;
+        for (UActorComponent* Comp : Actor->GetComponents())
+        {
+            if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+            {
+                if (UFireBallComponent* Fire = Cast<UFireBallComponent>(Prim))
+                {
+                    int idx = PointLightCB.PointLightCount++;
+                    if (idx >= MAX_POINT_LIGHTS) break;
+
+                    PointLightCB.PointLights[idx].Position = FVector4(
+                        Fire->GetWorldLocation(), Fire->Radius
+                    );
+                    PointLightCB.PointLights[idx].Color = FVector4(
+                        Fire->Color.R, Fire->Color.G, Fire->Color.B, Fire->Intensity
+                    );
+                    PointLightCB.PointLights[idx].FallOff = Fire->RadiusFallOff;
+                }
+            }
+        }
+    }
+
+    // 2️⃣ 상수 버퍼 GPU로 업데이트
+    UpdateSetCBuffer(PointLightCB);
 }
 
 void URenderer::RenderOverlayPass(UWorld* World)
