@@ -179,6 +179,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="ExponentialHeightFog.cpp" />
     <ClCompile Include="FireballComponent.cpp" />
+    <ClCompile Include="FXAA.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
@@ -270,7 +271,6 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="RHIDevice.cpp" />
     <ClCompile Include="SControlPanel.cpp" />
     <ClCompile Include="SDetailsWindow.cpp" />
     <ClCompile Include="ShapeComponent.cpp" />
@@ -416,6 +416,7 @@
     <ClInclude Include="FireballComponent.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
+    <ClInclude Include="FXAA.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="ExponentialHeightFogComponent.h" />
     <ClInclude Include="Info.h" />

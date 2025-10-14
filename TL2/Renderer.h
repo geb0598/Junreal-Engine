@@ -40,8 +40,6 @@ public:
 
 	void BeginFrame();
 
-    void PrepareShader(FShader& InShader);
-
     void PrepareShader(UShader* InShader);
 
     void OMSetBlendState(bool bIsChecked);
@@ -80,6 +78,8 @@ public:
 	void EndFrame();
 
     void OMSetDepthStencilState(EComparisonFunc Func);
+
+    void RenderViewPorts(UWorld* World);
 
     URHIDevice* GetRHIDevice() { return RHIDevice; }
     void RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport);

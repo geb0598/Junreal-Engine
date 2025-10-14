@@ -2,6 +2,12 @@
 #include "Vector.h"
 #include "Enums.h"
 
+struct FVertexUV
+{
+    FVector Position;
+    FVector2D UV;
+};
+
 struct FVertexSimple
 {
     FVector Position;
