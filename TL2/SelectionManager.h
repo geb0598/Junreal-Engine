@@ -20,14 +20,14 @@ public:
     /** === 선택 관리 === */
     void SelectActor(AActor* Actor);
     void DeselectActor(AActor* Actor);
-    void SelectComponent(USceneComponent* Component);
+    void SelectComponent(UActorComponent* Component);
     void ClearSelection();
     
     bool IsActorSelected(AActor* Actor) const;
     
     /** === 선택된 액터 접근 === */
     AActor* GetSelectedActor() const; // 단일 선택용
-    USceneComponent* GetSelectedComponent() const { return SelectedComponent; }
+    UActorComponent* GetSelectedComponent() const { return SelectedComponent; }
     const TArray<AActor*>& GetSelectedActors() const { return SelectedActors; }
     
     int32 GetSelectionCount() const { return SelectedActors.Num(); }
@@ -47,5 +47,5 @@ protected:
     
     /** === 선택된 액터들 === */
     TArray<AActor*> SelectedActors;
-    USceneComponent* SelectedComponent = nullptr;
+    UActorComponent* SelectedComponent = nullptr;
 };

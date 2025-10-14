@@ -115,6 +115,9 @@
     <Filter Include="ThirdParty\ImGui">
       <UniqueIdentifier>{340a9369-98be-4580-af67-945e0e2bcbef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\Movement">
+      <UniqueIdentifier>{74aac7c3-b3d4-4cb4-8aea-6bec9fe600ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <!-- ==================== 소스 파일 (.cpp) ==================== -->
   <ItemGroup>
@@ -463,6 +466,15 @@
     <ClCompile Include="TimeProfile.cpp" />
     <ClCompile Include="Info.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectileMovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationMovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="MovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
     </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
@@ -850,6 +862,15 @@
     <ClInclude Include="TimeProfile.h" />
     <ClInclude Include="Info.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectileMovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="RotationMovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="MovementComponent.h">
+      <Filter>Components\Movement</Filter>
     </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->

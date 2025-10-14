@@ -39,6 +39,18 @@ void UActorComponent::EndPlay(EEndPlayReason::Type EndPlayReason)
     }
 }
 
+void UActorComponent::OnRegister()
+{
+    // 컴포넌트가 액터에 등록될 때 호출
+    // 필요시 Override
+}
+
+void UActorComponent::OnUnregister()
+{
+    // 컴포넌트가 액터에서 해제될 때 호출
+    // 정리 로직이 필요하면 Override
+}
+
 UObject* UActorComponent::Duplicate()
 {
     UActorComponent* DuplicatedComponent = NewObject<UActorComponent>(*this);

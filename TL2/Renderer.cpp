@@ -18,6 +18,7 @@
 #include "Frustum.h"
 #include "BoundingVolume.h"
 #include "GizmoActor.h"
+#include "FireballComponent.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -110,14 +111,14 @@ void URenderer::RenderFrame(UWorld* World)
     UUIManager::GetInstance().Render();
 
     // 렌더 패스 구조:
-    // 1. Base Pass (Opaque geometry - 각 뷰포트별로)
+    RenderFireBallPass(World);
+    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
     RenderBasePass(World);
 
     // 2. Post-processing passes
     RenderFogPass();
-    RenderFireBallPass(World);
 
-    // 3. Overlay (UI, debug visualization)
+    // 4. Overlay (UI, debug visualization)
     RenderOverlayPass(World);
 
     UUIManager::GetInstance().EndFrame();
@@ -597,7 +598,38 @@ void URenderer::RenderFogPass()
 
 void URenderer::RenderFireBallPass(UWorld* World)
 {
-    // TODO: FireBall 광원 효과 구현
+    if (!World) return;
+
+    // 1️⃣ 라이트 컴포넌트 수집 (FireBall, PointLight 등)
+    FPointLightBufferType PointLightCB{};
+    const TArray<AActor*>& Actors = World->GetLevel()->GetActors();
+
+    for (AActor* Actor : Actors)
+    {
+        if (!Actor) continue;
+        for (UActorComponent* Comp : Actor->GetComponents())
+        {
+            if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+            {
+                if (UFireBallComponent* Fire = Cast<UFireBallComponent>(Prim))
+                {
+                    int idx = PointLightCB.PointLightCount++;
+                    if (idx >= MAX_POINT_LIGHTS) break;
+
+                    PointLightCB.PointLights[idx].Position = FVector4(
+                        Fire->GetWorldLocation(), Fire->Radius
+                    );
+                    PointLightCB.PointLights[idx].Color = FVector4(
+                        Fire->Color.R, Fire->Color.G, Fire->Color.B, Fire->Intensity
+                    );
+                    PointLightCB.PointLights[idx].FallOff = Fire->RadiusFallOff;
+                }
+            }
+        }
+    }
+
+    // 2️⃣ 상수 버퍼 GPU로 업데이트
+    UpdateSetCBuffer(PointLightCB);
 }
 
 void URenderer::RenderOverlayPass(UWorld* World)

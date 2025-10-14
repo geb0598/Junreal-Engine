@@ -15,10 +15,11 @@ struct UClass
     const char* Name = nullptr;
     const UClass* Super = nullptr;   // 루트(UObject)는 nullptr
     std::size_t   Size = 0;
+    UObject* (*CreateInstance)() = nullptr; // 인스턴스 생성 함수 포인터
 
     constexpr UClass() = default;
-    constexpr UClass(const char* n, const UClass* s, std::size_t z)//언리얼도 런타임 시간에 관리해주기 때문에 문제가 없습니다.
-        :Name(n), Super(s), Size(z) {
+    constexpr UClass(const char* n, const UClass* s, std::size_t z, UObject* (*creator)() = nullptr)
+        :Name(n), Super(s), Size(z), CreateInstance(creator) {
     }
     bool IsChildOf(const UClass* Base) const noexcept
     {
@@ -27,6 +28,47 @@ struct UClass
             if (c == Base) return true;
         return false;
     }
+};
+
+// ── 글로벌 클래스 레지스트리 ─────────────────────────────
+class UClassRegistry
+{
+public:
+    static UClassRegistry& Get()
+    {
+        static UClassRegistry Instance;
+        return Instance;
+    }
+
+    void RegisterClass(UClass* InClass)
+    {
+        if (InClass)
+        {
+            RegisteredClasses.push_back(InClass);
+        }
+    }
+
+    const TArray<UClass*>& GetAllClasses() const
+    {
+        return RegisteredClasses;
+    }
+
+    // 특정 베이스 클래스의 모든 자식 클래스 가져오기
+    TArray<UClass*> GetDerivedClasses(const UClass* BaseClass) const
+    {
+        TArray<UClass*> Result;
+        for (UClass* Class : RegisteredClasses)
+        {
+            if (Class && Class->IsChildOf(BaseClass) && Class != BaseClass)
+            {
+                Result.push_back(Class);
+            }
+        }
+        return Result;
+    }
+
+private:
+    TArray<UClass*> RegisteredClasses;
 };
 
 class UObject
@@ -72,7 +114,13 @@ public:
     // 정적: 타입 메타 반환 (이름을 StaticClass로!)
     static UClass* StaticClass()
     {
-        static UClass Cls{ "UObject", nullptr, sizeof(UObject) };
+        static UClass Cls{ "UObject", nullptr, sizeof(UObject), nullptr };
+        static bool bRegistered = false;
+        if (!bRegistered)
+        {
+            UClassRegistry::Get().RegisterClass(&Cls);
+            bRegistered = true;
+        }
         return &Cls;
     }
 
@@ -115,10 +163,35 @@ const T* Cast(const UObject* Obj) noexcept
 #define DECLARE_CLASS(ThisClass, SuperClass)                                  \
 public:                                                                       \
     using Super_t = SuperClass;                                               \
+    static UObject* CreateInstance() { return new ThisClass(); }              \
     static UClass* StaticClass()                                              \
     {                                                                         \
         static UClass Cls{ #ThisClass, SuperClass::StaticClass(),             \
-                            sizeof(ThisClass) };                              \
+                            sizeof(ThisClass), &ThisClass::CreateInstance };  \
+        static bool bRegistered = false;                                      \
+        if (!bRegistered)                                                     \
+        {                                                                     \
+            UClassRegistry::Get().RegisterClass(&Cls);                        \
+            bRegistered = true;                                               \
+        }                                                                     \
+        return &Cls;                                                          \
+    }                                                                         \
+    virtual UClass* GetClass() const override { return ThisClass::StaticClass(); }
+
+// ── 추상 클래스용 매크로 (인스턴스 생성 불가) ─────────────────────
+#define DECLARE_ABSTRACT_CLASS(ThisClass, SuperClass)                         \
+public:                                                                       \
+    using Super_t = SuperClass;                                               \
+    static UClass* StaticClass()                                              \
+    {                                                                         \
+        static UClass Cls{ #ThisClass, SuperClass::StaticClass(),             \
+                            sizeof(ThisClass), nullptr };                     \
+        static bool bRegistered = false;                                      \
+        if (!bRegistered)                                                     \
+        {                                                                     \
+            UClassRegistry::Get().RegisterClass(&Cls);                        \
+            bRegistered = true;                                               \
+        }                                                                     \
         return &Cls;                                                          \
     }                                                                         \
     virtual UClass* GetClass() const override { return ThisClass::StaticClass(); }

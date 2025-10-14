@@ -16,7 +16,7 @@ public:
     UDecalComponent* GetDecalComponent() const { return DecalComponent; }
     void SetDecalComponent(UDecalComponent* InDecalComponent);
 
-    virtual bool DeleteComponent(USceneComponent* ComponentToDelete) override;
+    virtual bool DeleteComponent(UActorComponent* ComponentToDelete) override;
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;

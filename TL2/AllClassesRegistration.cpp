@@ -50,6 +50,10 @@
 #include "DecalActor.h"
 #include "SpotLightActor.h"
 #include "ExponentialHeightFog.h"
+#include "FireballComponent.h"
+#include "MeshComponent.h"
+#include "RotationMovementComponent.h"
+#include "ProjectileMovementComponent.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -59,6 +63,9 @@ IMPLEMENT_CLASS(UActorComponent)
 IMPLEMENT_CLASS(USceneComponent)
 IMPLEMENT_CLASS(UCameraComponent)
 IMPLEMENT_CLASS(UStaticMeshComponent)
+IMPLEMENT_CLASS(UMovementComponent)
+IMPLEMENT_CLASS(URotationMovementComponent)
+IMPLEMENT_CLASS(UProjectileMovementComponent)
 //IMPLEMENT_CLASS(UShapeComponent)
 
 IMPLEMENT_CLASS(AActor)
@@ -78,6 +85,7 @@ IMPLEMENT_CLASS(ULine)
 IMPLEMENT_CLASS(UTextRenderComponent)
 IMPLEMENT_CLASS(UBillboardComponent)
 IMPLEMENT_CLASS(UDecalComponent)
+IMPLEMENT_CLASS(UFireBallComponent)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)
