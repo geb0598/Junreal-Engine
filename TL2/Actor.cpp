@@ -248,6 +248,7 @@ UActorComponent* AActor::AddComponentByClass(UClass* ComponentClass)
     {
         OwnedComponents.Add(NewComp);
         NewComp->SetOwner(this);
+        NewComp->OnRegister();
     }
     return NewComp;
 }

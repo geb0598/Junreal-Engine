@@ -21,6 +21,8 @@ public:
     virtual void BeginPlay();             // 월드 시작 시
     virtual void TickComponent(float DeltaSeconds); // 매 프레임
     virtual void EndPlay(EEndPlayReason::Type EndPlayReason); // 파괴/종료 시
+    virtual void OnRegister();          // 컴포넌트 등록
+    virtual void OnUnregister();        // 컴포넌트 제거
 
     // ───────────────
     // 활성화/비활성

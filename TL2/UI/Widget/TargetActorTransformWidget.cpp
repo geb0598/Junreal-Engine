@@ -351,7 +351,7 @@ void UTargetActorTransformWidget::RenderWidget()
 				if (!Comp->IsA(USceneComponent::StaticClass()))
 				{
 					ImGui::Text("%s", Comp->GetName().c_str());
-					//if (ImGui::IsItemClicked)
+					Comp->SetTickEnabled(true);
 					if (ImGui::IsItemClicked())
 					{
 						//USelectionManager::GetInstance().SelectComponent(Comp);

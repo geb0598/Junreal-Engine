@@ -10,6 +10,8 @@ public:
 	void TickComponent(float DeltaSeconds) override;
 	void SetUpdatedComponent(USceneComponent* Component);
 
+	void OnRegister() override;
+
 protected:
 	USceneComponent* UpdatedComponent;
 	
