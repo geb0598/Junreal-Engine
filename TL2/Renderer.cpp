@@ -59,13 +59,6 @@ void URenderer::BeginFrame()
     RHIDevice->OMSetRenderTargets();
 }
 
-void URenderer::PrepareShader(FShader& InShader)
-{
-    RHIDevice->GetDeviceContext()->VSSetShader(InShader.SimpleVertexShader, nullptr, 0);
-    RHIDevice->GetDeviceContext()->PSSetShader(InShader.SimplePixelShader, nullptr, 0);
-    RHIDevice->GetDeviceContext()->IASetInputLayout(InShader.SimpleInputLayout);
-}
-
 void URenderer::PrepareShader(UShader* InShader)
 {
     // 셰이더 변경 추적
@@ -118,15 +111,12 @@ void URenderer::RenderFrame(UWorld* World)
     UUIManager::GetInstance().Render();
 
     // 렌더 패스 구조:
-    // 1. Depth Pre-pass (옵션)
-    RenderSceneDepthPass(World);
     RenderFireBallPass(World);
     // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
     RenderBasePass(World);
 
-    // 3. Post-processing passes
+    // 2. Post-processing passes
     RenderFogPass();
-
 
     // 4. Overlay (UI, debug visualization)
     RenderOverlayPass(World);
@@ -153,6 +143,8 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     case EVertexLayoutType::PositionBillBoard:
         stride = sizeof(FBillboardVertexInfo_GPU);
         break;
+    case EVertexLayoutType::PositionUV:
+        stride = sizeof(FVertexUV);
     default:
         // Handle unknown or unsupported vertex types
         assert(false && "Unknown vertex type!");
@@ -370,11 +362,6 @@ void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
     RHIDevice->OmSetDepthStencilState(Func);
 }
 
-void URenderer::RenderSceneDepthPass(UWorld* World)
-{
-    // TODO: Early-Z 최적화를 위한 깊이 프리패스 구현
-}
-
 void URenderer::RenderBasePass(UWorld* World)
 {
     // 멀티 뷰포트 시스템을 통해 각 뷰포트별로 렌더링
@@ -577,6 +564,31 @@ void URenderer::RenderEngineActors(const TArray<AActor*>& EngineActors, const FM
         }
         OMSetBlendState(false);
     }
+}
+
+void URenderer::RenderPostProcessing(UShader* Shader)
+{
+    OMSetBlendState(false);
+    OMSetDepthStencilState(EComparisonFunc::Disable);
+    PrepareShader(Shader);
+    UINT Stride = sizeof(FVertexUV);
+    UINT Offset = 0;
+    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>("ScreenQuad");
+    ID3D11Buffer* VertexBuffer = StaticMesh->GetVertexBuffer();
+    ID3D11Buffer* IndexBuffer = StaticMesh->GetIndexBuffer();
+    RHIDevice->GetDeviceContext()->IASetVertexBuffers(
+        0, 1, &VertexBuffer, &Stride, &Offset
+    );
+
+    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
+        IndexBuffer, DXGI_FORMAT_R32_UINT, 0
+    );
+    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    RHIDevice->PSSetDefaultSampler(0);
+
+    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+
+    
 }
 
 void URenderer::RenderFogPass()

@@ -40,6 +40,7 @@ void UResourceManager::Initialize(ID3D11Device* InDevice, ID3D11DeviceContext* I
     CreateBillboardMesh();//"Billboard"
 
     CreateTextBillboardTexture();
+    CreateScreenQuatMesh();
     
 }
 
@@ -364,10 +365,34 @@ void UResourceManager::CreateBoxWireframeMesh(const FVector& Min, const FVector&
 }
 
 
+//해당 과정과 동일하게 생성된 메쉬는 문제가 있음
+// FStaticMesh가 아닌 FMeshData로 생성되고 UStaticMesh의 FStaticMesh가 비어있게됨
+void UResourceManager::CreateScreenQuatMesh()
+{
+    TArray<FVector> Vertices = { FVector(-1.0f,-1.0f,0.0f),FVector(-1.0f,1.0f,0.0f) ,FVector(1.0f,1.0f,0.0f) ,FVector(1.0f,-1.0f,0.0f) };
+    TArray<FVector2D> UVs = { FVector2D(0.0f,1.0f),FVector2D(0.0f,0.0f) ,FVector2D(1.0f,0.0f) ,FVector2D(1.0f,1.0f) };
+    TArray<uint32> Indices = { 0,1,2,0,2,3 };
+
+    UStaticMesh* Mesh = NewObject<UStaticMesh>();
+    FMeshData* MeshData = new FMeshData();
+    MeshData->Vertices = Vertices;
+    MeshData->UV = UVs;
+    MeshData->Indices = Indices;
+    Mesh->Load(MeshData, Device);
+    //Mesh->SetTopology(EPrimitiveTopology::LineList); // :흰색_확인_표시: 꼭 LineList로 설정
+    Add<UStaticMesh>("ScreenQuad", Mesh);
+    UMeshLoader::GetInstance().AddMeshData("ScreenQuad", MeshData);
+}
+
 
 void UResourceManager::InitShaderILMap()
 {
     TArray<D3D11_INPUT_ELEMENT_DESC> layout;
+    layout.Add({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    layout.Add({ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+    ShaderToInputLayoutMap["FXAA.hlsl"] = layout;
+    layout.clear();
+
 
     layout.Add({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 });
     layout.Add({ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 });
