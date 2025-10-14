@@ -61,24 +61,33 @@ cbuffer PSScrollCB : register(b5)
     float  _pad_scrollcb;
 }
 #define MAX_PointLight 100
+
+// C++ 구조체와 동일한 레이아웃
+struct FPointLightData
+{
+    float4 Position;   // xyz=위치, w=반경
+    float4 Color;      // rgb=색상, a=Intensity
+    float FallOff;     // 감쇠
+    float3 _pad;       // 패딩 (16바이트 정렬)
+};
+
 cbuffer PointLightBuffer : register(b9)
 {
     int PointLightCount;
     float3 _pad;
-    float4 PointLightPos[MAX_PointLight]; // xyz = 위치, w = Radius
-    float4 PointLightColor[MAX_PointLight]; // rgb = 색상, a = Intensity
-    float PointLightFallOff[MAX_PointLight]; // 감쇠 정도
+    FPointLightData PointLights[MAX_PointLight];
 }
+
 float3 ComputePointLights(float3 worldPos)
 {
     float3 totalLight = 0;
     for (int i = 0; i < PointLightCount; ++i)
     {
-        float3 toLight = worldPos - PointLightPos[i].xyz;
+        float3 toLight = worldPos - PointLights[i].Position.xyz;
         float dist = length(toLight);
-        float atten = saturate(1.0 - dist / PointLightPos[i].w);
-        atten = pow(atten, PointLightFallOff[i]);
-        totalLight += PointLightColor[i].rgb * PointLightColor[i].a * atten;
+        float atten = saturate(1.0 - dist / PointLights[i].Position.w);
+        atten = pow(atten, PointLights[i].FallOff);
+        totalLight += PointLights[i].Color.rgb * PointLights[i].Color.a * atten;
     }
     return totalLight;
 }
@@ -179,11 +188,11 @@ PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
     float3 lightAccum = ComputePointLights(input.worldPosition);
 
     // 약간의 기본 환경광 (ambient)
-    float3 ambient = 0.15 * baseColor.rgb;
+    float3 ambient = 0.25 * baseColor.rgb;
 
     float3 finalLit = baseColor.rgb * (lightAccum + ambient);
 
-    Result.Color = float4(finalLit, 1.0f);
+    Result.Color = float4(finalLit.rgb, 1.0f);
     Result.UUID = input.UUID;
     return Result;
 }

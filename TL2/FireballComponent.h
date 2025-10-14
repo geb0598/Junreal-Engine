@@ -21,9 +21,9 @@ public:
 
 
     float Intensity = 5.0f;          // 밝기 (빛 세기)
-    float Radius = 300.0f;           // 영향 반경
-    float RadiusFallOff = 2.0f;      // 감쇠 정도 (클수록 급격히 사라짐)
-    FLinearColor Color = FLinearColor(1.f, 0.5f, 0.2f, 1.f); // 오렌지빛
+    float Radius = 15.0f;           // 영향 반경
+    float RadiusFallOff = 1.0f;      // 감쇠 정도 (클수록 급격히 사라짐)
+    FLinearColor Color = FLinearColor(1.f, 0.0f, 0.0f, 1.f); // 오렌지빛
 
     // 🔸 CPU → GPU 전달용 라이트 데이터 캐시
     FPointLightData PointLightBuffer;

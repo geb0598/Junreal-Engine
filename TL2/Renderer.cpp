@@ -669,7 +669,7 @@ void URenderer::RenderFireBallPass(UWorld* World)
     }
 
     // 2️⃣ 상수 버퍼 GPU로 업데이트
-    RHIDevice->UpdateSetCBuffer(PointLightCB);
+    UpdateSetCBuffer(PointLightCB);
 }
 
 void URenderer::RenderOverlayPass(UWorld* World)
