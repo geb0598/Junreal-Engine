@@ -5,15 +5,11 @@
 class UMeshComponent : public UPrimitiveComponent
 {
 public:
-    DECLARE_CLASS(UMeshComponent, UPrimitiveComponent)
+    DECLARE_ABSTRACT_CLASS(UMeshComponent, UPrimitiveComponent)
     UMeshComponent();
 
 protected:
     ~UMeshComponent() override;
 
-public:
-
-
-protected:
 
 };
