@@ -27,17 +27,20 @@ AActor::~AActor()
 
 void AActor::InitEmptyActor()
 {
-    USceneComponent* DefaultComponent = CreateDefaultSubobject<USceneComponent>(FName("DefaultSceneComponent"));
-    RootComponent = DefaultComponent;
-
-    SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
-    if (SpriteComponent)
+    if (!RootComponent)
     {
-        SpriteComponent->SetTexture(FString("Editor/Icon/EmptyActor.dds"));
-        SpriteComponent->SetRelativeLocation(RootComponent->GetWorldLocation());
-        SpriteComponent->SetEditable(false);
-        SpriteComponent->SetupAttachment(RootComponent);
-    }
+        USceneComponent* DefaultComponent = CreateDefaultSubobject<USceneComponent>(FName("DefaultSceneComponent"));
+        RootComponent = DefaultComponent;
+
+        SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
+        if (SpriteComponent)
+        {
+            SpriteComponent->SetTexture(FString("Editor/Icon/EmptyActor.dds"));
+            SpriteComponent->SetRelativeLocation(RootComponent->GetWorldLocation());
+            SpriteComponent->SetEditable(false);
+            SpriteComponent->SetupAttachment(RootComponent);
+        }
+    }  
 }
 
 void AActor::BeginPlay()

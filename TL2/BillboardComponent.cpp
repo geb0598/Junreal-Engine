@@ -57,7 +57,10 @@ UObject* UBillboardComponent::Duplicate()
     {
         CopyCommonProperties(DuplicatedComponent);
 		DuplicatedComponent->TexturePath = TexturePath;
+        DuplicatedComponent->SetEditable(this->bEdiableWhenInherited);
+        DuplicatedComponent->SetBillboardSize(this->BillboardSize);
         DuplicatedComponent->DuplicateSubObjects();
+        
     }
     return DuplicatedComponent;
 }
