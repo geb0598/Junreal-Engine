@@ -19,7 +19,7 @@
 #include "BoundingVolume.h"
 #include "GizmoActor.h"
 #include "FireballComponent.h"
-
+#include "CameraComponent.h"
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
 {
@@ -431,7 +431,7 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     // 씬의 액터들을 렌더링
     if (this->CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
     {
-        RenderSceneDepthPass(World, ViewMatrix, ProjectionMatrix);
+         RenderSceneDepthPass(World, ViewMatrix, ProjectionMatrix);
     }
     else
     {   // General Rendering (color + depth)
@@ -731,7 +731,35 @@ void URenderer::RenderOverlayPass(UWorld* World)
 
 void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
 {
+    // +-+ Set Render State +-+
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
+    RHIDevice->OmSetDepthStencilState(EComparisonFunc::Disable);
 
+    // +-+ Set Shader & Buffer +-+
+    SceneDepthVisualizeShader = UResourceManager::GetInstance().Load<UShader>("DepthVisualizeShader.hlsl");
+    PrepareShader(SceneDepthVisualizeShader);
+
+    if (Camera)
+    {
+        CameraInfoBufferType CameraInfo;
+        CameraInfo.NearClip = Camera->GetCameraComponent()->GetNearClip();
+        CameraInfo.FarClip = Camera->GetCameraComponent()->GetFarClip();
+        UpdateSetCBuffer(CameraInfoBufferType(CameraInfo));
+    }
+
+    // +-+ Set Shader Resources (Texture) +-+
+    // TODO: Abstracting RHI access to the depth SRV
+    ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(RHIDevice)->GetDepthSRV();
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &DepthSRV);
+    RHIDevice->PSSetDefaultSampler(0);
+
+    // +-+ Draw Full-Screen Triangle +-+
+    RHIDevice->IASetPrimitiveTopology();
+    RHIDevice->GetDeviceContext()->Draw(3, 0);
+
+    // +-+ Cleanup +-+
+    ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, nullSRV);
 }
 
 void URenderer::InitializeLineBatch()

@@ -48,6 +48,7 @@ MACRO(ViewportBufferType)					\
 MACRO(DecalAlphaBufferType)					\
 MACRO(HeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
+MACRO(CameraInfoBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, false)
@@ -62,6 +63,7 @@ CBUFFER_INFO(ViewportBufferType, 6, false, true)
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
 CBUFFER_INFO(HeightFogBufferType, 8, false, true)
 CBUFFER_INFO(FPointLightBufferType, 9, false, true)
+CBUFFER_INFO(CameraInfoBufferType, 0, false, true)
 
 
 //Create 
@@ -182,6 +184,14 @@ struct HeightFogBufferType
     float FogCutoffDistance;
     float FogMaxOpacity;
     float FogActorHeight;
+    float Padding[2];
+};
+
+//PS : b0
+struct CameraInfoBufferType
+{
+    float NearClip;
+    float FarClip;
     float Padding[2];
 };
 
