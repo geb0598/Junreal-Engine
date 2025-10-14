@@ -2,9 +2,29 @@
 #include "ProjectileMovementComponent.h"
 
 UProjectileMovementComponent::UProjectileMovementComponent()
+	: InitialSpeed(10.0f)
+	, MaxSpeed(100.f)
+	, GravityScale(1.0f)
 {
+	bCanEverTick = true;
+
+	// Initial speed (forward)
+	Velocity = FVector(0.f, InitialSpeed, 0.0f);
 }
 
 void UProjectileMovementComponent::TickComponent(float DeltaSeconds)
 {
+	Velocity.Z -= 9.8f * GravityScale * DeltaSeconds;
+
+	if (Velocity.Size() > MaxSpeed)
+	{
+		Velocity = Velocity.GetSafeNormal() * MaxSpeed;
+	}
+
+	FVector Delta = Velocity * DeltaSeconds;
+
+	if (Delta.SizeSquared() > KINDA_SMALL_NUMBER)
+	{
+		UpdatedComponent->AddWorldOffset(Delta);
+	}
 }

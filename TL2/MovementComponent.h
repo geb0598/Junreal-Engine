@@ -14,7 +14,5 @@ public:
 
 protected:
 	USceneComponent* UpdatedComponent;
-	
-private:
 	FVector Velocity;
 };

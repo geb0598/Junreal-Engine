@@ -10,18 +10,8 @@ UMovementComponent::UMovementComponent()
 
 void UMovementComponent::TickComponent(float DeltaSeconds)
 {
-	UE_LOG("this actor is moving by movement component~");
-	if (UpdatedComponent == nullptr || Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
-	{
-		return;
-	}
-
-	const FVector DeltaMovement = Velocity * DeltaSeconds;
-
-	if (DeltaMovement.SizeSquared() > KINDA_SMALL_NUMBER)
-	{
-		UpdatedComponent->AddWorldOffset(DeltaMovement);
-	}
+	// Base class doesn't move anything.
+	// Subclasses (Projectile, Rotation, etc.) implement their own behavior.
 }
 
 void UMovementComponent::SetUpdatedComponent(USceneComponent* Component)
@@ -33,8 +23,7 @@ void UMovementComponent::OnRegister()
 {
 	if (UpdatedComponent == nullptr)
 	{
-		AActor* Owner = GetOwner();
-		if (Owner)
+		if (AActor* Owner = GetOwner())
 		{
 			SetUpdatedComponent(Owner->GetRootComponent());
 		}
