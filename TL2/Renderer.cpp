@@ -360,11 +360,12 @@ void URenderer::RenderViewPorts(UWorld* World)
     }
 }
 
+void URenderer::RenderSceneDepthPass(UWorld* World)
+{
+}
 
 void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-  
-
     // 뷰포트의 실제 크기로 aspect ratio 계산
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
     if (Viewport->GetSizeY() == 0)
@@ -386,13 +387,10 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
             Gizmo->Render(Camera, Viewport);
         }
     }
-
 }
-
 
 void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-
     // 렌더 패스 구조:
     RenderFireBallPass(World);
     // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
@@ -405,13 +403,10 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
     // 4. Overlay (UI, debug visualization)
     RenderOverlayPass(World);
 
-    
     if (!World || !Camera || !Viewport)
     {
         return;
     }
-
-  
 }
 
 void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
