@@ -614,22 +614,22 @@ void UTargetActorTransformWidget::RenderWidget()
 						BBC->SetScreenSize(screenSize);
 					}
 				}
-				else
-				{
-					// Billboard Size (Is Screen Size Scaled가 false일 때)
-					float billboardWidth = BBC->GetBillboardWidth();
-					float billboardHeight = BBC->GetBillboardHeight();
-					
-					if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
-					{
-						BBC->SetBillboardSize(billboardWidth, billboardHeight);
-					}
-					
-					if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
-					{
-						BBC->SetBillboardSize(billboardWidth, billboardHeight);
-					}
-				}
+				//else
+				//{
+				//	// Billboard Size (Is Screen Size Scaled가 false일 때)
+				//	float billboardWidth = BBC->GetBillboardWidth();
+				//	float billboardHeight = BBC->GetBillboardHeight();
+				//	
+				//	if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
+				//	{
+				//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
+				//	}
+				//	
+				//	if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
+				//	{
+				//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
+				//	}
+				//}
 				
 				ImGui::Spacing();
 				
