@@ -17,7 +17,7 @@ private:
     float FogCutoffDistance = 1000.0f;
     float FogMaxOpacity = 0.0f;
 
-    FLinearColor FogInscatteringColor;
+    FLinearColor FogInscatteringColor{ 0.5,0.5,0.5,1.0 };
 };
 
     

@@ -5,7 +5,6 @@ cbuffer ViewProjBuffer : register(b1)
 }
 cbuffer InvWorldBuffer : register(b3)
 {
-    row_major float4x4 WorldMatrix;
     row_major float4x4 ViewProjMatrixInverse;
 }
 
@@ -34,6 +33,7 @@ SamplerState Sampler : register(s0);
 struct PS_INPUT
 {
     float4 Position : SV_Position;
+    float2 UV : UV;
 };
 
 struct PS_OUTPUT
@@ -45,14 +45,9 @@ PS_INPUT mainVS(uint Input : SV_VertexID)
 {
     PS_INPUT Output;
 
-    float2 VertexList[3] =
-    {
-        float2(-1.0f, -1.0f),
-        float2(3.0f, -1.0f),
-        float2(-1.0f, 3.0f),
-    };
-    Output.Position = float4(VertexList[Input], 1.0f);
+    Output.UV = float2((Input << 1) & 2, Input & 2);
 
+    Output.Position = float4(Output.UV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
     
     return Output;
 }
@@ -91,7 +86,6 @@ PS_OUTPUT mainPS(PS_INPUT Input)
     //실제 포그 밀도에 DistanceFactor 곱해서 clamp
     float FogFactor = (1.0f - FogTransparency) * DistanceFactor;
     Output.Color = FogFactor * FogInscatteringColor + (1.0f - FogFactor) * OriginalColor;
- 
     
     return Output;
 }

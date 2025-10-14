@@ -352,6 +352,8 @@ void URenderer::EndFrame()
         AvgStats.ShaderChanges
     );
     
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
     RHIDevice->Present();
 }
 
@@ -401,7 +403,7 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
 
     RenderFogPass(World, Camera, Viewport);
 
-    FXAA.Render(this);
+   // FXAA.Render(this);
 
     RenderEditorPass(World, Camera, Viewport);
     // 4. Overlay (UI, debug visualization)
@@ -418,14 +420,26 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
 
 void URenderer::RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
+    // 뷰포트의 실제 크기로 aspect ratio 계산
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0)
+    {
+        ViewportAspectRatio = 1.0f;
+    }
+
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+
     if (!World->IsPIEWorld())
     {
-        
-        RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
+        RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+        RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
+        RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID | ERenderTargetType::NoDepth);
         for (auto& Billboard : World->GetLevel()->GetComponentList<UBillboardComponent>())
         {
-            Billboard->Render(this, Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Viewport->GetShowFlags());
+            Billboard->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
         }
+       
    
         if (AGizmoActor* Gizmo = World->GetGizmoActor())
         {
@@ -557,7 +571,7 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
     EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
     // 빌보드는 마지막에 렌더링
-    /*for (auto& Billboard : BillboardComponentList)
+   /* for (auto& Billboard : World->GetLevel()->GetComponentList<UBillboardComponent>())
     {
         Billboard->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
     }*/
@@ -657,7 +671,7 @@ void URenderer::RenderPostProcessing(UShader* Shader)
 {
     OMSetBlendState(false);
     OMSetDepthStencilState(EComparisonFunc::Disable);
-    UINT Stride = sizeof(FVertexUV);
+    /*UINT Stride = sizeof(FVertexUV);
     UINT Offset = 0;
     UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>("ScreenQuad");
     ID3D11Buffer* VertexBuffer = StaticMesh->GetVertexBuffer();
@@ -666,26 +680,34 @@ void URenderer::RenderPostProcessing(UShader* Shader)
         0, 1, &VertexBuffer, &Stride, &Offset
     );
 
-    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
+    RHIDevice->GetDeviceContext()->IASetIndexBuffer(s
         IndexBuffer, DXGI_FORMAT_R32_UINT, 0
-    );
-    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    );*/
+    ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
+    DeviceContext->IASetInputLayout(nullptr);
+    DeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+    DeviceContext->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
+    DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     RHIDevice->PSSetDefaultSampler(0);
 
     //FrameBuffer -> TemporalBuffer
     PrepareShader(UResourceManager::GetInstance().Load<UShader>("Copy.hlsl"));
     RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
     RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Frame);
     RHIDevice->OMSetRenderTargets(ERenderTargetType::Temporal);
-    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+   // RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+    RHIDevice->GetDeviceContext()->Draw(6, 0);
 
     //TemporalBuffer ->FrameBuffer
     PrepareShader(Shader);
     RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
-    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Temporal);
-    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
-    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
     RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Temporal | ERenderTargetType::Depth);
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::NoDepth);
+   // RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+    RHIDevice->GetDeviceContext()->Draw(6, 0);
 
 }
 

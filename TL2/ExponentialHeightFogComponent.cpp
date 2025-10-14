@@ -6,7 +6,7 @@ void UExponentialHeightFogComponent::Render(URenderer* Renderer, const FMatrix& 
 {
 
 	//상수버퍼 업데이트
-	Renderer->UpdateCBuffer(FHeightFogBufferType(
+	Renderer->UpdateSetCBuffer(FHeightFogBufferType(
 		FogInscatteringColor,
 		FogDensity,
 		FogHeightFalloff,
@@ -16,10 +16,10 @@ void UExponentialHeightFogComponent::Render(URenderer* Renderer, const FMatrix& 
 		this->GetWorldLocation().Z));
 
 	FMatrix ViewProj = View * Projection;
-	Renderer->UpdateCBuffer(ViewProjBufferType(View, Projection));
-	Renderer->UpdateCBuffer(FViewProjectionInverse(ViewProj.Inverse()));
+	Renderer->UpdateSetCBuffer(ViewProjBufferType(View, Projection));
+	Renderer->UpdateSetCBuffer(FViewProjectionInverse(ViewProj.Inverse()));
 	
-	Renderer->UpdateCBuffer(ViewportBufferType(FVector4(
+	Renderer->UpdateSetCBuffer(ViewportBufferType(FVector4(
 	Viewport->GetStartX(),
 	Viewport->GetStartY(),
 	Viewport->GetSizeX(),
