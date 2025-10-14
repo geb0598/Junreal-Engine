@@ -81,7 +81,11 @@ void UEditorEngine::Render()
 
             if (WorldContexts[i].WorldType == EWorldType::Editor)
             {
-                World->Render();
+                // Renderer가 렌더링을 직접 담당 (World는 데이터만 제공)
+                if (URenderer* Renderer = World->GetRenderer())
+                {
+                    Renderer->RenderFrame(World);
+                }
             }
         }
     }
