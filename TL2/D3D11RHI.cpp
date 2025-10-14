@@ -61,6 +61,7 @@ void D3D11RHI::Release()
     ReleaseTexture(&IdBuffer, &IdBufferRTV, nullptr);
     ReleaseTexture(&IdStagingBuffer, nullptr, nullptr);
     ReleaseTexture(&FrameBuffer, &FrameRTV, &FrameSRV);
+    ReleaseTexture(&TemporalBuffer, &TemporalRTV, &TemporalSRV);
     ReleaseDepthStencilView(&DepthStencilView, &DepthSRV);
 
     ReleaseBlendState();
