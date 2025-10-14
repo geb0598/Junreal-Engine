@@ -1,4 +1,4 @@
-#include "PostProcessing.hlsli"
+#include "PostProcessingVS.hlsl"
 
 float3 Lumaniance = { 0.299f, 0.587f, 0.114 };
 float ContrastThreshold = 0.0312f;
