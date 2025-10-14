@@ -569,6 +569,23 @@ void URenderer::RenderPostProcessing(UShader* Shader)
 {
     OMSetBlendState(false);
     OMSetDepthStencilState(EComparisonFunc::Disable);
+    PrepareShader(Shader);
+    UINT Stride = sizeof(FVertexUV);
+    UINT Offset = 0;
+    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>("ScreenQuad");
+    ID3D11Buffer* VertexBuffer = StaticMesh->GetVertexBuffer();
+    ID3D11Buffer* IndexBuffer = StaticMesh->GetIndexBuffer();
+    RHIDevice->GetDeviceContext()->IASetVertexBuffers(
+        0, 1, &VertexBuffer, &Stride, &Offset
+    );
+
+    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
+        IndexBuffer, DXGI_FORMAT_R32_UINT, 0
+    );
+    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    RHIDevice->PSSetDefaultSampler(0);
+
+    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
 
     
 }

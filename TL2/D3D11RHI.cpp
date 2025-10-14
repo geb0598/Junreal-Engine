@@ -66,7 +66,7 @@ void D3D11RHI::Release()
 void D3D11RHI::ClearBackBuffer()
 {
     float ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
-    DeviceContext->ClearRenderTargetView(RenderTargetView, ClearColor);
+    DeviceContext->ClearRenderTargetView(FrameRTV, ClearColor);
     float IDColor[4] = { 0.0f,0.0f,0.0f,0.0f };
     DeviceContext->ClearRenderTargetView(IdBufferRTV, IDColor);
 }
@@ -275,7 +275,7 @@ void D3D11RHI::RSSetViewport()
 
 void D3D11RHI::OMSetRenderTargets()
 {
-    ID3D11RenderTargetView* RTVList[]{ RenderTargetView, IdBufferRTV };
+    ID3D11RenderTargetView* RTVList[]{ FrameRTV, IdBufferRTV };
 
     DeviceContext->OMSetRenderTargets(2, RTVList, DepthStencilView);
 }
@@ -343,7 +343,12 @@ void D3D11RHI::CreateFrameBuffer()
     framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
     framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
-    Device->CreateRenderTargetView(FrameBuffer, &framebufferRTVdesc, &RenderTargetView);
+    Device->CreateRenderTargetView(FrameBuffer, &framebufferRTVdesc, &FrameRTV);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    Device->CreateShaderResourceView(FrameBuffer, &SRVDesc, &FrameSRV);
 
     // =====================================
     // 깊이/스텐실 버퍼 생성
@@ -487,10 +492,10 @@ void D3D11RHI::ReleaseFrameBuffer()
         FrameBuffer->Release();
         FrameBuffer = nullptr;
     }
-    if (RenderTargetView)
+    if (FrameRTV)
     {
-        RenderTargetView->Release();
-        RenderTargetView = nullptr;
+        FrameRTV->Release();
+        FrameRTV = nullptr;
     }
 
     if (DepthSRV)
@@ -567,35 +572,11 @@ void D3D11RHI::OmSetDepthStencilState(EComparisonFunc Func)
         DeviceContext->OMSetDepthStencilState(DepthStencilStateDisable, 0);
     }
 }
-
-void D3D11RHI::CreateShader(ID3D11InputLayout** SimpleInputLayout, ID3D11VertexShader** SimpleVertexShader, ID3D11PixelShader** SimplePixelShader)
-{
-    ID3DBlob* vertexshaderCSO;
-    ID3DBlob* pixelshaderCSO;
-
-    D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
-
-    Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, SimpleVertexShader);
-
-    D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
-
-    Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, SimplePixelShader);
-
-    D3D11_INPUT_ELEMENT_DESC layout[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-
-    Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), SimpleInputLayout);
-
-    vertexshaderCSO->Release();
-    pixelshaderCSO->Release();
-}
 void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
 {
     // 기존 바인딩 해제 후 뷰 해제
-    if (RenderTargetView) { DeviceContext->OMSetRenderTargets(0, nullptr, nullptr); RenderTargetView->Release(); RenderTargetView = nullptr; }
+    if (FrameRTV) { DeviceContext->OMSetRenderTargets(0, nullptr, nullptr); FrameRTV->Release(); FrameRTV = nullptr; }
+    if (FrameSRV) { FrameSRV->Release(); FrameSRV = nullptr; }
     if (DepthStencilView) { DepthStencilView->Release(); DepthStencilView = nullptr; }
 
     // 1) 백버퍼에서 RTV 생성
@@ -609,12 +590,17 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
     D3D11_RENDER_TARGET_VIEW_DESC framebufferRTVdesc = {};
     framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
     framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-    hr = Device->CreateRenderTargetView(backBuffer, &framebufferRTVdesc, &RenderTargetView);
-    backBuffer->Release();
-    if (FAILED(hr) || !RenderTargetView) {
+    hr = Device->CreateRenderTargetView(backBuffer, &framebufferRTVdesc, &FrameRTV);
+    if (FAILED(hr) || !FrameRTV) {
         UE_LOG("CreateRenderTargetView failed.\n");
         return;
     }
+    D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    hr = Device->CreateShaderResourceView(backBuffer, &SRVDesc, &FrameSRV);
+    backBuffer->Release();
+
 
     // 2) DepthStencil 텍스처/뷰 생성
     ID3D11Texture2D* depthTex = nullptr;
@@ -648,7 +634,7 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
     }
 
     // 3) OM 바인딩
-    DeviceContext->OMSetRenderTargets(1, &RenderTargetView, DepthStencilView);
+    DeviceContext->OMSetRenderTargets(1, &FrameRTV, DepthStencilView);
 
     // 4) 뷰포트 갱신
     SetViewport(width, height);
@@ -691,7 +677,8 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
     }
     ReleaseIdBuffer();
     // 기존 뷰 해제
-    if (RenderTargetView) { RenderTargetView->Release(); RenderTargetView = nullptr; }
+    if (FrameRTV) { FrameRTV->Release(); FrameRTV = nullptr; }
+    if (FrameSRV) { FrameSRV->Release(); FrameSRV = nullptr; }
     if (DepthStencilView) { DepthStencilView->Release(); DepthStencilView = nullptr; }
     if (FrameBuffer) { FrameBuffer->Release(); FrameBuffer = nullptr; }
 

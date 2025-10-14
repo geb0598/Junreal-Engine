@@ -85,8 +85,6 @@ public:
     void Present() override;
 	void PSSetDefaultSampler(UINT StartSlot) override;
 
-    void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) override;
-
     void CreateBackBufferAndDepthStencil(UINT width, UINT height);
 
     void SetViewport(UINT width, UINT height);
@@ -183,6 +181,8 @@ private:
  
 	void OmSetDepthStencilState(EComparisonFunc Func) override;
     
+    
+
 private:
     //24
     D3D11_VIEWPORT ViewportInfo{};
@@ -210,14 +210,17 @@ private:
     ID3D11BlendState* BlendStateTransparent{};
 
     ID3D11Texture2D* FrameBuffer{};//
+    ID3D11Texture2D* TemporalBuffer{};
     ID3D11Texture2D* IdBuffer = nullptr;
     ID3D11Texture2D* IdStagingBuffer = nullptr;
 
     ID3D11RenderTargetView* IdBufferRTV = nullptr;
-    ID3D11RenderTargetView* RenderTargetView{};//
+    ID3D11RenderTargetView* FrameRTV{};//
 
     ID3D11DepthStencilView* DepthStencilView{};//
     ID3D11ShaderResourceView* DepthSRV{}; // Depth buffer를 셰이더에서 읽기 위한 SRV
+    ID3D11ShaderResourceView* FrameSRV{};
+
 
 
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER)

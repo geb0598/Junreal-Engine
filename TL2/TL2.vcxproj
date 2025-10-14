@@ -267,7 +267,6 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="RHIDevice.cpp" />
     <ClCompile Include="SControlPanel.cpp" />
     <ClCompile Include="SDetailsWindow.cpp" />
     <ClCompile Include="ShapeComponent.cpp" />
