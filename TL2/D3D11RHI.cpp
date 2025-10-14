@@ -262,12 +262,74 @@ void D3D11RHI::RSSetViewport()
     DeviceContext->RSSetViewports(1, &ViewportInfo);
 }
 
-void D3D11RHI::OMSetRenderTargets()
+//수정 필요
+//postprocessing 이 RenderTarget을 직접 참조하고 원하는 렌더타겟을 설정 할 수 있어야 하나,
+//지금 발제는 처리가능하기에 일단 이대로 둠
+void D3D11RHI::OMSetRenderTargets(const ERenderTargetType RenderTargetType)
 {
-    ID3D11RenderTargetView* RTVList[]{ FrameRTV, IdBufferRTV };
+    TArray< ID3D11RenderTargetView*> RTVList;
+    if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
+    {
+        RTVList.Push(FrameRTV);
+    }
+    if (((int)RenderTargetType & (int)ERenderTargetType::ID) > 0)
+    {
+        RTVList.Push(IdBufferRTV);
+    }
+    if (((int)RenderTargetType & (int)ERenderTargetType::Temporal) > 0)
+    {
+        RTVList.Push(TemporalRTV);
+    }
 
-    DeviceContext->OMSetRenderTargets(2, RTVList, DepthStencilView);
+    DeviceContext->OMSetRenderTargets(RTVList.size(), RTVList.data(), DepthStencilView);
 }
+
+//수정 필요
+void D3D11RHI::PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType)
+{
+    D3D11_TEXTURE2D_DESC desc{};
+    FrameBuffer->GetDesc(&desc);
+    D3D11_TEXTURE2D_DESC desc2{};
+    TemporalBuffer->GetDesc(&desc2);
+    TArray< ID3D11ShaderResourceView*> SRVList;
+    D3D11_VIEWPORT ViewPorts;
+    UINT count = 0;
+
+    /*D3D11_VIEWPORT ViewPort;
+    ViewPort.TopLeftX = 0;
+    ViewPort.TopLeftY = 0;
+    ViewPort.Width = desc.Width * 0.5f;
+    ViewPort.Height = desc.Height;
+    ViewPort.MinDepth = 0;
+    ViewPort.MaxDepth = 1;
+    
+   DeviceContext->RSSetViewports(1, &ViewPort);*/
+    if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
+    {
+        SRVList = { FrameSRV };
+    }
+    if (((int)RenderTargetType & (int)ERenderTargetType::Temporal) > 0)
+    {
+        SRVList = { TemporalSRV };
+    }
+    DeviceContext->PSSetShaderResources(0, SRVList.size(), SRVList.data());
+}
+
+void D3D11RHI::CreateVertexBuffer(ID3D11Device* device, const TArray<FVertexUV> Vertices, ID3D11Buffer** outBuffer)
+{ 
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_DEFAULT;             // GPU에서만 읽고, CPU는 접근하지 않음
+    desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;    // 버텍스 버퍼로 사용
+    desc.ByteWidth = sizeof(FVertexUV) * Vertices.size();// 전체 버퍼 크기
+    desc.CPUAccessFlags = 0;                      // CPU 접근 불가
+    desc.MiscFlags = 0;                           // 기타 옵션 없음
+    desc.StructureByteStride = 0;                 // StructuredBuffer가 아니므로 0
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = Vertices.data();
+    device->CreateBuffer(&desc, &initData, outBuffer);
+}
+
 
 void D3D11RHI::OMSetBlendState(bool bIsBlendMode)
 {

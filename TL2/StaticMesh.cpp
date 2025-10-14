@@ -104,9 +104,12 @@ void UStaticMesh::BuildMeshBVH()
 
 void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
 {
-    HRESULT hr;
-    hr = D3D11RHI::CreateVertexBuffer<FVertexDynamic>(InDevice, *InMeshData, &VertexBuffer);
-    assert(SUCCEEDED(hr));
+    TArray<FVertexUV> Vertices;
+    for (int i = 0; i < InMeshData->Vertices.size(); i++)
+    {
+        Vertices.Push(FVertexUV(InMeshData->Vertices[i], InMeshData->UV[i]));
+    }
+    D3D11RHI::CreateVertexBuffer(InDevice, Vertices, &VertexBuffer);
 }
 
 void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice)
