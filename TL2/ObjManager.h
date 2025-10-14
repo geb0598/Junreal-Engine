@@ -109,9 +109,9 @@ public:
                 wss >> nx >> ny >> nz;
 
                 if (bIsRHCoordSys)
-                    OutObjInfo->Normals.push_back(FVector(nx, -ny, nz));
+                    OutObjInfo->Normals.push_back(FVector(nz, -ny, nx));
                 else
-                    OutObjInfo->Normals.push_back(FVector(nx, ny, nz));
+                    OutObjInfo->Normals.push_back(FVector(nz, ny, nx));
 
                 bHasNormal = true;
             }

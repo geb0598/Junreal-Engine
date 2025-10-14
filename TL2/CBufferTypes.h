@@ -77,6 +77,7 @@ struct ModelBufferType
     FMatrix Model;
     uint32 UUID = 0;
     FVector Padding;
+    FMatrix NormalMatrix; // Inverse transpose of Model matrix for proper normal transformation
 };
 
 //VS : b1

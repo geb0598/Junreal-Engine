@@ -3,6 +3,7 @@ cbuffer ModelBuffer : register(b0)
     row_major float4x4 WorldMatrix;
     uint UUID;
     float3 Padding;
+    row_major float4x4 NormalMatrix;
 }
 
 cbuffer ViewProjBuffer : register(b1)
@@ -128,8 +129,9 @@ PS_INPUT mainVS(VS_INPUT input)
     float4 worldPos = mul(float4(input.position, 1.0f), WorldMatrix);
     output.worldPosition = worldPos.xyz;
 
-    // 노멀 변환 (정규화)
-    output.worldNormal = normalize(mul(input.normal, (float3x3) WorldMatrix));
+    // 노멀 변환 (inverse transpose matrix 사용)
+    // Non-uniform scale에 대응하기 위해 월드 매트릭스의 inverse transpose를 사용
+    output.worldNormal = normalize(mul(input.normal, (float3x3)NormalMatrix));
     
     float4x4 MVP = mul(mul(WorldMatrix, ViewMatrix), ProjectionMatrix);
     
@@ -192,7 +194,7 @@ PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
 
     float3 finalLit = baseColor.rgb * (lightAccum + ambient);
 
-    Result.Color = float4(finalLit.rgb, 1.0f);
+    Result.Color = float4(input.worldNormal.rgb, 1.0f);
     Result.UUID = input.UUID;
     return Result;
 }
