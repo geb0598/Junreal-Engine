@@ -161,13 +161,13 @@ private:
         Device->CreateBuffer(&CBufferDesc, nullptr, CBuffer);
     }
 
-    void CreateScreenTexture(ID3D11Texture2D** Texture);
+    void CreateScreenTexture(ID3D11Texture2D** Texture, DXGI_FORMAT Format = DXGI_FORMAT_B8G8R8A8_UNORM);
     void CreateTexture2D(D3D11_TEXTURE2D_DESC& Desc, ID3D11Texture2D** Texture);
     void CreateDepthStencilView(ID3D11DepthStencilView** DSV, ID3D11ShaderResourceView** SRV);
-    void CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV);
-    void CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV);
-    void CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV, D3D11_SHADER_RESOURCE_VIEW_DESC& Desc);
-    void CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV, D3D11_RENDER_TARGET_VIEW_DESC& Desc);
+    void CreateSRV(ID3D11Texture2D* Resource, ID3D11ShaderResourceView** SRV);
+    void CreateRTV(ID3D11Texture2D* Resource, ID3D11RenderTargetView** RTV);
+    void CreateSRV(ID3D11Texture2D* Resource, ID3D11ShaderResourceView** SRV, D3D11_SHADER_RESOURCE_VIEW_DESC& Desc);
+    void CreateRTV(ID3D11Texture2D* Resource, ID3D11RenderTargetView** RTV, D3D11_RENDER_TARGET_VIEW_DESC& Desc);
 
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다
     void CreateFrameBuffer() override;
@@ -182,8 +182,8 @@ private:
     void ReleaseBlendState();
     void ReleaseRasterizerState(); // rs
     void ReleaseDeviceAndSwapChain();
-    void ReleaseTexture(ID3D11Texture2D* Texture, ID3D11RenderTargetView* RTV, ID3D11ShaderResourceView* SRV);
-    void ReleaseDepthStencilView(ID3D11DepthStencilView* DSV,  ID3D11ShaderResourceView* SRV);
+    void ReleaseTexture(ID3D11Texture2D** Texture, ID3D11RenderTargetView** RTV, ID3D11ShaderResourceView** SRV);
+    void ReleaseDepthStencilView(ID3D11DepthStencilView** DSV,  ID3D11ShaderResourceView** SRV);
  
 	void OmSetDepthStencilState(EComparisonFunc Func) override;
     
