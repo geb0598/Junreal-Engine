@@ -582,6 +582,11 @@ void URenderer::RenderEngineActors(const TArray<AActor*>& EngineActors, const FM
 void URenderer::RenderFogPass()
 {
     // TODO: 화면 전체 Fog 효과 구현
+    //뎊스를 받고 후처리 진행
+    //OffsceenColor
+
+    //넘겨서 -> 진행해주기 
+
 }
 
 void URenderer::RenderFireBallPass(UWorld* World)

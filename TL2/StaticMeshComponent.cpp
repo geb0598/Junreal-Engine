@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include "ResourceManager.h"
 #include "ObjManager.h"
+#include"CameraActor.h"
 #include "SceneLoader.h"
 
 UStaticMeshComponent::UStaticMeshComponent()
@@ -46,7 +47,7 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
         ModelBuffer.NormalMatrix = NormalMatrix;
 
         Renderer->UpdateSetCBuffer(ModelBuffer);
-        Renderer->UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
+        Renderer->UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix,GEngine->GetActiveWorld()->GetCameraActor()->GetActorLocation()));
         Renderer->PrepareShader(GetMaterial()->GetShader());
         Renderer->DrawIndexedPrimitiveComponent(GetStaticMesh(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, MaterailSlots);
     }

@@ -85,6 +85,9 @@ struct ViewProjBufferType
 {
     FMatrix View;
     FMatrix Proj;
+
+    FVector CameraWorldPos; // ★ 추가
+    float  _pad_cam;       // 16바이트 정렬용 패딩
 };
 
 //VS : b2
