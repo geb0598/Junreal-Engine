@@ -221,15 +221,10 @@ const FOBB UDecalComponent::GetWorldOBB() const
     SizeApplied.Min = SizeApplied.Min * DecalSize;
     return FOBB(SizeApplied, GetWorldTransform());
 }
-const FAABB UDecalComponent::GetWorldAABB() const
+
+const TArray<FVector> UDecalComponent::GetBoundingBoxLines() const
 {
-    FOBB WorldOBB = GetWorldOBB();
-    TArray<FVector> OBBVertices;
-    for (int i = 0; i < 8; i++)
-    {
-        OBBVertices.Add(WorldOBB.GetVertex(i));
-    }
-    return FAABB(OBBVertices);
+    return GetWorldOBB().GetWireLine();
 }
 
 UObject* UDecalComponent::Duplicate()
