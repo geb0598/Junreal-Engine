@@ -58,9 +58,10 @@ CBUFFER_INFO(ColorBufferType, 3, false, true)
 CBUFFER_INFO(UVScrollCB, 5, false, true)
 CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
-CBUFFER_INFO(FPointLightBufferType, 6, false, true)
+
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
 CBUFFER_INFO(HeightFogBufferType, 8, false, true)
+CBUFFER_INFO(FPointLightBufferType, 9, false, true)
 
 
 //Create 
