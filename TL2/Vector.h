@@ -833,15 +833,20 @@ struct FTransform
     FTransform(const FVector& T, const FQuat& R, const FVector& S) : Rotation(R), Translation(T), Scale3D(S) {}
 
     FMatrix ToMatrixWithScaleLocalXYZ() const;
-    // 합성 (this * Other)
-    //FTransform operator*(const FTransform& Other) const;
-    // FTransform 합성 (this * Other)
+
+    // 자식로컬 : cl
+    // 자식월드 : cw
+    // 부모월드 : pw
+    // 부모월드 inverse : pwi
+    //Quat1 * Quat2 = Quat2로 회전 후 Quat1로 회전
+
+    //Other = 자식 로컬, this = 부모 월드
     FTransform GetWorldTransform(const FTransform& Other) const
     {
         FTransform Result;
-        //Quat1 * Quat2 = Quat2로 회전 후 Quat1로 회전
-        //Other = 자식 로컬, this = 부모 월드
-        // 회전 결합
+
+        //Rcw = Rpw * Rcl
+        //자식로컬 회전 후 부모월드 회전 = 자식월드 회전
         Result.Rotation = Rotation * Other.Rotation;
         Result.Rotation.Normalize();
 
@@ -852,22 +857,22 @@ struct FTransform
             Scale3D.Z * Other.Scale3D.Z
         );
 
-        // 위치 결합: R*(S*Other.T) + T
-        FVector Scaled(Other.Translation.X * Scale3D.X,
-            Other.Translation.Y * Scale3D.Y,
-            Other.Translation.Z * Scale3D.Z);
+
+        // Tcw = Tcl * Spw * Rpw + Tpw
+        FVector Scaled(Other.Translation * Scale3D);
         FVector Rotated = Rotation.RotateVector(Scaled);
         Result.Translation = Translation + Rotated;
 
         return Result;
     }
-    // FTransform 합성 (this * Other)
+
+    //this = InverseParent, Other = ChildWorld
     FTransform GetRelativeTransform(const FTransform& Other) const
     {
         FTransform Result;
-        //Quat1 * Quat2 = Quat2로 회전 후 Quat1로 회전
-        //this = InverseParent, Other = ChildWorld
-        // 회전 결합
+        
+        //Rcl = Rcwi * Rcw
+        //자식월드회전 후 부모역회전 = 자식로컬회전
         Result.Rotation = Rotation * Other.Rotation;
         Result.Rotation.Normalize();
 
@@ -878,14 +883,12 @@ struct FTransform
             Scale3D.Z * Other.Scale3D.Z
         );
 
-        // 위치 결합: R*(S*Other.T) + T
-        FVector Scaled(Other.Translation.X,
-            Other.Translation.Y,
-            Other.Translation.Z);
-        FVector Rotated = Rotation.RotateVector(Scaled);
-        Rotated.X *= Scale3D.X;
-        Rotated.Y *= Scale3D.Y;
-        Rotated.Z *= Scale3D.Z;
+        //Tcw = Tcl * Spw * Rpw + Tpw
+        //(Tcw - Tpw) * Rpwi * Spwi = Tcl (위 식을 전개한 식)
+        //Tpwi = -Tpw * Rpwi * Spwi (FTransform 의 Inverse 에 이렇게 정의되어 있음)
+        //Tcw * Rpwi * Spwi + Tpwi = Tcl
+        FVector Rotated = Rotation.RotateVector(Other.Translation);
+        FVector Scaled(Rotated * Scale3D);
         Result.Translation = Translation + Rotated;
 
         return Result;
