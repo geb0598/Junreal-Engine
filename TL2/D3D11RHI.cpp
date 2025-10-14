@@ -295,15 +295,15 @@ void D3D11RHI::PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType)
     D3D11_VIEWPORT ViewPorts;
     UINT count = 0;
 
-    //D3D11_VIEWPORT ViewPort;
-    //ViewPort.TopLeftX = 0;
-    //ViewPort.TopLeftY = 0;
-    //ViewPort.Width = desc.Width;
-    //ViewPort.Height = desc.Height;
-    //ViewPort.MinDepth = 0;
-    //ViewPort.MaxDepth = 1;
+    /*D3D11_VIEWPORT ViewPort;
+    ViewPort.TopLeftX = 0;
+    ViewPort.TopLeftY = 0;
+    ViewPort.Width = desc.Width * 0.5f;
+    ViewPort.Height = desc.Height;
+    ViewPort.MinDepth = 0;
+    ViewPort.MaxDepth = 1;
     
- /*   DeviceContext->RSSetViewports(1, &ViewPort);*/
+   DeviceContext->RSSetViewports(1, &ViewPort);*/
     if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
     {
         SRVList = { FrameSRV };

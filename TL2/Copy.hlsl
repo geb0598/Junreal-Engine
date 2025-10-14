@@ -26,7 +26,12 @@ PS_Input mainVS(VS_Input i)
 
 float4 mainPS(PS_Input i) : SV_TARGET
 {
-    return float4(1,0,0,1);
+    uint TexWidth, TexHeight, MipCount = 0;
+    FrameColor.GetDimensions(0, TexWidth, TexHeight, MipCount);
+    float2 TexSizeRCP = float2(1 / (float) TexWidth, 1 / (float) TexHeight);
+    float3 Color = FrameColor.Sample(LinearSampler, float2(i.posCS.x / TexWidth, i.posCS.y / TexHeight)).rgb;
+
+    return float4(Color, 1);
 }
 
 

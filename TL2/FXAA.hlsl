@@ -45,7 +45,7 @@ float4 mainPS(PS_Input i) : SV_TARGET
     FrameColor.GetDimensions(0, TexWidth, TexHeight, MipCount);
     float2 TexSizeRCP = float2(1 / (float) TexWidth, 1 / (float) TexHeight);
     
-    float3 Color = FrameColor.Sample(LinearSampler, i.uv).rgb;
+    float3 Color = FrameColor.Sample(LinearSampler, float2(i.posCS.x / TexWidth, i.posCS.y / TexHeight)).rgb;
     
     //NearPixel Sample
     float M = dot(Color, Lumaniance);

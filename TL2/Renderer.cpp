@@ -110,18 +110,7 @@ void URenderer::RenderFrame(UWorld* World)
     BeginFrame();
     UUIManager::GetInstance().Render();
 
-    // 렌더 패스 구조:
-    RenderFireBallPass(World);
-    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
-    RenderBasePass(World);
-
-    // 2. Post-processing passes
-    RenderFogPass();
-
-    FXAA.Render(this);
-
-    // 4. Overlay (UI, debug visualization)
-    RenderOverlayPass(World);
+    RenderViewPorts(World);
 
     UUIManager::GetInstance().EndFrame();
     EndFrame();
@@ -364,7 +353,7 @@ void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
     RHIDevice->OmSetDepthStencilState(Func);
 }
 
-void URenderer::RenderBasePass(UWorld* World)
+void URenderer::RenderViewPorts(UWorld* World) 
 {
     // 멀티 뷰포트 시스템을 통해 각 뷰포트별로 렌더링
     if (SMultiViewportWindow* MultiViewport = World->GetMultiViewportWindow())
@@ -373,12 +362,10 @@ void URenderer::RenderBasePass(UWorld* World)
     }
 }
 
-void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+
+void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-    if (!World || !Camera || !Viewport)
-    {
-        return;
-    }
+  
 
     // 뷰포트의 실제 크기로 aspect ratio 계산
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
@@ -401,6 +388,32 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
             Gizmo->Render(Camera, Viewport);
         }
     }
+
+}
+
+
+void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+{
+
+    // 렌더 패스 구조:
+    RenderFireBallPass(World);
+    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
+    // 2. Post-processing passes
+    RenderBasePass(World, Camera, Viewport);
+
+    RenderFogPass();
+
+    FXAA.Render(this);
+    // 4. Overlay (UI, debug visualization)
+    RenderOverlayPass(World);
+
+    
+    if (!World || !Camera || !Viewport)
+    {
+        return;
+    }
+
+  
 }
 
 void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
