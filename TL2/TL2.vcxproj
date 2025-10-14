@@ -178,6 +178,7 @@
     <ClCompile Include="EditorEngine.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="ExponentialHeightFog.cpp" />
+    <ClCompile Include="FireballComponent.cpp" />
     <ClCompile Include="FXAA.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -186,6 +187,7 @@
     <ClCompile Include="Info.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="MenuBarWidget.cpp" />
+    <ClCompile Include="MovementComponent.cpp" />
     <ClCompile Include="ObjManager.cpp" />
     <ClCompile Include="OBoundingBoxComponent.cpp" />
     <ClCompile Include="CameraActor.cpp" />
@@ -215,9 +217,11 @@
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
+    <ClCompile Include="ProjectileMovementComponent.cpp" />
     <ClCompile Include="RenderingStats.cpp" />
     <ClCompile Include="RenderViewportSwitcherWidget.cpp" />
     <ClCompile Include="ResourceBase.cpp" />
+    <ClCompile Include="RotationMovementComponent.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MeshLoader.cpp" />
@@ -411,6 +415,7 @@
     <ClInclude Include="EditorEngine.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="ExponentialHeightFog.h" />
+    <ClInclude Include="FireballComponent.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
     <ClInclude Include="FXAA.h" />
@@ -420,6 +425,7 @@
     <ClInclude Include="Level.h" />
     <ClInclude Include="LinearColor.h" />
     <ClInclude Include="MenuBarWidget.h" />
+    <ClInclude Include="MovementComponent.h" />
     <ClInclude Include="ObjManager.h" />
     <ClInclude Include="OBoundingBoxComponent.h" />
     <ClInclude Include="DynamicMesh.h" />
@@ -446,10 +452,12 @@
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PrimitiveComponent.h" />
+    <ClInclude Include="ProjectileMovementComponent.h" />
     <ClInclude Include="PropertyFlag.h" />
     <ClInclude Include="RenderingStats.h" />
     <ClInclude Include="RenderViewportSwitcherWidget.h" />
     <ClInclude Include="ResourceBase.h" />
+    <ClInclude Include="RotationMovementComponent.h" />
     <ClInclude Include="SceneComponent.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="MeshLoader.h" />
