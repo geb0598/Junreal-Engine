@@ -187,7 +187,7 @@ void UDecalComponent::Render(URenderer* Renderer, UPrimitiveComponent* Component
     ctx->PSSetShaderResources(0, 1, &nullSRV);
 
     // 원래 DSV/RTV 복원 (렌더러가 백버퍼/DSV 재바인딩)
-    Renderer->GetRHIDevice()->OMSetRenderTargets();
+    Renderer->GetRHIDevice()->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
 
     // 상태 복원
     Renderer->OMSetBlendState(false);
