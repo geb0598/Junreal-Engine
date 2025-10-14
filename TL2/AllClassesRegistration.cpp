@@ -50,6 +50,7 @@
 #include "DecalActor.h"
 #include "SpotLightActor.h"
 #include "ExponentialHeightFog.h"
+#include"FireballComponent.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -78,6 +79,7 @@ IMPLEMENT_CLASS(ULine)
 IMPLEMENT_CLASS(UTextRenderComponent)
 IMPLEMENT_CLASS(UBillboardComponent)
 IMPLEMENT_CLASS(UDecalComponent)
+IMPLEMENT_CLASS(UFireBallComponent)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)

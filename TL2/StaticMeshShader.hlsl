@@ -68,6 +68,30 @@ cbuffer PSScrollCB : register(b5)
     float  UVScrollTime;
     float  _pad_scrollcb;
 }
+#define MAX_PointLight 100
+cbuffer PointLightBuffer : register(b6)
+{
+    int PointLightCount;
+    float4 PointLightPos[MAX_PointLight];
+    float PointLightRadius[MAX_PointLight];
+    float4 PointLightColor[MAX_PointLight];
+    float PointLightIntensity[MAX_PointLight];
+    float PointLightFallOff[MAX_PointLight];
+    float3 _pad;
+}
+float3 ComputePointLights(float3 worldPos)
+{
+    float3 totalLight = 0;
+    for (int i = 0; i < PointLightCount; ++i)
+    {
+        float3 toLight = worldPos - PointLightPos[i].xyz;
+        float dist = length(toLight);
+        float atten = saturate(1.0 - dist / PointLightPos[i].w);
+        atten = pow(atten, PointLightFallOff[i]);
+        totalLight += PointLightColor[i].rgb * PointLightColor[i].a * atten;
+    }
+    return totalLight;
+}
 
 struct PS_INPUT
 {

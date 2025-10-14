@@ -13,7 +13,7 @@ class URenderer;
 class UPrimitiveComponent :public USceneComponent
 {
 public:
-    DECLARE_CLASS(UPrimitiveComponent, USceneComponent)
+    DECLARE_ABSTRACT_CLASS(UPrimitiveComponent, USceneComponent)
 
     UPrimitiveComponent() = default;
     virtual ~UPrimitiveComponent() = default;
