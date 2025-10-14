@@ -5,5 +5,5 @@
 
 void UFXAA::Render(URenderer* Renderer)
 {
-	
+	//Renderer->
 }

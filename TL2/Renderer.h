@@ -42,8 +42,6 @@ public:
 
 	void BeginFrame();
 
-    void PrepareShader(FShader& InShader);
-
     void PrepareShader(UShader* InShader);
 
     void OMSetBlendState(bool bIsChecked);

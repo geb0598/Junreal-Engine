@@ -58,13 +58,6 @@ void URenderer::BeginFrame()
     RHIDevice->OMSetRenderTargets();
 }
 
-void URenderer::PrepareShader(FShader& InShader)
-{
-    RHIDevice->GetDeviceContext()->VSSetShader(InShader.SimpleVertexShader, nullptr, 0);
-    RHIDevice->GetDeviceContext()->PSSetShader(InShader.SimplePixelShader, nullptr, 0);
-    RHIDevice->GetDeviceContext()->IASetInputLayout(InShader.SimpleInputLayout);
-}
-
 void URenderer::PrepareShader(UShader* InShader)
 {
     // 셰이더 변경 추적
@@ -123,7 +116,7 @@ void URenderer::RenderFrame(UWorld* World)
     // 2. Post-processing passes
     RenderFogPass();
     RenderFireBallPass(World);
-    RenderFXAA();
+
     // 3. Overlay (UI, debug visualization)
     RenderOverlayPass(World);
 

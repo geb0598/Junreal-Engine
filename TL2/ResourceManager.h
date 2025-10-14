@@ -15,14 +15,6 @@ class UResourceBase;
 class UStaticMesh;
 class UMaterial;
 
-struct FShaderDesc
-{
-    std::wstring Filename;
-    std::string EntryVS;
-    std::string EntryPS;
-    std::vector<D3D11_INPUT_ELEMENT_DESC> InputLayout;
-};
-
 class UResourceManager :public UObject
 {
 public:
@@ -95,9 +87,6 @@ protected:
 
     //Resource Type의 개수만큼 Array 생성 및 저장
     TArray<TMap<FString, UResourceBase*>> Resources;
-
-    FShader PrimitiveShader;
-    TMap<FWideString,FShader*> ShaderList;
 
     TMap<FString, TArray<D3D11_INPUT_ELEMENT_DESC>> ShaderToInputLayoutMap;
     TMap<FString, FString> TextureToShaderMap;

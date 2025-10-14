@@ -15,14 +15,12 @@ UStaticMesh::~UStaticMesh()
     ReleaseResources();
 }
 
-void UStaticMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
+void UStaticMesh::Load(const FString& InFilePath, ID3D11Device* InDevice)
 {
     assert(InDevice);
 
-    VertexType = InVertexType;
-
     StaticMeshAsset = FObjManager::LoadObjStaticMeshAsset(InFilePath);
-    CreateVertexBuffer(StaticMeshAsset, InDevice, InVertexType);
+    CreateVertexBuffer(StaticMeshAsset, InDevice);
     CreateIndexBuffer(StaticMeshAsset, InDevice);
     VertexCount = static_cast<uint32>(StaticMeshAsset->Vertices.size());
     IndexCount = static_cast<uint32>(StaticMeshAsset->Indices.size());
@@ -34,10 +32,8 @@ void UStaticMesh::Load(const FString& InFilePath, ID3D11Device* InDevice, EVerte
 #endif
 }
 
-void UStaticMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
+void UStaticMesh::Load(FMeshData* InData, ID3D11Device* InDevice)
 {
-    VertexType = InVertexType;
-
     if (VertexBuffer)
     {
         VertexBuffer->Release();
@@ -49,7 +45,7 @@ void UStaticMesh::Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutT
         IndexBuffer = nullptr;
     }
 
-    CreateVertexBuffer(InData, InDevice, InVertexType);
+    CreateVertexBuffer(InData, InDevice);
     CreateIndexBuffer(InData, InDevice);
 
     VertexCount = static_cast<uint32>(InData->Vertices.size());
@@ -106,14 +102,14 @@ void UStaticMesh::BuildMeshBVH()
     }
 }
 
-void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
+void UStaticMesh::CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice)
 {
     HRESULT hr;
     hr = D3D11RHI::CreateVertexBuffer<FVertexDynamic>(InDevice, *InMeshData, &VertexBuffer);
     assert(SUCCEEDED(hr));
 }
 
-void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice, EVertexLayoutType InVertexType)
+void UStaticMesh::CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice)
 {
     HRESULT hr;
     hr = D3D11RHI::CreateVertexBuffer<FVertexDynamic>(InDevice, InStaticMesh->Vertices, &VertexBuffer);
@@ -148,5 +144,8 @@ void UStaticMesh::ReleaseResources()
 
 void UStaticMesh::SetAABB()
 {
-    AABB.InitAABB(StaticMeshAsset->Vertices);
+    if (StaticMeshAsset) 
+    {
+        AABB.InitAABB(StaticMeshAsset->Vertices);
+    }
 }
