@@ -1,4 +1,27 @@
-#include "PostProcessingVS.hlsl"
+
+Texture2D FrameColor : register(t0);
+SamplerState LinearSampler : register(s0);
+
+
+struct VS_Input
+{
+    float3 posModel : POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+struct PS_Input
+{
+    float4 posCS : SV_Position;
+    float2 uv : TEXCOORD0;
+};
+
+PS_Input mainVS(VS_Input i)
+{
+    PS_Input o;
+    o.posCS = float4(i.posModel, 1);
+    o.uv = i.uv;
+    return o;
+}
 
 float3 Lumaniance = { 0.299f, 0.587f, 0.114 };
 float ContrastThreshold = 0.0312f;
@@ -12,7 +35,7 @@ float FXAAStrength = 1.0f;
 
 float GetFrameSample(float2 uv)
 {
-    return dot(FrameColor.Sample(PointSampler, uv).rgb, Lumaniance);
+    return dot(FrameColor.Sample(LinearSampler, uv).rgb, Lumaniance);
 }
 
 float4 mainPS(PS_Input i) : SV_TARGET
@@ -22,7 +45,7 @@ float4 mainPS(PS_Input i) : SV_TARGET
     FrameColor.GetDimensions(0, TexWidth, TexHeight, MipCount);
     float2 TexSizeRCP = float2(1 / (float) TexWidth, 1 / (float) TexHeight);
     
-    float3 Color = FrameColor.Sample(PointSampler, i.uv).rgb;
+    float3 Color = FrameColor.Sample(LinearSampler, i.uv).rgb;
     
     //NearPixel Sample
     float M = dot(Color, Lumaniance);
@@ -74,14 +97,10 @@ float4 mainPS(PS_Input i) : SV_TARGET
     //엣지가 끝나는지점과의 거리 측정
     float2 CurUV = i.uv;
     
-    
-    
-    
-    
     float2 BlendUV = i.uv + (bHorizontal ? float2(0, 1) : float2(1, 0)) * PixelUVStep * BlendFactor;
     float3 BlendColor = FrameColor.Sample(LinearSampler, BlendUV).rgb;
     
-    return float4(Color.rrr, 1);
+    return float4(Color.rgb, 1);
 }
 
 

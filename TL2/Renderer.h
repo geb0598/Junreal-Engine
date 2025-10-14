@@ -2,6 +2,7 @@
 #include "BillboardComponent.h"
 #include "RHIDevice.h"
 #include "LineDynamicMesh.h"
+#include "FXAA.h"
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
@@ -10,6 +11,7 @@ class URHIDevice;
 class UShader;
 class UStaticMesh;
 struct FMaterialSlot;
+
 
 //여긴 템플릿 써도 되는데 통일성을 위해 매크로로 적용
 #define DECLARE_CBUFFER_UPDATE_FUNC(TYPE)\
@@ -140,6 +142,8 @@ private:
     ID3D11Buffer* LastIndexBuffer = nullptr;
     D3D11_PRIMITIVE_TOPOLOGY LastPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     ID3D11ShaderResourceView* LastTextureSRV = nullptr;
+
+    UFXAA FXAA;
 
     void InitializeLineBatch();
     void ResetRenderStateTracking();

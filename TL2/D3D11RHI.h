@@ -68,6 +68,8 @@ public:
     static HRESULT CreateIndexBuffer(ID3D11Device* device, const FMeshData* meshData, ID3D11Buffer** outBuffer);
 
     static HRESULT CreateIndexBuffer(ID3D11Device* device, const FStaticMesh* mesh, ID3D11Buffer** outBuffer);
+    static void CreateVertexBuffer(ID3D11Device* device, const TArray<FVertexUV> Vertices, ID3D11Buffer** outBuffer);
+
 
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
         CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
@@ -80,12 +82,12 @@ public:
     void RSSetDefaultState() override;
     void RSSetDecalState() override;
     void RSSetViewport() override;
-    void OMSetRenderTargets() override;
+    void OMSetRenderTargets(const ERenderTargetType RenderTargetType) override;
+    void PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType) override;
+
     void OMSetBlendState(bool bIsBlendMode) override;
     void Present() override;
 	void PSSetDefaultSampler(UINT StartSlot) override;
-
-    void CreateBackBufferAndDepthStencil(UINT width, UINT height);
 
     void SetViewport(UINT width, UINT height);
 
@@ -186,7 +188,6 @@ private:
     void ReleaseDepthStencilView(ID3D11DepthStencilView** DSV,  ID3D11ShaderResourceView** SRV);
  
 	void OmSetDepthStencilState(EComparisonFunc Func) override;
-    
     
 
 private:

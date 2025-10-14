@@ -1,13 +1,17 @@
 
-//All Shader Common CBuffer
-cbuffer ModelBuffer : register(b0)
-{
-    row_major float4x4 WorldMatrix;
-}
+Texture2D FrameColor : register(t0);
+SamplerState LinearSampler : register(s0);
+SamplerState PointSampler : register(s1);
 
-cbuffer ViewProjBuffer : register(b1)
-{
-    row_major float4x4 ViewMatrix;
-    row_major float4x4 ProjectionMatrix;
-}
 
+struct VS_Input
+{
+    float3 posModel : POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+struct PS_Input
+{
+    float4 posCS : SV_Position;
+    float2 uv : TEXCOORD0;
+};
