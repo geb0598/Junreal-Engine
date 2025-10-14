@@ -100,9 +100,7 @@ public:
 	float GetTimeSeconds() const;
 
 	/** === 렌더 === */
-	void Render();
 	void RenderViewports(ACameraActor* Camera, FViewport* Viewport);
-	void RenderEngineActors(const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
 	//void GameRender(ACameraActor* Camera, FViewport* Viewport);
 
 	  /** === 필요한 엑터 게터 === */
@@ -132,7 +130,8 @@ public:
 
 	bool IsPIEWorld() const { return WorldType == EWorldType::PIE; }
 	void SetUseBVH(const bool InUseBVH) { bUseBVH = InUseBVH; }
-	bool GetUseBVH() { return bUseBVH; }
+	bool GetUseBVH() const { return bUseBVH; }
+	FBVH& GetBVH() { return BVH; }
 private:
 	// 싱글톤 매니저 참조
 	UResourceManager& ResourceManager;

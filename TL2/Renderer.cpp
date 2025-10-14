@@ -8,6 +8,16 @@
 #include "StaticMeshComponent.h"
 #include "RenderingStats.h"
 #include "UI/StatsOverlayD2D.h"
+#include "SMultiViewportWindow.h"
+#include "SelectionManager.h"
+#include "DecalComponent.h"
+#include "SpotLightComponent.h"
+#include "GridActor.h"
+#include "FViewport.h"
+#include "CameraActor.h"
+#include "Frustum.h"
+#include "BoundingVolume.h"
+#include "GizmoActor.h"
 
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -99,6 +109,29 @@ void URenderer::RSSetNoCullState()
 void URenderer::RSSetDefaultState()
 {
     RHIDevice->RSSetDefaultState();
+}
+
+void URenderer::RenderFrame(UWorld* World)
+{
+    BeginFrame();
+    UUIManager::GetInstance().Render();
+
+    // 렌더 패스 구조:
+    // 1. Depth Pre-pass (옵션)
+    RenderSceneDepthPass(World);
+
+    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
+    RenderBasePass(World);
+
+    // 3. Post-processing passes
+    RenderFogPass();
+    RenderFireBallPass(World);
+
+    // 4. Overlay (UI, debug visualization)
+    RenderOverlayPass(World);
+
+    UUIManager::GetInstance().EndFrame();
+    EndFrame();
 }
 
 void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots)
@@ -334,6 +367,230 @@ void URenderer::EndFrame()
 void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
 {
     RHIDevice->OmSetDepthStencilState(Func);
+}
+
+void URenderer::RenderSceneDepthPass(UWorld* World)
+{
+    // TODO: Early-Z 최적화를 위한 깊이 프리패스 구현
+}
+
+void URenderer::RenderBasePass(UWorld* World)
+{
+    // 멀티 뷰포트 시스템을 통해 각 뷰포트별로 렌더링
+    if (SMultiViewportWindow* MultiViewport = World->GetMultiViewportWindow())
+    {
+        MultiViewport->OnRender();
+    }
+}
+
+void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+{
+    if (!World || !Camera || !Viewport)
+    {
+        return;
+    }
+
+    // 뷰포트의 실제 크기로 aspect ratio 계산
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0)
+    {
+        ViewportAspectRatio = 1.0f;
+    }
+
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+
+    // 씬의 액터들을 렌더링
+    RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
+
+    // Gizmo 렌더링 (에디터 전용)
+    if (!World->IsPIEWorld())
+    {
+        if (AGizmoActor* Gizmo = World->GetGizmoActor())
+        {
+            Gizmo->Render(Camera, Viewport);
+        }
+    }
+}
+
+void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
+{
+    if (!World || !Viewport)
+    {
+        return;
+    }
+
+    FFrustum ViewFrustum;
+    ViewFrustum.Update(ViewMatrix * ProjectionMatrix);
+
+    BeginLineBatch();
+    SetViewModeType(ViewModeIndex);
+
+    const TArray<AActor*>& LevelActors = World->GetLevel() ? World->GetLevel()->GetActors() : TArray<AActor*>();
+    USelectionManager& SelectionManager = USelectionManager::GetInstance();
+
+    // 특수 처리가 필요한 컴포넌트들
+    TArray<UDecalComponent*> Decals;
+    TArray<UPrimitiveComponent*> RenderPrimitivesWithOutDecal;
+    TArray<UBillboardComponent*> BillboardComponentList;
+
+    if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
+    {
+        return;
+    }
+
+    // 액터별로 순회하며 렌더링
+    for (AActor* Actor : LevelActors)
+    {
+        if (!Actor || Actor->GetActorHiddenInGame())
+        {
+            continue;
+        }
+
+        bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+
+        for (UActorComponent* ActorComp : Actor->GetComponents())
+        {
+            if (!ActorComp)
+            {
+                continue;
+            }
+
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
+            {
+                // 바운딩 박스 그리기
+                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+                {
+                    AddLines(Primitive->GetBoundingBoxLines(), Primitive->GetBoundingBoxColor());
+                }
+
+                // 데칼 컴포넌트는 나중에 처리
+                if (UDecalComponent* Decal = Cast<UDecalComponent>(ActorComp))
+                {
+                    Decals.Add(Decal);
+                    continue;
+                }
+                if (UBillboardComponent* Billboard = Cast<UBillboardComponent>(ActorComp))
+                {
+                    BillboardComponentList.Add(Billboard);
+                    continue;
+                }
+
+                RenderPrimitivesWithOutDecal.Add(Primitive);
+
+                FVector rgb(1.0f, 1.0f, 1.0f);
+                UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+                Primitive->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+            }
+        }
+    }
+
+    OMSetBlendState(false);
+    RenderEngineActors(World->GetEngineActors(), ViewMatrix, ProjectionMatrix, Viewport);
+
+    // 데칼 렌더링
+    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
+    {
+        Decals.Sort([](const UDecalComponent* A, const UDecalComponent* B)
+        {
+            return A->GetSortOrder() < B->GetSortOrder();
+        });
+
+        for (UDecalComponent* Decal : Decals)
+        {
+            FOBB DecalWorldOBB = Decal->GetWorldOBB();
+
+            if (World->GetUseBVH() && World->GetBVH().IsBuild())
+            {
+                TArray<UPrimitiveComponent*> CollisionPrimitives = World->GetBVH().GetCollisionWithOBB(DecalWorldOBB);
+                for (UPrimitiveComponent* Primitive : CollisionPrimitives)
+                {
+                    Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                }
+            }
+            else
+            {
+                for (UPrimitiveComponent* Primitive : RenderPrimitivesWithOutDecal)
+                {
+                    if (IntersectOBBAABB(DecalWorldOBB, Primitive->GetWorldAABB()))
+                    {
+                        Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                    }
+                }
+            }
+        }
+    }
+
+    // BVH 바운드 시각화
+    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH))
+    {
+        AddLines(World->GetBVH().GetBVHBoundsWire(), FVector4(0.5f, 0.5f, 1, 1));
+    }
+
+    EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
+
+    // 빌보드는 마지막에 렌더링
+    for (auto& Billboard : BillboardComponentList)
+    {
+        Billboard->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+    }
+
+  
+}
+
+void URenderer::RenderEngineActors(const TArray<AActor*>& EngineActors, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
+{
+    for (AActor* EngineActor : EngineActors)
+    {
+        if (!EngineActor || EngineActor->GetActorHiddenInGame())
+        {
+            continue;
+        }
+
+        if (Cast<AGridActor>(EngineActor) && !Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Grid))
+        {
+            continue;
+        }
+
+        for (UActorComponent* Component : EngineActor->GetComponents())
+        {
+            if (!Component)
+            {
+                continue;
+            }
+
+            if (UActorComponent* ActorComp = Cast<UActorComponent>(Component))
+            {
+                if (!ActorComp->IsActive())
+                {
+                    continue;
+                }
+            }
+
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                SetViewModeType(EViewModeIndex::VMI_Unlit);
+                Primitive->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+                OMSetDepthStencilState(EComparisonFunc::LessEqual);
+            }
+        }
+        OMSetBlendState(false);
+    }
+}
+
+void URenderer::RenderFogPass()
+{
+    // TODO: 화면 전체 Fog 효과 구현
+}
+
+void URenderer::RenderFireBallPass(UWorld* World)
+{
+    // TODO: FireBall 광원 효과 구현
+}
+
+void URenderer::RenderOverlayPass(UWorld* World)
+{
+    // TODO: 오버레이(UI, 디버그 텍스트 등) 구현
 }
 
 void URenderer::InitializeLineBatch()

@@ -15,8 +15,14 @@ void UGameEngine::Tick(float DeltaSeconds)
 
 void UGameEngine::Render()
 {
+    // Renderer가 렌더링을 직접 담당 (World는 데이터만 제공)
     if (GameWorld)
-        GameWorld->Render();
+    {
+        if (URenderer* Renderer = GameWorld->GetRenderer())
+        {
+            Renderer->RenderFrame(GameWorld);
+        }
+    }
 }
 
 void UGameEngine::StartGame(UWorld* World)

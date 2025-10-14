@@ -47,7 +47,18 @@ void UPrimitiveComponent::Serialize(bool bIsLoading, FComponentData& InOut)
         InOut.RelativeScale = GetRelativeScale();
     }
 }
-
+const FAABB UPrimitiveComponent::GetWorldAABB() const
+{
+    return FAABB();
+}
+const TArray<FVector> UPrimitiveComponent::GetBoundingBoxLines() const
+{
+    return GetWorldAABB().GetWireLine();
+}
+const FVector4 UPrimitiveComponent::GetBoundingBoxColor() const
+{
+    return FVector4(1, 1, 0, 1);
+}
 UObject* UPrimitiveComponent::Duplicate()
 {
     UPrimitiveComponent* DuplicatedComponent = NewObject<UPrimitiveComponent>(*this);

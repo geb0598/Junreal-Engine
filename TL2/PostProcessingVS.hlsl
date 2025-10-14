@@ -4,6 +4,7 @@
 
 Texture2D FrameColor : register(t0);
 SamplerState PointSampler : register(s0);
+SamplerState LinearSampler : register(s1);
 
 struct VS_Input
 {
@@ -16,6 +17,7 @@ struct PS_Input
     float4 posCS : SV_Position;
     float2 uv : TEXCOORD0;
 };
+
 
 PS_Input mainVS(VS_Input i)
 {
