@@ -116,18 +116,42 @@ void URenderer::RenderFrame(UWorld* World)
     BeginFrame();
     UUIManager::GetInstance().Render();
 
-    // 렌더 패스 구조:
-    // 1. Depth Pre-pass (옵션)
-    RenderSceneDepthPass(World);
+    // +-+-+ Render Pass Structure +-+-+
+    
+    // [ Pre-Processing Phase ]
+    if (CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
+    {
+        // Depth Pre-Pass
+        RenderSceneDepthPass(World);
+    }
+    else
+    {
+        // Base Pass (Opaque geometry - 각 뷰포트별로)
+        RenderBasePass(World);
+    }
 
-    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
-    RenderBasePass(World);
+    // [ Post-Processing Phase ]
+    switch (CurrentViewMode)
+    {
+    case EViewModeIndex::VMI_Lit:
+    case EViewModeIndex::VMI_Unlit:
+    case EViewModeIndex::VMI_Wireframe:
+    {
+        RenderFogPass();
+        RenderFireBallPass(World);
+        break;
+    }
+    case EViewModeIndex::VMI_SceneDepth:
+    {
+        // Depth → Grayscale visualize
+        RenderSceneDepthVisualizePass();
+        break;
+    }
+    default:
+        break;
+    }
 
-    // 3. Post-processing passes
-    RenderFogPass();
-    RenderFireBallPass(World);
-
-    // 4. Overlay (UI, debug visualization)
+    // Overlay (UI, debug visualization)
     RenderOverlayPass(World);
 
     UUIManager::GetInstance().EndFrame();
@@ -342,8 +366,6 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 
 void URenderer::EndFrame()
 {
-
-    
     // 렌더링 통계 수집 종료
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();
     StatsCollector.EndFrame();
@@ -424,7 +446,7 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
     ViewFrustum.Update(ViewMatrix * ProjectionMatrix);
 
     BeginLineBatch();
-    SetViewModeType(ViewModeIndex);
+    SetViewModeType(CurrentViewMode);
 
     const TArray<AActor*>& LevelActors = World->GetLevel() ? World->GetLevel()->GetActors() : TArray<AActor*>();
     USelectionManager& SelectionManager = USelectionManager::GetInstance();
@@ -591,6 +613,10 @@ void URenderer::RenderFireBallPass(UWorld* World)
 void URenderer::RenderOverlayPass(UWorld* World)
 {
     // TODO: 오버레이(UI, 디버그 텍스트 등) 구현
+}
+
+void URenderer::RenderSceneDepthVisualizePass()
+{
 }
 
 void URenderer::InitializeLineBatch()
