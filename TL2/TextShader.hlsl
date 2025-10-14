@@ -49,7 +49,7 @@ PS_INPUT mainVS(VS_INPUT Input)
     return Output;
 }
 
-PS_OUTPUT mainPS(PS_INPUT Input) : SV_Target
+PS_OUTPUT mainPS(PS_INPUT Input)
 {
     PS_OUTPUT Result;
     float4 Color = FontAtlas.Sample(LinearSampler, Input.Tex);

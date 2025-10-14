@@ -165,7 +165,7 @@ PS_INPUT mainVS(VS_INPUT input)
     return output;
 }
 
-PS_OUTPUT mainPS(PS_INPUT input) : SV_TARGET
+PS_OUTPUT mainPS(PS_INPUT input) 
 {
     PS_OUTPUT Result;
     // Lerp the incoming color with the global LerpColor

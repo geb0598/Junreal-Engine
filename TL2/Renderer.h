@@ -96,13 +96,17 @@ private:
 
     // 1) 패스들
     void RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);         // 불투명/기본 머티리얼
-    void RenderFogPass();                       // 포스트: SceneColor/SceneDepth 기반
+    void RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);                       // 포스트: SceneColor/SceneDepth 기반
     void RenderFireBallPass(UWorld* World);     // 포스트: FireBall 조명/가산
     void RenderOverlayPass(UWorld* World);      // 라인/텍스트/UI/디버그
 
     // 2) 씬 렌더링 헬퍼 메소드들
 
+    void RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+
     void RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderEngineActors(const TArray<AActor*>& EngineActors, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
 
     //// 2) 풀스크린 쿼드

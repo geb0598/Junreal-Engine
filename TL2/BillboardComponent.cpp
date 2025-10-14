@@ -159,6 +159,7 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     Renderer->UpdateSetCBuffer(BillboardBufferType(BillboardPos,0, View, Proj, View.InverseAffine()));
 
     Renderer->OMSetDepthStencilState(EComparisonFunc::Disable);
+    
     Renderer->OMSetBlendState(false);
     // 셰이더 준비
     Renderer->PrepareShader(Material->GetShader());
