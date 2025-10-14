@@ -22,6 +22,29 @@ enum class EComparisonFunc
     Disable,
     LessEqualReadOnly,
 };
+
+enum class ERenderTargetType
+{
+    None = 1 << 0,
+    Frame = 1 << 1,
+    ID = 1 << 2,
+    Temporal = 1<< 3,
+};
+// 비트 OR 연산자
+inline ERenderTargetType operator|(ERenderTargetType lhs, ERenderTargetType rhs)
+{
+    return static_cast<ERenderTargetType>(
+        static_cast<int>(lhs) | static_cast<int>(rhs)
+        );
+}
+
+// 비트 AND 연산자
+inline ERenderTargetType operator&(ERenderTargetType lhs, ERenderTargetType rhs)
+{
+    return static_cast<ERenderTargetType>(
+        static_cast<int>(lhs) & static_cast<int>(rhs)
+        );
+}
 class URHIDevice
 {
 public:
@@ -66,7 +89,8 @@ public:
     virtual void RSSetNoCullState() = 0;
     virtual void RSSetDefaultState() = 0;
     virtual void RSSetDecalState() = 0;
-    virtual void OMSetRenderTargets() = 0;
+    virtual void OMSetRenderTargets(const ERenderTargetType RenderTargetType) = 0;
+    virtual void PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType) = 0;
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;
     virtual void OmSetDepthStencilState(EComparisonFunc Func) = 0;
     virtual void Present() = 0;

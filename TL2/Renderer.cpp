@@ -56,7 +56,7 @@ void URenderer::BeginFrame()
 
     //OM
     //RHIDevice->OMSetBlendState();
-    RHIDevice->OMSetRenderTargets();
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
 }
 
 void URenderer::PrepareShader(UShader* InShader)
@@ -401,6 +401,7 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
 
     RenderFogPass();
 
+    FXAA.Render(this);
     // 4. Overlay (UI, debug visualization)
     RenderOverlayPass(World);
 
@@ -582,7 +583,6 @@ void URenderer::RenderPostProcessing(UShader* Shader)
 {
     OMSetBlendState(false);
     OMSetDepthStencilState(EComparisonFunc::Disable);
-    PrepareShader(Shader);
     UINT Stride = sizeof(FVertexUV);
     UINT Offset = 0;
     UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>("ScreenQuad");
@@ -598,9 +598,21 @@ void URenderer::RenderPostProcessing(UShader* Shader)
     RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     RHIDevice->PSSetDefaultSampler(0);
 
+    //FrameBuffer -> TemporalBuffer
+    PrepareShader(UResourceManager::GetInstance().Load<UShader>("Copy.hlsl"));
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Frame);
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Temporal);
     RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
 
-    
+    //TemporalBuffer ->FrameBuffer
+    PrepareShader(Shader);
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Temporal);
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
+    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
+
 }
 
 void URenderer::RenderFogPass()

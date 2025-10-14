@@ -4,7 +4,6 @@
 
 AStaticMeshActor::AStaticMeshActor()
 {
-
     Name = "Static Mesh Actor";
     StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");
     RootComponent = StaticMeshComponent;
