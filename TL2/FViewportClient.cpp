@@ -52,18 +52,6 @@ void FViewportClient::Draw(FViewport* Viewport)
             PerspectiveCameraPosition = Camera->GetActorLocation();
             PerspectiveCameraRotation = Camera->GetActorRotation();
             PerspectiveCameraFov = Camera->GetCameraComponent()->GetFOV();
-            if (World)
-            {
-                World->SetViewModeIndex(ViewModeIndex);
-                World->RenderViewports(Camera, Viewport);
-                AGizmoActor* GizmoActor = World->GetGizmoActor();
-
-                if (GizmoActor)
-                {
-                    GizmoActor->Render(Camera, Viewport);
-                        
-                }
-            }
             break;
         }
     case EViewportType::Orthographic_Top:
@@ -76,22 +64,21 @@ void FViewportClient::Draw(FViewport* Viewport)
             Camera = ViewPortCamera;
             Camera->GetCameraComponent()->SetProjectionMode(ECameraProjectionMode::Orthographic);
             SetupCameraMode();
-
-            // 월드의 모든 액터들을 렌더링
-            if (World)
-            {
-                World->SetViewModeIndex(ViewModeIndex);
-                World->RenderViewports(Camera, Viewport);
-                
-
-                if (World->GetGizmoActor())
-                {
-                    World->GetGizmoActor()->Render(Camera, Viewport);
-                }
-            }
-            break;
         }
     }
+
+    // Renderer에게 뷰포트 렌더링 요청
+    if (World && World->GetRenderer())
+    {
+        URenderer* Renderer = World->GetRenderer();
+
+        // ViewMode 설정 (Renderer가 직접 관리)
+        Renderer->SetViewModeIndex(ViewModeIndex);
+
+        // 씬 렌더링 (Gizmo 포함)
+        Renderer->RenderScene(World, Camera, Viewport);
+    }
+
 }
 
 

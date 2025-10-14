@@ -56,6 +56,8 @@ public:
 
     void RSSetDefaultState();
 
+    void RenderFrame(class UWorld* World);   //패스를 위한 렌더프레임
+
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
         CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
         CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
@@ -68,6 +70,7 @@ public:
                                        D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
     void SetViewModeType(EViewModeIndex ViewModeIndex);
+    void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
     // Batch Line Rendering System
     void BeginLineBatch();
     void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -82,7 +85,40 @@ public:
     void OMSetDepthStencilState(EComparisonFunc Func);
 
     URHIDevice* GetRHIDevice() { return RHIDevice; }
+    void RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
 private:
+
+    // ========== 핵심: 패스 분리 ==========
+
+    // 1) 패스들
+    void RenderSceneDepthPass(UWorld* World);   // 깊이 전용 (필요 시)
+    void RenderBasePass(UWorld* World);         // 불투명/기본 머티리얼
+    void RenderFogPass();                       // 포스트: SceneColor/SceneDepth 기반
+    void RenderFireBallPass(UWorld* World);     // 포스트: FireBall 조명/가산
+    void RenderOverlayPass(UWorld* World);      // 라인/텍스트/UI/디버그
+
+    // 2) 씬 렌더링 헬퍼 메소드들
+
+    void RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderEngineActors(const TArray<AActor*>& EngineActors, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+
+    //// 2) 풀스크린 쿼드
+    //void CreateFullScreenQuad();
+    //void DestroyFullScreenQuad();
+    //void DrawFullScreenQuad();
+
+    //// 3) 씬 타겟 (SceneColor/SceneDepth)
+    //void EnsureSceneTargets();     // 뷰포트 크기 반영해 생성/재생성
+    //void ReleaseSceneTargets();
+
+    // 4) 파이프라인 공통 상수
+    struct alignas(16) FPostCB { FVector4 ViewSize; FVector2D NearFar; FVector2D Pad; };
+    struct alignas(16) FViewProjCB { FMatrix View; FMatrix Proj; FMatrix InvViewProj; };
+
+    // ========== 내부 상태 ==========
+
+    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
+
 	URHIDevice* RHIDevice;
 
     TArray<uint32> IdBufferCache;
