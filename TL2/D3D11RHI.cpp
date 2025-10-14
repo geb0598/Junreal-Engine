@@ -54,12 +54,12 @@ void D3D11RHI::Release()
     if (FrontCullRasterizerState) { FrontCullRasterizerState->Release();   FrontCullRasterizerState = nullptr; }
     if (DecalRasterizerState) { DecalRasterizerState->Release();   DecalRasterizerState = nullptr; }
 
-    ReleaseIdBuffer();
-    ReleaseBlendState();
-    // RTV/DSV/FrameBuffer
-    ReleaseFrameBuffer();
+    ReleaseTexture(IdBuffer, IdBufferRTV, nullptr);
+    ReleaseTexture(IdStagingBuffer, nullptr, nullptr);
+    ReleaseTexture(FrameBuffer, FrameRTV, FrameSRV);
+    ReleaseDepthStencilView(DepthStencilView, DepthSRV);
 
-    // Device + SwapChain
+    ReleaseBlendState();
     ReleaseDeviceAndSwapChain();
 }
 
@@ -177,7 +177,7 @@ void D3D11RHI::CreateIdBuffer()
     TextureDesc.SampleDesc.Quality = 0;
     TextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-    Device->CreateTexture2D(&TextureDesc, nullptr, &IdBuffer);
+    HRESULT hr = Device->CreateTexture2D(&TextureDesc, nullptr, &IdBuffer);
 
     TextureDesc.Format = DXGI_FORMAT_R32_UINT;
     TextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
@@ -193,7 +193,10 @@ void D3D11RHI::CreateIdBuffer()
     Device->CreateTexture2D(&TextureDesc, nullptr, &IdStagingBuffer);
     if (IdBuffer)
     {
-        Device->CreateRenderTargetView(IdBuffer, nullptr, &IdBufferRTV);
+        D3D11_RENDER_TARGET_VIEW_DESC Desc{};
+        Desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+        Desc.Format = DXGI_FORMAT_R32_UINT;
+        CreateRTV(IdBuffer, &IdBufferRTV, Desc);
     }
 }
 
@@ -298,7 +301,36 @@ void D3D11RHI::Present()
     UStatsOverlayD2D::Get().Draw();
     SwapChain->Present(1, 0); // vsync on
 }
-
+void D3D11RHI::CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV)
+{
+    D3D11_SHADER_RESOURCE_VIEW_DESC Desc = {};
+    Desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    Desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    CreateSRV(Resource, SRV, Desc);
+}
+void D3D11RHI::CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV)
+{
+    D3D11_RENDER_TARGET_VIEW_DESC Desc = {};
+    Desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+    Desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    CreateRTV(Resource, RTV, Desc);
+}
+void D3D11RHI::CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV, D3D11_SHADER_RESOURCE_VIEW_DESC& Desc)
+{
+    HRESULT hr = Device->CreateShaderResourceView(Resource, &Desc, SRV);
+    if (FAILED(hr))
+    {
+        int a = 0;
+    }
+}
+void D3D11RHI::CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV, D3D11_RENDER_TARGET_VIEW_DESC& Desc)
+{
+    HRESULT hr = Device->CreateRenderTargetView(Resource, &Desc, RTV);
+    if (FAILED(hr))
+    {
+        int a = 0;
+    }
+}
 void D3D11RHI::CreateDeviceAndSwapChain(HWND hWindow)
 {
     // 지원하는 Direct3D 기능 레벨을 정의
@@ -338,17 +370,8 @@ void D3D11RHI::CreateFrameBuffer()
     // 백 버퍼 가져오기
     SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&FrameBuffer);
 
-    // 렌더 타겟 뷰 생성
-    D3D11_RENDER_TARGET_VIEW_DESC framebufferRTVdesc = {};
-    framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-    framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-
-    Device->CreateRenderTargetView(FrameBuffer, &framebufferRTVdesc, &FrameRTV);
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    Device->CreateShaderResourceView(FrameBuffer, &SRVDesc, &FrameSRV);
+    CreateRTV(FrameBuffer, &FrameRTV);
+    CreateSRV(FrameBuffer, &FrameSRV);
 
     // =====================================
     // 깊이/스텐실 버퍼 생성
@@ -383,8 +406,7 @@ void D3D11RHI::CreateFrameBuffer()
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Texture2D.MostDetailedMip = 0;
-
-    Device->CreateShaderResourceView(depthBuffer, &srvDesc, &DepthSRV);
+    CreateSRV(depthBuffer, &DepthSRV, srvDesc);
 
     depthBuffer->Release(); // 뷰만 참조 유지
 }
@@ -485,29 +507,35 @@ void D3D11RHI::ReleaseRasterizerState()
     DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 }
 
-void D3D11RHI::ReleaseFrameBuffer()
+void D3D11RHI::ReleaseTexture(ID3D11Texture2D* Texture, ID3D11RenderTargetView* RTV, ID3D11ShaderResourceView* SRV)
 {
-    if (FrameBuffer)
+    if (RTV)
     {
-        FrameBuffer->Release();
-        FrameBuffer = nullptr;
+        RTV->Release();
+        RTV = nullptr;
     }
-    if (FrameRTV)
+    if (SRV)
     {
-        FrameRTV->Release();
-        FrameRTV = nullptr;
+        SRV->Release();
+        SRV = nullptr;
     }
-
-    if (DepthSRV)
+    if (Texture)
     {
-        DepthSRV->Release();
-        DepthSRV = nullptr;
+        Texture->Release();
+        Texture = nullptr;
     }
-
-    if (DepthStencilView)
+}
+void D3D11RHI::ReleaseDepthStencilView(ID3D11DepthStencilView* DSV, ID3D11ShaderResourceView* SRV)
+{
+    if (SRV)
     {
-        DepthStencilView->Release();
-        DepthStencilView = nullptr;
+        SRV->Release();
+        SRV = nullptr;
+    }
+    if (DSV)
+    {
+        DSV->Release();
+        DSV = nullptr;
     }
 }
 
@@ -533,25 +561,6 @@ void D3D11RHI::ReleaseDeviceAndSwapChain()
 
 }
 
-void D3D11RHI::ReleaseIdBuffer()
-{
-    if (IdBufferRTV)
-    {
-        IdBufferRTV->Release();
-        IdBufferRTV = nullptr;
-    }
-    if (IdStagingBuffer)
-    {
-        IdStagingBuffer->Release();
-        IdStagingBuffer = nullptr;
-    }
-    if (IdBuffer)
-    {
-        IdBuffer->Release();
-        IdBuffer = nullptr;
-    }
-}
-
 void D3D11RHI::OmSetDepthStencilState(EComparisonFunc Func)
 {
     switch (Func)
@@ -575,9 +584,7 @@ void D3D11RHI::OmSetDepthStencilState(EComparisonFunc Func)
 void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
 {
     // 기존 바인딩 해제 후 뷰 해제
-    if (FrameRTV) { DeviceContext->OMSetRenderTargets(0, nullptr, nullptr); FrameRTV->Release(); FrameRTV = nullptr; }
-    if (FrameSRV) { FrameSRV->Release(); FrameSRV = nullptr; }
-    if (DepthStencilView) { DepthStencilView->Release(); DepthStencilView = nullptr; }
+    DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
     // 1) 백버퍼에서 RTV 생성
     ID3D11Texture2D* backBuffer = nullptr;
@@ -587,20 +594,9 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
         return;
     }
 
-    D3D11_RENDER_TARGET_VIEW_DESC framebufferRTVdesc = {};
-    framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-    framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-    hr = Device->CreateRenderTargetView(backBuffer, &framebufferRTVdesc, &FrameRTV);
-    if (FAILED(hr) || !FrameRTV) {
-        UE_LOG("CreateRenderTargetView failed.\n");
-        return;
-    }
-    D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    hr = Device->CreateShaderResourceView(backBuffer, &SRVDesc, &FrameSRV);
+    CreateRTV(backBuffer, &FrameRTV);
+    CreateSRV(backBuffer, &FrameSRV);
     backBuffer->Release();
-
 
     // 2) DepthStencil 텍스처/뷰 생성
     ID3D11Texture2D* depthTex = nullptr;
@@ -632,12 +628,12 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
         UE_LOG("CreateDepthStencilView failed.\n");
         return;
     }
-
-    // 3) OM 바인딩
-    DeviceContext->OMSetRenderTargets(1, &FrameRTV, DepthStencilView);
-
-    // 4) 뷰포트 갱신
-    SetViewport(width, height);
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // SRV는 R24_UNORM_X8_TYPELESS 포맷
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    CreateSRV(depthTex, &DepthSRV, srvDesc);
 }
 
 // ──────────────────────────────────────────────────────
@@ -655,13 +651,6 @@ void D3D11RHI::SetViewport(UINT width, UINT height)
     DeviceContext->RSSetViewports(1, &ViewportInfo);
 }
 
-// ──────────────────────────────────────────────────────
-// 기존 오타 호출 호환용 래퍼 (선택)
-// ──────────────────────────────────────────────────────
-void D3D11RHI::setviewort(UINT width, UINT height)
-{
-    SetViewport(width, height);
-}
 void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
 {
     if (!SwapChain) return;
@@ -675,12 +664,11 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
     if (DeviceContext) {
         DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
     }
-    ReleaseIdBuffer();
     // 기존 뷰 해제
-    if (FrameRTV) { FrameRTV->Release(); FrameRTV = nullptr; }
-    if (FrameSRV) { FrameSRV->Release(); FrameSRV = nullptr; }
-    if (DepthStencilView) { DepthStencilView->Release(); DepthStencilView = nullptr; }
-    if (FrameBuffer) { FrameBuffer->Release(); FrameBuffer = nullptr; }
+    ReleaseTexture(IdBuffer, IdBufferRTV, nullptr);
+    ReleaseTexture(IdStagingBuffer, nullptr, nullptr);
+    ReleaseTexture(nullptr, FrameRTV, FrameSRV);
+    ReleaseDepthStencilView(DepthStencilView, DepthSRV);
 
     // 스왑체인 버퍼 리사이즈
     HRESULT hr = SwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
@@ -690,7 +678,7 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
     CreateBackBufferAndDepthStencil(width, height);
     CreateIdBuffer();
     // 뷰포트도 갱신
-    setviewort(width, height);
+    SetViewport(width, height);
 }
 
 void D3D11RHI::PSSetDefaultSampler(UINT StartSlot)

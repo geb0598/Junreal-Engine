@@ -89,8 +89,6 @@ public:
 
     void SetViewport(UINT width, UINT height);
 
-    void setviewort(UINT width, UINT height);
-
     void ResizeSwapChain(UINT width, UINT height);
 
 public:
@@ -163,6 +161,11 @@ private:
         Device->CreateBuffer(&CBufferDesc, nullptr, CBuffer);
     }
 
+    void CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV);
+    void CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV);
+    void CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV, D3D11_SHADER_RESOURCE_VIEW_DESC& Desc);
+    void CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV, D3D11_RENDER_TARGET_VIEW_DESC& Desc);
+
     void CreateDeviceAndSwapChain(HWND hWindow)override; // 여기서 디바이스, 디바이스 컨택스트, 스왑체인, 뷰포트를 초기화한다
     void CreateFrameBuffer() override;
     void CreateRasterizerState() override;
@@ -175,9 +178,9 @@ private:
 	void ReleaseSamplerState();
     void ReleaseBlendState();
     void ReleaseRasterizerState(); // rs
-    void ReleaseFrameBuffer(); // fb, rtv
     void ReleaseDeviceAndSwapChain();
-    void ReleaseIdBuffer();
+    void ReleaseTexture(ID3D11Texture2D* Texture, ID3D11RenderTargetView* RTV, ID3D11ShaderResourceView* SRV);
+    void ReleaseDepthStencilView(ID3D11DepthStencilView* DSV,  ID3D11ShaderResourceView* SRV);
  
 	void OmSetDepthStencilState(EComparisonFunc Func) override;
     
@@ -216,28 +219,16 @@ private:
 
     ID3D11RenderTargetView* IdBufferRTV = nullptr;
     ID3D11RenderTargetView* FrameRTV{};//
+    ID3D11RenderTargetView* TemporalRTV{};//
 
     ID3D11DepthStencilView* DepthStencilView{};//
     ID3D11ShaderResourceView* DepthSRV{}; // Depth buffer를 셰이더에서 읽기 위한 SRV
     ID3D11ShaderResourceView* FrameSRV{};
+    ID3D11ShaderResourceView* TemporalSRV{};
 
 
 
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER)
-
-    // 버퍼 핸들
-    ID3D11Buffer* ModelCB{};
-    ID3D11Buffer* ViewProjCB{};
-    ID3D11Buffer* HighLightCB{};
-    ID3D11Buffer* BillboardCB{};
-    ID3D11Buffer* ColorCB{};
-    ID3D11Buffer* PixelConstCB{};
-    ID3D11Buffer* UVScrollCB{};
-    ID3D11Buffer* InvWorldCB{};
-    ID3D11Buffer* ViewportCB{};
-    ID3D11Buffer* DecalCB{};
-
-    ID3D11Buffer* ConstantBuffer{};
 
     ID3D11SamplerState* DefaultSamplerState = nullptr;
 
