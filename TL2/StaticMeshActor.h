@@ -13,7 +13,7 @@ protected:
     ~AStaticMeshActor() override;
 
 public:
-    virtual bool DeleteComponent(USceneComponent* ComponentToDelete) override;
+    virtual bool DeleteComponent(UActorComponent* ComponentToDelete) override;
 
     UStaticMeshComponent* GetStaticMeshComponent() const { return StaticMeshComponent; }
     void SetStaticMeshComponent(UStaticMeshComponent* InStaticMeshComponent);

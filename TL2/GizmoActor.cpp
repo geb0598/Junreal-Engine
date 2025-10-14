@@ -130,7 +130,6 @@ AGizmoActor::AGizmoActor()
 	SelectionManager = &USelectionManager::GetInstance();
 	InputManager = &UInputManager::GetInstance();
 	UIManager = &UUIManager::GetInstance();
-	
 }
 
 void AGizmoActor::Tick(float DeltaSeconds)
@@ -139,22 +138,21 @@ void AGizmoActor::Tick(float DeltaSeconds)
 	if (!InputManager) InputManager = &UInputManager::GetInstance();
 	if (!UIManager) UIManager = &UUIManager::GetInstance();
 
-	USceneComponent* SelectedComponent = nullptr;
 	// 컴포넌트 활성화 상태 업데이트    
 	if (SelectionManager->HasSelection() && CameraActor)
 	{
-		SelectedComponent = SelectionManager->GetSelectedComponent();
+		UActorComponent* SelectedComp = SelectionManager->GetSelectedComponent();
 
 		// 기즈모 위치를 선택된 컴포넌트 위치로 업데이트
-		if (SelectedComponent)
+		if (USceneComponent* SelectedSceneComp = Cast<USceneComponent>(SelectedComp))
 		{
-			SetSpaceWorldMatrix(CurrentSpace, SelectedComponent);
-			SetActorLocation(SelectedComponent->GetWorldLocation());
+			SetSpaceWorldMatrix(CurrentSpace, SelectedSceneComp);
+			SetActorLocation(SelectedSceneComp->GetWorldLocation());
 		}
 	}
 	UpdateComponentVisibility();
-
 }
+
 void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport) 
 {
 	UpdateConstantScreenScale(Camera, Viewport);
@@ -608,19 +606,20 @@ worldPerPixel *= zoomFactor;*/
 
 void AGizmoActor::ProcessGizmoInteraction(ACameraActor* Camera, FViewport* Viewport, float MousePositionX, float MousePositionY)
 {
-	USceneComponent* SelectedComponent = SelectionManager->GetSelectedComponent();
-	if (!SelectedComponent || !Camera) return;
-
+	UActorComponent* SelectedComp = SelectionManager->GetSelectedComponent();
+	USceneComponent* SelectedSceneComp = Cast<USceneComponent>(SelectedComp);
+	if (!SelectedSceneComp || !Camera)
+	{
+		return;
+	}
 	
     UpdateConstantScreenScale(Camera, Viewport);
 
     ProcessGizmoModeSwitch();
 
 	// 기즈모 드래그
-	ProcessGizmoDragging(Camera, SelectedComponent, Viewport, MousePositionX, MousePositionY);
-
+	ProcessGizmoDragging(Camera, SelectedSceneComp, Viewport, MousePositionX, MousePositionY);
 	ProcessGizmoHovering(Camera,  Viewport,  MousePositionX, MousePositionY);
-
 }
 
 void AGizmoActor::ProcessGizmoHovering(ACameraActor* Camera,FViewport* Viewport ,float MousePositionX, float MousePositionY )

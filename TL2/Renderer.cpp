@@ -462,59 +462,7 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
                 // 바운딩 박스 그리기
                 if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
                 {
-                    if (USpotLightComponent* SpotLight = Cast<USpotLightComponent>(Primitive))
-                    {
-                        // SpotLight 절두체 그리기
-                        float Fov = SpotLight->Fov;
-                        float Aspect = SpotLight->Aspect;
-                        float Near = SpotLight->Near;
-                        float Far = SpotLight->Far;
-
-                        float halfFov = tanf(Fov / 2.0f);
-                        float nearHalfH = Near * halfFov;
-                        float nearHalfW = nearHalfH * Aspect;
-                        float farHalfH = Far * halfFov;
-                        float farHalfW = farHalfH * Aspect;
-
-                        FVector Corners[8];
-                        Corners[0] = FVector(nearHalfW, nearHalfH, Near);
-                        Corners[1] = FVector(-nearHalfW, nearHalfH, Near);
-                        Corners[2] = FVector(-nearHalfW, -nearHalfH, Near);
-                        Corners[3] = FVector(nearHalfW, -nearHalfH, Near);
-                        Corners[4] = FVector(farHalfW, farHalfH, Far);
-                        Corners[5] = FVector(-farHalfW, farHalfH, Far);
-                        Corners[6] = FVector(-farHalfW, -farHalfH, Far);
-                        Corners[7] = FVector(farHalfW, -farHalfH, Far);
-
-                        FMatrix WorldMatrix = SpotLight->GetWorldMatrix();
-                        for (int i = 0; i < 8; ++i)
-                        {
-                            FVector4 Transformed = WorldMatrix.TransformPosition(FVector4(Corners[i], 1.0f));
-                            Corners[i] = FVector(Transformed.X, Transformed.Y, Transformed.Z);
-                        }
-
-                        FVector4 Color(1, 1, 0, 1);
-                        AddLine(Corners[0], Corners[1], Color);
-                        AddLine(Corners[1], Corners[2], Color);
-                        AddLine(Corners[2], Corners[3], Color);
-                        AddLine(Corners[3], Corners[0], Color);
-                        AddLine(Corners[4], Corners[5], Color);
-                        AddLine(Corners[5], Corners[6], Color);
-                        AddLine(Corners[6], Corners[7], Color);
-                        AddLine(Corners[7], Corners[4], Color);
-                        AddLine(Corners[0], Corners[4], Color);
-                        AddLine(Corners[1], Corners[5], Color);
-                        AddLine(Corners[2], Corners[6], Color);
-                        AddLine(Corners[3], Corners[7], Color);
-                    }
-                    else if (UDecalComponent* Decal = Cast<UDecalComponent>(Primitive))
-                    {
-                        AddLines(Decal->GetWorldOBB().GetWireLine(), FVector4(1, 0, 1, 1));
-                    }
-                    else
-                    {
-                        AddLines(Primitive->GetWorldAABB().GetWireLine(), FVector4(1, 1, 0, 1));
-                    }
+                    AddLines(Primitive->GetBoundingBoxLines(), Primitive->GetBoundingBoxColor());
                 }
 
                 // 데칼 컴포넌트는 나중에 처리

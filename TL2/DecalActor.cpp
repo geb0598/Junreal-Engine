@@ -41,7 +41,7 @@ void ADecalActor::SetDecalComponent(UDecalComponent* InDecalComponent)
     DecalComponent->SetupAttachment(RootComponent);
 }
 
-bool ADecalActor::DeleteComponent(USceneComponent* ComponentToDelete)
+bool ADecalActor::DeleteComponent(UActorComponent* ComponentToDelete)
 {
     if (ComponentToDelete == DecalComponent)
     {

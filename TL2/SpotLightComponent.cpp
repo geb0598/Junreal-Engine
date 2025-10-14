@@ -42,6 +42,56 @@ void USpotLightComponent::UpdateDecalProjectionMatrix()
     DecalProjectionMatrix = FMatrix::PerspectiveFovLH(Fov, Aspect, Near, Far);
 }
 
+const FVector4 USpotLightComponent::GetBoundingBoxColor() const
+{
+    return FVector4(1, 0, 0, 1);
+}
+const TArray<FVector> USpotLightComponent::GetBoundingBoxLines() const
+{
+    // SpotLight 절두체 그리기
+
+    float halfFov = tanf(Fov / 2.0f);
+    float nearHalfH = Near * halfFov;
+    float nearHalfW = nearHalfH * Aspect;
+    float farHalfH = Far * halfFov;
+    float farHalfW = farHalfH * Aspect;
+
+    FVector Corners[8];
+    Corners[0] = FVector(nearHalfW, nearHalfH, Near);
+    Corners[1] = FVector(-nearHalfW, nearHalfH, Near);
+    Corners[2] = FVector(-nearHalfW, -nearHalfH, Near);
+    Corners[3] = FVector(nearHalfW, -nearHalfH, Near);
+    Corners[4] = FVector(farHalfW, farHalfH, Far);
+    Corners[5] = FVector(-farHalfW, farHalfH, Far);
+    Corners[6] = FVector(-farHalfW, -farHalfH, Far);
+    Corners[7] = FVector(farHalfW, -farHalfH, Far);
+
+    FMatrix WorldMatrix = GetWorldMatrix();
+    for (int i = 0; i < 8; ++i)
+    {
+        FVector4 Transformed = WorldMatrix.TransformPosition(FVector4(Corners[i], 1.0f));
+        Corners[i] = FVector(Transformed.X, Transformed.Y, Transformed.Z);
+    }
+
+    TArray<FVector> BoxWireLines =
+    {
+    Corners[0], Corners[1],
+    Corners[1], Corners[2],
+    Corners[2], Corners[3],
+    Corners[3], Corners[0],
+    Corners[4], Corners[5],
+    Corners[5], Corners[6],
+    Corners[6], Corners[7],
+    Corners[7], Corners[4],
+    Corners[0], Corners[4],
+    Corners[1], Corners[5],
+    Corners[2], Corners[6],
+    Corners[3], Corners[7],
+    };
+    return BoxWireLines;
+}
+
+
 UObject* USpotLightComponent::Duplicate()
 {
     USpotLightComponent* DuplicatedComponent = Cast<USpotLightComponent>(UDecalComponent::Duplicate());

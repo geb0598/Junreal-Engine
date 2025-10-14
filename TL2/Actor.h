@@ -60,8 +60,6 @@ public:
     void SetIsPicked(bool picked) { bIsPicked = picked; }
     bool GetIsPicked() { return bIsPicked; }
 
-    
-
     //-----------------------------
     //----------Getter------------
     const TSet<UActorComponent*>& GetComponents() const;
@@ -82,8 +80,10 @@ public:
 
     // 지정된 부모 하위에 새로운 컴포넌트를 생성하고 붙입니다.
     USceneComponent* CreateAndAttachComponent(USceneComponent* ParentComponent, UClass* ComponentClass);
+    UActorComponent* AddComponentByClass(UClass* ComponentClass);
+
     // 이 액터가 소유한 씬 컴포넌트를 안전하게 제거하고 삭제합니다.
-    virtual bool DeleteComponent(USceneComponent* ComponentToDelete);
+    virtual bool DeleteComponent(UActorComponent* ComponentToDelete);
     void AddComponent(USceneComponent* InComponent);
     // Duplicate function
     UObject* Duplicate() override;
@@ -92,12 +92,10 @@ public:
     void DestroyAllComponents();
 
 public:
-
     // Visibility properties
     void SetActorHiddenInGame(bool bNewHidden) { bHiddenInGame = bNewHidden; }
     bool GetActorHiddenInGame() const { return bHiddenInGame; }
     bool IsActorVisible() const { return !bHiddenInGame; }
-    
     
     // Tick Enabled Check
     bool IsActorTickEnabled() const { return bCanEverTick; }
@@ -105,9 +103,6 @@ public:
     // Tick 조건 헬퍼 함수들
     bool ShouldTickInEditor() const { return bTickInEditor; }
     bool CanTickInPlayMode() const { return bCanEverTick && !bHiddenInGame; }
-
-    
-
 
     UWorld* GetWorld() const override final;
     // TODO(KHJ): 제거 필요

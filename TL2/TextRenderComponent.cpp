@@ -224,7 +224,3 @@ TArray<FBillboardVertexInfo_GPU> UTextRenderComponent::CreateVerticesForString(c
 	}
 	return vertices;
 }
-const FAABB UTextRenderComponent::GetWorldAABB() const
-{
-	return FAABB();
-}

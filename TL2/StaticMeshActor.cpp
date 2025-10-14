@@ -78,7 +78,7 @@ void AStaticMeshActor::DuplicateSubObjects()
 }
 
 // 특화된 멤버 컴포넌트 CollisionComponent, StaticMeshComponent 는 삭제 시 포인터를 초기화합니다.
-bool AStaticMeshActor::DeleteComponent(USceneComponent* ComponentToDelete)
+bool AStaticMeshActor::DeleteComponent(UActorComponent* ComponentToDelete)
 {
     // 2. [부모 클래스의 원래 기능 호출]
     // 기본적인 삭제 로직(소유 목록 제거, 메모리 해제 등)은 부모에게 위임합니다.

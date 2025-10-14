@@ -42,8 +42,8 @@ struct alignas(16) FOptimizedRay
 
 struct FAABB
 {
-    FVector Min;
-    FVector Max;
+    FVector Min = FVector(0, 0, 0);
+    FVector Max = FVector(0, 0, 0);
     FAABB() = default;
     FAABB(const FVector& InMin, const FVector& InMax) : Min(InMin), Max(InMax) {}
     FAABB(const FVector* Vertices, const uint32 Count)

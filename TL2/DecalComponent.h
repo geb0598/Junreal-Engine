@@ -33,9 +33,12 @@ public:
     void Serialize(bool bIsLoading, FComponentData& InOut) override;
 
     UStaticMesh* GetDecalBoxMesh() const { return DecalBoxMesh; }
-
-    const FAABB GetWorldAABB() const override;
     const FOBB GetWorldOBB() const;
+    const TArray<FVector> GetBoundingBoxLines() const override;
+    const FVector4 GetBoundingBoxColor() const override
+    {
+        return FVector4(1, 0, 1, 1);
+    }
 
     // Fade Effect Getter/Setter Func
     int32 GetSortOrder() const { return SortOrder; }

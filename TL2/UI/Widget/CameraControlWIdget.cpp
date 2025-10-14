@@ -201,39 +201,39 @@ void UCameraControlWidget::RenderWidget()
 	// 기즈모 스페이스 모드 선택
 	if (GizmoActor)
 	{
-		const char* spaceItems[] = { "World", "Local" };
-		int currentSpaceIndex = static_cast<int>(CurrentGizmoSpace);
+		UActorComponent* SelectedComp = USelectionManager::GetInstance().GetSelectedComponent();
+		USceneComponent* SelectedSceneComp = Cast<USceneComponent>(SelectedComp);
 
-		if (ImGui::Combo("Gizmo Space", &currentSpaceIndex, spaceItems, IM_ARRAYSIZE(spaceItems)))
+		if (SelectedSceneComp)
 		{
-			if (UIManager)
+			const char* spaceItems[] = { "World", "Local" };
+			int currentSpaceIndex = static_cast<int>(CurrentGizmoSpace);
+
+			if (ImGui::Combo("Gizmo Space", &currentSpaceIndex, spaceItems, IM_ARRAYSIZE(spaceItems)))
 			{
-				CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
-				USceneComponent* SelectedComponent = USelectionManager::GetInstance().GetSelectedComponent();
-				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedComponent);
+				if (UIManager)
+				{
+					CurrentGizmoSpace = static_cast<EGizmoSpace>(currentSpaceIndex);
+					GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedSceneComp);
+				}
 			}
-		}
 
-		const char* buttonText = CurrentGizmoSpace == EGizmoSpace::World ?
-			"Switch to Local" : "Switch to World";
+			const char* buttonText = CurrentGizmoSpace == EGizmoSpace::World ? "Switch to Local" : "Switch to World";
 
-		if (ImGui::Button(buttonText))
-		{
-			if (UIManager)
+			if (ImGui::Button(buttonText))
 			{
-				// 스페이스 모드 전환
-				CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ?
-				EGizmoSpace::Local : EGizmoSpace::World;
-				USceneComponent* SelectedComponent = USelectionManager::GetInstance().GetSelectedComponent();
-				GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedComponent);
+				if (UIManager)
+				{
+					// 스페이스 모드 전환
+					CurrentGizmoSpace = (CurrentGizmoSpace == EGizmoSpace::World) ? EGizmoSpace::Local : EGizmoSpace::World;
+					GizmoActor->SetSpaceWorldMatrix(CurrentGizmoSpace, SelectedSceneComp);
+				}
 			}
-		}
 
-		ImGui::SameLine();
-		ImGui::Text("Current: %s",
-			CurrentGizmoSpace == EGizmoSpace::World ? "World" : "Local");
+			ImGui::SameLine();
+			ImGui::Text("Current: %s", CurrentGizmoSpace == EGizmoSpace::World ? "World" : "Local");
+		}
 	}
-
 }
 
 void UCameraControlWidget::SyncFromCamera()
