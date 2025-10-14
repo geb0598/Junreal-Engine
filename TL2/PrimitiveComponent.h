@@ -28,7 +28,9 @@ public:
     virtual void Serialize(bool bIsLoading, FComponentData& InOut);
     virtual void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlags) {}
 
-    virtual const FAABB GetWorldAABB() const = 0;
+    virtual const FAABB GetWorldAABB() const;
+    virtual const TArray<FVector> GetBoundingBoxLines() const;
+    virtual const FVector4 GetBoundingBoxColor() const;
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
