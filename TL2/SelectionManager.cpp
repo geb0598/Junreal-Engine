@@ -39,11 +39,10 @@ void USelectionManager::DeselectActor(AActor* Actor)
     SelectedComponent = nullptr;
 }
 
-void USelectionManager::SelectComponent(USceneComponent* Component)
+void USelectionManager::SelectComponent(UActorComponent* Component)
 {
     if (!Component)
     {
-
         return;
     }
     AActor* SelectedActor = Component->GetOwner();

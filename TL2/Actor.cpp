@@ -272,7 +272,7 @@ UActorComponent* AActor::AddComponentByClass(UClass* ComponentClass)
     return NewComp;
 }
 
-bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
+bool AActor::DeleteComponent(UActorComponent* ComponentToDelete)
 {
     // 1. [유효성 검사] nullptr이거나 이 액터가 소유한 컴포넌트가 아니면 실패 처리합니다.
     if (!ComponentToDelete || !OwnedComponents.Contains(ComponentToDelete))
@@ -280,34 +280,40 @@ bool AActor::DeleteComponent(USceneComponent* ComponentToDelete)
         return false;
     }
 
-    // 2. [루트 컴포넌트 보호] 루트 컴포넌트는 액터의 기준점이므로, 직접 삭제하는 것을 막습니다.
-    // 루트를 바꾸려면 다른 컴포넌트를 루트로 지정하는 방식을 사용해야 합니다.
-    if (ComponentToDelete == RootComponent)
+    // +-+-+ Only for Scene Component +-+-+
+    if (USceneComponent* SceneCompToDelete = Cast<USceneComponent>(ComponentToDelete))
     {
-        UE_LOG("루트 컴포넌트는 직접 삭제할 수 없습니다.");
-        return false;
-    }
-
-    // 3. [자식 컴포넌트 처리] 삭제될 컴포넌트의 자식들을 조부모에게 재연결합니다.
-    if (USceneComponent* ParentOfDoomedComponent = ComponentToDelete->GetAttachParent())
-    {
-        // 자식 목록의 복사본을 만들어 순회합니다. (원본을 수정하면서 순회하면 문제가 발생)
-        TArray<USceneComponent*> ChildrenToReAttach = ComponentToDelete->GetAttachChildren();
-        for (USceneComponent* Child : ChildrenToReAttach)
+        // 2a. [루트 컴포넌트 보호] 루트 컴포넌트는 액터의 기준점이므로, 직접 삭제하는 것을 막습니다.
+        // 루트를 바꾸려면 다른 컴포넌트를 루트로 지정하는 방식을 사용해야 합니다.
+        if (SceneCompToDelete == RootComponent)
         {
-            // 자식을 조부모에게 다시 붙입니다.
-            Child->SetupAttachment(ParentOfDoomedComponent);
+            UE_LOG("루트 컴포넌트는 직접 삭제할 수 없습니다.");
+            return false;
         }
+
+        // 2b. [자식 컴포넌트 처리] 삭제될 컴포넌트의 자식들을 조부모에게 재연결합니다.
+        if (USceneComponent* ParentOfDoomedComponent = SceneCompToDelete->GetAttachParent())
+        {
+            // 자식 목록의 복사본을 만들어 순회합니다. (원본을 수정하면서 순회하면 문제가 발생)
+            TArray<USceneComponent*> ChildrenToReAttach = SceneCompToDelete->GetAttachChildren();
+            for (USceneComponent* Child : ChildrenToReAttach)
+            {
+                // 자식을 조부모에게 다시 붙입니다.
+                Child->SetupAttachment(ParentOfDoomedComponent);
+            }
+        }
+
+        // 2c. [부모로부터 분리] 이제 삭제될 컴포넌트를 부모로부터 분리합니다.
+        SceneCompToDelete->DetachFromParent();
     }
 
-    // 4. [부모로부터 분리] 이제 삭제될 컴포넌트를 부모로부터 분리합니다.
-    ComponentToDelete->DetachFromParent();
+    // +-+-+ Common Logic +-+-+
 
-    // 5. [소유 목록에서 제거] 액터의 관리 목록에서 포인터를 제거합니다.
+    // 3. [소유 목록에서 제거] 액터의 관리 목록에서 포인터를 제거합니다.
     //    이걸 하지 않으면 액터 소멸자에서 이미 삭제된 메모리에 접근하여 충돌합니다.
     OwnedComponents.Remove(ComponentToDelete);
 
-    // 6. [메모리 해제] 모든 연결이 정리되었으므로, 마지막으로 객체를 삭제합니다.
+    // 4. [메모리 해제] 모든 연결이 정리되었으므로, 마지막으로 객체를 삭제합니다.
     ObjectFactory::DeleteObject(ComponentToDelete);
 
     return true;

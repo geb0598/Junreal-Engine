@@ -9,6 +9,14 @@ public:
 
 	void TickComponent(float DeltaSeconds) override;
 
+	// Getter/Setter Func
+	float GetInitialSpeed() const { return InitialSpeed; }
+	float GetMaxSpeed() const { return MaxSpeed; }
+	float GetGravityScale() const { return GravityScale; }
+	void SetInitialSpeed(float InInitialSpeed) { InitialSpeed = InInitialSpeed; }
+	void SetMaxSpeed(float InMaxSpeed) { MaxSpeed = InMaxSpeed; }
+	void SetGravityScale(float InGravityScale) { GravityScale = InGravityScale; }
+
 private:
 	float InitialSpeed;
 	float MaxSpeed;

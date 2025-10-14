@@ -83,7 +83,7 @@ public:
     UActorComponent* AddComponentByClass(UClass* ComponentClass);
 
     // 이 액터가 소유한 씬 컴포넌트를 안전하게 제거하고 삭제합니다.
-    virtual bool DeleteComponent(USceneComponent* ComponentToDelete);
+    virtual bool DeleteComponent(UActorComponent* ComponentToDelete);
     void AddComponent(USceneComponent* InComponent);
     // Duplicate function
     UObject* Duplicate() override;
