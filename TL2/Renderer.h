@@ -133,6 +133,10 @@ private:
     UShader* LastShader = nullptr;
     UTexture* LastTexture = nullptr;
 
+    // Shader for Scene Depth Pass
+    UShader* DepthOnlyShader = nullptr;
+    UShader* SceneDepthVisualizeShader = nullptr;
+
     /**
      * @brief 불필요한 API 호출을 막기 위해 마지막으로 바인딩된 상태를 캐싱합니다.
      */

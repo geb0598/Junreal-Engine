@@ -83,6 +83,7 @@ public:
     void RSSetDecalState() override;
     void RSSetViewport() override;
     void OMSetRenderTargets(const ERenderTargetType RenderTargetType) override;
+    void OMSetDepthOnlyTarget() override;
     void PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType) override;
 
     void OMSetBlendState(bool bIsBlendMode) override;

@@ -362,7 +362,58 @@ void URenderer::RenderViewPorts(UWorld* World)
 
 void URenderer::RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
+    // +-+ Set Render State +-+
+    RHIDevice->OMSetDepthOnlyTarget();     // DSV binding
+    RHIDevice->OMSetBlendState(false);     // color write mask = 0
+    RHIDevice->RSSetDefaultState();        // solid fill, back-face culling
+    RHIDevice->IASetPrimitiveTopology();
 
+    // +-+ Set Shader & Buffer +-+
+    DepthOnlyShader = UResourceManager::GetInstance().Load<UShader>("DepthPrepassShader.hlsl");
+    PrepareShader(DepthOnlyShader);
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
+
+    // +-+ Iterate and Draw Renderable Actors +-+
+    const TArray<AActor*>& LevelActors = World->GetLevel()->GetActors();
+    for (AActor* Actor : LevelActors)
+    {
+        if (!Actor || Actor->GetActorHiddenInGame())
+            continue;
+
+        for (UActorComponent* ActorComp : Actor->GetComponents())
+        {
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
+            {
+                if (!Primitive->IsActive())
+                    continue;
+
+                if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Primitive))
+                {
+                    UStaticMesh* Mesh = MeshComp->GetStaticMesh();
+                    if (!Mesh)  continue;
+
+                    const FMatrix& WorldMatrix = Primitive->GetWorldMatrix();
+                    UpdateSetCBuffer(ModelBufferType(WorldMatrix));
+
+                    ID3D11Buffer* VertexBuffer = Mesh->GetVertexBuffer();
+                    ID3D11Buffer* IndexBuffer = Mesh->GetIndexBuffer();
+
+                    UINT Stride = sizeof(FVertexDynamic);
+                    UINT Offset = 0;
+                    RHIDevice->GetDeviceContext()->IASetVertexBuffers(0, 1, &VertexBuffer, &Stride, &Offset);
+                    RHIDevice->GetDeviceContext()->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+                    RHIDevice->GetDeviceContext()->DrawIndexed(Mesh->GetIndexCount(), 0, 0);
+                    URenderingStatsCollector::GetInstance().IncrementDrawCalls();
+                }
+            }
+        }
+    }
+
+    // +-+ Restore Render State +-+
+    // DSV un-binding
+    ID3D11RenderTargetView* nullRTV[1] = { nullptr };
+    RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, nullRTV, nullptr);
 }
 
 void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
