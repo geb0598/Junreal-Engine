@@ -13,8 +13,8 @@ public:
     UStaticMesh() = default;
     virtual ~UStaticMesh() override;
 
-    void Load(const FString& InFilePath, ID3D11Device* InDevice, EVertexLayoutType InVertexType = EVertexLayoutType::PositionColorTexturNormal);
-    void Load(FMeshData* InData, ID3D11Device* InDevice, EVertexLayoutType InVertexType = EVertexLayoutType::PositionColorTexturNormal);
+    void Load(const FString& InFilePath, ID3D11Device* InDevice);
+    void Load(FMeshData* InData, ID3D11Device* InDevice);
 
     ID3D11Buffer* GetVertexBuffer() const { return VertexBuffer; }
     ID3D11Buffer* GetIndexBuffer() const { return IndexBuffer; }
@@ -36,8 +36,8 @@ public:
     FNarrowPhaseBVHNode* GetMeshBVH() const { return MeshBVH; }
 
 private:
-    void CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice, EVertexLayoutType InVertexType);
-	void CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice, EVertexLayoutType InVertexType);
+    void CreateVertexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice);
+	void CreateVertexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevic);
     void CreateIndexBuffer(FMeshData* InMeshData, ID3D11Device* InDevice);
 	void CreateIndexBuffer(FStaticMesh* InStaticMesh, ID3D11Device* InDevice);
     void ReleaseResources();

@@ -42,8 +42,6 @@ public:
 
 	void BeginFrame();
 
-    void PrepareShader(FShader& InShader);
-
     void PrepareShader(UShader* InShader);
 
     void OMSetBlendState(bool bIsChecked);
@@ -84,15 +82,18 @@ public:
 
     void OMSetDepthStencilState(EComparisonFunc Func);
 
+    void RenderViewPorts(UWorld* World);
+
     URHIDevice* GetRHIDevice() { return RHIDevice; }
     void RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+    void RenderPostProcessing(UShader* Shader);
+
 private:
 
     // ========== 핵심: 패스 분리 ==========
 
     // 1) 패스들
-    void RenderSceneDepthPass(UWorld* World);   // 깊이 전용 (필요 시)
-    void RenderBasePass(UWorld* World);         // 불투명/기본 머티리얼
+    void RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);         // 불투명/기본 머티리얼
     void RenderFogPass();                       // 포스트: SceneColor/SceneDepth 기반
     void RenderFireBallPass(UWorld* World);     // 포스트: FireBall 조명/가산
     void RenderOverlayPass(UWorld* World);      // 라인/텍스트/UI/디버그

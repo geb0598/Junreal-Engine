@@ -179,6 +179,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="ExponentialHeightFog.cpp" />
     <ClCompile Include="FireballComponent.cpp" />
+    <ClCompile Include="FXAA.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
@@ -270,7 +271,6 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="RHIDevice.cpp" />
     <ClCompile Include="SControlPanel.cpp" />
     <ClCompile Include="SDetailsWindow.cpp" />
     <ClCompile Include="ShapeComponent.cpp" />
@@ -368,6 +368,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="StaticMeshPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mainVS</EntryPointName>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="StaticMeshShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ShaderType>
@@ -409,6 +418,7 @@
     <ClInclude Include="FireballComponent.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
+    <ClInclude Include="FXAA.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="ExponentialHeightFogComponent.h" />
     <ClInclude Include="Info.h" />

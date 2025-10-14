@@ -49,7 +49,6 @@ public:
     virtual void CreateConstantBuffer() = 0;
     virtual void CreateBlendState() = 0;
 	virtual void CreateDepthStencilState() = 0;
-    virtual void CreateShader(ID3D11InputLayout** OutSimpleInputLayout, ID3D11VertexShader** OutSimpleVertexShader, ID3D11PixelShader** OutSimplePixelShader) = 0;
 
     // update
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)

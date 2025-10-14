@@ -59,13 +59,6 @@ void URenderer::BeginFrame()
     RHIDevice->OMSetRenderTargets();
 }
 
-void URenderer::PrepareShader(FShader& InShader)
-{
-    RHIDevice->GetDeviceContext()->VSSetShader(InShader.SimpleVertexShader, nullptr, 0);
-    RHIDevice->GetDeviceContext()->PSSetShader(InShader.SimplePixelShader, nullptr, 0);
-    RHIDevice->GetDeviceContext()->IASetInputLayout(InShader.SimpleInputLayout);
-}
-
 void URenderer::PrepareShader(UShader* InShader)
 {
     // 셰이더 변경 추적
@@ -117,19 +110,7 @@ void URenderer::RenderFrame(UWorld* World)
     BeginFrame();
     UUIManager::GetInstance().Render();
 
-    // 렌더 패스 구조:
-    // 1. Depth Pre-pass (옵션)
-    RenderSceneDepthPass(World);
-    RenderFireBallPass(World);
-    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
-    RenderBasePass(World);
-
-    // 3. Post-processing passes
-    RenderFogPass();
-
-
-    // 4. Overlay (UI, debug visualization)
-    RenderOverlayPass(World);
+    RenderViewPorts(World);
 
     UUIManager::GetInstance().EndFrame();
     EndFrame();
@@ -153,6 +134,8 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
     case EVertexLayoutType::PositionBillBoard:
         stride = sizeof(FBillboardVertexInfo_GPU);
         break;
+    case EVertexLayoutType::PositionUV:
+        stride = sizeof(FVertexUV);
     default:
         // Handle unknown or unsupported vertex types
         assert(false && "Unknown vertex type!");
@@ -370,12 +353,7 @@ void URenderer::OMSetDepthStencilState(EComparisonFunc Func)
     RHIDevice->OmSetDepthStencilState(Func);
 }
 
-void URenderer::RenderSceneDepthPass(UWorld* World)
-{
-    // TODO: Early-Z 최적화를 위한 깊이 프리패스 구현
-}
-
-void URenderer::RenderBasePass(UWorld* World)
+void URenderer::RenderViewPorts(UWorld* World) 
 {
     // 멀티 뷰포트 시스템을 통해 각 뷰포트별로 렌더링
     if (SMultiViewportWindow* MultiViewport = World->GetMultiViewportWindow())
@@ -384,12 +362,10 @@ void URenderer::RenderBasePass(UWorld* World)
     }
 }
 
-void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+
+void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-    if (!World || !Camera || !Viewport)
-    {
-        return;
-    }
+  
 
     // 뷰포트의 실제 크기로 aspect ratio 계산
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
@@ -412,6 +388,31 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
             Gizmo->Render(Camera, Viewport);
         }
     }
+
+}
+
+
+void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+{
+
+    // 렌더 패스 구조:
+    RenderFireBallPass(World);
+    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
+    // 2. Post-processing passes
+    RenderBasePass(World, Camera, Viewport);
+
+    RenderFogPass();
+
+    // 4. Overlay (UI, debug visualization)
+    RenderOverlayPass(World);
+
+    
+    if (!World || !Camera || !Viewport)
+    {
+        return;
+    }
+
+  
 }
 
 void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
@@ -577,6 +578,31 @@ void URenderer::RenderEngineActors(const TArray<AActor*>& EngineActors, const FM
         }
         OMSetBlendState(false);
     }
+}
+
+void URenderer::RenderPostProcessing(UShader* Shader)
+{
+    OMSetBlendState(false);
+    OMSetDepthStencilState(EComparisonFunc::Disable);
+    PrepareShader(Shader);
+    UINT Stride = sizeof(FVertexUV);
+    UINT Offset = 0;
+    UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>("ScreenQuad");
+    ID3D11Buffer* VertexBuffer = StaticMesh->GetVertexBuffer();
+    ID3D11Buffer* IndexBuffer = StaticMesh->GetIndexBuffer();
+    RHIDevice->GetDeviceContext()->IASetVertexBuffers(
+        0, 1, &VertexBuffer, &Stride, &Offset
+    );
+
+    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
+        IndexBuffer, DXGI_FORMAT_R32_UINT, 0
+    );
+    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    RHIDevice->PSSetDefaultSampler(0);
+
+    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+
+    
 }
 
 void URenderer::RenderFogPass()
