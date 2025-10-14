@@ -4,7 +4,7 @@
 URotationMovementComponent::URotationMovementComponent()
 	: RotationRate(FVector(0.f, 20.f, 0.f))
 	, PivotTranslation(FVector(0.f, 0.f, 0.f))
-	, bRotationInLocalSpace(false)
+	, bRotationInLocalSpace(true)
 {
 	bCanEverTick = true;
 }

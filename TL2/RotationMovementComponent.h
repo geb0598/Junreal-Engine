@@ -12,8 +12,10 @@ public:
 	// Getter/Setter Func
 	FVector GetRotationRate() const { return RotationRate; }
 	FVector GetPivotTranslation() const { return PivotTranslation; }
+	bool GetRotationInLocalSpace() const { return bRotationInLocalSpace; }
 	void SetRotationRate(const FVector& InRotationRate) { RotationRate = InRotationRate; }
 	void SetPivotTranslation(const FVector& InPivotTranslation) { PivotTranslation = InPivotTranslation; }
+	void SetRotationInLocalSpace(bool InRotationInLocalSpace) { bRotationInLocalSpace = InRotationInLocalSpace; }
 
 private:
 	FVector RotationRate;

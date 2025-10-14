@@ -317,7 +317,7 @@ void UTargetActorTransformWidget::RenderWidget()
 
 			// +-+-+ Show Actor Component List +-+-+
 			ImGui::SetWindowFontScale(0.8f);
-			ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Actor Components");
+			ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Movement Components");
 			ImGui::SetWindowFontScale(1.0f);
 			for (const TPair<FString, UClass*>& Item : AddableActorComponentTypes)
 			{
@@ -865,6 +865,42 @@ void UTargetActorTransformWidget::RenderWidget()
 			if (ImGui::DragFloat3("Decal Size", &DecalSize.X, 0.1f, 1.0f, 10.0f))
 			{
 				DecalComponent->SetDecalSize(DecalSize);
+			}
+		}
+		else if (URotationMovementComponent* RotComp = Cast<URotationMovementComponent>(SelectedComponent))
+		{
+			ImGui::Text("Rotation Movement Component Settings");
+			ImGui::Separator();
+			
+			// Rotate in Local Space
+			bool bLocalRotation = RotComp->GetRotationInLocalSpace();
+			if (ImGui::Checkbox("Rotate in Local Space", &bLocalRotation))
+			{
+				RotComp->SetRotationInLocalSpace(bLocalRotation);
+			}
+		}
+		else if (UProjectileMovementComponent* ProjComp = Cast<UProjectileMovementComponent>(SelectedComponent))
+		{
+			ImGui::Text("Projectile Movement Component Settings");
+			ImGui::Separator();
+
+			// Initial Speed
+			float InitialSpeed = ProjComp->GetInitialSpeed();
+			if (ImGui::DragFloat("InitialSpeed", &InitialSpeed, 1.0f, 0.0f, 10000.0f))
+			{
+				ProjComp->SetInitialSpeed(InitialSpeed);
+			}
+			// Max Speed
+			float MaxSpeed = ProjComp->GetMaxSpeed();
+			if (ImGui::DragFloat("MaxSpeed", &MaxSpeed, 1.0f, 0.0f, 10000.0f))
+			{
+				ProjComp->SetMaxSpeed(MaxSpeed);
+			}
+			// Gravity Scale
+			float GravityScale = ProjComp->GetGravityScale();
+			if (ImGui::DragFloat("GravityScale", &GravityScale, 1.0f, 0.0f, 10000.0f))
+			{
+				ProjComp->SetGravityScale(GravityScale);
 			}
 		}
 		else
