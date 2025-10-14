@@ -643,7 +643,7 @@ void D3D11RHI::ResizeSwapChain(UINT width, UINT height)
     { 
         UE_LOG("ResizeBuffers failed!\n");
         return; 
-    }
+    } 
 
     // 1) 백버퍼에서 RTV 생성
     hr = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&FrameBuffer);
