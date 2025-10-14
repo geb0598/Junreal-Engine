@@ -161,6 +161,9 @@ private:
         Device->CreateBuffer(&CBufferDesc, nullptr, CBuffer);
     }
 
+    void CreateScreenTexture(ID3D11Texture2D** Texture);
+    void CreateTexture2D(D3D11_TEXTURE2D_DESC& Desc, ID3D11Texture2D** Texture);
+    void CreateDepthStencilView(ID3D11DepthStencilView** DSV, ID3D11ShaderResourceView** SRV);
     void CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV);
     void CreateRTV(ID3D11Resource* Resource, ID3D11RenderTargetView** RTV);
     void CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV, D3D11_SHADER_RESOURCE_VIEW_DESC& Desc);

@@ -14,6 +14,10 @@ void D3D11RHI::Initialize(HWND hWindow)
 	CreateSamplerState();
     CreateIdBuffer();
 
+    CreateScreenTexture(&TemporalBuffer);
+    CreateRTV(TemporalBuffer, &TemporalRTV);
+    CreateSRV(TemporalBuffer, &TemporalSRV);
+
     UResourceManager::GetInstance().Initialize(Device,DeviceContext);
 
     // Initialize Direct2D overlay after device/swapchain ready
@@ -161,24 +165,13 @@ void D3D11RHI::CreateSamplerState()
 
 void D3D11RHI::CreateIdBuffer()
 {
-
-    DXGI_SWAP_CHAIN_DESC SwapDesc;
-    SwapChain->GetDesc(&SwapDesc);
+    CreateScreenTexture(&IdBuffer);
+    D3D11_RENDER_TARGET_VIEW_DESC Desc{};
+    Desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    Desc.Format = DXGI_FORMAT_R32_UINT;
+    CreateRTV(IdBuffer, &IdBufferRTV, Desc);
 
     D3D11_TEXTURE2D_DESC TextureDesc{};
-    TextureDesc.Format = DXGI_FORMAT_R32_UINT;
-    TextureDesc.CPUAccessFlags = 0;
-    TextureDesc.Usage = D3D11_USAGE_DEFAULT;
-    TextureDesc.Width = SwapDesc.BufferDesc.Width;
-    TextureDesc.Height = SwapDesc.BufferDesc.Height;
-    TextureDesc.MipLevels = 1;
-    TextureDesc.ArraySize = 1;
-    TextureDesc.SampleDesc.Count = 1;
-    TextureDesc.SampleDesc.Quality = 0;
-    TextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-
-    HRESULT hr = Device->CreateTexture2D(&TextureDesc, nullptr, &IdBuffer);
-
     TextureDesc.Format = DXGI_FORMAT_R32_UINT;
     TextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
     TextureDesc.Usage = D3D11_USAGE_STAGING;
@@ -189,15 +182,7 @@ void D3D11RHI::CreateIdBuffer()
     TextureDesc.SampleDesc.Count = 1;
     TextureDesc.SampleDesc.Quality = 0;
     TextureDesc.BindFlags = 0;
-
-    Device->CreateTexture2D(&TextureDesc, nullptr, &IdStagingBuffer);
-    if (IdBuffer)
-    {
-        D3D11_RENDER_TARGET_VIEW_DESC Desc{};
-        Desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-        Desc.Format = DXGI_FORMAT_R32_UINT;
-        CreateRTV(IdBuffer, &IdBufferRTV, Desc);
-    }
+    CreateTexture2D(TextureDesc, &IdStagingBuffer);
 }
 
 HRESULT D3D11RHI::CreateIndexBuffer(ID3D11Device* device, const FMeshData* meshData, ID3D11Buffer** outBuffer)
@@ -301,6 +286,72 @@ void D3D11RHI::Present()
     UStatsOverlayD2D::Get().Draw();
     SwapChain->Present(1, 0); // vsync on
 }
+void D3D11RHI::CreateScreenTexture(ID3D11Texture2D** Texture)
+{
+    DXGI_SWAP_CHAIN_DESC SwapDesc;
+    SwapChain->GetDesc(&SwapDesc);
+
+    D3D11_TEXTURE2D_DESC TextureDesc{};
+    TextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    TextureDesc.CPUAccessFlags = 0;
+    TextureDesc.Usage = D3D11_USAGE_DEFAULT;
+    TextureDesc.Width = SwapDesc.BufferDesc.Width;
+    TextureDesc.Height = SwapDesc.BufferDesc.Height;
+    TextureDesc.MipLevels = 1;
+    TextureDesc.ArraySize = 1;
+    TextureDesc.SampleDesc.Count = 1;
+    TextureDesc.SampleDesc.Quality = 0;
+    TextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+    CreateTexture2D(TextureDesc, &IdBuffer);
+}
+void D3D11RHI::CreateTexture2D(D3D11_TEXTURE2D_DESC& Desc, ID3D11Texture2D** Texture)
+{
+    HRESULT hr = Device->CreateTexture2D(&Desc, nullptr, &IdBuffer);
+    if (FAILED(hr))
+    {
+        int a = 0;
+    }
+}
+void D3D11RHI::CreateDepthStencilView(ID3D11DepthStencilView** DSV, ID3D11ShaderResourceView** SRV)
+{
+    DXGI_SWAP_CHAIN_DESC swapDesc;
+    SwapChain->GetDesc(&swapDesc);
+
+    D3D11_TEXTURE2D_DESC depthDesc = {};
+    depthDesc.Width = swapDesc.BufferDesc.Width;
+    depthDesc.Height = swapDesc.BufferDesc.Height;
+    depthDesc.MipLevels = 1;
+    depthDesc.ArraySize = 1;
+    depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; // SRV를 생성하려면 TYPELESS 포맷 사용
+    depthDesc.SampleDesc.Count = 1;
+    depthDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV 바인딩 추가
+
+    // DepthStencilView 생성
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // DSV는 D24_UNORM_S8_UINT 포맷
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Texture2D.MipSlice = 0;
+
+    ID3D11Texture2D* depthBuffer = nullptr;
+    CreateTexture2D(depthDesc, &depthBuffer);
+    HRESULT hr = Device->CreateDepthStencilView(depthBuffer, &dsvDesc, DSV);
+    if (FAILED(hr))
+    {
+        int a = 0;
+    }
+    // ShaderResourceView 생성 (데칼 렌더링에서 사용)
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // SRV는 R24_UNORM_X8_TYPELESS 포맷
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    CreateSRV(depthBuffer, SRV, srvDesc);
+
+    depthBuffer->Release(); // 뷰만 참조 유지
+}
+
 void D3D11RHI::CreateSRV(ID3D11Resource* Resource, ID3D11ShaderResourceView** SRV)
 {
     D3D11_SHADER_RESOURCE_VIEW_DESC Desc = {};
@@ -373,42 +424,7 @@ void D3D11RHI::CreateFrameBuffer()
     CreateRTV(FrameBuffer, &FrameRTV);
     CreateSRV(FrameBuffer, &FrameSRV);
 
-    // =====================================
-    // 깊이/스텐실 버퍼 생성
-    // =====================================
-    DXGI_SWAP_CHAIN_DESC swapDesc;
-    SwapChain->GetDesc(&swapDesc);
-
-    D3D11_TEXTURE2D_DESC depthDesc = {};
-    depthDesc.Width = swapDesc.BufferDesc.Width;
-    depthDesc.Height = swapDesc.BufferDesc.Height;
-    depthDesc.MipLevels = 1;
-    depthDesc.ArraySize = 1;
-    depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; // SRV를 생성하려면 TYPELESS 포맷 사용
-    depthDesc.SampleDesc.Count = 1;
-    depthDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV 바인딩 추가
-
-    ID3D11Texture2D* depthBuffer = nullptr;
-    Device->CreateTexture2D(&depthDesc, nullptr, &depthBuffer);
-
-    // DepthStencilView 생성
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // DSV는 D24_UNORM_S8_UINT 포맷
-    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Texture2D.MipSlice = 0;
-
-    Device->CreateDepthStencilView(depthBuffer, &dsvDesc, &DepthStencilView);
-
-    // ShaderResourceView 생성 (데칼 렌더링에서 사용)
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // SRV는 R24_UNORM_X8_TYPELESS 포맷
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    CreateSRV(depthBuffer, &DepthSRV, srvDesc);
-
-    depthBuffer->Release(); // 뷰만 참조 유지
+    CreateDepthStencilView(&DepthStencilView, &DepthSRV);
 }
 
 void D3D11RHI::CreateRasterizerState()
@@ -598,42 +614,7 @@ void D3D11RHI::CreateBackBufferAndDepthStencil(UINT width, UINT height)
     CreateSRV(backBuffer, &FrameSRV);
     backBuffer->Release();
 
-    // 2) DepthStencil 텍스처/뷰 생성
-    ID3D11Texture2D* depthTex = nullptr;
-    D3D11_TEXTURE2D_DESC depthDesc{};
-    depthDesc.Width = width;
-    depthDesc.Height = height;
-    depthDesc.MipLevels = 1;
-    depthDesc.ArraySize = 1;
-    depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthDesc.SampleDesc.Count = 1;               // 멀티샘플링 끄는 경우
-    depthDesc.SampleDesc.Quality = 0;
-    depthDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-
-    hr = Device->CreateTexture2D(&depthDesc, nullptr, &depthTex);
-    if (FAILED(hr) || !depthTex) {
-        UE_LOG("CreateTexture2D(depth) failed.\n");
-        return;
-    }
-
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
-    dsvDesc.Format = depthDesc.Format;
-    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Texture2D.MipSlice = 0;
-
-    hr = Device->CreateDepthStencilView(depthTex, &dsvDesc, &DepthStencilView);
-    depthTex->Release();
-    if (FAILED(hr) || !DepthStencilView) {
-        UE_LOG("CreateDepthStencilView failed.\n");
-        return;
-    }
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // SRV는 R24_UNORM_X8_TYPELESS 포맷
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    CreateSRV(depthTex, &DepthSRV, srvDesc);
+    CreateDepthStencilView(&DepthStencilView, &DepthSRV);
 }
 
 // ──────────────────────────────────────────────────────
