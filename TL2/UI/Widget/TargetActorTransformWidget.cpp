@@ -657,22 +657,22 @@ void UTargetActorTransformWidget::RenderWidget()
 						BBC->SetScreenSize(screenSize);
 					}
 				}
-				else
-				{
-					// Billboard Size (Is Screen Size Scaled가 false일 때)
-					float billboardWidth = BBC->GetBillboardWidth();
-					float billboardHeight = BBC->GetBillboardHeight();
-					
-					if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
-					{
-						BBC->SetBillboardSize(billboardWidth, billboardHeight);
-					}
-					
-					if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
-					{
-						BBC->SetBillboardSize(billboardWidth, billboardHeight);
-					}
-				}
+				//else
+				//{
+				//	// Billboard Size (Is Screen Size Scaled가 false일 때)
+				//	float billboardWidth = BBC->GetBillboardWidth();
+				//	float billboardHeight = BBC->GetBillboardHeight();
+				//	
+				//	if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
+				//	{
+				//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
+				//	}
+				//	
+				//	if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
+				//	{
+				//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
+				//	}
+				//}
 				
 				ImGui::Spacing();
 				
@@ -874,7 +874,7 @@ void UTargetActorTransformWidget::RenderWidget()
 // 재귀적으로 모든 하위 컴포넌트를 트리 형태로 렌더링
 void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* SceneComponent)
 {
-	if (!SceneComponent)
+	if (!SceneComponent || !SceneComponent->IsEditable())
 	{
 		return;
 	}
@@ -889,7 +889,13 @@ void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* Scen
 	const bool bIsRootComponent = SelectedActor->GetRootComponent() == SceneComponent;
 	const FString ComponentName = SceneComponent->GetName() + (bIsRootComponent ? " (Root)" : "");
 	const TArray<USceneComponent*>& AttachedChildren = SceneComponent->GetAttachChildren();
-	const bool bHasChildren = AttachedChildren.Num() > 0;
+	
+	bool bHasEditableChild = false;
+
+	for (USceneComponent* ChildComponent : AttachedChildren)
+	{
+		bHasEditableChild = ChildComponent->IsEditable();
+	}
 
 	ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
 		| ImGuiTreeNodeFlags_SpanAvailWidth
@@ -903,10 +909,12 @@ void UTargetActorTransformWidget::RenderComponentHierarchy(USceneComponent* Scen
 		NodeFlags |= ImGuiTreeNodeFlags_Selected;
 		
 	}
-	if (!bHasChildren)
+	//Editable한 자식이 존재하지 않는 경우만 NonLeaf노드로 처리
+	if (!bHasEditableChild)
 	{
 		NodeFlags |= ImGuiTreeNodeFlags_Leaf;
 	}
+	
 
 	const bool bNodeIsOpen = ImGui::TreeNodeEx(
 		(void*)SceneComponent,

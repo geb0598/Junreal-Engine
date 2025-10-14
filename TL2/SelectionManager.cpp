@@ -47,8 +47,8 @@ void USelectionManager::SelectComponent(USceneComponent* Component)
         return;
     }
     AActor* SelectedActor = Component->GetOwner();
-    //이미 컴포넌트의 오너 엑터가 피킹되어 있는 상황, 어느 컴포넌트든 선택 가능
-    if (IsActorSelected(SelectedActor))
+    //이미 컴포넌트의 오너 엑터가 피킹되어 있는 상황, Editable한 어느 컴포넌트든 선택 가능
+    if (IsActorSelected(SelectedActor) && Component->IsEditable())
     {
         SelectedComponent = Component;
     }

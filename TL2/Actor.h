@@ -6,6 +6,7 @@
 class UWorld;
 class USceneComponent;
 class UActorComponent;
+class UBillboardComponent;
 
 class AActor : public UObject
 {
@@ -20,9 +21,11 @@ public:
     virtual void BeginPlay();
     virtual void Tick(float DeltaSeconds);
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
-
     virtual void Destroy();
+    virtual void PostInitProperties() {};
 
+
+    void InitEmptyActor();
     // ───────────────
     // Transform API
     // ───────────────
@@ -51,6 +54,7 @@ public:
     void AddActorLocalRotation(const FQuat& InDeltaRotation) const;
     void AddActorLocalLocation(const FVector& DeltaRot) const;
 
+  
     USceneComponent* GetRootComponent() { return RootComponent; }
 
     void SetIsPicked(bool picked) { bIsPicked = picked; }
@@ -111,6 +115,8 @@ public:
 
     // [PIE] Duplicate 복사
     USceneComponent* RootComponent = nullptr;
+    //EmptyActor가 쓰는 빌보드
+    UBillboardComponent* SpriteComponent = nullptr;
     // [PIE] RootComponent 복사가 끝나면 자식 컴포넌트를 순회하면서 OwnedComponents에 루트와 하위 컴포넌트 모두 추가
     TSet<UActorComponent*> OwnedComponents;
 

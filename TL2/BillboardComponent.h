@@ -14,9 +14,9 @@ public:
     void Render(URenderer* Renderer, const FMatrix& View, const FMatrix& Proj, const EEngineShowFlags ShowFlags) override;
     
     // Size settings
-    void SetBillboardSize(float Width, float Height) { BillboardWidth = Width; BillboardHeight = Height; }
-    float GetBillboardWidth() const { return BillboardWidth; }
-    float GetBillboardHeight() const { return BillboardHeight; }
+    void SetBillboardSize(float InSize) { BillboardSize = InSize; }
+    float GetBillboardWidth() const { return BillboardSize; }
+    float GetBillboardHeight() const { return BillboardSize; }
     
     // Texture settings
     void SetTexture(const FString& TexturePath);
@@ -53,8 +53,7 @@ private:
     
     // Size properties
     // [PIE] 값 복사
-    float BillboardWidth = 1.0f;
-    float BillboardHeight = 1.0f;
+    float BillboardSize = 0.5f;
     
     // Texture properties
     // [PIE] 값 복사

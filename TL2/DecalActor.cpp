@@ -5,17 +5,17 @@
 
 ADecalActor::ADecalActor()
 {
-    // 기존 RootComponent 제거 후 DecalComponent를 Root로 설정
-    if (RootComponent)
-    {
-        USceneComponent* TempRootComponent = RootComponent;
-        RootComponent = nullptr;
-        DeleteComponent(TempRootComponent);
-    }
-
     DecalComponent = CreateDefaultSubobject<UDecalComponent>(FName("DecalComponent"));
     RootComponent = DecalComponent;
-    AddComponent(DecalComponent);
+
+    SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
+    if (SpriteComponent)
+    {
+        SpriteComponent->SetTexture(FString("Editor/Icon/S_DecalActorIcon.dds"));
+        SpriteComponent->SetRelativeLocation(RootComponent->GetWorldLocation());
+        SpriteComponent->SetEditable(false);
+        SpriteComponent->SetupAttachment(RootComponent);
+    }
 }
 
 ADecalActor::~ADecalActor()

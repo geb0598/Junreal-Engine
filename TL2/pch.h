@@ -41,6 +41,7 @@
 #include "VertexData.h"
 #include "UEContainer.h"
 #include "Vector.h"
+#include "LinearColor.h"
 #include "Name.h"
 #include "Object.h"
 #include "Enums.h"

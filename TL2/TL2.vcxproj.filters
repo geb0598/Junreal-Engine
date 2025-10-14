@@ -464,6 +464,9 @@
       <Filter>Components\Decal</Filter>
     </ClCompile>
     <ClCompile Include="TimeProfile.cpp" />
+    <ClCompile Include="Info.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="ProjectileMovementComponent.cpp">
       <Filter>Components\Movement</Filter>
     </ClCompile>
@@ -857,6 +860,9 @@
       <Filter>Components\Decal</Filter>
     </ClInclude>
     <ClInclude Include="TimeProfile.h" />
+    <ClInclude Include="Info.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="ProjectileMovementComponent.h">
       <Filter>Components\Movement</Filter>
     </ClInclude>

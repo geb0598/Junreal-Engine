@@ -177,9 +177,12 @@
     <ClCompile Include="EditorClipboard.cpp" />
     <ClCompile Include="EditorEngine.cpp" />
     <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="ExponentialHeightFog.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
+    <ClCompile Include="ExponentialHeightFogComponent.cpp" />
+    <ClCompile Include="Info.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="MenuBarWidget.cpp" />
     <ClCompile Include="MovementComponent.cpp" />
@@ -326,6 +329,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="HeightFogShader.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Primitive.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -390,10 +396,14 @@
     <ClInclude Include="EditorClipboard.h" />
     <ClInclude Include="EditorEngine.h" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="ExponentialHeightFog.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
     <ClInclude Include="GameEngine.h" />
+    <ClInclude Include="ExponentialHeightFogComponent.h" />
+    <ClInclude Include="Info.h" />
     <ClInclude Include="Level.h" />
+    <ClInclude Include="LinearColor.h" />
     <ClInclude Include="MenuBarWidget.h" />
     <ClInclude Include="MovementComponent.h" />
     <ClInclude Include="ObjManager.h" />

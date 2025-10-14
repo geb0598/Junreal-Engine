@@ -4,12 +4,13 @@
 #include "ObjectFactory.h"
 #include "ShapeComponent.h"
 #include "MeshComponent.h"
+#include "BillboardComponent.h"
 #include "TextRenderComponent.h"
 
 AActor::AActor()
 {
     Name = "DefaultActor";
-    RootComponent = CreateDefaultSubobject<USceneComponent>(FName("SceneComponent"));
+    //필요한 것만 Default Component를 생성해주도록 바꾸고 AActor만 생성하는 경우 Level에 등록할때 생성하도록 바꿈
 }
 
 AActor::~AActor()
@@ -22,6 +23,24 @@ AActor::~AActor()
         }
     }
     OwnedComponents.Empty();
+}
+
+void AActor::InitEmptyActor()
+{
+    if (!RootComponent)
+    {
+        USceneComponent* DefaultComponent = CreateDefaultSubobject<USceneComponent>(FName("DefaultSceneComponent"));
+        RootComponent = DefaultComponent;
+
+        SpriteComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpriteComponent"));
+        if (SpriteComponent)
+        {
+            SpriteComponent->SetTexture(FString("Editor/Icon/EmptyActor.dds"));
+            SpriteComponent->SetRelativeLocation(RootComponent->GetWorldLocation());
+            SpriteComponent->SetEditable(false);
+            SpriteComponent->SetupAttachment(RootComponent);
+        }
+    }  
 }
 
 void AActor::BeginPlay()

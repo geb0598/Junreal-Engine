@@ -190,6 +190,8 @@ inline T* UWorld::SpawnActor(const FTransform& Transform)
 	// 초기 트랜스폼 적용
 	NewActor->SetActorTransform(Transform);
 
+	NewActor->PostInitProperties();
+
 	//  월드 등록
 	NewActor->SetWorld(this);
 

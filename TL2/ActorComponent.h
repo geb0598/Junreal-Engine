@@ -28,7 +28,9 @@ public:
     // 활성화/비활성
     // ───────────────
     void SetActive(bool bNewActive) { bIsActive = bNewActive; }
+    void SetEditable(bool bIsEditable) { bEdiableWhenInherited = bIsEditable; }
     bool IsActive() const { return bIsActive; }
+    bool IsEditable() const { return bEdiableWhenInherited; }
 
     void SetTickEnabled(bool bNewTick) { bCanEverTick = bNewTick; }
     bool CanEverTick() const { return bCanEverTick; }
@@ -51,4 +53,5 @@ protected:
     // [PIE] 값 복사
     bool bIsActive = true;    // 활성 상태
     bool bCanEverTick = false; // 매 프레임 Tick 가능 여부
+    bool bEdiableWhenInherited = true;  //디테일에서 Editing 가능 여부
 };

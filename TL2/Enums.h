@@ -316,6 +316,7 @@ enum class ESpawnActorType : uint32
     StaticMesh,
     Decal,
     SpotLight,
+    HeightFog,
 
     Count
 };

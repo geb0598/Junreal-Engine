@@ -23,4 +23,5 @@ public:
 
 protected:
     UDecalComponent* DecalComponent;
+    UBillboardComponent* SpriteComponent;
 };

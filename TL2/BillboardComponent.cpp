@@ -57,7 +57,10 @@ UObject* UBillboardComponent::Duplicate()
     {
         CopyCommonProperties(DuplicatedComponent);
 		DuplicatedComponent->TexturePath = TexturePath;
+        DuplicatedComponent->SetEditable(this->bEdiableWhenInherited);
+        DuplicatedComponent->SetBillboardSize(this->BillboardSize);
         DuplicatedComponent->DuplicateSubObjects();
+        
     }
     return DuplicatedComponent;
 }
@@ -93,17 +96,16 @@ void UBillboardComponent::CreateBillboardVertices()
 
     // 단일 쿼드의 4개 정점 생성 (카메라를 향하는 평면)
     // 중심이 (0,0,0)이고 크기가 BillboardWidth x BillboardHeight인 사각형
-    float halfW = BillboardWidth * 0.5f;
-    float halfH = BillboardHeight * 0.5f;
+    float half = BillboardSize * 0.5f;
 
     FBillboardVertexInfo_GPU Info;
 
     // 정점 0: 좌상단 (-halfW, +halfH)
-    Info.Position[0] = -halfW;
-    Info.Position[1] = halfH;
+    Info.Position[0] = -half;
+    Info.Position[1] = half;
     Info.Position[2] = 0.0f;
-    Info.CharSize[0] = BillboardWidth;
-    Info.CharSize[1] = BillboardHeight;
+    Info.CharSize[0] = BillboardSize;
+    Info.CharSize[1] = BillboardSize;
     Info.UVRect[0] = UCoord;   // u start
     Info.UVRect[1] = VCoord;   // v start
     Info.UVRect[2] = ULength;  // u length (UL)
@@ -111,20 +113,20 @@ void UBillboardComponent::CreateBillboardVertices()
     vertices.push_back(Info);
 
     // 정점 1: 우상단 (+halfW, +halfH)
-    Info.Position[0] = halfW;
-    Info.Position[1] = halfH;
+    Info.Position[0] = half;
+    Info.Position[1] = half;
     Info.Position[2] = 0.0f;
     vertices.push_back(Info);
 
     // 정점 2: 좌하단 (-halfW, -halfH)
-    Info.Position[0] = -halfW;
-    Info.Position[1] = -halfH;
+    Info.Position[0] = -half;
+    Info.Position[1] = -half;
     Info.Position[2] = 0.0f;
     vertices.push_back(Info);
 
     // 정점 3: 우하단 (+halfW, -halfH)
-    Info.Position[0] = halfW;
-    Info.Position[1] = -halfH;
+    Info.Position[0] = half;
+    Info.Position[1] = -half;
     Info.Position[2] = 0.0f;
     vertices.push_back(Info);
 
@@ -148,7 +150,12 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
 
     // 빌보드 위치 설정
     FVector BillboardPos = GetWorldLocation();
-
+    if (this->IsEditable())
+    {
+        FVector BillboardScale = GetRelativeScale();
+        float Scale = BillboardScale.X > BillboardScale.Y ? BillboardScale.X : BillboardScale.Y;
+        SetBillboardSize(Scale);
+    }
     // 상수 버퍼 업데이트
     ////UUID만 필요하지만 기존 버퍼와 함수 재사용하기 위해서 모델버퍼 받아옴
     Renderer->UpdateSetCBuffer(ModelBufferType(FMatrix(), this->InternalIndex));
