@@ -19,7 +19,7 @@ void UProjectileMovementComponent::TickComponent(float DeltaSeconds)
 
 	if (Velocity.Size() > MaxSpeed)
 	{
-		Velocity = Velocity.GetSafeNormal() * MaxSpeed;
+		Velocity = -Velocity.GetSafeNormal() * MaxSpeed;
 	}
 
 	FVector Delta = Velocity * DeltaSeconds;

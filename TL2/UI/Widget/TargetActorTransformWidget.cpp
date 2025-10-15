@@ -1228,13 +1228,13 @@ void UTargetActorTransformWidget::RenderProjectileMovementComponentDetails(UProj
 
 	// Initial Speed
 	float InitialSpeed = InComponent->GetInitialSpeed();
-	if (ImGui::DragFloat("InitialSpeed", &InitialSpeed, 1.0f, 0.0f, 10000.0f))
+	if (ImGui::DragFloat("InitialSpeed", &InitialSpeed, 1.0f))
 	{
 		InComponent->SetInitialSpeed(InitialSpeed);
 	}
 	// Max Speed
 	float MaxSpeed = InComponent->GetMaxSpeed();
-	if (ImGui::DragFloat("MaxSpeed", &MaxSpeed, 1.0f, 0.0f, 10000.0f))
+	if (ImGui::DragFloat("MaxSpeed", &MaxSpeed, 1.0f))
 	{
 		InComponent->SetMaxSpeed(MaxSpeed);
 	}
