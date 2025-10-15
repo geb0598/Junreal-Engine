@@ -756,92 +756,40 @@ void URenderer::RenderOverlayPass(UWorld* World)
     // TODO: 오버레이(UI, 디버그 텍스트 등) 구현
 }
 
-//void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
-//{
-//    // red
-//    //RHIDevice->OMSetDepthOnlyTarget();
-//
-//
-//
-//    /*ID3D11RenderTargetView* rtv = nullptr;
-//    ID3D11DepthStencilView* dsv = nullptr;
-//    RHIDevice->GetDeviceContext()->OMGetRenderTargets(1, &rtv, &dsv);*/
-//    //UE_LOG("RTV=%p, DSV=%p", rtv, dsv);
-//
-//    UINT numViewports = 0;
-//    D3D11_VIEWPORT vp[8];
-//    RHIDevice->GetDeviceContext()->RSGetViewports(&numViewports, vp);
-//    //UE_LOG("ViewportCount=%u, Size=(%.1f, %.1f)", numViewports, vp[0].Width, vp[0].Height);
-//
-//    // +-+ Set Render State +-+
-//    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
-//    RHIDevice->OMSetBlendState(true);
-//    RHIDevice->OmSetDepthStencilState(EComparisonFunc::Disable);
-//
-//    // +-+ Set Shader & Buffer +-+
-//    SceneDepthVisualizeShader = UResourceManager::GetInstance().Load<UShader>("DepthVisualizeShader.hlsl");
-//    PrepareShader(SceneDepthVisualizeShader);
-//
-//    if (Camera)
-//    {
-//        CameraInfoBufferType CameraInfo;
-//        CameraInfo.NearClip = Camera->GetCameraComponent()->GetNearClip();
-//        CameraInfo.FarClip = Camera->GetCameraComponent()->GetFarClip();
-//        UpdateSetCBuffer(CameraInfoBufferType(CameraInfo));
-//    }
-//
-//    // +-+ Set Shader Resources (Texture) +-+
-//    // TODO: Abstracting RHI access to the depth SRV
-//    ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(RHIDevice)->GetDepthSRV();
-//
-//    ID3D11Resource* resSRV = nullptr;
-//    DepthSRV->GetResource(&resSRV);
-//
-//    /*ID3D11DepthStencilView* dsv = nullptr;
-//    RHIDevice->GetDeviceContext()->OMGetRenderTargets(0, nullptr, &dsv);
-//    ID3D11Resource* resDSV = nullptr;
-//    dsv->GetResource(&resDSV);
-//
-//    UE_LOG("-------DepthSRV resource = %p", resSRV);
-//    UE_LOG("-------DepthDSV resource = %p", resDSV);*/
-//
-//    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &DepthSRV);
-//    ID3D11ShaderResourceView* currentSRV = nullptr;
-//    RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &currentSRV);
-//    UE_LOG("=========Currently bound SRV at slot 0 = %p", currentSRV);
-//    RHIDevice->PSSetDefaultSampler(0);
-//
-//    // +-+ Draw Full-Screen Triangle +-+
-//    RHIDevice->IASetPrimitiveTopology();
-//    //UE_LOG("VisualizePass draw start");
-//
-//    ID3D11ShaderResourceView* cur = nullptr;
-//    RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &cur);
-//    UE_LOG("t0 = %p (must equal depthSRV)", cur);
-//    ID3D11PixelShader* ps = nullptr; RHIDevice->GetDeviceContext()->PSGetShader(&ps, nullptr, nullptr);
-//    UE_LOG("PS = %p", ps);
-//
-//    RHIDevice->GetDeviceContext()->Draw(3, 0);
-//    //UE_LOG("VisualizePass draw end");
-//
-//    // +-+ Restore Render State +-+
-//    // SRV un-binding
-//    ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
-//    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, nullSRV);
-//    // Depth test OK
-//    RHIDevice->OmSetDepthStencilState(EComparisonFunc::LessEqual);
-//    RHIDevice->OMSetBlendState(true);
-//}
-
 void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
 {
     // RTV만 바인딩 (DSV = nullptr)
     ID3D11RenderTargetView* FrameRTV = static_cast<D3D11RHI*>(RHIDevice)->GetFrameRTV();
     RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, &FrameRTV, nullptr);
 
+    // 현재 프레임버퍼(Texture2D)에서 뷰포트 크기 구하기
+    D3D11_TEXTURE2D_DESC backDesc{};
+    ID3D11Texture2D* frameBuffer = static_cast<D3D11RHI*>(RHIDevice)->GetFrameBuffer();
+
+    if (frameBuffer)
+    {
+        frameBuffer->GetDesc(&backDesc);
+
+        D3D11_VIEWPORT vp{};
+        vp.TopLeftX = 0.0f;
+        vp.TopLeftY = 0.0f;
+        vp.Width = static_cast<FLOAT>(backDesc.Width);
+        vp.Height = static_cast<FLOAT>(backDesc.Height);
+        vp.MinDepth = 0.0f;
+        vp.MaxDepth = 1.0f;
+
+        RHIDevice->GetDeviceContext()->RSSetViewports(1, &vp);
+
+        UE_LOG("Viewport 재설정 완료: %.0fx%.0f", vp.Width, vp.Height);
+    }
+    else
+    {
+        UE_LOG("FrameBuffer가 null입니다. Viewport 설정 실패");
+    }
+
     //RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
     RHIDevice->OmSetDepthStencilState(EComparisonFunc::Disable);
-    RHIDevice->OMSetBlendState(true);
+    RHIDevice->OMSetBlendState(false);
 
     SceneDepthVisualizeShader = UResourceManager::GetInstance().Load<UShader>("DepthVisualizeShader.hlsl");
     PrepareShader(SceneDepthVisualizeShader);
@@ -860,6 +808,28 @@ void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
     //UE_LOG("Currently bound SRV at slot 0 = %p", DepthSRV);
 
     RHIDevice->PSSetDefaultSampler(0);
+
+    // (디버그) OM/RS/PS 상태 확인
+    {
+        ID3D11RenderTargetView* chkRTV = nullptr; ID3D11DepthStencilView* chkDSV = nullptr;
+        RHIDevice->GetDeviceContext()->OMGetRenderTargets(1, &chkRTV, &chkDSV);
+        UE_LOG("OMGet RT=%p DSV=%p (DSV는 반드시 null)", chkRTV, chkDSV);
+        if (chkRTV) chkRTV->Release(); if (chkDSV) chkDSV->Release();
+
+        UINT numVPs = 0;
+        RHIDevice->GetDeviceContext()->RSGetViewports(&numVPs, nullptr);      // 필요한 개수 질의
+
+        std::vector<D3D11_VIEWPORT> vps(numVPs);
+        RHIDevice->GetDeviceContext()->RSGetViewports(&numVPs, vps.data());   // 실제 가져오기
+
+        UE_LOG("ViewportCount=%u, size=(%.0f, %.0f)",
+            numVPs, numVPs ? vps[0].Width : 0, numVPs ? vps[0].Height : 0);
+
+        ID3D11ShaderResourceView* cur = nullptr;
+        RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &cur);
+        UE_LOG("t0(before Draw)=%p (depthSRV=%p)", cur, DepthSRV);
+        if (cur) cur->Release();
+    }
 
     RHIDevice->IASetPrimitiveTopology();
 

@@ -112,6 +112,10 @@ public:
     {
         return DepthSRV;
     }
+    inline ID3D11Texture2D* GetFrameBuffer()
+    {
+        return FrameBuffer;
+    }
     inline ID3D11Texture2D* GetIdBuffer()
     {
         return IdBuffer;
