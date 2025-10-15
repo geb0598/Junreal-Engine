@@ -96,18 +96,18 @@ float4 mainPS(PS_Input i) : SV_TARGET
     //가로세로 확인
     //코드
 
-    if (abs(Dir.x) < 1 && abs(Dir.y) < 1)
-    {
+    //if (abs(Dir.x) < 1 && abs(Dir.y) < 1)
+    //{
         
-    }
-    else if (abs(Dir.x) < 1)
-    {
-        return float4(1, 1, 0, 1);
-    }
-    else if (abs(Dir.y) < 1)
-    {
-        return float4(0, 1, 1, 1);
-    }
+    //}
+    //else if (abs(Dir.x) < 1)
+    //{
+    //    return float4(1, 1, 0, 1);
+    //}
+    //else if (abs(Dir.y) < 1)
+    //{
+    //    return float4(0, 1, 1, 1);
+    //}
     
     //step(x,y) = x <= y ? 1 : 0;
     Dir.x = Dir.x * step(1.0, abs(Dir.x)); //abs(Dir.x)가 1보다 크거나 같으면 1 else 0
