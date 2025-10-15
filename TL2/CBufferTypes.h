@@ -51,7 +51,7 @@ MACRO(FHeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
-CBUFFER_INFO(ViewProjBufferType, 1, true, false)
+CBUFFER_INFO(ViewProjBufferType, 1, true, true)
 CBUFFER_INFO(BillboardBufferType, 2, true, false)
 CBUFFER_INFO(FViewProjectionInverse, 3, false, true)
 CBUFFER_INFO(FPixelConstBufferType, 4, false, true)
@@ -104,6 +104,7 @@ struct BillboardBufferType
 struct FViewProjectionInverse
 {
     FMatrix ViewProjectionInverse;
+    FVector CameraPosition;
 };
 
 

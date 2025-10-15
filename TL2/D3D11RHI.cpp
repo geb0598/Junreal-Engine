@@ -275,6 +275,7 @@ void D3D11RHI::OMSetRenderTargets(const ERenderTargetType RenderTargetType)
         DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
         return;
     }
+
     if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
     {
         RTVList.Push(FrameRTV);
@@ -287,6 +288,7 @@ void D3D11RHI::OMSetRenderTargets(const ERenderTargetType RenderTargetType)
     {
         RTVList.Push(TemporalRTV);
     }
+    //depth를 SRV로 안 써야 RTV로 설정 가능
     if (((int)RenderTargetType & (int)ERenderTargetType::NoDepth) > 0)
     {
         Depth = nullptr;
@@ -315,6 +317,13 @@ void D3D11RHI::PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType)
     ViewPort.MaxDepth = 1;
     
    DeviceContext->RSSetViewports(1, &ViewPort);*/
+    if (((int)RenderTargetType & (int)ERenderTargetType::None) > 0)
+    {
+        //현재까지 최대 2개
+        ID3D11ShaderResourceView* Empty[2]{ nullptr, nullptr };
+        DeviceContext->PSSetShaderResources(0, 2, Empty);
+        return;
+    }
     if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
     {
         SRVList.Add(FrameSRV);
