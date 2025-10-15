@@ -310,6 +310,7 @@ enum class ESpawnActorType : uint32
     Decal,
     SpotLight,
     HeightFog,
+    FXAA,
 
     Count
 };

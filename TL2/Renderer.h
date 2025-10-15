@@ -2,7 +2,6 @@
 #include "BillboardComponent.h"
 #include "RHIDevice.h"
 #include "LineDynamicMesh.h"
-#include "FXAA.h"
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
@@ -93,6 +92,7 @@ private:
     void RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);   // 깊이 전용 (필요 시)
     void RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);         // 불투명/기본 머티리얼
     void RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);                       // 포스트: SceneColor/SceneDepth 기반
+    void RenderFXAAPaxx(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
 
     void RenderPointLightShadowPass(UWorld* World);
     void RenderFireBallPass(UWorld* World);     // 포스트: FireBall 조명/가산
@@ -152,8 +152,6 @@ private:
     ID3D11Buffer* LastIndexBuffer = nullptr;
     D3D11_PRIMITIVE_TOPOLOGY LastPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     ID3D11ShaderResourceView* LastTextureSRV = nullptr;
-
-    UFXAA FXAA;
 
     void InitializeLineBatch();
     void ResetRenderStateTracking();

@@ -8,6 +8,7 @@
 #include "../../SpotLightActor.h"
 #include "../../Vector.h"
 #include "ExponentialHeightFog.h"
+#include "FXAAActor.h"
 #include "ObjManager.h"
 #include <algorithm>
 #include <cstdlib>
@@ -65,6 +66,7 @@ void UPrimitiveSpawnWidget::Initialize()
         RegisterSpawnInfo<ADecalActor>(ESpawnActorType::Decal, "Decal");
         RegisterSpawnInfo<ASpotLightActor>(ESpawnActorType::SpotLight, "Spot Light");
         RegisterSpawnInfo<AExponentialHeightFog>(ESpawnActorType::HeightFog, "HeightFog");
+        RegisterSpawnInfo<AFXAAActor>(ESpawnActorType::FXAA, "FXAA");
     }
 }
 
@@ -138,7 +140,7 @@ void UPrimitiveSpawnWidget::RenderWidget()
     ImGui::Spacing();
 
     // Primitive 타입 선택: StaticMesh만 노출
-    const char* SpawnTypes[] = { "Actor", "Static Mesh", "Decal", "Spot Light", "ExponentialHeightFog"};
+    const char* SpawnTypes[] = { "Actor", "Static Mesh", "Decal", "Spot Light", "ExponentialHeightFog", "FXAA"};
     static ESpawnActorType SelectedSpawnType = ESpawnActorType::StaticMesh;
     
     ImGui::Text("Actor Types:");

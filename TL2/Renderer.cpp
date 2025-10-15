@@ -20,6 +20,7 @@
 #include "GizmoActor.h"
 #include "FireballComponent.h"
 #include "ExponentialHeightFogComponent.h"
+#include "FXAAComponent.h"
 #include "CameraComponent.h"
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
@@ -500,7 +501,7 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
         RenderFireBallPass(World);
         RenderBasePass(World, Camera, Viewport);  // Full color + depth pass (Opaque geometry - per viewport)
         RenderFogPass(World,Camera,Viewport);
-       // FXAA.Render(this);
+        RenderFXAAPaxx(World, Camera, Viewport);
         RenderEditorPass(World, Camera, Viewport);
         break;
     }
@@ -824,6 +825,16 @@ void URenderer::RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Vi
    }
 
 }
+void URenderer::RenderFXAAPaxx(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+{
+    for (UFXAAComponent* FXAAComponent : World->GetLevel()->GetComponentList<UFXAAComponent>())
+    {
+        FXAAComponent->Render(this);
+        //첫번째 것만 그림
+        break;
+    }
+}
+
 
 void URenderer::RenderFireBallPass(UWorld* World)
 {

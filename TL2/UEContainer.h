@@ -551,3 +551,11 @@ public:
 #define TPriorityQueueWithCompare(T, Compare) TQueue<T, EQueueMode::Priority, Compare>
 
 
+//어디 둬야할지 몰라서 여기둠
+inline void RemoveUnderScore(FString& Name)
+{
+    size_t UnderScorePos = Name.find_last_of('_');
+    if (UnderScorePos != std::string::npos) {
+        Name = Name.substr(0, UnderScorePos); // '_' 이전까지 잘라냄
+    }
+}
