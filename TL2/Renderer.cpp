@@ -390,7 +390,39 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     }
 
 }
-
+//void URenderer::RenderPointLightShadowPass(UWorld* World)
+//{
+//    for (auto& Light : World->PointLights)
+//    {
+//        if (!Light->CastShadows)
+//            continue;
+//
+//        const FVector LightPos = Light->Position;
+//        const float NearZ = 1.0f;
+//        const float FarZ = Light->Radius;
+//
+//        // 6방향 뷰행렬 구성
+//        FMatrix LightViews[6];
+//        LightViews[0] = FMatrix::LookAt(LightPos, LightPos + FVector(1, 0, 0), FVector(0, 1, 0));   // +X
+//        LightViews[1] = FMatrix::LookAt(LightPos, LightPos + FVector(-1, 0, 0), FVector(0, 1, 0));  // -X
+//        LightViews[2] = FMatrix::LookAt(LightPos, LightPos + FVector(0, 1, 0), FVector(0, 0, -1));  // +Y
+//        LightViews[3] = FMatrix::LookAt(LightPos, LightPos + FVector(0, -1, 0), FVector(0, 0, 1));  // -Y
+//        LightViews[4] = FMatrix::LookAt(LightPos, LightPos + FVector(0, 0, 1), FVector(0, 1, 0));   // +Z
+//        LightViews[5] = FMatrix::LookAt(LightPos, LightPos + FVector(0, 0, -1), FVector(0, 1, 0));  // -Z
+//
+//        const FMatrix LightProj = FMatrix::PerspectiveFovLH(PI / 2.0f, 1.0f, NearZ, FarZ);
+//
+//        for (int Face = 0; Face < 6; ++Face)
+//        {
+//            RHI->SetRenderTarget(Light->ShadowCubeMap, Face);
+//            RHI->ClearDepth(1.0f);
+//            RHI->OMSetDepthStencilState(EComparisonFunc::LessEqualWrite);
+//
+//            UpdateShadowBuffer(LightViews[Face], LightProj, LightPos);
+//            RenderSceneDepthOnly(World); // 깊이만 렌더
+//        }
+//    }
+//}
 
 void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
@@ -648,12 +680,12 @@ void URenderer::RenderFireBallPass(UWorld* World)
                     if (idx >= MAX_POINT_LIGHTS) break;
 
                     PointLightCB.PointLights[idx].Position = FVector4(
-                        Fire->GetWorldLocation(), Fire->Radius
+                        Fire->GetWorldLocation(), Fire->FireData.Radius
                     );
                     PointLightCB.PointLights[idx].Color = FVector4(
-                        Fire->Color.R, Fire->Color.G, Fire->Color.B, Fire->Intensity
+                        Fire->FireData.Color.R, Fire->FireData.Color.G, Fire->FireData.Color.B, Fire->FireData.Intensity
                     );
-                    PointLightCB.PointLights[idx].FallOff = Fire->RadiusFallOff;
+                    PointLightCB.PointLights[idx].FallOff = Fire->FireData.RadiusFallOff;
                 }
             }
         }

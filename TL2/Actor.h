@@ -74,6 +74,7 @@ public:
         T* Comp = ObjectFactory::NewObject<T>();
         Comp->SetOwner(this);
        // Comp->SetName(SubobjectName);  //나중에 추가 구현
+		
         AddComponent(Comp);
         return Comp;
     }

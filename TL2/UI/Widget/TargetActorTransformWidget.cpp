@@ -20,6 +20,7 @@
 #include "MeshComponent.h"
 #include "RotationMovementComponent.h"
 #include "ProjectileMovementComponent.h"
+#include"FireballComponent.h"
 #include <filesystem>
 #include <vector>
 
@@ -783,6 +784,49 @@ void UTargetActorTransformWidget::RenderWidget()
 			//	TextRenderComponent->SetTextColor(FLinearColor(color[0], color[1], color[2]));
 			//}
 		}
+		else if (UFireBallComponent* FBC = Cast<UFireBallComponent>(SelectedComponent))
+		{
+			ImGui::Separator();
+			ImGui::Text("FireBall Component Settings");
+
+			// 🔸 색상 설정 (RGB Color Picker)
+			float color[3] = { FBC->FireData.Color.R, FBC->FireData.Color.G, FBC->FireData.Color.B };
+			if (ImGui::ColorEdit3("Color", color))
+			{
+				FBC->FireData.Color = FLinearColor(color[0], color[1], color[2], 1.0f);
+			}
+
+			ImGui::Spacing();
+
+			// 🔸 밝기 (Intensity)
+			float intensity = FBC->FireData.Intensity;
+			if (ImGui::DragFloat("Intensity", &intensity, 0.1f, 0.0f, 100.0f))
+			{
+				FBC->FireData.Intensity = intensity;
+			}
+
+			// 🔸 반경 (Radius)
+			float radius = FBC->FireData.Radius;
+			if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 1000.0f))
+			{
+				FBC->FireData.Radius = radius;
+			}
+
+			// 🔸 감쇠 정도 (FallOff)
+			float falloff = FBC->FireData.RadiusFallOff;
+			if (ImGui::DragFloat("FallOff", &falloff, 0.05f, 0.1f, 10.0f))
+			{
+				FBC->FireData.RadiusFallOff = falloff;
+			}
+
+			ImGui::Spacing();
+
+			// 🔸 시각적 미리보기용 Sphere 표시 (선택된 경우)
+			ImGui::Text("Preview:");
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(color[0], color[1], color[2], 1.0f), "● FireBall Active");
+
+		}	
 		else if (UDecalComponent* DecalComponent = Cast<UDecalComponent>(SelectedComponent))
 		{
 			ImGui::Text("Decal Component Settings");
