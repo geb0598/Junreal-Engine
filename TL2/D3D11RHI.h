@@ -83,6 +83,7 @@ public:
     void RSSetDecalState() override;
     void RSSetViewport() override;
     void OMSetRenderTargets(const ERenderTargetType RenderTargetType) override;
+    void OMSetDepthOnlyTarget() override;
     void PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType) override;
 
     void OMSetBlendState(bool bIsBlendMode) override;
@@ -111,6 +112,10 @@ public:
     {
         return DepthSRV;
     }
+    inline ID3D11Texture2D* GetFrameBuffer()
+    {
+        return FrameBuffer;
+    }
     inline ID3D11Texture2D* GetIdBuffer()
     {
         return IdBuffer;
@@ -118,6 +123,10 @@ public:
     inline ID3D11Texture2D* GetIdStagingBuffer()
     {
         return IdStagingBuffer;
+    }
+    inline ID3D11RenderTargetView* GetFrameRTV()
+    {
+        return FrameRTV;
     }
 
 private:

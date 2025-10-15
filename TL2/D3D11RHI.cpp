@@ -262,6 +262,11 @@ void D3D11RHI::RSSetViewport()
     DeviceContext->RSSetViewports(1, &ViewportInfo);
 }
 
+void D3D11RHI::OMSetDepthOnlyTarget()
+{
+    DeviceContext->OMSetRenderTargets(0, nullptr, DepthStencilView);
+}
+
 //수정 필요
 //postprocessing 이 RenderTarget을 직접 참조하고 원하는 렌더타겟을 설정 할 수 있어야 하나,
 //지금 발제는 처리가능하기에 일단 이대로 둠

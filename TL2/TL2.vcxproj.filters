@@ -900,9 +900,6 @@
     <FxCompile Include="StaticMeshShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="StaticMeshPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="TextShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -919,6 +916,13 @@
     <FxCompile Include="Copy.hlsl" />
     <FxCompile Include="FXAA.hlsl" />
     <FxCompile Include="HeightFogShader.hlsl" />
+    <FxCompile Include="SceneDepth.hlsl" />
+    <FxCompile Include="DepthPrepassShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthVisualizeShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <!-- ==================== 리소스 파일 ==================== -->
   <ItemGroup>
