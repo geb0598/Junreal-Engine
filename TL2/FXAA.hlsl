@@ -84,14 +84,13 @@ float4 mainPS(PS_Input i) : SV_TARGET
     
 
     float2 Dir;
-    Dir.x = ((TR + TL) - (BR + BL)); //Top - Bottom
+    Dir.x = ((TR + TL) - (BR + BL)); //Top - Bottom  양수 => 위가 밝다, 음수 => 아래가 밝다
     Dir.y = ((TR + BR) - (TL + BL)); //Right - Left
 	
-    float DirReduce = max((TR + TL + BR + BL) * (ReduceMul * 0.25), ReduceMin);
-    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce);
+    float DirReduce = max((TR + TL + BR + BL) * 0.25 * ReduceMul, ReduceMin); //DirReduce = max(평균 * ReduceMul, ReduceMin)
+    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce); //1 / (Dir x,y 거리중 최소 + DirReduce)
 	
-    Dir = min(float2(SpanMax, SpanMax), max(float2(-SpanMax, -SpanMax), Dir * InvDirAdjustment)); //Dir = -SpanMax <= Dir * InvDirAdjustment <= SpanMax 범위로 넣기
-	
+    Dir = min(float2(SpanMax, SpanMax), max(float2(-SpanMax, -SpanMax), Dir * InvDirAdjustment)); //Dir = -SpanMax <= (Dir * InvDirAdjustment) <= SpanMax 범위로 넣기
     
     //step(x,y) = x <= y ? 1 : 0;
     Dir.x = Dir.x * step(1.0, abs(Dir.x)); //abs(Dir.x)가 1보다 크거나 같으면 1 else 0
@@ -111,6 +110,7 @@ float4 mainPS(PS_Input i) : SV_TARGET
     float Max = max(M, max(max(TL, TR), max(BL, BR)));
     float Result2Dot = dot(Lumaniance, Result2);
 	
+    //4점평균이 Min Max 범위 밖이면 Result1(가까움 두점 평균) 리턴
     if (Result2Dot < Min || Result2Dot > Max)
     {
         return float4(Result1, 1.0);
