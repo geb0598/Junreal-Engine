@@ -8,6 +8,13 @@ SamplerState LinearSampler : register(s0);
 //    float3 posModel : POSITION;
 //    float2 uv : TEXCOORD0;
 //};
+cbuffer FXAACBuffer : register(b0)
+{
+    float SlideX;
+    float SpanMax;
+    float ReduceMin;
+    float ReduceMul;
+}
 
 struct PS_Input
 {
@@ -48,16 +55,26 @@ float GetFrameSample(float2 uv)
 
 float4 mainPS(PS_Input i) : SV_TARGET
 {
+    if (i.uv.x < SlideX)
+    {
+        discard;
+    }
+    if (!(SlideX == 0.00f || SlideX == 1.0f))
+    {
+        if (0.005f > abs(i.uv.x - SlideX))
+        {
+            return float4(1, 0, 0, 1);
+        }
+
+    }
     float3 Lumaniance = float3(0.299f, 0.587f, 0.114f);
-    float SpanMax = 8.0f;
-    float ReduceMin = 1.0f / 128.0f;
-    float ReduceMul = 1.0f / 8.0f;
     
     //Get Texture Info
     uint TexWidth, TexHeight, MipCount = 0;
     FrameColor.GetDimensions(0, TexWidth, TexHeight, MipCount);
     float2 TexSizeRCP = float2(1.0f / TexWidth, 1.0f / TexHeight);
     float2 uv = float2(i.posCS.x / TexWidth, i.posCS.y / TexHeight);
+    
     
     float3 Color = FrameColor.Sample(LinearSampler, uv).rgb;
     //NearPixel Sample

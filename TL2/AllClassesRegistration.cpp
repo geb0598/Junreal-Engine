@@ -55,6 +55,8 @@
 #include "RotationMovementComponent.h"
 #include "ProjectileMovementComponent.h"
 #include "ExponentialHeightFogComponent.h"
+#include "FXAAComponent.h"
+#include "FXAAActor.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -77,6 +79,7 @@ IMPLEMENT_CLASS(AGridActor)
 IMPLEMENT_CLASS(ADecalActor)
 IMPLEMENT_CLASS(ASpotLightActor)
 IMPLEMENT_CLASS(AExponentialHeightFog)
+IMPLEMENT_CLASS(AFXAAActor)
 
 IMPLEMENT_CLASS(UGizmoArrowComponent)
 IMPLEMENT_CLASS(UGizmoScaleComponent)
@@ -88,6 +91,7 @@ IMPLEMENT_CLASS(UBillboardComponent)
 IMPLEMENT_CLASS(UDecalComponent)
 IMPLEMENT_CLASS(UFireBallComponent)
 IMPLEMENT_CLASS(UExponentialHeightFogComponent)
+IMPLEMENT_CLASS(UFXAAComponent)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)

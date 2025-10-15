@@ -180,6 +180,8 @@
     <ClCompile Include="ExponentialHeightFog.cpp" />
     <ClCompile Include="FireballComponent.cpp" />
     <ClCompile Include="FXAA.cpp" />
+    <ClCompile Include="FXAAActor.cpp" />
+    <ClCompile Include="FXAAComponent.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="FViewportClient.cpp" />
@@ -431,6 +433,8 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="FViewportClient.h" />
     <ClInclude Include="FXAA.h" />
+    <ClInclude Include="FXAAActor.h" />
+    <ClInclude Include="FXAAComponent.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="ExponentialHeightFogComponent.h" />
     <ClInclude Include="Info.h" />
