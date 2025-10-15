@@ -45,7 +45,7 @@ public:
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
-
+    EComponentWorldTickMode WorldTickMode; // 
 protected:
     // [PIE] 외부에서 초기화 필요
     AActor* Owner = nullptr;  // 자신을 보유한 액터
@@ -54,4 +54,6 @@ protected:
     bool bIsActive = true;    // 활성 상태
     bool bCanEverTick = false; // 매 프레임 Tick 가능 여부
     bool bEdiableWhenInherited = true;  //디테일에서 Editing 가능 여부
+
+   
 };

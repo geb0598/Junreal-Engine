@@ -7,13 +7,14 @@ UProjectileMovementComponent::UProjectileMovementComponent()
 	, GravityScale(1.0f)
 {
 	bCanEverTick = true;
-
+	WorldTickMode = EComponentWorldTickMode::PIEOnly; // PIE에서만 작동
 	// Initial speed (forward)
 	Velocity = FVector(0.f, InitialSpeed, 0.0f);
 }
 
 void UProjectileMovementComponent::TickComponent(float DeltaSeconds)
 {
+	UMovementComponent::TickComponent(DeltaSeconds);
 	Velocity.Z -= 9.8f * GravityScale * DeltaSeconds;
 
 	if (Velocity.Size() > MaxSpeed)
