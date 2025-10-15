@@ -39,34 +39,7 @@ void AStaticMeshActor::SetStaticMeshComponent(UStaticMeshComponent* InStaticMesh
 
 UObject* AStaticMeshActor::Duplicate()
 {
-    // 원본(this)의 컴포넌트들 저장
-    USceneComponent* OriginalRoot = this->RootComponent;
-
-    // 얕은 복사 수행 (생성자 실행됨 - StaticMeshComponent, CollisionComponent 생성)
-    AStaticMeshActor* DuplicatedActor = NewObject<AStaticMeshActor>(*this);
-    DuplicatedActor->SetName(GetName().ToString());
-
-    // 생성자가 만든 컴포넌트들 삭제
-    if (DuplicatedActor->StaticMeshComponent)
-    {
-        DuplicatedActor->OwnedComponents.Remove(DuplicatedActor->StaticMeshComponent);
-        ObjectFactory::DeleteObject(DuplicatedActor->StaticMeshComponent);
-        DuplicatedActor->StaticMeshComponent = nullptr;
-    }
-
-    DuplicatedActor->RootComponent = nullptr;
-    DuplicatedActor->OwnedComponents.clear();
-
-    // 원본의 RootComponent(StaticMeshComponent) 복제
-    if (OriginalRoot)
-    {
-        DuplicatedActor->RootComponent = Cast<USceneComponent>(OriginalRoot->Duplicate());
-    }
-
-    // OwnedComponents 재구성 및 타입별 포인터 재설정
-    DuplicatedActor->DuplicateSubObjects();
-
-    return DuplicatedActor;
+    return Super_t::Duplicate();
 }
 
 void AStaticMeshActor::DuplicateSubObjects()
