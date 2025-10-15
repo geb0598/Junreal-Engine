@@ -70,7 +70,7 @@ void D3D11RHI::Release()
 
 void D3D11RHI::ClearBackBuffer()
 {
-    float ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
+    float ClearColor[4] = { 135.0/255.0f, 204/255.0f, 235/255.0f, 1.0f };
     DeviceContext->ClearRenderTargetView(FrameRTV, ClearColor);
     float IDColor[4] = { 0.0f,0.0f,0.0f,0.0f };
     DeviceContext->ClearRenderTargetView(IdBufferRTV, IDColor);

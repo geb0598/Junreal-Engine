@@ -846,9 +846,12 @@ void URenderer::RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Vi
 
     for (UExponentialHeightFogComponent* FogComponent : World->GetLevel()->GetComponentList<UExponentialHeightFogComponent>())
     {
-        FogComponent->Render(this, Camera->GetActorLocation(), Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Viewport);
-        //첫번째 것만 그림
-        break;
+        if (FogComponent->IsRender())
+        {
+            FogComponent->Render(this, Camera->GetActorLocation(), Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Viewport);
+            //첫번째 것만 그림
+            break;
+        }
    }
 
 }

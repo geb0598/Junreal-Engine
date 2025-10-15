@@ -495,6 +495,7 @@ void UTargetActorTransformWidget::RenderWidget()
 		if (UExponentialHeightFogComponent* FogComponent = Cast<UExponentialHeightFogComponent>(SelectedComponent))
 		{
 			RenderExponentialHeightFogComponentDetails(FogComponent);
+
 		}
 		if (UStaticMeshComponent* Comp = Cast<UStaticMeshComponent>(SelectedComponent))
 		{
@@ -696,6 +697,7 @@ void UTargetActorTransformWidget::ResetChangeFlags()
 void UTargetActorTransformWidget::RenderExponentialHeightFogComponentDetails(UExponentialHeightFogComponent* InComponent)
 {
 	UExponentialHeightFogComponent::FFogInfo FogInfo = InComponent->GetFogInfo();
+	ImGui::Text("Exponential Height Fog Component");
 
 	ImGui::DragFloat("Fog Density", &FogInfo.FogDensity, 0.001f, 0.0f, 10.0f);
 	ImGui::DragFloat("Fog Height Falloff", &FogInfo.FogHeightFalloff, 0.0001f, 0.0f, 10.0f);
@@ -711,6 +713,9 @@ void UTargetActorTransformWidget::RenderExponentialHeightFogComponentDetails(UEx
 		FogInfo.FogInscatteringColor.B = Color[2];
 	}
 	//ImGui::DragFloat3("Fog Inscattering Color", &FogInfo.FogInscatteringColor, 0.1f, 0.0f, 10.0f);
+	bool bIsRender = InComponent->IsRender();
+	ImGui::Checkbox("Render", &bIsRender);
+	InComponent->SetShowflag(bIsRender);
 	InComponent->SetFogInfo(FogInfo);
 }
 

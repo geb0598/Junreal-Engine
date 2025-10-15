@@ -66,7 +66,10 @@ void ULevel::CollectComponentsToRender()
 			}
 			else if (UExponentialHeightFogComponent* FogComponent = Cast<UExponentialHeightFogComponent>(ActorComponent))
 			{
-				FogComponentList.Add(FogComponent);
+				if (FogComponent->IsRender())
+				{
+					FogComponentList.Add(FogComponent);
+				}
 			}
 			else if (UFXAAComponent* FXAAComp = Cast<UFXAAComponent>(ActorComponent))
 			{
