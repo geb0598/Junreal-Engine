@@ -120,6 +120,10 @@ public:
     {
         return IdStagingBuffer;
     }
+    inline ID3D11RenderTargetView* GetFrameRTV()
+    {
+        return FrameRTV;
+    }
 
 private:
 

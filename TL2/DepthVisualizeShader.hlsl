@@ -15,7 +15,7 @@ struct VS_OUTPUT
     float2 texcoord : TEXCOORD;
 };
 
-VS_OUTPUT VS(uint vid : SV_VertexID)
+VS_OUTPUT mainVS(uint vid : SV_VertexID)
 {
     VS_OUTPUT output;
     output.texcoord.x = (vid == 1) ? 2.0f : 0.0f;
@@ -32,7 +32,7 @@ float LinearizeDepth(float rawDepth)
     return z / FarClip;
 }
 
-float4 PS(VS_OUTPUT input) : SV_Target
+float4 mainPS(VS_OUTPUT input) : SV_Target
 {
     float rawDepth = DepthTexture.Sample(PointSampler, input.texcoord).r;
     
@@ -45,3 +45,9 @@ float4 PS(VS_OUTPUT input) : SV_Target
     
     return float4(linearDepth, linearDepth, linearDepth, 1.0f);
 }
+
+//float4 mainPS(VS_OUTPUT input) : SV_Target
+//{
+//    float rawDepth = DepthTexture.Sample(PointSampler, input.texcoord).r;
+//    return float4(rawDepth, 0, 0, 1);
+//}
