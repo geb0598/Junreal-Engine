@@ -21,6 +21,7 @@ AFXAAActor::AFXAAActor()
 UObject* AFXAAActor::Duplicate()
 {
     AFXAAActor* DuplicatedActor = NewObject<AFXAAActor>(*this);
+    DuplicatedActor->SetName(GetName().ToString());
 
     if (DuplicatedActor->RootComponent)
     {

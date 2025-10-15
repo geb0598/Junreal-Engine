@@ -47,7 +47,7 @@ void USceneManagerWidget::RenderWidget()
     ImGui::Separator();
 
     // World status
-    UWorld* World = GetCurrentWorld();
+    UWorld* World = GEngine->GetActiveWorld();
     if (!World)
     {
         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "No World Available");

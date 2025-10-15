@@ -44,6 +44,7 @@ UObject* AStaticMeshActor::Duplicate()
 
     // 얕은 복사 수행 (생성자 실행됨 - StaticMeshComponent, CollisionComponent 생성)
     AStaticMeshActor* DuplicatedActor = NewObject<AStaticMeshActor>(*this);
+    DuplicatedActor->SetName(GetName().ToString());
 
     // 생성자가 만든 컴포넌트들 삭제
     if (DuplicatedActor->StaticMeshComponent)

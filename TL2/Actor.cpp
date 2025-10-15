@@ -375,6 +375,7 @@ UObject* AActor::Duplicate()
 
     // 얕은 복사 수행 (생성자 실행됨)
     AActor* DuplicateActor = NewObject<AActor>(*this);
+    DuplicateActor->SetName(GetName().ToString());
 
     // 생성자가 만든 RootComponent 삭제
     if (DuplicateActor->RootComponent)

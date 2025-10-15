@@ -23,7 +23,8 @@ UObject* AExponentialHeightFog::Duplicate()
 
     AExponentialHeightFog* DuplicatedActor = NewObject<AExponentialHeightFog>(*this);
 
-    
+    DuplicatedActor->SetName(GetName().ToString());
+
     if (DuplicatedActor->RootComponent)
     {
         TSet<UActorComponent*> ComponentsToDelete = DuplicatedActor->GetComponents();
