@@ -323,9 +323,23 @@ void UTargetActorTransformWidget::RenderWidget()
 					}
 				}
 			}
-			else
+			else	// For non-SceneComponents
 			{
-				// For non-SceneComponents
+				USelectionManager::GetInstance().ClearSelection();
+				
+				if (SelectedActor->DeleteComponent(SelectedComponent))
+				{
+					USceneComponent* Root = SelectedActor->GetRootComponent();
+					if (Root)
+					{
+						USelectionManager::GetInstance().SelectComponent(Root);
+						SelectedComponent = Root;
+					}
+					else
+					{
+						SelectedComponent = nullptr;
+					}
+				}
 			}
 		}
 
@@ -1186,8 +1200,6 @@ void UTargetActorTransformWidget::RenderRotationMovementComponentDetails(URotati
 	{
 		InComponent->SetRotationInLocalSpace(bLocalRotation);
 	}
-
-	UE_LOG("UI Component Address:      %p\n", InComponent);
 
 	// Rotation Rate
 	FVector RotationRate = InComponent->GetRotationRate();
