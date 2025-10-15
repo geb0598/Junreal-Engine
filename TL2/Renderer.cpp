@@ -707,6 +707,10 @@ void URenderer::RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMa
 {
     for (UDecalComponent* Decal : World->GetLevel()->GetComponentList<UDecalComponent>())
     {
+        if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+        {
+            AddLines(Decal->GetBoundingBoxLines(), Decal->GetBoundingBoxColor());
+        }
         FOBB DecalWorldOBB = Decal->GetWorldOBB();
 
         if (World->GetUseBVH() && World->GetBVH().IsBuild())
