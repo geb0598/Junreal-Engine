@@ -1,15 +1,54 @@
 {
   "Version" : 2,
-  "NextUUID" : 583,
+  "NextUUID" : 612,
   "PerspectiveCamera" : {
     "FOV" : [60.000000],
     "FarClip" : [4000.000000],
-    "Location" : [0.537240, 3.690123, 1.157489],
+    "Location" : [-13.923723, 7.794196, 2.146348],
     "NearClip" : [0.100000],
-    "Rotation" : [0.000000, 15.800008, -91.099968]
+    "Rotation" : [0.000000, 10.400009, -29.400002]
   },
   "Actors" : [
+    {
+      "UUID" : 584,
+      "Type" : "AActor",
+      "Name" : "Actor_0",
+      "RootComponentUUID" : 585
+    }
   ],
   "Components" : [
+    {
+      "UUID" : 598,
+      "OwnerActorUUID" : 584,
+      "ParentComponentUUID" : 585,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "StaticMesh" : "Data/Cube.obj"
+    },
+    {
+      "UUID" : 585,
+      "OwnerActorUUID" : 584,
+      "ParentComponentUUID" : 0,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 590,
+      "OwnerActorUUID" : 584,
+      "ParentComponentUUID" : 0,
+      "Type" : "URotationMovementComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [0.000000, 0.000000, 0.000000],
+      "RotationMovementData" : {
+        "RotationRate" : [0.000000, 80.000000, 0.000000],
+        "PivotTranslation" : [0.000000, 11.700000, 0.000000],
+        "bRotationInLocalSpace" : true
+      }
+    }
   ]
 }
