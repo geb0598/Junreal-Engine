@@ -155,8 +155,8 @@ void UBillboardComponent::Render(URenderer* Renderer, const FMatrix& View, const
     // 상수 버퍼 업데이트
     ////UUID만 필요하지만 기존 버퍼와 함수 재사용하기 위해서 모델버퍼 받아옴
     Renderer->UpdateSetCBuffer(ModelBufferType(FMatrix(), this->InternalIndex));
-    Renderer->UpdateSetCBuffer(ViewProjBufferType( FMatrix(), FMatrix()));
-    Renderer->UpdateSetCBuffer(BillboardBufferType(BillboardPos,0, View, Proj, View.InverseAffine()));
+    //Renderer->UpdateSetCBuffer(ViewProjBufferType( FMatrix(), FMatrix()));
+    Renderer->UpdateSetCBuffer(BillboardBufferType(BillboardPos,0, View.InverseAffine()));
 
     Renderer->OMSetDepthStencilState(EComparisonFunc::Disable);
     

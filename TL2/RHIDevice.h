@@ -93,6 +93,7 @@ public:
     virtual void RSSetNoCullState() = 0;
     virtual void RSSetDefaultState() = 0;
     virtual void RSSetDecalState() = 0;
+    virtual void OMSetDepthOnlyTarget() = 0;
     virtual void OMSetRenderTargets(const ERenderTargetType RenderTargetType) = 0;
     virtual void PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType) = 0;
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;

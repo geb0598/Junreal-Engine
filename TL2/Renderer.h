@@ -103,6 +103,7 @@ private:
     // 2) 씬 렌더링 헬퍼 메소드들
 
     void RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+
     void RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
@@ -139,6 +140,10 @@ private:
     UMaterial* LastMaterial = nullptr;
     UShader* LastShader = nullptr;
     UTexture* LastTexture = nullptr;
+
+    // Shader for Scene Depth Pass
+    UShader* DepthOnlyShader = nullptr;
+    UShader* SceneDepthVisualizeShader = nullptr;
 
     /**
      * @brief 불필요한 API 호출을 막기 위해 마지막으로 바인딩된 상태를 캐싱합니다.

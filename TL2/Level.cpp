@@ -43,6 +43,7 @@ void ULevel::CollectComponentsToRender()
 	PrimitiveComponentList.clear();
 	BillboardComponentList.clear();
 	FogComponentList.clear();
+	FireBallComponentList.clear();
 
 	for (AActor* Actor : Actors)
 	{

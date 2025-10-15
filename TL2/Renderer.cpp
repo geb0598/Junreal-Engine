@@ -20,7 +20,7 @@
 #include "GizmoActor.h"
 #include "FireballComponent.h"
 #include "ExponentialHeightFogComponent.h"
-
+#include "CameraComponent.h"
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
 {
@@ -56,8 +56,8 @@ void URenderer::BeginFrame()
     RHIDevice->RSSetViewport();
 
     //OM
-    //RHIDevice->OMSetBlendState();
-    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
+    RHIDevice->OMSetBlendState(false);
+   RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
 }
 
 void URenderer::PrepareShader(UShader* InShader)
@@ -371,7 +371,58 @@ void URenderer::RenderViewPorts(UWorld* World)
 
 void URenderer::RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
+    // +-+ Set Render State +-+
+    RHIDevice->OMSetDepthOnlyTarget();     // DSV binding
+    RHIDevice->OMSetBlendState(false);     // color write mask = 0
+    RHIDevice->RSSetDefaultState();        // solid fill, back-face culling
+    RHIDevice->IASetPrimitiveTopology();
 
+    // +-+ Set Shader & Buffer +-+
+    DepthOnlyShader = UResourceManager::GetInstance().Load<UShader>("DepthPrepassShader.hlsl");
+    PrepareShader(DepthOnlyShader);
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
+
+    // +-+ Iterate and Draw Renderable Actors +-+
+    const TArray<AActor*>& LevelActors = World->GetLevel()->GetActors();
+    for (AActor* Actor : LevelActors)
+    {
+        if (!Actor || Actor->GetActorHiddenInGame())
+            continue;
+
+        for (UActorComponent* ActorComp : Actor->GetComponents())
+        {
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
+            {
+                if (!Primitive->IsActive())
+                    continue;
+
+                if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Primitive))
+                {
+                    UStaticMesh* Mesh = MeshComp->GetStaticMesh();
+                    if (!Mesh)  continue;
+
+                    const FMatrix& WorldMatrix = Primitive->GetWorldMatrix();
+                    UpdateSetCBuffer(ModelBufferType(WorldMatrix));
+
+                    ID3D11Buffer* VertexBuffer = Mesh->GetVertexBuffer();
+                    ID3D11Buffer* IndexBuffer = Mesh->GetIndexBuffer();
+
+                    UINT Stride = sizeof(FVertexDynamic);
+                    UINT Offset = 0;
+                    RHIDevice->GetDeviceContext()->IASetVertexBuffers(0, 1, &VertexBuffer, &Stride, &Offset);
+                    RHIDevice->GetDeviceContext()->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+                    RHIDevice->GetDeviceContext()->DrawIndexed(Mesh->GetIndexCount(), 0, 0);
+                    URenderingStatsCollector::GetInstance().IncrementDrawCalls();
+                }
+            }
+        }
+    }
+
+    // +-+ Restore Render State +-+
+    // DSV un-binding
+    ID3D11RenderTargetView* nullRTV[1] = { nullptr };
+    RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, nullRTV, nullptr);
 }
 
 void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
@@ -386,15 +437,10 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     FMatrix ViewMatrix = Camera->GetViewMatrix();
     FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 
+   
     // 씬의 액터들을 렌더링
-    if (this->CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
-    {
-        RenderSceneDepthPass(World, ViewMatrix, ProjectionMatrix);
-    }
-    else
-    {   // General Rendering (color + depth)
-        RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
-    }
+    // General Rendering (color + depth)
+    RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
 }
 
 //void URenderer::RenderPointLightShadowPass(UWorld* World)
@@ -439,7 +485,12 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
         return;
 
     // +-+-+ Render Pass Structure +-+-+
-    
+
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix, Camera->GetActorLocation()));
     switch (CurrentViewMode)
     {
     case EViewModeIndex::VMI_Lit:
@@ -641,11 +692,12 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
         {
             AddLines(PrimitiveComponent->GetBoundingBoxLines(), PrimitiveComponent->GetBoundingBoxColor());
         }
-        if (SelectionManager.IsActorSelected(PrimitiveComponent->GetOwner()))
+        if (PrimitiveComponent->GetOwner() == SelectedActor)
         {
-            FVector rgb(1.0f, 1.0f, 1.0f);
-            UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+            bIsSelected = true;
         }
+        FVector rgb(1.0f, 1.0f, 1.0f);
+        UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
         PrimitiveComponent->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
     }
 }
@@ -779,7 +831,7 @@ void URenderer::RenderFireBallPass(UWorld* World)
 
     // 1️⃣ 라이트 컴포넌트 수집 (FireBall, PointLight 등)
     FPointLightBufferType PointLightCB{};
-
+    PointLightCB.PointLightCount=0;
     for (UFireBallComponent* FireBallComponent : World->GetLevel()->GetComponentList<UFireBallComponent>())
     {
         int idx = PointLightCB.PointLightCount++;
@@ -832,7 +884,67 @@ void URenderer::RenderOverlayPass(UWorld* World)
 
 void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
 {
+    // +-+ Set Render State +-+
+    // Bind only RTV (DSV = nullptr)
+    ID3D11RenderTargetView* FrameRTV = static_cast<D3D11RHI*>(RHIDevice)->GetFrameRTV();
+    RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, &FrameRTV, nullptr);
+    RHIDevice->OmSetDepthStencilState(EComparisonFunc::Disable);
 
+    // +-+ Re-set Viewport +-+
+    // Because the DSV is set to nullptr
+    // Unbinding DSV invalidates the current viewport state, causing it to appear smaller.
+    // Get viewport size from the current framebuffer (Texture2D)
+    D3D11_TEXTURE2D_DESC BackDesc{};
+    ID3D11Texture2D* FrameBuffer = static_cast<D3D11RHI*>(RHIDevice)->GetFrameBuffer();
+    if (FrameBuffer)
+    {
+        FrameBuffer->GetDesc(&BackDesc);
+        D3D11_VIEWPORT vp = {
+            .TopLeftX = 0.0f,
+            .TopLeftY = 0.0f,
+            .Width = static_cast<FLOAT>(BackDesc.Width),
+            .Height = static_cast<FLOAT>(BackDesc.Height),
+            .MinDepth = 0.0f,
+            .MaxDepth = 1.0f
+        };
+        // Reset Viewport
+        RHIDevice->GetDeviceContext()->RSSetViewports(1, &vp);
+    }
+
+    // +-+ Set Shader & Buffer +-+
+    SceneDepthVisualizeShader = UResourceManager::GetInstance().Load<UShader>("DepthVisualizeShader.hlsl");
+    PrepareShader(SceneDepthVisualizeShader);
+    if (Camera)
+    {
+        CameraInfoBufferType CameraInfo;
+        CameraInfo.NearClip = Camera->GetCameraComponent()->GetNearClip();
+        CameraInfo.FarClip = Camera->GetCameraComponent()->GetFarClip();
+        UpdateSetCBuffer(CameraInfoBufferType(CameraInfo));
+    }
+
+    // +-+ Set Shader Resources (Texture) +-+
+    // Bind depth SRV
+    // If DSV were still bound, the set call would fail and result in a null binding.
+    // TODO: Abstracting RHI access to the depth SRV
+    ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(RHIDevice)->GetDepthSRV();
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &DepthSRV);   // SET
+    
+    //ID3D11ShaderResourceView* currentSRV = nullptr;
+    //RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &currentSRV); // GET
+    //UE_LOG("Currently bound SRV at slot 0 = %p", currentSRV);      // null!!! if bind both RTV + DSV
+
+    // +-+ Connect to PS s0 slot +-+
+    RHIDevice->PSSetDefaultSampler(0);
+    RHIDevice->IASetPrimitiveTopology();
+
+    // +-+ Draw Full-Screen Triangle +-+
+    RHIDevice->GetDeviceContext()->Draw(3, 0);
+
+    // +-+ Restore Render State +-+
+    // Unbind SRV to allow re-binding the depth texture as DSV
+    ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, nullSRV);
+    RHIDevice->OmSetDepthStencilState(EComparisonFunc::LessEqual);
 }
 
 void URenderer::InitializeLineBatch()
@@ -963,7 +1075,6 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     
     // Set up rendering state
     UpdateSetCBuffer(ModelBufferType(ModelMatrix));
-    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
     PrepareShader(LineShader);
     OMSetBlendState(true);
     

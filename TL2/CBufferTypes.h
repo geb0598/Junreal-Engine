@@ -49,6 +49,7 @@ MACRO(ViewportBufferType)					\
 MACRO(DecalAlphaBufferType)					\
 MACRO(FHeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
+MACRO(CameraInfoBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, true)
@@ -64,6 +65,7 @@ CBUFFER_INFO(ViewportBufferType, 6, false, true)
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
 CBUFFER_INFO(FHeightFogBufferType, 8, false, true)
 CBUFFER_INFO(FPointLightBufferType, 9, false, true)
+CBUFFER_INFO(CameraInfoBufferType, 0, false, true)
 
 
 //Create 
@@ -97,8 +99,6 @@ struct BillboardBufferType
 {
     FVector pos;
     float padding;
-    FMatrix View;
-    FMatrix Proj;
     FMatrix InverseViewMat;
     /*FVector cameraRight;
     FVector cameraUp;*/
@@ -108,7 +108,6 @@ struct BillboardBufferType
 struct FViewProjectionInverse
 {
     FMatrix ViewProjectionInverse;
-    FVector CameraPosition;
 };
 
 
@@ -170,7 +169,7 @@ struct FPointLightData
     FVector Padding;    // 16바이트 정렬 맞추기용
 };
 #define MAX_POINT_LIGHTS 100
-// 전체 버퍼 (cbuffer b6 대응)
+// 전체 버퍼 (cbuffer b9 대응)
 struct FPointLightBufferType
 {
     int PointLightCount;                    // 현재 활성 조명 개수
@@ -194,8 +193,17 @@ struct FHeightFogBufferType
     float FogHeightFalloff;
     float StartDistance;
     float FogCutoffDistance;
+    float FogMaxOpacityDistance;
     float FogMaxOpacity;
     float FogActorHeight;
+    float Padding;
+};
+
+//PS : b0
+struct CameraInfoBufferType
+{
+    float NearClip;
+    float FarClip;
     float Padding[2];
 };
 

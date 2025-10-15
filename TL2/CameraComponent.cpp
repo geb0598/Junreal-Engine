@@ -12,7 +12,6 @@ UCameraComponent::UCameraComponent()
     , FarClip(4000.0f)
     , ProjectionMode(ECameraProjectionMode::Perspective)
     , ZooMFactor(1.0f)
-
 {
 }
 

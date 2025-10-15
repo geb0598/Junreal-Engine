@@ -13,6 +13,7 @@ public:
         float FogHeightFalloff;
         float StartDistance;
         float FogCutoffDistance;
+        float FogMaxOpacityDistance;
         float FogMaxOpacity;
 
         FLinearColor FogInscatteringColor;
@@ -25,6 +26,7 @@ public:
             FogHeightFalloff,
             StartDistance,
             FogCutoffDistance,
+            FogMaxOpacityDistance,
             FogMaxOpacity,
             FogInscatteringColor);
     }
@@ -33,6 +35,7 @@ public:
         FogHeightFalloff = Info.FogHeightFalloff;
         StartDistance = Info.StartDistance;
         FogCutoffDistance = Info.FogCutoffDistance;
+        FogMaxOpacityDistance = Info.FogMaxOpacityDistance;
         FogMaxOpacity = Info.FogMaxOpacity;
         FogInscatteringColor = Info.FogInscatteringColor;
     }
@@ -40,12 +43,13 @@ public:
     void DuplicateSubObjects() override;
 private:
     float FogDensity = 1.0f;
-    float FogHeightFalloff = 1.0f;
+    float FogHeightFalloff = 0.003f;
     float StartDistance = 0.0f;
-    float FogCutoffDistance = 1000.0f;
-    float FogMaxOpacity = 0.0f;
+    float FogCutoffDistance = 10000.0f;
+    float FogMaxOpacityDistance = 10000.0f;
+    float FogMaxOpacity = 1.0f;
 
-    FLinearColor FogInscatteringColor{ 0.5,0.5,0.5,1.0 };
+    FLinearColor FogInscatteringColor{ 0.53f,0.8f,0.92f,1.0 };
 };
 
     

@@ -191,7 +191,6 @@ void AGizmoActor::Render(ACameraActor* Camera, FViewport* Viewport)
 
 		ModelMatrix = Component->GetWorldMatrix();
 		Renderer->UpdateSetCBuffer(ModelBufferType{ ModelMatrix });
-		Renderer->UpdateSetCBuffer(ViewProjBufferType{ ViewMatrix, ProjectionMatrix });
 
 		
 			if (GizmoAxis== i + 1)
