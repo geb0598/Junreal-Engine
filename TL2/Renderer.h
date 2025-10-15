@@ -87,6 +87,9 @@ public:
     
     void RenderPostProcessing(UShader* Shader);
 
+    //목요일 새벽5시 어쩔수가없다.
+    float Gamma = 1.0f;
+
 private:
     // Render Passes
     void RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);   // 깊이 전용 (필요 시)

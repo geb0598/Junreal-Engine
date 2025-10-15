@@ -16,12 +16,15 @@
 #include "Frustum.h"
 #include "Octree.h"
 #include "BVH.h"
+#include "MovementComponent.h"
 
 #include"UEContainer.h"
 #include"DecalComponent.h"
 #include"DecalActor.h"
 #include "TimeProfile.h"
 #include "SpotLightComponent.h"
+#include "ProjectileMovementComponent.h"
+#include "RotationMovementComponent.h"
 
 
 extern float CLIENTWIDTH;
@@ -724,6 +727,7 @@ void UWorld::SaveSceneV2(const FString& SceneName)
         FActorData ActorData;
         ActorData.UUID = Actor->UUID;
         ActorData.Name = Actor->GetName().ToString();
+        // Type 자동 가져오기
         ActorData.Type = Actor->GetClass()->Name;
 
         if (Actor->GetRootComponent())
@@ -735,23 +739,42 @@ void UWorld::SaveSceneV2(const FString& SceneName)
         for (UActorComponent* ActorComp : Actor->GetComponents())
         {
             if (!ActorComp) continue;
-
+          
             // SceneComponent만 처리 (Transform 정보가 있는 컴포넌트)
+        
+          //  if (!Comp) continue;
+               
+            FComponentData CompData;
+            CompData.UUID = ActorComp->UUID;
+            CompData.OwnerActorUUID = Actor->UUID;
+            CompData.Type = ActorComp->GetClass()->Name;
+            if (UProjectileMovementComponent* ProjMove = Cast<UProjectileMovementComponent>(ActorComp))
+            {
+                CompData.ProjectileMovementProperty.InitialSpeed = ProjMove->GetInitialSpeed();
+                CompData.ProjectileMovementProperty.MaxSpeed = ProjMove->GetMaxSpeed();
+                CompData.ProjectileMovementProperty.GravityScale = ProjMove->GetGravityScale();
+                SceneData.Components.push_back(CompData);
+                continue; // 다음 컴포넌트로
+            }
+
+            if (URotationMovementComponent* RotMove = Cast<URotationMovementComponent>(ActorComp))
+            {
+                CompData.RotationMovementProperty.RotationRate = RotMove->GetRotationRate();
+                CompData.RotationMovementProperty.PivotTranslation = RotMove->GetPivotTranslation();
+                CompData.RotationMovementProperty.bRotationInLocalSpace = RotMove->GetRotationInLocalSpace();
+                SceneData.Components.push_back(CompData);
+                continue;
+            }
+
             USceneComponent* Comp = Cast<USceneComponent>(ActorComp);
             if (!Comp) continue;
-
-            FComponentData CompData;
-            CompData.UUID = Comp->UUID;
-            CompData.OwnerActorUUID = Actor->UUID;
-
             // 부모 컴포넌트 UUID (RootComponent면 0)
             if (Comp->GetAttachParent())
                 CompData.ParentComponentUUID = Comp->GetAttachParent()->UUID;
             else
                 CompData.ParentComponentUUID = 0;
 
-            // Type 자동 가져오기
-            CompData.Type = Comp->GetClass()->Name;
+        
 
             // Serialize를 통해 Transform 및 Type별 속성 저장
             if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
@@ -856,7 +879,7 @@ void UWorld::LoadSceneV2(const FString& SceneName)
     // Component 생성 또는 재활용
     for (FComponentData& CompData : SceneData.Components)
     {
-        USceneComponent* TargetComp = nullptr;
+        UActorComponent* TargetComp = nullptr;
 
         // 1. Owner Actor 찾기
         AActor** OwnerActorPtr = ActorMap.Find(CompData.OwnerActorUUID);
@@ -870,6 +893,8 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         // 2. Owner Actor의 기존 컴포넌트 중에서 같은 타입의 컴포넌트 찾기
         for (UActorComponent* ExistingComp : OwnerActor->GetComponents())
         {
+           
+
             if (USceneComponent* SceneComp = Cast<USceneComponent>(ExistingComp))
             {
                 // 타입이 일치하고 아직 매핑되지 않은 컴포넌트 찾기
@@ -898,7 +923,7 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         // 3. 기존 컴포넌트가 없으면 새로 생성
         if (!TargetComp)
         {
-            TargetComp = Cast<USceneComponent>(NewObject(CompData.Type));
+            TargetComp = Cast<UActorComponent>(NewObject(CompData.Type));
 
             if (!TargetComp)
             {
@@ -920,13 +945,37 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         }
         else
         {
+            if (!Cast<USceneComponent>(TargetComp)) {
+                continue;
+            }
             // PrimitiveComponent가 아닌 경우 Transform만 로드
-            TargetComp->SetRelativeLocation(CompData.RelativeLocation);
-            TargetComp->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
-            TargetComp->SetRelativeScale(CompData.RelativeScale);
+            Cast<USceneComponent>(TargetComp)->SetRelativeLocation(CompData.RelativeLocation);
+            Cast<USceneComponent>(TargetComp)->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
+            Cast<USceneComponent>(TargetComp)->SetRelativeScale(CompData.RelativeScale);
         }
 
-        ComponentMap.Add(CompData.UUID, TargetComp);
+        if (UProjectileMovementComponent* ProjectileComp = Cast<UProjectileMovementComponent>(TargetComp))
+        {
+            const FProjectileMovementProperty& PM = CompData.ProjectileMovementProperty;
+            ProjectileComp->SetInitialSpeed(PM.InitialSpeed);
+            ProjectileComp->SetMaxSpeed(PM.MaxSpeed);
+            ProjectileComp->SetGravityScale(PM.GravityScale);
+
+            ProjectileComp->UUID = CompData.UUID;
+            OwnerActor->OwnedComponents.Add(ProjectileComp);
+        }
+
+        else if (URotationMovementComponent* RotComp = Cast<URotationMovementComponent>(TargetComp))
+        {
+            const FRotationMovementProperty& RM = CompData.RotationMovementProperty;
+            RotComp->SetRotationRate(RM.RotationRate);
+            RotComp->SetPivotTranslation(RM.PivotTranslation);
+            RotComp->SetRotationInLocalSpace(RM.bRotationInLocalSpace);
+            RotComp->UUID = CompData.UUID;
+            OwnerActor->OwnedComponents.Add(RotComp);
+        }
+
+        ComponentMap.Add(CompData.UUID, Cast<USceneComponent>(TargetComp));
     }
 
     // ========================================

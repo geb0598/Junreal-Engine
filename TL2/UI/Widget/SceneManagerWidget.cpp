@@ -8,6 +8,7 @@
 #include "../../Actor.h"
 #include "../../StaticMeshActor.h"
 #include "../../SelectionManager.h"
+#include "Renderer.h"
 #include <algorithm>
 #include <string>
 
@@ -40,6 +41,7 @@ void USceneManagerWidget::Update()
 void USceneManagerWidget::RenderWidget()
 {
     ImGui::Text("Scene Manager");
+    ImGui::DragFloat("Gamma", &GEngine->GetActiveWorld()->GetRenderer()->Gamma, 0.1f, 1.0f, 2.2f);
     ImGui::Spacing();
 
     // Toolbar
