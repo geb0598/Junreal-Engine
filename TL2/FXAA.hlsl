@@ -83,21 +83,21 @@ float4 mainPS(PS_Input i) : SV_TARGET
     float BL = GetFrameSample(uv + int2(-1, -1) * TexSizeRCP);
     
 
-    float2 Dir;
+    float2 Dir; //밝기 차이
     Dir.x = ((TR + TL) - (BR + BL)); //Top - Bottom  양수 => 위가 밝다, 음수 => 아래가 밝다
     Dir.y = ((TR + BR) - (TL + BL)); //Right - Left
 	
-    float DirReduce = max((TR + TL + BR + BL) * 0.25 * ReduceMul, ReduceMin); //DirReduce = max(대각 4점 평균 * ReduceMul, ReduceMin)
-    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce); //1 / (Dir x,y 거리중 최소 + DirReduce)
+    float DirReduce = max((TR + TL + BR + BL) * 0.25 * ReduceMul, ReduceMin); //DirReduce = max(대각 4점 평균 * ReduceMul, ReduceMin) = max(대각 평균 줄인거, ReduceMin)
+    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce); //1 / (밝기차이절대값X,Y중 최소 + DirReduce)
 	
+    //Dir * InvDirAdjustment = Dir / (밝기차이절대값X,Y중 최소 + max(대각평균 줄인거, ReduceMin))
     Dir = min(float2(SpanMax, SpanMax), max(float2(-SpanMax, -SpanMax), Dir * InvDirAdjustment)); //Dir = -SpanMax <= (Dir * InvDirAdjustment) <= SpanMax 범위로 넣기
-    
-    //Dir * InvDirAdjustment = Dir / (Dir x,y 거리중 최소 + max(max(대각 4점 평균 * ReduceMul, ReduceMin))
     
     //step(x,y) = x <= y ? 1 : 0;
     Dir.x = Dir.x * step(1.0, abs(Dir.x)); //abs(Dir.x)가 1보다 크거나 같으면 1 else 0
     Dir.y = Dir.y * step(1.0, abs(Dir.y));
     Dir *= TexSizeRCP; //1 / TexSize 곱함
+    
 
     //(0, 1/3, 2/3, 1) => (-0.5, (1/3 - 0.5), (2/3 - 0.5), 0.5) 
     float3 Sample1 = FrameColor.Sample(LinearSampler, uv + (Dir * (1.0f / 3.0f - 0.5f)));
