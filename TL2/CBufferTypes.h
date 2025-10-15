@@ -50,6 +50,7 @@ MACRO(DecalAlphaBufferType)					\
 MACRO(FHeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
 MACRO(CameraInfoBufferType)                  \
+MACRO(FXAABufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, true)
@@ -66,6 +67,7 @@ CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
 CBUFFER_INFO(FHeightFogBufferType, 8, false, true)
 CBUFFER_INFO(FPointLightBufferType, 9, false, true)
 CBUFFER_INFO(CameraInfoBufferType, 0, false, true)
+CBUFFER_INFO(FXAABufferType, 0, false, true)
 
 
 //Create 
@@ -205,6 +207,16 @@ struct CameraInfoBufferType
     float NearClip;
     float FarClip;
     float Padding[2];
+};
+
+
+//PS : b0
+struct FXAABufferType
+{
+    float SlideX = 1.0f;
+    float SpanMax = 8.0f;
+    float ReduceMin = 1.0f / 128.0f;
+    float ReduceMul = 1.0f / 8.0f;
 };
 
 //---//

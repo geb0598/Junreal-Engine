@@ -21,8 +21,12 @@ public:
     virtual void BeginPlay();             // 월드 시작 시
     virtual void TickComponent(float DeltaSeconds); // 매 프레임
     virtual void EndPlay(EEndPlayReason::Type EndPlayReason); // 파괴/종료 시
+    
+    // Component registration
+    virtual void RegisterComponent();
     virtual void OnRegister();          // 컴포넌트 등록
     virtual void OnUnregister();        // 컴포넌트 제거
+    bool bIsRegistered = false;
 
     // ───────────────
     // 활성화/비활성
@@ -45,7 +49,7 @@ public:
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;
-
+    EComponentWorldTickMode WorldTickMode; // 
 protected:
     // [PIE] 외부에서 초기화 필요
     AActor* Owner = nullptr;  // 자신을 보유한 액터
@@ -54,4 +58,6 @@ protected:
     bool bIsActive = true;    // 활성 상태
     bool bCanEverTick = false; // 매 프레임 Tick 가능 여부
     bool bEdiableWhenInherited = true;  //디테일에서 Editing 가능 여부
+
+   
 };

@@ -5,6 +5,7 @@
 #include "PrimitiveComponent.h"
 #include "BillboardComponent.h"
 #include "FireballComponent.h"
+#include "FXAAComponent.h"
 
 ULevel::ULevel()
 {
@@ -44,6 +45,7 @@ void ULevel::CollectComponentsToRender()
 	BillboardComponentList.clear();
 	FogComponentList.clear();
 	FireBallComponentList.clear();
+	FXAAComponentList.clear();
 
 	for (AActor* Actor : Actors)
 	{
@@ -65,6 +67,10 @@ void ULevel::CollectComponentsToRender()
 			else if (UExponentialHeightFogComponent* FogComponent = Cast<UExponentialHeightFogComponent>(ActorComponent))
 			{
 				FogComponentList.Add(FogComponent);
+			}
+			else if (UFXAAComponent* FXAAComp = Cast<UFXAAComponent>(ActorComponent))
+			{
+				FXAAComponentList.Add(FXAAComp);
 			}
 			else if (UFireBallComponent* FireBallComponent = Cast<UFireBallComponent>(ActorComponent))
 			{
@@ -97,6 +103,11 @@ template<>
 TArray<UExponentialHeightFogComponent*>& ULevel::GetComponentList<UExponentialHeightFogComponent>()
 {
 	return FogComponentList;
+}
+template<>
+TArray<UFXAAComponent*>& ULevel::GetComponentList<UFXAAComponent>()
+{
+	return FXAAComponentList;
 }
 template<>
 TArray<UBillboardComponent*>& ULevel::GetComponentList<UBillboardComponent>()

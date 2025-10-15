@@ -21,6 +21,7 @@
 #include "RotationMovementComponent.h"
 #include "ProjectileMovementComponent.h"
 #include "ExponentialHeightFogComponent.h"
+#include "FXAAComponent.h"
 #include"FireballComponent.h"
 
 #include <filesystem>
@@ -1005,6 +1006,30 @@ void UTargetActorTransformWidget::RenderWidget()
 			{
 				ProjComp->SetGravityScale(GravityScale);
 			}
+		}
+		else if (UFXAAComponent* FXAAComp = Cast<UFXAAComponent>(SelectedComponent))
+		{
+			float SlideX = FXAAComp->GetSlideX();
+			float SpanMax = FXAAComp->GetSpanMax();
+			int ReduceMin = FXAAComp->GetReduceMin();
+			float ReduceMul = FXAAComp->GetReduceMul();
+			if (ImGui::DragFloat("SlideX", &SlideX, 0.01f, 0, 1))
+			{
+				FXAAComp->SetSlideX(SlideX);
+			}
+			if (ImGui::DragFloat("SpanMax", &SpanMax, 0.01f, 0, 8))
+			{
+				FXAAComp->SetSpanMax(SpanMax);
+			}
+			if (ImGui::DragInt("ReduceMin", &ReduceMin, 1.0f, 0, 128))
+			{
+				FXAAComp->SetReduceMin(ReduceMin);
+			}
+			if (ImGui::DragFloat("ReduceMul", &ReduceMul, 0.01f, 0, 1))
+			{
+				FXAAComp->SetReduceMul(ReduceMul);
+			}
+			
 		}
 		else
 		{

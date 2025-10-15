@@ -6,6 +6,7 @@
 #include "MeshComponent.h"
 #include "BillboardComponent.h"
 #include "TextRenderComponent.h"
+#include "MovementComponent.h"
 
 AActor::AActor()
 {
@@ -49,13 +50,50 @@ void AActor::BeginPlay()
 
 void AActor::Tick(float DeltaSeconds)
 {
-    // 소유한 모든 컴포넌트의 Tick 처리
+    // 🔹 현재 활성 월드 타입 가져오기
+    EWorldType CurrentWorldType = EWorldType::None;
+    if (GEngine)
+    {
+        if (UWorld* World = GEngine->GetActiveWorld())
+        {
+            CurrentWorldType = World->WorldType;
+        }
+    }
+
+    // 🔹 소유한 컴포넌트들 Tick
     for (UActorComponent* Component : OwnedComponents)
     {
-        if (Component && Component->CanEverTick())
+        if (!Component || !Component->IsActive() || !Component->CanEverTick())
+            continue;
+
+        // ✅ WorldTickMode 검사
+        const EComponentWorldTickMode TickMode = Component->WorldTickMode; // 게터 있으면
+        bool bShouldTick = false;
+
+        switch (TickMode)
         {
-            Component->TickComponent(DeltaSeconds);
+        case EComponentWorldTickMode::All:
+            bShouldTick = true;
+            break;
+        case EComponentWorldTickMode::PIEOnly:
+            bShouldTick = (CurrentWorldType == EWorldType::PIE);
+            break;
+        case EComponentWorldTickMode::GameOnly:
+            bShouldTick = (CurrentWorldType == EWorldType::Game);
+            break;
+        case EComponentWorldTickMode::EditorOnly:
+            bShouldTick = (CurrentWorldType == EWorldType::Editor);
+            break;
+        default:
+            break;
         }
+
+        // ❌ 틱 조건 불충족 시 패스
+        if (!bShouldTick)
+            continue;
+
+        // ✅ 틱 수행
+        Component->TickComponent(DeltaSeconds);
     }
 }
 
@@ -205,6 +243,17 @@ void AActor::AddComponent(USceneComponent* InComponent)
     }
 }
 
+void AActor::RegisterAllComponents()
+{
+    for (UActorComponent* Component : OwnedComponents)
+    {
+        if (Component && !Component->bIsRegistered)
+        {
+            Component->RegisterComponent();
+        }
+    }
+}
+
 UWorld* AActor::GetWorld() const
 {
     // TODO(KHJ): Level 생기면 붙일 것
@@ -342,8 +391,25 @@ UObject* AActor::Duplicate()
         DuplicateActor->RootComponent = Cast<USceneComponent>(OriginalRoot->Duplicate());
     }
 
+    // Non-Scene Component만 따로 복제
+    for (UActorComponent* OriginalComponent : this->OwnedComponents)
+    {
+        if (OriginalComponent && !Cast<USceneComponent>(OriginalComponent))
+        {
+            UActorComponent* DuplicateNonSceneComp = Cast<UActorComponent>(OriginalComponent->Duplicate());
+            if (DuplicateNonSceneComp)
+            {
+                DuplicateNonSceneComp->SetOwner(DuplicateActor);
+                DuplicateActor->OwnedComponents.Add(DuplicateNonSceneComp);
+            }
+        }
+    }
+
     // OwnedComponents 재구성
     DuplicateActor->DuplicateSubObjects();
+    
+    // 복제된 모든 컴포넌트의 RegisterComponent()->OnRegister() 호출
+    DuplicateActor->RegisterAllComponents();
 
     return DuplicateActor;
 }
