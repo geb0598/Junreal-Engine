@@ -1,0 +1,31 @@
+{
+  "Version" : 2,
+  "NextUUID" : 558,
+  "PerspectiveCamera" : {
+    "FOV" : [60.000000],
+    "FarClip" : [4000.000000],
+    "Location" : [6.661167, -103.460625, 54.346127],
+    "NearClip" : [0.100000],
+    "Rotation" : [0.000000, 15.800013, 87.400017]
+  },
+  "Actors" : [
+    {
+      "UUID" : 556,
+      "Type" : "AStaticMeshActor",
+      "Name" : "Sun_0",
+      "RootComponentUUID" : 557
+    }
+  ],
+  "Components" : [
+    {
+      "UUID" : 557,
+      "OwnerActorUUID" : 556,
+      "ParentComponentUUID" : 0,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [3.640000, 3.640000, 3.640000],
+      "StaticMesh" : "Data/Sun/Sun.obj"
+    }
+  ]
+}

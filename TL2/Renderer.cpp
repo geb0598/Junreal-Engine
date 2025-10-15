@@ -688,6 +688,10 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
 
     for (UPrimitiveComponent* PrimitiveComponent : World->GetLevel()->GetComponentList<UPrimitiveComponent>())
     {
+        FVector rgb(1.0f, 1.0f, 1.0f);
+     
+     
+        
         bool bIsSelected = false;
         if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
         {
@@ -697,8 +701,27 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
         {
             bIsSelected = true;
         }
-        FVector rgb(1.0f, 1.0f, 1.0f);
-        UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+        UStaticMeshComponent* FireballComponent = Cast<UStaticMeshComponent>(PrimitiveComponent);
+
+        if (FireballComponent)
+        {
+            if (!FireballComponent->GetStaticMesh()) {
+                return;
+            }
+            if (FireballComponent->GetStaticMesh()->GetVertexCount() == 4286) {
+
+                UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0, 1));
+                static float Time;
+                Time += 0.001 ;
+				UpdateSetCBuffer(UVScrollCB((1, 1),Time,1));
+            }
+            else {
+                UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+            }
+        }
+      
+
+      
         PrimitiveComponent->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
     }
 }
