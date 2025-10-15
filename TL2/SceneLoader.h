@@ -23,28 +23,7 @@ struct FPrimitiveData
     FString ObjStaticMeshAsset;
 };
 
-// ========================================
-// Version 2 (Component Hierarchy Support)
-// ========================================
-struct FComponentData
-{
-    uint32 UUID = 0;
-    uint32 OwnerActorUUID = 0;
-    uint32 ParentComponentUUID = 0;  // 0이면 RootComponent (부모 없음)
-    FString Type;  // "StaticMeshComponent", "AABoundingBoxComponent" 등
 
-    // Transform
-    FVector RelativeLocation;
-    FVector RelativeRotation;
-    FVector RelativeScale;
-
-    // Type별 속성
-    FString StaticMesh;  // StaticMeshComponent: Asset path
-    TArray<FString> Materials;  // StaticMeshComponent: Materials
-    FString TexturePath;  // DecalComponent, BillboardComponent: Texture path
-	FFireBallProperty FireBallProperty; // FireballComponent
-
-};
 
 struct FActorData
 {
@@ -71,6 +50,43 @@ struct FSceneData
     TArray<FComponentData> Components;
     FPerspectiveCameraData Camera;
 };
+
+struct FProjectileMovementProperty
+{
+    float InitialSpeed = 1000.f;
+    float MaxSpeed = 3000.f;
+    float GravityScale = 1.0f;
+};
+
+struct FRotationMovementProperty
+{
+    FVector RotationRate = FVector(0, 0, 0);
+    FVector PivotTranslation = FVector(0, 0, 0);
+    bool bRotationInLocalSpace = false;
+};
+struct FComponentData
+{
+    uint32 UUID = 0;
+    uint32 OwnerActorUUID = 0;
+    uint32 ParentComponentUUID = 0;  // 0이면 RootComponent (부모 없음)
+    FString Type;  // "StaticMeshComponent", "AABoundingBoxComponent" 등
+
+    // Transform
+    FVector RelativeLocation;
+    FVector RelativeRotation;
+    FVector RelativeScale;
+
+    // Type별 속성
+    FString StaticMesh;  // StaticMeshComponent: Asset path
+    TArray<FString> Materials;  // StaticMeshComponent: Materials
+    FString TexturePath;  // DecalComponent, BillboardComponent: Texture path
+    FFireBallProperty FireBallProperty; // FireballComponent
+    // 신규
+    FProjectileMovementProperty ProjectileMovementProperty;
+    FRotationMovementProperty RotationMovementProperty;
+};
+
+
 
 class FSceneLoader
 {

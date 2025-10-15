@@ -322,6 +322,34 @@ void FSceneLoader::SaveV2(const FSceneData& SceneData, const FString& SceneName)
             oss << "        \"Color\" : [" << FB.Color.R << ", " << FB.Color.G << ", " << FB.Color.B << ", " << FB.Color.A << "]\n";
             oss << "      }";
         }
+        if (Comp.Type.find("ProjectileMovementComponent") != std::string::npos)
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+
+            const FProjectileMovementProperty& PM = Comp.ProjectileMovementProperty;
+
+            oss << "      \"ProjectileMovementData\" : {\n";
+            oss << "        \"InitialSpeed\" : " << PM.InitialSpeed << ",\n";
+            oss << "        \"MaxSpeed\" : " << PM.MaxSpeed << ",\n";
+            oss << "        \"GravityScale\" : " << PM.GravityScale << "\n";
+            oss << "      }";
+        }
+
+        // RotationMovementComponent
+        if (Comp.Type.find("RotationMovementComponent") != std::string::npos)
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+
+            const FRotationMovementProperty& RM = Comp.RotationMovementProperty;
+
+            oss << "      \"RotationMovementData\" : {\n";
+            oss << "        \"RotationRate\" : [" << RM.RotationRate.X << ", " << RM.RotationRate.Y << ", " << RM.RotationRate.Z << "],\n";
+            oss << "        \"PivotTranslation\" : [" << RM.PivotTranslation.X << ", " << RM.PivotTranslation.Y << ", " << RM.PivotTranslation.Z << "],\n";
+            oss << "        \"bRotationInLocalSpace\" : " << (RM.bRotationInLocalSpace ? "true" : "false") << "\n";
+            oss << "      }";
+        }
 
         oss << "\n";
         oss << "    }" << (i + 1 < SceneData.Components.size() ? "," : "") << "\n";
@@ -501,6 +529,45 @@ FSceneData FSceneLoader::ParseV2(const JSON& Json)
                         );
                     }
                 }
+            }
+            if (Comp.Type.find("ProjectileMovementComponent") != std::string::npos &&
+                CompJson.hasKey("ProjectileMovementData"))
+            {
+                const JSON& PMJson = CompJson.at("ProjectileMovementData");
+                if (PMJson.hasKey("InitialSpeed"))
+                    Comp.ProjectileMovementProperty.InitialSpeed = (float)PMJson.at("InitialSpeed").ToFloat();
+                if (PMJson.hasKey("MaxSpeed"))
+                    Comp.ProjectileMovementProperty.MaxSpeed = (float)PMJson.at("MaxSpeed").ToFloat();
+                if (PMJson.hasKey("GravityScale"))
+                    Comp.ProjectileMovementProperty.GravityScale = (float)PMJson.at("GravityScale").ToFloat();
+            }
+
+            // RotationMovementComponent
+            if (Comp.Type.find("RotationMovementComponent") != std::string::npos &&
+                CompJson.hasKey("RotationMovementData"))
+            {
+                const JSON& RMJson = CompJson.at("RotationMovementData");
+
+                if (RMJson.hasKey("RotationRate"))
+                {
+                    auto arr = RMJson.at("RotationRate");
+                    Comp.RotationMovementProperty.RotationRate = FVector(
+                        (float)arr[0].ToFloat(),
+                        (float)arr[1].ToFloat(),
+                        (float)arr[2].ToFloat()
+                    );
+                }
+                if (RMJson.hasKey("PivotTranslation"))
+                {
+                    auto arr = RMJson.at("PivotTranslation");
+                    Comp.RotationMovementProperty.PivotTranslation = FVector(
+                        (float)arr[0].ToFloat(),
+                        (float)arr[1].ToFloat(),
+                        (float)arr[2].ToFloat()
+                    );
+                }
+                if (RMJson.hasKey("bRotationInLocalSpace"))
+                    Comp.RotationMovementProperty.bRotationInLocalSpace = RMJson.at("bRotationInLocalSpace").ToBool();
             }
             Data.Components.push_back(Comp);
         }
