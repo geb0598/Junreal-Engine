@@ -5,14 +5,16 @@ cbuffer ModelBuffer : register(b0)
     uint UUID;
     float3 Padding;
 }
-
+cbuffer CameraInfo : register(b1)
+{
+    row_major float4x4 ViewMatrix;
+    row_major float4x4 ProjectionMatrix;
+}
 // C++에서 상수 버퍼를 통해 전달될 데이터
-cbuffer CameraInfo : register(b2)
+cbuffer BillboardBuffer : register(b2)
 {
     float3 textWorldPos;
     float padding;
-    row_major matrix viewMatrix;
-    row_major matrix projectionMatrix;
     row_major matrix viewInverse;
 }
 
@@ -53,7 +55,7 @@ PS_INPUT mainVS(VS_INPUT input)
     float3 finalPos_worldspace = textWorldPos + pos_aligned;
 
     // 뷰-프로젝션 변환
-    output.pos_screenspace = mul(float4(finalPos_worldspace, 1.0f), mul(viewMatrix, projectionMatrix)) * 0.1;
+    output.pos_screenspace = mul(float4(finalPos_worldspace, 1.0f), mul(ViewMatrix, ProjectionMatrix)) * 0.1;
 
     // UV 계산: vertexId % 4로 코너 결정
     // 0=좌상단(0,0), 1=우상단(1,0), 2=좌하단(0,1), 3=우하단(1,1)

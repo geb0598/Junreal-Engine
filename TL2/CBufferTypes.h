@@ -99,8 +99,6 @@ struct BillboardBufferType
 {
     FVector pos;
     float padding;
-    FMatrix View;
-    FMatrix Proj;
     FMatrix InverseViewMat;
     /*FVector cameraRight;
     FVector cameraUp;*/
