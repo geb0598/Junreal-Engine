@@ -17,3 +17,34 @@ AExponentialHeightFog::AExponentialHeightFog()
     }
 
 }
+
+UObject* AExponentialHeightFog::Duplicate()
+{
+
+    AExponentialHeightFog* DuplicatedActor = NewObject<AExponentialHeightFog>(*this);
+
+    
+    if (DuplicatedActor->RootComponent)
+    {
+        TSet<UActorComponent*> ComponentsToDelete = DuplicatedActor->GetComponents();
+        for (UActorComponent* Component : ComponentsToDelete)
+        {
+            DuplicatedActor->OwnedComponents.Remove(Component);
+            ObjectFactory::DeleteObject(Component);
+        }
+        DuplicatedActor->RootComponent = nullptr;
+    }
+
+    if (RootComponent)
+    {
+        DuplicatedActor->RootComponent = Cast<USceneComponent>(RootComponent->Duplicate());
+    }
+    DuplicatedActor->DuplicateSubObjects();
+
+    return DuplicatedActor;
+}
+
+void AExponentialHeightFog::DuplicateSubObjects()
+{
+    Super_t::DuplicateSubObjects();
+}
