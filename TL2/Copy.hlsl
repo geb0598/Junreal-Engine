@@ -19,9 +19,19 @@ struct PS_Input
 PS_Input mainVS(uint Input : SV_VertexID)
 {
     PS_Input o;
-    o.uv = float2((Input << 1) & 2, Input & 2);
+   
+    float2 UVMap[] =
+    {
+        float2(0.0f, 0.0f),
+        float2(1.0f, 1.0f),
+        float2(0.0f, 1.0f),
+        float2(0.0f, 0.0f),
+        float2(1.0f, 0.0f),
+        float2(1.0f, 1.0f),
+    };
 
-    o.posCS = float4(o.uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
+    o.uv = UVMap[Input];
+    o.posCS = float4(o.uv.x * 2.0f - 1.0f, 1.0f - (o.uv.y * 2.0f), 0.0f, 1.0f);
     return o;
 }
 

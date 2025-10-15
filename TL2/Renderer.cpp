@@ -333,8 +333,6 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 
 void URenderer::EndFrame()
 {
-
-    
     // 렌더링 통계 수집 종료
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();
     StatsCollector.EndFrame();
@@ -371,11 +369,13 @@ void URenderer::RenderViewPorts(UWorld* World)
     }
 }
 
+void URenderer::RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+{
+
+}
 
 void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-  
-
     // 뷰포트의 실제 크기로 aspect ratio 계산
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
     if (Viewport->GetSizeY() == 0)
@@ -387,35 +387,85 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 
     // 씬의 액터들을 렌더링
-    RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
-
+    if (this->CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
+    {
+        RenderSceneDepthPass(World, ViewMatrix, ProjectionMatrix);
+    }
+    else
+    {   // General Rendering (color + depth)
+        RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
+    }
 }
+
+//void URenderer::RenderPointLightShadowPass(UWorld* World)
+//{
+//    for (auto& Light : World->PointLights)
+//    {
+//        if (!Light->CastShadows)
+//            continue;
+//
+//        const FVector LightPos = Light->Position;
+//        const float NearZ = 1.0f;
+//        const float FarZ = Light->Radius;
+//
+//        // 6방향 뷰행렬 구성
+//        FMatrix LightViews[6];
+//        LightViews[0] = FMatrix::LookAt(LightPos, LightPos + FVector(1, 0, 0), FVector(0, 1, 0));   // +X
+//        LightViews[1] = FMatrix::LookAt(LightPos, LightPos + FVector(-1, 0, 0), FVector(0, 1, 0));  // -X
+//        LightViews[2] = FMatrix::LookAt(LightPos, LightPos + FVector(0, 1, 0), FVector(0, 0, -1));  // +Y
+//        LightViews[3] = FMatrix::LookAt(LightPos, LightPos + FVector(0, -1, 0), FVector(0, 0, 1));  // -Y
+//        LightViews[4] = FMatrix::LookAt(LightPos, LightPos + FVector(0, 0, 1), FVector(0, 1, 0));   // +Z
+//        LightViews[5] = FMatrix::LookAt(LightPos, LightPos + FVector(0, 0, -1), FVector(0, 1, 0));  // -Z
+//
+//        const FMatrix LightProj = FMatrix::PerspectiveFovLH(PI / 2.0f, 1.0f, NearZ, FarZ);
+//
+//        for (int Face = 0; Face < 6; ++Face)
+//        {
+//            RHI->SetRenderTarget(Light->ShadowCubeMap, Face);
+//            RHI->ClearDepth(1.0f);
+//            RHI->OMSetDepthStencilState(EComparisonFunc::LessEqualWrite);
+//
+//            UpdateShadowBuffer(LightViews[Face], LightProj, LightPos);
+//            RenderSceneDepthOnly(World); // 깊이만 렌더
+//        }
+//    }
+//}
 
 
 void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
 
-    // 렌더 패스 구조:
-    RenderFireBallPass(World);
-    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
-    // 2. Post-processing passes
-    RenderBasePass(World, Camera, Viewport);
-
-    RenderFogPass(World, Camera, Viewport);
-
-   // FXAA.Render(this);
-
-    RenderEditorPass(World, Camera, Viewport);
-    // 4. Overlay (UI, debug visualization)
-    RenderOverlayPass(World);
-
-    
     if (!World || !Camera || !Viewport)
-    {
         return;
-    }
 
-  
+    // +-+-+ Render Pass Structure +-+-+
+    
+    switch (CurrentViewMode)
+    {
+    case EViewModeIndex::VMI_Lit:
+    case EViewModeIndex::VMI_Unlit:
+    case EViewModeIndex::VMI_Wireframe:
+    {
+        RenderFireBallPass(World);
+        RenderBasePass(World, Camera, Viewport);  // Full color + depth pass (Opaque geometry - per viewport)
+        RenderFogPass(World,Camera,Viewport);
+       // FXAA.Render(this);
+        RenderEditorPass(World, Camera, Viewport);
+        break;
+    }
+    case EViewModeIndex::VMI_SceneDepth:
+    {
+        RenderBasePass(World, Camera, Viewport);  // calls RenderScene, which executes the depth-only pass 
+                                                  // (RenderSceneDepthPass) according to the current view mode
+        RenderSceneDepthVisualizePass(Camera);    // Depth → Grayscale visualize
+        break;
+    }
+    default:
+        break;
+    }
+    
+    // Overlay (UI, debug visualization)
+    RenderOverlayPass(World);
 }
 
 void URenderer::RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
@@ -462,7 +512,7 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
     ViewFrustum.Update(ViewMatrix * ProjectionMatrix);
 
     BeginLineBatch();
-    SetViewModeType(ViewModeIndex);
+    SetViewModeType(CurrentViewMode);
 
     RenderPrimitives(World, ViewMatrix, ProjectionMatrix, Viewport);
 
@@ -713,12 +763,14 @@ void URenderer::RenderPostProcessing(UShader* Shader)
 
 void URenderer::RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
+
     for (UExponentialHeightFogComponent* FogComponent : World->GetLevel()->GetComponentList<UExponentialHeightFogComponent>())
     {
         FogComponent->Render(this, Camera->GetActorLocation(), Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Viewport);
         //첫번째 것만 그림
         break;
    }
+
 }
 
 void URenderer::RenderFireBallPass(UWorld* World)
@@ -734,17 +786,17 @@ void URenderer::RenderFireBallPass(UWorld* World)
         if (idx >= MAX_POINT_LIGHTS) break;
 
         PointLightCB.PointLights[idx].Position = FVector4(
-            FireBallComponent->GetWorldLocation(), FireBallComponent->Radius
+            FireBallComponent->GetWorldLocation(), FireBallComponent->FireData.Radius
         );
         PointLightCB.PointLights[idx].Color = FVector4(
-            FireBallComponent->Color.R, FireBallComponent->Color.G, FireBallComponent->Color.B, FireBallComponent->Intensity
+            FireBallComponent->FireData.Color.R, FireBallComponent->FireData.Color.G, FireBallComponent->FireData.Color.B, FireBallComponent->FireData.Intensity
         );
-        PointLightCB.PointLights[idx].FallOff = FireBallComponent->RadiusFallOff;
+        PointLightCB.PointLights[idx].FallOff = FireBallComponent->FireData.RadiusFallOff;
     }
     // 2️⃣ 상수 버퍼 GPU로 업데이트
     UpdateSetCBuffer(PointLightCB);
 
-    /*const TArray<AActor*>& Actors = World->GetLevel()->GetActors();
+    /*const TArray<AActor*>& Actors = World->GetLevel()->GetActors();se
 
     for (AActor* Actor : Actors)
     {
@@ -759,12 +811,12 @@ void URenderer::RenderFireBallPass(UWorld* World)
                     if (idx >= MAX_POINT_LIGHTS) break;
 
                     PointLightCB.PointLights[idx].Position = FVector4(
-                        Fire->GetWorldLocation(), Fire->Radius
+                        Fire->GetWorldLocation(), Fire->FireData.Radius
                     );
                     PointLightCB.PointLights[idx].Color = FVector4(
-                        Fire->Color.R, Fire->Color.G, Fire->Color.B, Fire->Intensity
+                        Fire->FireData.Color.R, Fire->FireData.Color.G, Fire->FireData.Color.B, Fire->FireData.Intensity
                     );
-                    PointLightCB.PointLights[idx].FallOff = Fire->RadiusFallOff;
+                    PointLightCB.PointLights[idx].FallOff = Fire->FireData.RadiusFallOff;
                 }
             }
         }
@@ -776,6 +828,11 @@ void URenderer::RenderFireBallPass(UWorld* World)
 void URenderer::RenderOverlayPass(UWorld* World)
 {
     // TODO: 오버레이(UI, 디버그 텍스트 등) 구현
+}
+
+void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
+{
+
 }
 
 void URenderer::InitializeLineBatch()

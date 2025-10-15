@@ -6,7 +6,9 @@
 #include "nlohmann/json.hpp"   
 #include "Vector.h"
 #include "UEContainer.h"
+#include"FireballComponent.h"
 using namespace json;
+
 
 // ========================================
 // Version 1 (Legacy - 하위 호환용)
@@ -40,6 +42,8 @@ struct FComponentData
     FString StaticMesh;  // StaticMeshComponent: Asset path
     TArray<FString> Materials;  // StaticMeshComponent: Materials
     FString TexturePath;  // DecalComponent, BillboardComponent: Texture path
+	FFireBallProperty FireBallProperty; // FireballComponent
+
 };
 
 struct FActorData

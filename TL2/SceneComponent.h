@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Vector.h"
 #include "ActorComponent.h"
-
+#include"Engine.h"
 
 
 // 부착 시 로컬을 유지할지, 월드를 유지할지
@@ -75,7 +75,7 @@ public:
     // ──────────────────────────────
     USceneComponent* GetAttachParent() const { return AttachParent; }
     const TArray<USceneComponent*>& GetAttachChildren() const { return AttachChildren; }
-    UWorld* GetWorld() { return AttachParent->GetWorld(); }
+    UWorld* GetWorld() { return GEngine->GetActiveWorld(); }
 
     // Duplicate function
     UObject* Duplicate() override;

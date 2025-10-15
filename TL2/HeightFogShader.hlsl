@@ -47,9 +47,19 @@ PS_INPUT mainVS(uint Input : SV_VertexID)
 {
     PS_INPUT Output;
 
-    Output.UV = float2((Input << 1) & 2, Input & 2);
+   
+    float2 UVMap[] =
+    {
+        float2(0.0f, 0.0f),
+        float2(1.0f, 1.0f),
+        float2(0.0f, 1.0f),
+        float2(0.0f, 0.0f),
+        float2(1.0f, 0.0f),
+        float2(1.0f, 1.0f),
+    };
 
-    Output.Position = float4(Output.UV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
+    Output.UV = UVMap[Input];
+    Output.Position = float4(Output.UV.x * 2.0f - 1.0f, 1.0f - (Output.UV.y * 2.0f), 0.0f, 1.0f);
     
     return Output;
 }

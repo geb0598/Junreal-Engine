@@ -79,6 +79,7 @@ struct ModelBufferType
     FMatrix Model;
     uint32 UUID = 0;
     FVector Padding;
+    FMatrix NormalMatrix; // Inverse transpose of Model matrix for proper normal transformation
 };
 
 //VS : b1
@@ -86,6 +87,9 @@ struct ViewProjBufferType
 {
     FMatrix View;
     FMatrix Proj;
+
+    FVector CameraWorldPos; // ★ 추가
+    float  _pad_cam;       // 16바이트 정렬용 패딩
 };
 
 //VS : b2

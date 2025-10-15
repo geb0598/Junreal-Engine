@@ -3,12 +3,15 @@ cbuffer ModelBuffer : register(b0)
     row_major float4x4 WorldMatrix;
     uint UUID;
     float3 Padding;
+    row_major float4x4 NormalMatrix;
 }
 
 cbuffer ViewProjBuffer : register(b1)
 {
     row_major float4x4 ViewMatrix;
     row_major float4x4 ProjectionMatrix;
+    float3 CameraWorldPos; // ★ 추가
+    float _pad_cam; // 16바이트 정렬용 패딩
 }
 
 cbuffer HighLightBuffer : register(b2)
@@ -77,19 +80,51 @@ cbuffer PointLightBuffer : register(b9)
     float3 _pad;
     FPointLightData PointLights[MAX_PointLight];
 }
-
-float3 ComputePointLights(float3 worldPos)
+struct LightAccum
 {
-    float3 totalLight = 0;
+    float3 diffuse;
+    float3 specular;
+};
+
+LightAccum ComputePointLights_LambertPhong(float3 worldPos, float3 worldNormal, float shininess)
+{
+    LightAccum acc;
+    acc.diffuse = 0;//난반사
+    acc.specular = 0;
+
+    float3 N = normalize(worldNormal);
+
+    // 뷰 벡터 (카메라 방향)//빛이 카메라로 들어가는 방향
+    float3 V = normalize(CameraWorldPos - worldPos);
+
+    [loop]
     for (int i = 0; i < PointLightCount; ++i)
     {
-        float3 toLight = worldPos - PointLights[i].Position.xyz;
-        float dist = length(toLight);
+        float3 Lvec = PointLights[i].Position.xyz - worldPos;
+        float dist = length(Lvec);
+        float3 L = (dist > 1e-5) ? (Lvec / dist) : float3(0, 0, 1);
+
+        // 반경 기반 감쇠
         float atten = saturate(1.0 - dist / PointLights[i].Position.w);
         atten = pow(atten, PointLights[i].FallOff);
-        totalLight += PointLights[i].Color.rgb * PointLights[i].Color.a * atten;
+
+        // 라이트 색 * 강도
+        float3 Li = PointLights[i].Color.rgb * PointLights[i].Color.a;
+
+        // Lambert diffuse
+        float NdotL = saturate(dot(N, L));
+        float3 diffuse = Li * NdotL * atten;
+
+        // Blinn-Phong specular
+        float3 H = normalize(L + V);
+        float NdotH = saturate(dot(N, H));
+        float3 specular = Li * pow(NdotH, max(shininess, 1e-3)) * atten;
+
+        acc.diffuse += diffuse;
+        acc.specular += specular;
     }
-    return totalLight;
+
+    return acc;
 }
 
 
@@ -128,8 +163,9 @@ PS_INPUT mainVS(VS_INPUT input)
     float4 worldPos = mul(float4(input.position, 1.0f), WorldMatrix);
     output.worldPosition = worldPos.xyz;
 
-    // 노멀 변환 (정규화)
-    output.worldNormal = normalize(mul(input.normal, (float3x3) WorldMatrix));
+    // 노멀 변환 (inverse transpose matrix 사용)
+    // Non-uniform scale에 대응하기 위해 월드 매트릭스의 inverse transpose를 사용
+    output.worldNormal = normalize(mul(input.normal, (float3x3)NormalMatrix));
     
     float4x4 MVP = mul(mul(WorldMatrix, ViewMatrix), ProjectionMatrix);
     
@@ -184,15 +220,23 @@ PS_OUTPUT mainPS(PS_INPUT input)
         float3 highlightColor = float3(1.0, 1.0, 0.0); // 노란색
         baseColor.rgb = lerp(baseColor.rgb, highlightColor, 0.5);
     }
-      // 🔥 FireBall(PointLight) lighting
-    float3 lightAccum = ComputePointLights(input.worldPosition);
+   // ✅ 조명 계산
+    float3 N = input.worldNormal;
+    LightAccum la = ComputePointLights_LambertPhong(input.worldPosition, N, Material.SpecularExponent);
 
-    // 약간의 기본 환경광 (ambient)
-    float3 ambient = 0.25 * baseColor.rgb;
+    // ✅ Ambient + Diffuse + Specular
+    float3 ambient = 0.25 * baseColor;
+    if (HasMaterial)
+        ambient += 0.25 * Material.AmbientColor;
 
-    float3 finalLit = baseColor.rgb * (lightAccum + ambient);
+    float3 diffuseLit = baseColor.rgb * la.diffuse ;
+    float3 specularLit = la.specular;
+    if (HasMaterial)
+        specularLit *= Material.SpecularColor;
 
-    Result.Color = float4(finalLit.rgb, 1.0f);
+    float3 finalLit = ambient + diffuseLit + specularLit;
+
+    Result.Color = float4(finalLit, 1.0f);
     Result.UUID = input.UUID;
     return Result;
 }
