@@ -49,6 +49,15 @@ void UActorComponent::OnUnregister()
 {
     // 컴포넌트가 액터에서 해제될 때 호출
     // 정리 로직이 필요하면 Override
+    if (!bIsRegistered)     return;
+    bIsRegistered = false;
+}
+
+void UActorComponent::RegisterComponent()
+{
+    if (bIsRegistered)  return;
+    bIsRegistered = true;
+    OnRegister();
 }
 
 UObject* UActorComponent::Duplicate()

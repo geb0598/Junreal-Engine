@@ -206,6 +206,17 @@ void AActor::AddComponent(USceneComponent* InComponent)
     }
 }
 
+void AActor::RegisterAllComponents()
+{
+    for (UActorComponent* Component : OwnedComponents)
+    {
+        if (Component && !Component->bIsRegistered)
+        {
+            Component->RegisterComponent();
+        }
+    }
+}
+
 UWorld* AActor::GetWorld() const
 {
     // TODO(KHJ): Level 생기면 붙일 것
@@ -360,14 +371,8 @@ UObject* AActor::Duplicate()
     // OwnedComponents 재구성
     DuplicateActor->DuplicateSubObjects();
     
-    // 복제된 모든 컴포넌트 순회, MoveComponent 찾기 (임시 하드 코딩)
-    for (UActorComponent* Component : DuplicateActor->OwnedComponents)
-    {
-        if (UMovementComponent* MovementComp = Cast<UMovementComponent>(Component))
-        {
-            MovementComp->SetUpdatedComponent(DuplicateActor->RootComponent);
-        }
-    }
+    // 복제된 모든 컴포넌트의 RegisterComponent()->OnRegister() 호출
+    DuplicateActor->RegisterAllComponents();
 
     return DuplicateActor;
 }
