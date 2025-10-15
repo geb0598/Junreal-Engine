@@ -53,7 +53,8 @@ void UActorComponent::OnUnregister()
 
 UObject* UActorComponent::Duplicate()
 {
-    UActorComponent* DuplicatedComponent = NewObject<UActorComponent>(*this);
+    UActorComponent* DuplicatedComponent = Cast<UActorComponent>(NewObject(GetClass()));
+    //UActorComponent* DuplicatedComponent = NewObject<UActorComponent>(*this);
     DuplicatedComponent->DuplicateSubObjects();
 
     return DuplicatedComponent;

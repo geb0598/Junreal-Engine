@@ -6,6 +6,7 @@
 #include "MeshComponent.h"
 #include "BillboardComponent.h"
 #include "TextRenderComponent.h"
+#include "MovementComponent.h"
 
 AActor::AActor()
 {
@@ -342,8 +343,31 @@ UObject* AActor::Duplicate()
         DuplicateActor->RootComponent = Cast<USceneComponent>(OriginalRoot->Duplicate());
     }
 
+    // Non-Scene Component만 따로 복제
+    for (UActorComponent* OriginalComponent : this->OwnedComponents)
+    {
+        if (OriginalComponent && !Cast<USceneComponent>(OriginalComponent))
+        {
+            UActorComponent* DuplicateNonSceneComp = Cast<UActorComponent>(OriginalComponent->Duplicate());
+            if (DuplicateNonSceneComp)
+            {
+                DuplicateNonSceneComp->SetOwner(DuplicateActor);
+                DuplicateActor->OwnedComponents.Add(DuplicateNonSceneComp);
+            }
+        }
+    }
+
     // OwnedComponents 재구성
     DuplicateActor->DuplicateSubObjects();
+    
+    // 복제된 모든 컴포넌트 순회, MoveComponent 찾기 (임시 하드 코딩)
+    for (UActorComponent* Component : DuplicateActor->OwnedComponents)
+    {
+        if (UMovementComponent* MovementComp = Cast<UMovementComponent>(Component))
+        {
+            MovementComp->SetUpdatedComponent(DuplicateActor->RootComponent);
+        }
+    }
 
     return DuplicateActor;
 }
