@@ -932,6 +932,27 @@ void UWorld::LoadSceneV2(const FString& SceneName)
             }
 
             TargetComp->SetOwner(OwnerActor);
+
+            if (UProjectileMovementComponent* ProjectileComp = Cast<UProjectileMovementComponent>(TargetComp))
+            {
+                const FProjectileMovementProperty& PM = CompData.ProjectileMovementProperty;
+                ProjectileComp->SetInitialSpeed(PM.InitialSpeed);
+                ProjectileComp->SetMaxSpeed(PM.MaxSpeed);
+                ProjectileComp->SetGravityScale(PM.GravityScale);
+
+                ProjectileComp->UUID = CompData.UUID;
+                OwnerActor->OwnedComponents.Add(ProjectileComp);
+            }
+
+            else if (URotationMovementComponent* RotComp = Cast<URotationMovementComponent>(TargetComp))
+            {
+                const FRotationMovementProperty& RM = CompData.RotationMovementProperty;
+                RotComp->SetRotationRate(RM.RotationRate);
+                RotComp->SetPivotTranslation(RM.PivotTranslation);
+                RotComp->SetRotationInLocalSpace(RM.bRotationInLocalSpace);
+                RotComp->UUID = CompData.UUID;
+                OwnerActor->OwnedComponents.Add(RotComp);
+            }
             OwnerActor->OwnedComponents.Add(TargetComp);
         }
 
@@ -954,26 +975,7 @@ void UWorld::LoadSceneV2(const FString& SceneName)
             Cast<USceneComponent>(TargetComp)->SetRelativeScale(CompData.RelativeScale);
         }
 
-        if (UProjectileMovementComponent* ProjectileComp = Cast<UProjectileMovementComponent>(TargetComp))
-        {
-            const FProjectileMovementProperty& PM = CompData.ProjectileMovementProperty;
-            ProjectileComp->SetInitialSpeed(PM.InitialSpeed);
-            ProjectileComp->SetMaxSpeed(PM.MaxSpeed);
-            ProjectileComp->SetGravityScale(PM.GravityScale);
-
-            ProjectileComp->UUID = CompData.UUID;
-            OwnerActor->OwnedComponents.Add(ProjectileComp);
-        }
-
-        else if (URotationMovementComponent* RotComp = Cast<URotationMovementComponent>(TargetComp))
-        {
-            const FRotationMovementProperty& RM = CompData.RotationMovementProperty;
-            RotComp->SetRotationRate(RM.RotationRate);
-            RotComp->SetPivotTranslation(RM.PivotTranslation);
-            RotComp->SetRotationInLocalSpace(RM.bRotationInLocalSpace);
-            RotComp->UUID = CompData.UUID;
-            OwnerActor->OwnedComponents.Add(RotComp);
-        }
+        
 
         ComponentMap.Add(CompData.UUID, Cast<USceneComponent>(TargetComp));
     }
