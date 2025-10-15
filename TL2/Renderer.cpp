@@ -326,8 +326,6 @@ void URenderer::SetViewModeType(EViewModeIndex ViewModeIndex)
 
 void URenderer::EndFrame()
 {
-
-    
     // 렌더링 통계 수집 종료
     URenderingStatsCollector& StatsCollector = URenderingStatsCollector::GetInstance();
     StatsCollector.EndFrame();
@@ -362,11 +360,13 @@ void URenderer::RenderViewPorts(UWorld* World)
     }
 }
 
+void URenderer::RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
+{
+
+}
 
 void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-  
-
     // 뷰포트의 실제 크기로 aspect ratio 계산
     float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
     if (Viewport->GetSizeY() == 0)
@@ -378,7 +378,14 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 
     // 씬의 액터들을 렌더링
-    RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
+    if (this->CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
+    {
+        RenderSceneDepthPass(World, ViewMatrix, ProjectionMatrix);
+    }
+    else
+    {   // General Rendering (color + depth)
+        RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
+    }
 
     // Gizmo 렌더링 (에디터 전용)
     if (!World->IsPIEWorld())
@@ -388,8 +395,8 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
             Gizmo->Render(Camera, Viewport);
         }
     }
-
 }
+
 //void URenderer::RenderPointLightShadowPass(UWorld* World)
 //{
 //    for (auto& Light : World->PointLights)
@@ -424,28 +431,39 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
 //    }
 //}
 
+
 void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-
-    // 렌더 패스 구조:
-    RenderFireBallPass(World);
-    // 2. Base Pass (Opaque geometry - 각 뷰포트별로)
-    // 2. Post-processing passes
-    RenderBasePass(World, Camera, Viewport);
-
-    RenderFogPass();
-
-    FXAA.Render(this);
-    // 4. Overlay (UI, debug visualization)
-    RenderOverlayPass(World);
-
-    
     if (!World || !Camera || !Viewport)
-    {
         return;
-    }
 
-  
+    // +-+-+ Render Pass Structure +-+-+
+    
+    switch (CurrentViewMode)
+    {
+    case EViewModeIndex::VMI_Lit:
+    case EViewModeIndex::VMI_Unlit:
+    case EViewModeIndex::VMI_Wireframe:
+    {
+        RenderFireBallPass(World);
+        RenderBasePass(World, Camera, Viewport);  // Full color + depth pass (Opaque geometry - per viewport)
+        RenderFogPass();
+        FXAA.Render(this);
+        break;
+    }
+    case EViewModeIndex::VMI_SceneDepth:
+    {
+        RenderBasePass(World, Camera, Viewport);  // calls RenderScene, which executes the depth-only pass 
+                                                  // (RenderSceneDepthPass) according to the current view mode
+        RenderSceneDepthVisualizePass(Camera);    // Depth → Grayscale visualize
+        break;
+    }
+    default:
+        break;
+    }
+    
+    // Overlay (UI, debug visualization)
+    RenderOverlayPass(World);
 }
 
 void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
@@ -459,7 +477,7 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
     ViewFrustum.Update(ViewMatrix * ProjectionMatrix);
 
     BeginLineBatch();
-    SetViewModeType(ViewModeIndex);
+    SetViewModeType(CurrentViewMode);
 
     const TArray<AActor*>& LevelActors = World->GetLevel() ? World->GetLevel()->GetActors() : TArray<AActor*>();
     USelectionManager& SelectionManager = USelectionManager::GetInstance();
@@ -698,6 +716,11 @@ void URenderer::RenderFireBallPass(UWorld* World)
 void URenderer::RenderOverlayPass(UWorld* World)
 {
     // TODO: 오버레이(UI, 디버그 텍스트 등) 구현
+}
+
+void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
+{
+
 }
 
 void URenderer::InitializeLineBatch()
