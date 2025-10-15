@@ -310,6 +310,7 @@ enum class ESpawnActorType : uint32
     Decal,
     SpotLight,
     HeightFog,
+    FXAA,
 
     Count
 };
@@ -402,5 +403,12 @@ namespace EEndPlayReason
         Quit,
     };
 }
+enum class EComponentWorldTickMode
+{
+    All,        // 모든 월드에서 (Editor + PIE + Game)
+    PIEOnly,    // PIE에서만
+    GameOnly,   // 실제 게임에서만
+    EditorOnly  // 에디터에서만
+};
 
 //#endif /** UE_ENUMS_H */

@@ -29,6 +29,10 @@ enum class ERenderTargetType
     Frame = 1 << 1,
     ID = 1 << 2,
     Temporal = 1<< 3,
+    //for SRV
+    Depth = 1<<4,
+    //for RTV
+    NoDepth = 1<<5,
 };
 // 비트 OR 연산자
 inline ERenderTargetType operator|(ERenderTargetType lhs, ERenderTargetType rhs)
@@ -89,6 +93,7 @@ public:
     virtual void RSSetNoCullState() = 0;
     virtual void RSSetDefaultState() = 0;
     virtual void RSSetDecalState() = 0;
+    virtual void OMSetDepthOnlyTarget() = 0;
     virtual void OMSetRenderTargets(const ERenderTargetType RenderTargetType) = 0;
     virtual void PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType) = 0;
     virtual void OMSetBlendState(bool bIsBlendMode) = 0;

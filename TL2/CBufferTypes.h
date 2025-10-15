@@ -38,6 +38,7 @@ constexpr bool TYPENAME##SetPS = SETPS;\
 #define CBUFFER_TYPE_LIST(MACRO)\
 MACRO(ModelBufferType)					\
 MACRO(ViewProjBufferType)					\
+MACRO(FViewProjectionInverse)            \
 MACRO(BillboardBufferType)					\
 MACRO(FPixelConstBufferType)					\
 MACRO(HighLightBufferType)					\
@@ -46,12 +47,15 @@ MACRO(UVScrollCB)					\
 MACRO(DecalMatrixCB)					\
 MACRO(ViewportBufferType)					\
 MACRO(DecalAlphaBufferType)					\
-MACRO(HeightFogBufferType)                  \
+MACRO(FHeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
+MACRO(CameraInfoBufferType)                  \
+MACRO(FXAABufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
-CBUFFER_INFO(ViewProjBufferType, 1, true, false)
+CBUFFER_INFO(ViewProjBufferType, 1, true, true)
 CBUFFER_INFO(BillboardBufferType, 2, true, false)
+CBUFFER_INFO(FViewProjectionInverse, 3, false, true)
 CBUFFER_INFO(FPixelConstBufferType, 4, false, true)
 CBUFFER_INFO(HighLightBufferType, 2, true, true)
 CBUFFER_INFO(ColorBufferType, 3, false, true)
@@ -60,8 +64,10 @@ CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
 
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
-CBUFFER_INFO(HeightFogBufferType, 8, false, true)
+CBUFFER_INFO(FHeightFogBufferType, 8, false, true)
 CBUFFER_INFO(FPointLightBufferType, 9, false, true)
+CBUFFER_INFO(CameraInfoBufferType, 0, false, true)
+CBUFFER_INFO(FXAABufferType, 0, false, true)
 
 
 //Create 
@@ -95,12 +101,17 @@ struct BillboardBufferType
 {
     FVector pos;
     float padding;
-    FMatrix View;
-    FMatrix Proj;
     FMatrix InverseViewMat;
     /*FVector cameraRight;
     FVector cameraUp;*/
 };
+
+//PS : b3
+struct FViewProjectionInverse
+{
+    FMatrix ViewProjectionInverse;
+};
+
 
 //PS : b4
 struct FPixelConstBufferType
@@ -160,7 +171,7 @@ struct FPointLightData
     FVector Padding;    // 16바이트 정렬 맞추기용
 };
 #define MAX_POINT_LIGHTS 100
-// 전체 버퍼 (cbuffer b6 대응)
+// 전체 버퍼 (cbuffer b9 대응)
 struct FPointLightBufferType
 {
     int PointLightCount;                    // 현재 활성 조명 개수
@@ -176,7 +187,7 @@ struct DecalAlphaBufferType
 };
 
 //PS : b8
-struct HeightFogBufferType
+struct FHeightFogBufferType
 {
     FLinearColor FogInscatteringColor;
 
@@ -184,9 +195,28 @@ struct HeightFogBufferType
     float FogHeightFalloff;
     float StartDistance;
     float FogCutoffDistance;
+    float FogMaxOpacityDistance;
     float FogMaxOpacity;
     float FogActorHeight;
+    float Padding;
+};
+
+//PS : b0
+struct CameraInfoBufferType
+{
+    float NearClip;
+    float FarClip;
     float Padding[2];
+};
+
+
+//PS : b0
+struct FXAABufferType
+{
+    float SlideX = 1.0f;
+    float SpanMax = 8.0f;
+    float ReduceMin = 1.0f / 128.0f;
+    float ReduceMul = 1.0f / 8.0f;
 };
 
 //---//

@@ -19,7 +19,9 @@
 #include "BoundingVolume.h"
 #include "GizmoActor.h"
 #include "FireballComponent.h"
-
+#include "ExponentialHeightFogComponent.h"
+#include "FXAAComponent.h"
+#include "CameraComponent.h"
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
 {
@@ -55,8 +57,8 @@ void URenderer::BeginFrame()
     RHIDevice->RSSetViewport();
 
     //OM
-    //RHIDevice->OMSetBlendState();
-    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
+    RHIDevice->OMSetBlendState(false);
+   RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
 }
 
 void URenderer::PrepareShader(UShader* InShader)
@@ -109,6 +111,12 @@ void URenderer::RenderFrame(UWorld* World)
 {
     BeginFrame();
     UUIManager::GetInstance().Render();
+
+    //원래 컴포넌트가 생성되고 레벨에 알아서 등록하고 해제하는게 훨씬 효율적인데 그렇게 하면 지금 구조상 생성자에서 레벨에 등록할 수밖에 없고
+    //그러면 파이월드로 넘어가면서 듀플리케이트 하는 시점이 GWorld가 파이월드가 되기 전이라서 기존의 에디터월드 레벨에 중복으로 등록되고
+    //파이월드에는 컴포넌트 등록 안되어있어서 터짐. 파이월드에 등록하는건 beingplay에서 하면 된다지만 생성자가 아닌 곳에서 생성이후 렌더링 전 레벨에 등록할
+    //방안이 떠오르지 않아서 일단 급한대로 매프레임 컴포넌트 수집하는 형태로 작성함
+    World->GetLevel()->CollectComponentsToRender();
 
     RenderViewPorts(World);
 
@@ -343,6 +351,8 @@ void URenderer::EndFrame()
         AvgStats.ShaderChanges
     );
     
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
     RHIDevice->Present();
 }
 
@@ -362,7 +372,58 @@ void URenderer::RenderViewPorts(UWorld* World)
 
 void URenderer::RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix)
 {
+    // +-+ Set Render State +-+
+    RHIDevice->OMSetDepthOnlyTarget();     // DSV binding
+    RHIDevice->OMSetBlendState(false);     // color write mask = 0
+    RHIDevice->RSSetDefaultState();        // solid fill, back-face culling
+    RHIDevice->IASetPrimitiveTopology();
 
+    // +-+ Set Shader & Buffer +-+
+    DepthOnlyShader = UResourceManager::GetInstance().Load<UShader>("DepthPrepassShader.hlsl");
+    PrepareShader(DepthOnlyShader);
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
+
+    // +-+ Iterate and Draw Renderable Actors +-+
+    const TArray<AActor*>& LevelActors = World->GetLevel()->GetActors();
+    for (AActor* Actor : LevelActors)
+    {
+        if (!Actor || Actor->GetActorHiddenInGame())
+            continue;
+
+        for (UActorComponent* ActorComp : Actor->GetComponents())
+        {
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
+            {
+                if (!Primitive->IsActive())
+                    continue;
+
+                if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Primitive))
+                {
+                    UStaticMesh* Mesh = MeshComp->GetStaticMesh();
+                    if (!Mesh)  continue;
+
+                    const FMatrix& WorldMatrix = Primitive->GetWorldMatrix();
+                    UpdateSetCBuffer(ModelBufferType(WorldMatrix));
+
+                    ID3D11Buffer* VertexBuffer = Mesh->GetVertexBuffer();
+                    ID3D11Buffer* IndexBuffer = Mesh->GetIndexBuffer();
+
+                    UINT Stride = sizeof(FVertexDynamic);
+                    UINT Offset = 0;
+                    RHIDevice->GetDeviceContext()->IASetVertexBuffers(0, 1, &VertexBuffer, &Stride, &Offset);
+                    RHIDevice->GetDeviceContext()->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+                    RHIDevice->GetDeviceContext()->DrawIndexed(Mesh->GetIndexCount(), 0, 0);
+                    URenderingStatsCollector::GetInstance().IncrementDrawCalls();
+                }
+            }
+        }
+    }
+
+    // +-+ Restore Render State +-+
+    // DSV un-binding
+    ID3D11RenderTargetView* nullRTV[1] = { nullptr };
+    RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, nullRTV, nullptr);
 }
 
 void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
@@ -377,24 +438,10 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     FMatrix ViewMatrix = Camera->GetViewMatrix();
     FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 
+   
     // 씬의 액터들을 렌더링
-    if (this->CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
-    {
-        RenderSceneDepthPass(World, ViewMatrix, ProjectionMatrix);
-    }
-    else
-    {   // General Rendering (color + depth)
-        RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
-    }
-
-    // Gizmo 렌더링 (에디터 전용)
-    if (!World->IsPIEWorld())
-    {
-        if (AGizmoActor* Gizmo = World->GetGizmoActor())
-        {
-            Gizmo->Render(Camera, Viewport);
-        }
-    }
+    // General Rendering (color + depth)
+    RenderActorsInViewport(World, ViewMatrix, ProjectionMatrix, Viewport);
 }
 
 //void URenderer::RenderPointLightShadowPass(UWorld* World)
@@ -434,11 +481,17 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
 
 void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
+
     if (!World || !Camera || !Viewport)
         return;
 
     // +-+-+ Render Pass Structure +-+-+
-    
+
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix, Camera->GetActorLocation()));
     switch (CurrentViewMode)
     {
     case EViewModeIndex::VMI_Lit:
@@ -447,8 +500,9 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
     {
         RenderFireBallPass(World);
         RenderBasePass(World, Camera, Viewport);  // Full color + depth pass (Opaque geometry - per viewport)
-        RenderFogPass();
-        FXAA.Render(this);
+        RenderFogPass(World,Camera,Viewport);
+        RenderFXAAPaxx(World, Camera, Viewport);
+        RenderEditorPass(World, Camera, Viewport);
         break;
     }
     case EViewModeIndex::VMI_SceneDepth:
@@ -466,9 +520,42 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
     RenderOverlayPass(World);
 }
 
+void URenderer::RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+{
+    // 뷰포트의 실제 크기로 aspect ratio 계산
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0)
+    {
+        ViewportAspectRatio = 1.0f;
+    }
+
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+
+    if (!World->IsPIEWorld())
+    {
+        RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+        RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
+        RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID | ERenderTargetType::NoDepth);
+        for (auto& Billboard : World->GetLevel()->GetComponentList<UBillboardComponent>())
+        {
+            Billboard->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+        }
+       
+   
+        if (AGizmoActor* Gizmo = World->GetGizmoActor())
+        {
+            Gizmo->Render(Camera, Viewport);
+        }
+    }
+}
 void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
 {
     if (!World || !Viewport)
+    {
+        return;
+    }
+    if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
     {
         return;
     }
@@ -479,100 +566,103 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
     BeginLineBatch();
     SetViewModeType(CurrentViewMode);
 
-    const TArray<AActor*>& LevelActors = World->GetLevel() ? World->GetLevel()->GetActors() : TArray<AActor*>();
-    USelectionManager& SelectionManager = USelectionManager::GetInstance();
-
-    // 특수 처리가 필요한 컴포넌트들
-    TArray<UDecalComponent*> Decals;
-    TArray<UPrimitiveComponent*> RenderPrimitivesWithOutDecal;
-    TArray<UBillboardComponent*> BillboardComponentList;
-
-    if (!Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Primitives))
-    {
-        return;
-    }
-
-    // 액터별로 순회하며 렌더링
-    for (AActor* Actor : LevelActors)
-    {
-        if (!Actor || Actor->GetActorHiddenInGame())
-        {
-            continue;
-        }
-
-        bool bIsSelected = SelectionManager.IsActorSelected(Actor);
-
-        for (UActorComponent* ActorComp : Actor->GetComponents())
-        {
-            if (!ActorComp)
-            {
-                continue;
-            }
-
-            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
-            {
-                // 바운딩 박스 그리기
-                if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
-                {
-                    AddLines(Primitive->GetBoundingBoxLines(), Primitive->GetBoundingBoxColor());
-                }
-
-                // 데칼 컴포넌트는 나중에 처리
-                if (UDecalComponent* Decal = Cast<UDecalComponent>(ActorComp))
-                {
-                    Decals.Add(Decal);
-                    continue;
-                }
-                if (UBillboardComponent* Billboard = Cast<UBillboardComponent>(ActorComp))
-                {
-                    BillboardComponentList.Add(Billboard);
-                    continue;
-                }
-
-                RenderPrimitivesWithOutDecal.Add(Primitive);
-
-                FVector rgb(1.0f, 1.0f, 1.0f);
-                UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
-                Primitive->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
-            }
-        }
-    }
+    RenderPrimitives(World, ViewMatrix, ProjectionMatrix, Viewport);
 
     OMSetBlendState(false);
     RenderEngineActors(World->GetEngineActors(), ViewMatrix, ProjectionMatrix, Viewport);
 
-    // 데칼 렌더링
-    if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
-    {
-        Decals.Sort([](const UDecalComponent* A, const UDecalComponent* B)
-        {
-            return A->GetSortOrder() < B->GetSortOrder();
-        });
+    RenderDecals(World, ViewMatrix, ProjectionMatrix, Viewport);
 
-        for (UDecalComponent* Decal : Decals)
-        {
-            FOBB DecalWorldOBB = Decal->GetWorldOBB();
 
-            if (World->GetUseBVH() && World->GetBVH().IsBuild())
-            {
-                TArray<UPrimitiveComponent*> CollisionPrimitives = World->GetBVH().GetCollisionWithOBB(DecalWorldOBB);
-                for (UPrimitiveComponent* Primitive : CollisionPrimitives)
-                {
-                    Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
-                }
-            }
-            else
-            {
-                for (UPrimitiveComponent* Primitive : RenderPrimitivesWithOutDecal)
-                {
-                    if (IntersectOBBAABB(DecalWorldOBB, Primitive->GetWorldAABB()))
-                    {
-                        Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
-                    }
-                }
-            }
-        }
-    }
+    //const TArray<AActor*>& LevelActors = World->GetLevel() ? World->GetLevel()->GetActors() : TArray<AActor*>();
+    //USelectionManager& SelectionManager = USelectionManager::GetInstance();
+
+    //// 특수 처리가 필요한 컴포넌트들
+    //TArray<UDecalComponent*> Decals;
+    //TArray<UPrimitiveComponent*> RenderPrimitivesWithOutDecal;
+    //TArray<UBillboardComponent*> BillboardComponentList;
+    // 
+    //// 액터별로 순회하며 렌더링
+    //for (AActor* Actor : LevelActors)
+    //{
+    //    if (!Actor || Actor->GetActorHiddenInGame())
+    //    {
+    //        continue;
+    //    }
+
+    //    bool bIsSelected = SelectionManager.IsActorSelected(Actor);
+
+    //    for (UActorComponent* ActorComp : Actor->GetComponents())
+    //    {
+    //        if (!ActorComp)
+    //        {
+    //            continue;
+    //        }
+
+    //        if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(ActorComp))
+    //        {
+    //            // 바운딩 박스 그리기
+    //            if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+    //            {
+    //                AddLines(Primitive->GetBoundingBoxLines(), Primitive->GetBoundingBoxColor());
+    //            }
+
+    //            // 데칼 컴포넌트는 나중에 처리
+    //            if (UDecalComponent* Decal = Cast<UDecalComponent>(ActorComp))
+    //            {
+    //                Decals.Add(Decal);
+    //                continue;
+    //            }
+    //            if (UBillboardComponent* Billboard = Cast<UBillboardComponent>(ActorComp))
+    //            {
+    //                BillboardComponentList.Add(Billboard);
+    //                continue;
+    //            }
+
+    //            RenderPrimitivesWithOutDecal.Add(Primitive);
+
+    //            FVector rgb(1.0f, 1.0f, 1.0f);
+    //            UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+    //            Primitive->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+    //        }
+    //    }
+    //}
+
+    //OMSetBlendState(false);
+    //RenderEngineActors(World->GetEngineActors(), ViewMatrix, ProjectionMatrix, Viewport);
+
+    //// 데칼 렌더링
+    //if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_Decals))
+    //{
+    //    Decals.Sort([](const UDecalComponent* A, const UDecalComponent* B)
+    //    {
+    //        return A->GetSortOrder() < B->GetSortOrder();
+    //    });
+
+    //    for (UDecalComponent* Decal : Decals)
+    //    {
+    //        FOBB DecalWorldOBB = Decal->GetWorldOBB();
+
+    //        if (World->GetUseBVH() && World->GetBVH().IsBuild())
+    //        {
+    //            TArray<UPrimitiveComponent*> CollisionPrimitives = World->GetBVH().GetCollisionWithOBB(DecalWorldOBB);
+    //            for (UPrimitiveComponent* Primitive : CollisionPrimitives)
+    //            {
+    //                Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+    //            }
+    //        }
+    //        else
+    //        {
+    //            for (UPrimitiveComponent* Primitive : RenderPrimitivesWithOutDecal)
+    //            {
+    //                if (IntersectOBBAABB(DecalWorldOBB, Primitive->GetWorldAABB()))
+    //                {
+    //                    Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     // BVH 바운드 시각화
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH))
@@ -583,12 +673,61 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
     EndLineBatch(FMatrix::Identity(), ViewMatrix, ProjectionMatrix);
 
     // 빌보드는 마지막에 렌더링
-    for (auto& Billboard : BillboardComponentList)
+   /* for (auto& Billboard : World->GetLevel()->GetComponentList<UBillboardComponent>())
     {
         Billboard->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
-    }
+    }*/
 
   
+}
+
+void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
+{
+    USelectionManager& SelectionManager = USelectionManager::GetInstance();
+    AActor* SelectedActor = SelectionManager.GetSelectedActor();
+
+    for (UPrimitiveComponent* PrimitiveComponent : World->GetLevel()->GetComponentList<UPrimitiveComponent>())
+    {
+        bool bIsSelected = false;
+        if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BoundingBoxes))
+        {
+            AddLines(PrimitiveComponent->GetBoundingBoxLines(), PrimitiveComponent->GetBoundingBoxColor());
+        }
+        if (PrimitiveComponent->GetOwner() == SelectedActor)
+        {
+            bIsSelected = true;
+        }
+        FVector rgb(1.0f, 1.0f, 1.0f);
+        UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+        PrimitiveComponent->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
+    }
+}
+
+void URenderer::RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
+{
+    for (UDecalComponent* Decal : World->GetLevel()->GetComponentList<UDecalComponent>())
+    {
+        FOBB DecalWorldOBB = Decal->GetWorldOBB();
+
+        if (World->GetUseBVH() && World->GetBVH().IsBuild())
+        {
+            TArray<UPrimitiveComponent*> CollisionPrimitives = World->GetBVH().GetCollisionWithOBB(DecalWorldOBB);
+            for (UPrimitiveComponent* Primitive : CollisionPrimitives)
+            {
+                Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+            }
+        }
+        else
+        {
+            for (UPrimitiveComponent* Primitive : World->GetLevel()->GetComponentList<UPrimitiveComponent>())
+            {
+                if (IntersectOBBAABB(DecalWorldOBB, Primitive->GetWorldAABB()))
+                {
+                    Decal->Render(this, Primitive, ViewMatrix, ProjectionMatrix, Viewport);
+                }
+            }
+        }
+    }
 }
 
 void URenderer::RenderEngineActors(const TArray<AActor*>& EngineActors, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport)
@@ -635,7 +774,7 @@ void URenderer::RenderPostProcessing(UShader* Shader)
 {
     OMSetBlendState(false);
     OMSetDepthStencilState(EComparisonFunc::Disable);
-    UINT Stride = sizeof(FVertexUV);
+    /*UINT Stride = sizeof(FVertexUV);
     UINT Offset = 0;
     UStaticMesh* StaticMesh = UResourceManager::GetInstance().Load<UStaticMesh>("ScreenQuad");
     ID3D11Buffer* VertexBuffer = StaticMesh->GetVertexBuffer();
@@ -644,38 +783,58 @@ void URenderer::RenderPostProcessing(UShader* Shader)
         0, 1, &VertexBuffer, &Stride, &Offset
     );
 
-    RHIDevice->GetDeviceContext()->IASetIndexBuffer(
+    RHIDevice->GetDeviceContext()->IASetIndexBuffer(s
         IndexBuffer, DXGI_FORMAT_R32_UINT, 0
-    );
-    RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    );*/
+    ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
+    DeviceContext->IASetInputLayout(nullptr);
+    DeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+    DeviceContext->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
+    DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //RHIDevice->GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     RHIDevice->PSSetDefaultSampler(0);
 
     //FrameBuffer -> TemporalBuffer
     PrepareShader(UResourceManager::GetInstance().Load<UShader>("Copy.hlsl"));
     RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
     RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Frame);
     RHIDevice->OMSetRenderTargets(ERenderTargetType::Temporal);
-    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+   // RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+    RHIDevice->GetDeviceContext()->Draw(6, 0);
 
     //TemporalBuffer ->FrameBuffer
     PrepareShader(Shader);
     RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
-    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Temporal);
-    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
-    RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
     RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
+    RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::Temporal | ERenderTargetType::Depth);
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::NoDepth);
+   // RHIDevice->GetDeviceContext()->DrawIndexed(StaticMesh->GetIndexCount(), 0, 0);
+    RHIDevice->GetDeviceContext()->Draw(6, 0);
 
 }
 
-void URenderer::RenderFogPass()
+void URenderer::RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
-    // TODO: 화면 전체 Fog 효과 구현
-    //뎊스를 받고 후처리 진행
-    //OffsceenColor
 
-    //넘겨서 -> 진행해주기 
+    for (UExponentialHeightFogComponent* FogComponent : World->GetLevel()->GetComponentList<UExponentialHeightFogComponent>())
+    {
+        FogComponent->Render(this, Camera->GetActorLocation(), Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Viewport);
+        //첫번째 것만 그림
+        break;
+   }
 
 }
+void URenderer::RenderFXAAPaxx(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
+{
+    for (UFXAAComponent* FXAAComponent : World->GetLevel()->GetComponentList<UFXAAComponent>())
+    {
+        FXAAComponent->Render(this);
+        //첫번째 것만 그림
+        break;
+    }
+}
+
 
 void URenderer::RenderFireBallPass(UWorld* World)
 {
@@ -683,7 +842,24 @@ void URenderer::RenderFireBallPass(UWorld* World)
 
     // 1️⃣ 라이트 컴포넌트 수집 (FireBall, PointLight 등)
     FPointLightBufferType PointLightCB{};
-    const TArray<AActor*>& Actors = World->GetLevel()->GetActors();
+    PointLightCB.PointLightCount=0;
+    for (UFireBallComponent* FireBallComponent : World->GetLevel()->GetComponentList<UFireBallComponent>())
+    {
+        int idx = PointLightCB.PointLightCount++;
+        if (idx >= MAX_POINT_LIGHTS) break;
+
+        PointLightCB.PointLights[idx].Position = FVector4(
+            FireBallComponent->GetWorldLocation(), FireBallComponent->FireData.Radius
+        );
+        PointLightCB.PointLights[idx].Color = FVector4(
+            FireBallComponent->FireData.Color.R, FireBallComponent->FireData.Color.G, FireBallComponent->FireData.Color.B, FireBallComponent->FireData.Intensity
+        );
+        PointLightCB.PointLights[idx].FallOff = FireBallComponent->FireData.RadiusFallOff;
+    }
+    // 2️⃣ 상수 버퍼 GPU로 업데이트
+    UpdateSetCBuffer(PointLightCB);
+
+    /*const TArray<AActor*>& Actors = World->GetLevel()->GetActors();se
 
     for (AActor* Actor : Actors)
     {
@@ -707,10 +883,9 @@ void URenderer::RenderFireBallPass(UWorld* World)
                 }
             }
         }
-    }
+    }*/
 
-    // 2️⃣ 상수 버퍼 GPU로 업데이트
-    UpdateSetCBuffer(PointLightCB);
+    
 }
 
 void URenderer::RenderOverlayPass(UWorld* World)
@@ -720,7 +895,67 @@ void URenderer::RenderOverlayPass(UWorld* World)
 
 void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
 {
+    // +-+ Set Render State +-+
+    // Bind only RTV (DSV = nullptr)
+    ID3D11RenderTargetView* FrameRTV = static_cast<D3D11RHI*>(RHIDevice)->GetFrameRTV();
+    RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, &FrameRTV, nullptr);
+    RHIDevice->OmSetDepthStencilState(EComparisonFunc::Disable);
 
+    // +-+ Re-set Viewport +-+
+    // Because the DSV is set to nullptr
+    // Unbinding DSV invalidates the current viewport state, causing it to appear smaller.
+    // Get viewport size from the current framebuffer (Texture2D)
+    D3D11_TEXTURE2D_DESC BackDesc{};
+    ID3D11Texture2D* FrameBuffer = static_cast<D3D11RHI*>(RHIDevice)->GetFrameBuffer();
+    if (FrameBuffer)
+    {
+        FrameBuffer->GetDesc(&BackDesc);
+        D3D11_VIEWPORT vp = {
+            .TopLeftX = 0.0f,
+            .TopLeftY = 0.0f,
+            .Width = static_cast<FLOAT>(BackDesc.Width),
+            .Height = static_cast<FLOAT>(BackDesc.Height),
+            .MinDepth = 0.0f,
+            .MaxDepth = 1.0f
+        };
+        // Reset Viewport
+        RHIDevice->GetDeviceContext()->RSSetViewports(1, &vp);
+    }
+
+    // +-+ Set Shader & Buffer +-+
+    SceneDepthVisualizeShader = UResourceManager::GetInstance().Load<UShader>("DepthVisualizeShader.hlsl");
+    PrepareShader(SceneDepthVisualizeShader);
+    if (Camera)
+    {
+        CameraInfoBufferType CameraInfo;
+        CameraInfo.NearClip = Camera->GetCameraComponent()->GetNearClip();
+        CameraInfo.FarClip = Camera->GetCameraComponent()->GetFarClip();
+        UpdateSetCBuffer(CameraInfoBufferType(CameraInfo));
+    }
+
+    // +-+ Set Shader Resources (Texture) +-+
+    // Bind depth SRV
+    // If DSV were still bound, the set call would fail and result in a null binding.
+    // TODO: Abstracting RHI access to the depth SRV
+    ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(RHIDevice)->GetDepthSRV();
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &DepthSRV);   // SET
+    
+    //ID3D11ShaderResourceView* currentSRV = nullptr;
+    //RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &currentSRV); // GET
+    //UE_LOG("Currently bound SRV at slot 0 = %p", currentSRV);      // null!!! if bind both RTV + DSV
+
+    // +-+ Connect to PS s0 slot +-+
+    RHIDevice->PSSetDefaultSampler(0);
+    RHIDevice->IASetPrimitiveTopology();
+
+    // +-+ Draw Full-Screen Triangle +-+
+    RHIDevice->GetDeviceContext()->Draw(3, 0);
+
+    // +-+ Restore Render State +-+
+    // Unbind SRV to allow re-binding the depth texture as DSV
+    ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, nullSRV);
+    RHIDevice->OmSetDepthStencilState(EComparisonFunc::LessEqual);
 }
 
 void URenderer::InitializeLineBatch()
@@ -851,7 +1086,6 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     
     // Set up rendering state
     UpdateSetCBuffer(ModelBufferType(ModelMatrix));
-    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
     PrepareShader(LineShader);
     OMSetBlendState(true);
     

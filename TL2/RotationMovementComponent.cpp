@@ -7,10 +7,13 @@ URotationMovementComponent::URotationMovementComponent()
 	, bRotationInLocalSpace(true)
 {
 	bCanEverTick = true;
+	//bCanEverTick = true;
+	WorldTickMode = EComponentWorldTickMode::PIEOnly; // PIE에서만 작동
 }
 
 void URotationMovementComponent::TickComponent(float DeltaSeconds)
 {
+	UActorComponent::TickComponent(DeltaSeconds);
 	if (!UpdatedComponent)
 	{
 		return;

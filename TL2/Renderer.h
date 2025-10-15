@@ -2,7 +2,6 @@
 #include "BillboardComponent.h"
 #include "RHIDevice.h"
 #include "LineDynamicMesh.h"
-#include "FXAA.h"
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
@@ -92,14 +91,22 @@ private:
     // Render Passes
     void RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);   // 깊이 전용 (필요 시)
     void RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);         // 불투명/기본 머티리얼
+    void RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);                       // 포스트: SceneColor/SceneDepth 기반
+    void RenderFXAAPaxx(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+
     void RenderPointLightShadowPass(UWorld* World);
-    void RenderFogPass();                       // 포스트: SceneColor/SceneDepth 기반
     void RenderFireBallPass(UWorld* World);     // 포스트: FireBall 조명/가산
     void RenderOverlayPass(UWorld* World);      // 라인/텍스트/UI/디버그
     void RenderSceneDepthVisualizePass(ACameraActor* Camera);       // 포스트: SceneDepth 뷰 모드 (뎁스 버퍼 시각화)
 
-    // Scene Rendering Helper Methods
+
+    // 2) 씬 렌더링 헬퍼 메소드들
+
+    void RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+
     void RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderEngineActors(const TArray<AActor*>& EngineActors, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
 
     //// 2) 풀스크린 쿼드
@@ -134,6 +141,10 @@ private:
     UShader* LastShader = nullptr;
     UTexture* LastTexture = nullptr;
 
+    // Shader for Scene Depth Pass
+    UShader* DepthOnlyShader = nullptr;
+    UShader* SceneDepthVisualizeShader = nullptr;
+
     /**
      * @brief 불필요한 API 호출을 막기 위해 마지막으로 바인딩된 상태를 캐싱합니다.
      */
@@ -141,8 +152,6 @@ private:
     ID3D11Buffer* LastIndexBuffer = nullptr;
     D3D11_PRIMITIVE_TOPOLOGY LastPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     ID3D11ShaderResourceView* LastTextureSRV = nullptr;
-
-    UFXAA FXAA;
 
     void InitializeLineBatch();
     void ResetRenderStateTracking();

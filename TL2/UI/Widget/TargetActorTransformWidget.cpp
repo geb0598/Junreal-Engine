@@ -20,7 +20,10 @@
 #include "MeshComponent.h"
 #include "RotationMovementComponent.h"
 #include "ProjectileMovementComponent.h"
+#include "ExponentialHeightFogComponent.h"
+#include "FXAAComponent.h"
 #include"FireballComponent.h"
+
 #include <filesystem>
 #include <vector>
 
@@ -475,6 +478,28 @@ void UTargetActorTransformWidget::RenderWidget()
 	// Actor가 AStaticMeshActor인 경우 StaticMesh 변경 UI
 	if (SelectedComponent)
 	{
+		if (UExponentialHeightFogComponent* FogComponent = Cast<UExponentialHeightFogComponent>(SelectedComponent))
+		{
+			UExponentialHeightFogComponent::FFogInfo FogInfo = FogComponent->GetFogInfo();
+
+			ImGui::DragFloat("Fog Density", &FogInfo.FogDensity, 0.001f, 0.0f, 10.0f);
+			ImGui::DragFloat("Fog Height Falloff", &FogInfo.FogHeightFalloff, 0.0001f, 0.0f, 10.0f);
+			ImGui::DragFloat("Start Distance", &FogInfo.StartDistance, 0.1f, 0.0f);
+			ImGui::DragFloat("Fog Max Opacity", &FogInfo.FogMaxOpacity, 0.001f, 0.0f, 1.0f);
+			ImGui::DragFloat("Fog Max Opacity Distance", &FogInfo.FogMaxOpacityDistance, 100.0f, 0.0f);
+			ImGui::DragFloat("Fog Cutoff Distance", &FogInfo.FogCutoffDistance, 100.0f,0.0f);
+			float Color[3]{ FogInfo.FogInscatteringColor.R,FogInfo.FogInscatteringColor.G ,FogInfo.FogInscatteringColor.B };
+			if(ImGui::ColorEdit3("Fog Inscattering Color", Color))
+			{
+				FogInfo.FogInscatteringColor.R = Color[0];
+				FogInfo.FogInscatteringColor.G = Color[1];
+				FogInfo.FogInscatteringColor.B = Color[2];
+			}
+			//ImGui::DragFloat3("Fog Inscattering Color", &FogInfo.FogInscatteringColor, 0.1f, 0.0f, 10.0f);
+			FogComponent->SetFogInfo(FogInfo);
+
+		}
+
 		if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(SelectedComponent))
 		{
 			ImGui::Text("Static Mesh Override");
@@ -981,6 +1006,30 @@ void UTargetActorTransformWidget::RenderWidget()
 			{
 				ProjComp->SetGravityScale(GravityScale);
 			}
+		}
+		else if (UFXAAComponent* FXAAComp = Cast<UFXAAComponent>(SelectedComponent))
+		{
+			float SlideX = FXAAComp->GetSlideX();
+			float SpanMax = FXAAComp->GetSpanMax();
+			int ReduceMin = FXAAComp->GetReduceMin();
+			float ReduceMul = FXAAComp->GetReduceMul();
+			if (ImGui::DragFloat("SlideX", &SlideX, 0.01f, 0, 1))
+			{
+				FXAAComp->SetSlideX(SlideX);
+			}
+			if (ImGui::DragFloat("SpanMax", &SpanMax, 0.01f, 0, 8))
+			{
+				FXAAComp->SetSpanMax(SpanMax);
+			}
+			if (ImGui::DragInt("ReduceMin", &ReduceMin, 1.0f, 0, 128))
+			{
+				FXAAComp->SetReduceMin(ReduceMin);
+			}
+			if (ImGui::DragFloat("ReduceMul", &ReduceMul, 0.01f, 0, 1))
+			{
+				FXAAComp->SetReduceMul(ReduceMul);
+			}
+			
 		}
 		else
 		{

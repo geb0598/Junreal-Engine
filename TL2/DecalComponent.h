@@ -24,7 +24,7 @@ public:
     void SetDecalSize(FVector InDecalSize);
     FVector GetDecalSize() const { return DecalSize; }
     const FString& GetTexturePath() const { return TexturePath; }
-
+    
 
     UObject* Duplicate() override;
     void DuplicateSubObjects() override;

@@ -6,6 +6,7 @@ UMovementComponent::UMovementComponent()
 	, Velocity(FVector(0.f, 5.f, 0.f))
 {
 	bCanEverTick = true;
+	WorldTickMode = EComponentWorldTickMode::PIEOnly; // PIE에서만 작동
 }
 
 void UMovementComponent::TickComponent(float DeltaSeconds)

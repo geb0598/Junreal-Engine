@@ -50,13 +50,50 @@ void AActor::BeginPlay()
 
 void AActor::Tick(float DeltaSeconds)
 {
-    // 소유한 모든 컴포넌트의 Tick 처리
+    // 🔹 현재 활성 월드 타입 가져오기
+    EWorldType CurrentWorldType = EWorldType::None;
+    if (GEngine)
+    {
+        if (UWorld* World = GEngine->GetActiveWorld())
+        {
+            CurrentWorldType = World->WorldType;
+        }
+    }
+
+    // 🔹 소유한 컴포넌트들 Tick
     for (UActorComponent* Component : OwnedComponents)
     {
-        if (Component && Component->CanEverTick())
+        if (!Component || !Component->IsActive() || !Component->CanEverTick())
+            continue;
+
+        // ✅ WorldTickMode 검사
+        const EComponentWorldTickMode TickMode = Component->WorldTickMode; // 게터 있으면
+        bool bShouldTick = false;
+
+        switch (TickMode)
         {
-            Component->TickComponent(DeltaSeconds);
+        case EComponentWorldTickMode::All:
+            bShouldTick = true;
+            break;
+        case EComponentWorldTickMode::PIEOnly:
+            bShouldTick = (CurrentWorldType == EWorldType::PIE);
+            break;
+        case EComponentWorldTickMode::GameOnly:
+            bShouldTick = (CurrentWorldType == EWorldType::Game);
+            break;
+        case EComponentWorldTickMode::EditorOnly:
+            bShouldTick = (CurrentWorldType == EWorldType::Editor);
+            break;
+        default:
+            break;
         }
+
+        // ❌ 틱 조건 불충족 시 패스
+        if (!bShouldTick)
+            continue;
+
+        // ✅ 틱 수행
+        Component->TickComponent(DeltaSeconds);
     }
 }
 
