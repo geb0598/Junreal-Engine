@@ -1,20 +1,14 @@
 {
   "Version" : 2,
-  "NextUUID" : 3534,
+  "NextUUID" : 4833,
   "PerspectiveCamera" : {
     "FOV" : [60.000000],
     "FarClip" : [4000.000000],
-    "Location" : [38.774223, 515.638672, 27.386072],
+    "Location" : [57.631790, 530.428955, 45.483742],
     "NearClip" : [0.100000],
-    "Rotation" : [0.000000, 1.400118, -104.800598]
+    "Rotation" : [0.000000, 6.100158, -110.300850]
   },
   "Actors" : [
-    {
-      "UUID" : 668,
-      "Type" : "AActor",
-      "Name" : "Actor_0",
-      "RootComponentUUID" : 669
-    },
     {
       "UUID" : 636,
       "Type" : "AStaticMeshActor",
@@ -22,10 +16,10 @@
       "RootComponentUUID" : 637
     },
     {
-      "UUID" : 673,
+      "UUID" : 668,
       "Type" : "AActor",
-      "Name" : "Actor_1",
-      "RootComponentUUID" : 674
+      "Name" : "Actor_0",
+      "RootComponentUUID" : 669
     },
     {
       "UUID" : 641,
@@ -34,16 +28,22 @@
       "RootComponentUUID" : 642
     },
     {
-      "UUID" : 677,
+      "UUID" : 673,
       "Type" : "AActor",
-      "Name" : "Actor_2",
-      "RootComponentUUID" : 678
+      "Name" : "Actor_1",
+      "RootComponentUUID" : 674
     },
     {
       "UUID" : 645,
       "Type" : "AExponentialHeightFog",
       "Name" : "HeightFog_0",
       "RootComponentUUID" : 646
+    },
+    {
+      "UUID" : 677,
+      "Type" : "AActor",
+      "Name" : "Actor_2",
+      "RootComponentUUID" : 678
     },
     {
       "UUID" : 687,
@@ -120,6 +120,31 @@
   ],
   "Components" : [
     {
+      "UUID" : 637,
+      "OwnerActorUUID" : 636,
+      "ParentComponentUUID" : 0,
+      "Type" : "UStaticMeshComponent",
+      "RelativeLocation" : [0.000000, -0.226716, 0.008449],
+      "RelativeRotation" : [179.999893, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "StaticMesh" : "Data/City Islands/City Islands.obj"
+    },
+    {
+      "UUID" : 672,
+      "OwnerActorUUID" : 668,
+      "ParentComponentUUID" : 669,
+      "Type" : "UFireBallComponent",
+      "RelativeLocation" : [36.786362, 82.393784, 78.791649],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "FireBallData" : {
+        "Intensity" : 13.800000,
+        "Radius" : 263.100006,
+        "RadiusFallOff" : 2.000000,
+        "Color" : [0.501344, 0.695893, 0.928270, 1.000000]
+      }
+    },
+    {
       "UUID" : 670,
       "OwnerActorUUID" : 668,
       "ParentComponentUUID" : 669,
@@ -139,29 +164,58 @@
       "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
-      "UUID" : 672,
-      "OwnerActorUUID" : 668,
-      "ParentComponentUUID" : 669,
+      "UUID" : 643,
+      "OwnerActorUUID" : 641,
+      "ParentComponentUUID" : 642,
       "Type" : "UFireBallComponent",
-      "RelativeLocation" : [36.786362, 82.393784, 78.791649],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "RelativeLocation" : [-32.596985, -7.371002, 240.173828],
+      "RelativeRotation" : [-0.000930, 53.629913, -10.273499],
+      "RelativeScale" : [7.714417, 30.133114, 38.252869],
       "FireBallData" : {
-        "Intensity" : 13.800000,
-        "Radius" : 263.100006,
-        "RadiusFallOff" : 2.000000,
-        "Color" : [0.501344, 0.695893, 0.928270, 1.000000]
+        "Intensity" : 5.000000,
+        "Radius" : 7.300000,
+        "RadiusFallOff" : 2.250000,
+        "Color" : [1.000000, 1.000000, 1.000000, 1.000000]
       }
     },
     {
-      "UUID" : 637,
-      "OwnerActorUUID" : 636,
+      "UUID" : 642,
+      "OwnerActorUUID" : 641,
       "ParentComponentUUID" : 0,
       "Type" : "UStaticMeshComponent",
-      "RelativeLocation" : [0.000000, -0.226716, 0.008449],
-      "RelativeRotation" : [179.999893, 0.000000, 0.000000],
+      "RelativeLocation" : [24.145641, 478.662598, 8.480831],
+      "RelativeRotation" : [87.611069, -0.428898, 1.912222],
+      "RelativeScale" : [0.030000, 0.030000, 0.030000],
+      "StaticMesh" : "Data/SportCar/2DoorSportscar_V1_L1.123cfac389e2-e709-4bcc-8c91-9229058569be/10614_2DoorSportscar-L1.obj"
+    },
+    {
+      "UUID" : 3604,
+      "OwnerActorUUID" : 641,
+      "ParentComponentUUID" : 0,
+      "Type" : "UProjectileMovementComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [0.000000, 0.000000, 0.000000],
+      "ProjectileMovementData" : {
+        "InitialSpeed" : 7.000000,
+        "MaxSpeed" : 8.000000,
+        "GravityScale" : 0.000000
+      }
+    },
+    {
+      "UUID" : 644,
+      "OwnerActorUUID" : 641,
+      "ParentComponentUUID" : 642,
+      "Type" : "UFireBallComponent",
+      "RelativeLocation" : [72.481506, -8.655792, 235.766602],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
       "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "StaticMesh" : "Data/City Islands/City Islands.obj"
+      "FireBallData" : {
+        "Intensity" : 3.700000,
+        "Radius" : 8.100000,
+        "RadiusFallOff" : 2.000000,
+        "Color" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }
     },
     {
       "UUID" : 675,
@@ -198,44 +252,32 @@
       }
     },
     {
-      "UUID" : 642,
-      "OwnerActorUUID" : 641,
+      "UUID" : 646,
+      "OwnerActorUUID" : 645,
       "ParentComponentUUID" : 0,
-      "Type" : "UStaticMeshComponent",
-      "RelativeLocation" : [24.145641, 478.662598, 6.059646],
-      "RelativeRotation" : [0.000000, 90.000000, 0.000000],
-      "RelativeScale" : [0.030000, 0.030000, 0.030000],
-      "StaticMesh" : "Data/pony-cartoon/Pony_cartoon.obj"
+      "Type" : "UExponentialHeightFogComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
-      "UUID" : 643,
-      "OwnerActorUUID" : 641,
-      "ParentComponentUUID" : 642,
-      "Type" : "UFireBallComponent",
-      "RelativeLocation" : [-193.447266, 74.102783, 72.255371],
-      "RelativeRotation" : [-0.011550, 53.629921, -10.273554],
-      "RelativeScale" : [7.714417, 30.133114, 38.252869],
-      "FireBallData" : {
-        "Intensity" : 5.000000,
-        "Radius" : 7.300000,
-        "RadiusFallOff" : 2.250000,
-        "Color" : [1.000000, 1.000000, 1.000000, 1.000000]
-      }
-    },
-    {
-      "UUID" : 644,
-      "OwnerActorUUID" : 641,
-      "ParentComponentUUID" : 642,
-      "Type" : "UFireBallComponent",
-      "RelativeLocation" : [-163.417969, 77.862549, -75.661865],
+      "UUID" : 647,
+      "OwnerActorUUID" : 645,
+      "ParentComponentUUID" : 646,
+      "Type" : "UBillboardComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
       "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "FireBallData" : {
-        "Intensity" : 3.700000,
-        "Radius" : 8.100000,
-        "RadiusFallOff" : 2.000000,
-        "Color" : [1.000000, 1.000000, 1.000000, 1.000000]
-      }
+      "TexturePath" : "Editor/Icon/S_AtmosphericHeightFog.dds"
+    },
+    {
+      "UUID" : 678,
+      "OwnerActorUUID" : 677,
+      "ParentComponentUUID" : 0,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [-219.039154, 185.953644, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
       "UUID" : 686,
@@ -263,32 +305,23 @@
       "TexturePath" : "Editor/Icon/EmptyActor.dds"
     },
     {
-      "UUID" : 678,
-      "OwnerActorUUID" : 677,
-      "ParentComponentUUID" : 0,
-      "Type" : "USceneComponent",
-      "RelativeLocation" : [-219.039154, 185.953644, 0.000000],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000]
-    },
-    {
-      "UUID" : 646,
-      "OwnerActorUUID" : 645,
-      "ParentComponentUUID" : 0,
-      "Type" : "UExponentialHeightFogComponent",
-      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000]
-    },
-    {
-      "UUID" : 647,
-      "OwnerActorUUID" : 645,
-      "ParentComponentUUID" : 646,
+      "UUID" : 689,
+      "OwnerActorUUID" : 687,
+      "ParentComponentUUID" : 688,
       "Type" : "UBillboardComponent",
       "RelativeLocation" : [0.000000, 0.000000, 0.000000],
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
       "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "TexturePath" : "Editor/Icon/S_AtmosphericHeightFog.dds"
+      "TexturePath" : "Editor/Icon/EmptyActor.dds"
+    },
+    {
+      "UUID" : 688,
+      "OwnerActorUUID" : 687,
+      "ParentComponentUUID" : 0,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [-29.155312, 382.503815, 13.414474],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
       "UUID" : 690,
@@ -304,25 +337,6 @@
         "RadiusFallOff" : 2.000000,
         "Color" : [0.588848, 0.926549, 0.949367, 1.000000]
       }
-    },
-    {
-      "UUID" : 688,
-      "OwnerActorUUID" : 687,
-      "ParentComponentUUID" : 0,
-      "Type" : "USceneComponent",
-      "RelativeLocation" : [-29.155312, 382.503815, 13.414474],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000]
-    },
-    {
-      "UUID" : 689,
-      "OwnerActorUUID" : 687,
-      "ParentComponentUUID" : 688,
-      "Type" : "UBillboardComponent",
-      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "TexturePath" : "Editor/Icon/EmptyActor.dds"
     },
     {
       "UUID" : 694,
@@ -374,15 +388,6 @@
       }
     },
     {
-      "UUID" : 696,
-      "OwnerActorUUID" : 695,
-      "ParentComponentUUID" : 0,
-      "Type" : "USceneComponent",
-      "RelativeLocation" : [233.692886, 0.000000, 27.593706],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000]
-    },
-    {
       "UUID" : 697,
       "OwnerActorUUID" : 695,
       "ParentComponentUUID" : 696,
@@ -391,6 +396,15 @@
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
       "RelativeScale" : [1.000000, 1.000000, 1.000000],
       "TexturePath" : "Editor/Icon/EmptyActor.dds"
+    },
+    {
+      "UUID" : 696,
+      "OwnerActorUUID" : 695,
+      "ParentComponentUUID" : 0,
+      "Type" : "USceneComponent",
+      "RelativeLocation" : [233.692886, 0.000000, 27.593706],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
       "UUID" : 701,
@@ -427,21 +441,6 @@
       }
     },
     {
-      "UUID" : 706,
-      "OwnerActorUUID" : 703,
-      "ParentComponentUUID" : 704,
-      "Type" : "UFireBallComponent",
-      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "FireBallData" : {
-        "Intensity" : 5.000000,
-        "Radius" : 63.099998,
-        "RadiusFallOff" : 2.000000,
-        "Color" : [0.928270, 0.868973, 0.567929, 1.000000]
-      }
-    },
-    {
       "UUID" : 705,
       "OwnerActorUUID" : 703,
       "ParentComponentUUID" : 704,
@@ -461,6 +460,21 @@
       "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
+      "UUID" : 706,
+      "OwnerActorUUID" : 703,
+      "ParentComponentUUID" : 704,
+      "Type" : "UFireBallComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "FireBallData" : {
+        "Intensity" : 5.000000,
+        "Radius" : 63.099998,
+        "RadiusFallOff" : 2.000000,
+        "Color" : [0.928270, 0.868973, 0.567929, 1.000000]
+      }
+    },
+    {
       "UUID" : 710,
       "OwnerActorUUID" : 707,
       "ParentComponentUUID" : 708,
@@ -476,16 +490,6 @@
       }
     },
     {
-      "UUID" : 709,
-      "OwnerActorUUID" : 707,
-      "ParentComponentUUID" : 708,
-      "Type" : "UBillboardComponent",
-      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "TexturePath" : "Editor/Icon/EmptyActor.dds"
-    },
-    {
       "UUID" : 708,
       "OwnerActorUUID" : 707,
       "ParentComponentUUID" : 0,
@@ -495,9 +499,9 @@
       "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
-      "UUID" : 713,
-      "OwnerActorUUID" : 711,
-      "ParentComponentUUID" : 712,
+      "UUID" : 709,
+      "OwnerActorUUID" : 707,
+      "ParentComponentUUID" : 708,
       "Type" : "UBillboardComponent",
       "RelativeLocation" : [0.000000, 0.000000, 0.000000],
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
@@ -512,6 +516,16 @@
       "RelativeLocation" : [70.114243, 398.914612, 0.000000],
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
       "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 713,
+      "OwnerActorUUID" : 711,
+      "ParentComponentUUID" : 712,
+      "Type" : "UBillboardComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "TexturePath" : "Editor/Icon/EmptyActor.dds"
     },
     {
       "UUID" : 714,
@@ -544,16 +558,6 @@
       }
     },
     {
-      "UUID" : 717,
-      "OwnerActorUUID" : 715,
-      "ParentComponentUUID" : 716,
-      "Type" : "UBillboardComponent",
-      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
-      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
-      "RelativeScale" : [1.000000, 1.000000, 1.000000],
-      "TexturePath" : "Editor/Icon/EmptyActor.dds"
-    },
-    {
       "UUID" : 716,
       "OwnerActorUUID" : 715,
       "ParentComponentUUID" : 0,
@@ -563,9 +567,9 @@
       "RelativeScale" : [1.000000, 1.000000, 1.000000]
     },
     {
-      "UUID" : 721,
-      "OwnerActorUUID" : 719,
-      "ParentComponentUUID" : 720,
+      "UUID" : 717,
+      "OwnerActorUUID" : 715,
+      "ParentComponentUUID" : 716,
       "Type" : "UBillboardComponent",
       "RelativeLocation" : [0.000000, 0.000000, 0.000000],
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
@@ -580,6 +584,16 @@
       "RelativeLocation" : [360.874542, 159.841705, 0.000000],
       "RelativeRotation" : [0.000000, 0.000000, 0.000000],
       "RelativeScale" : [1.000000, 1.000000, 1.000000]
+    },
+    {
+      "UUID" : 721,
+      "OwnerActorUUID" : 719,
+      "ParentComponentUUID" : 720,
+      "Type" : "UBillboardComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "TexturePath" : "Editor/Icon/EmptyActor.dds"
     },
     {
       "UUID" : 722,
@@ -630,10 +644,39 @@
       "OwnerActorUUID" : 1301,
       "ParentComponentUUID" : 0,
       "Type" : "UStaticMeshComponent",
-      "RelativeLocation" : [-36.620564, 94.456512, 131.919510],
-      "RelativeRotation" : [180.000000, 0.000005, 90.000008],
+      "RelativeLocation" : [-36.620564, -31.943001, 131.919510],
+      "RelativeRotation" : [76.858833, -5.362121, 94.109032],
       "RelativeScale" : [10.000000, 10.000000, 10.000000],
       "StaticMesh" : "Data/ship/ship.obj"
+    },
+    {
+      "UUID" : 3606,
+      "OwnerActorUUID" : 1301,
+      "ParentComponentUUID" : 0,
+      "Type" : "URotationMovementComponent",
+      "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+      "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+      "RelativeScale" : [0.000000, 0.000000, 0.000000],
+      "RotationMovementData" : {
+        "RotationRate" : [0.000000, 0.000000, -90.000000],
+        "PivotTranslation" : [15.000000, 0.000000, 0.000000],
+        "bRotationInLocalSpace" : true
+      }
+    },
+    {
+      "UUID" : 4109,
+      "OwnerActorUUID" : 1301,
+      "ParentComponentUUID" : 1302,
+      "Type" : "UFireBallComponent",
+      "RelativeLocation" : [-0.035432, 2.846898, -0.680984],
+      "RelativeRotation" : [0.000000, 0.000000, -0.000002],
+      "RelativeScale" : [1.000000, 1.000000, 1.000000],
+      "FireBallData" : {
+        "Intensity" : 29.400000,
+        "Radius" : 152.899994,
+        "RadiusFallOff" : 2.000000,
+        "Color" : [0.486781, 0.877614, 0.915612, 1.000000]
+      }
     }
   ]
 }
