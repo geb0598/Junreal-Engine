@@ -45,11 +45,11 @@ void UFireBallComponent::TickComponent(float DeltaSeconds)
     Time += DeltaSeconds;
    // Radius = 300.0f + sinf(Time) * 100.0f;
 
-    // 🔹 GPU 업로드용 버퍼 갱신
- /*   FVector WorldPos = GetWorldLocation();
-    PointLightBuffer.Position = FVector4(WorldPos, FireData.Radius);
-    PointLightBuffer.Color = FVector4(FireData.Color.R, FireData.Color.G, FireData.Color.B, FireData.Intensity);
-    PointLightBuffer.FallOff = FireData.RadiusFallOff;*/
+    //// 🔹 GPU 업로드용 버퍼 갱신
+    //FVector WorldPos = GetWorldLocation();
+    //PointLightBuffer.Position = FVector4(WorldPos, FireData.Radius);
+    //PointLightBuffer.Color = FVector4(FireData.Color.R, FireData.Color.G, FireData.Color.B, FireData.Intensity);
+    //PointLightBuffer.FallOff = FireData.RadiusFallOff;
 }
 
 const FAABB UFireBallComponent::GetWorldAABB() const

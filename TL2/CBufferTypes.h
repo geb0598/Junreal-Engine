@@ -170,7 +170,7 @@ struct FPointLightData
     FVector Padding;    // 16바이트 정렬 맞추기용
 };
 #define MAX_POINT_LIGHTS 100
-// 전체 버퍼 (cbuffer b6 대응)
+// 전체 버퍼 (cbuffer b9 대응)
 struct FPointLightBufferType
 {
     int PointLightCount;                    // 현재 활성 조명 개수

@@ -86,6 +86,19 @@ struct LightAccum
     float3 specular;
 };
 
+float3 ComputePointLights(float3 worldPos)
+{
+    float3 totalLight = 0;
+    for (int i = 0; i < PointLightCount; ++i)
+    {
+        float3 toLight = worldPos - PointLights[i].Position.xyz;
+        float dist = length(toLight);
+        float atten = saturate(1.0 - dist / PointLights[i].Position.w);
+        atten = pow(atten, PointLights[i].FallOff);
+        totalLight += PointLights[i].Color.rgb * PointLights[i].Color.a * atten;
+    }
+    return totalLight;
+}
 LightAccum ComputePointLights_LambertPhong(float3 worldPos, float3 worldNormal, float shininess)
 {
     LightAccum acc;
@@ -100,26 +113,32 @@ LightAccum ComputePointLights_LambertPhong(float3 worldPos, float3 worldNormal, 
     [loop]
     for (int i = 0; i < PointLightCount; ++i)
     {
+        // 📌 빛 방향: 표면 → 광원
         float3 Lvec = PointLights[i].Position.xyz - worldPos;
         float dist = length(Lvec);
-        float3 L = (dist > 1e-5) ? (Lvec / dist) : float3(0, 0, 1);
+        float3 L = (dist > 1e-5) ? normalize(Lvec) : float3(0, 0, 1);
 
-        // 반경 기반 감쇠
-        float atten = saturate(1.0 - dist / PointLights[i].Position.w);
-        atten = pow(atten, PointLights[i].FallOff);
+    // 📌 반경 기반 감쇠 (안정화)
+        float range = max(PointLights[i].Position.w, 1e-3); // 0 division 방지
+        float falloff = max(PointLights[i].FallOff, 0.001); // pow(0,0) 방지
+        float t = saturate(dist / range);
+        float atten = pow(saturate(1.0 - t), falloff);
 
-        // 라이트 색 * 강도
+    // 📌 라이트 색 + 강도
         float3 Li = PointLights[i].Color.rgb * PointLights[i].Color.a;
 
-        // Lambert diffuse
+    // 📌 Lambert diffuse
         float NdotL = saturate(dot(N, L));
         float3 diffuse = Li * NdotL * atten;
 
-        // Blinn-Phong specular
+    // 📌 Blinn-Phong specular (안정화)
+        float3 V = normalize(CameraWorldPos - worldPos);
         float3 H = normalize(L + V);
         float NdotH = saturate(dot(N, H));
-        float3 specular = Li * pow(NdotH, max(shininess, 1e-3)) * atten;
+        float exp = clamp(shininess, 1.0, 128.0); // 안정적인 shininess 범위
+        float3 specular = Li * pow(NdotH, exp) * atten;
 
+    // 📌 누적
         acc.diffuse += diffuse;
         acc.specular += specular;
     }
@@ -222,7 +241,7 @@ PS_OUTPUT mainPS(PS_INPUT input)
     }
    // ✅ 조명 계산
     float3 N = input.worldNormal;
-    LightAccum la = ComputePointLights_LambertPhong(input.worldPosition, N, Material.SpecularExponent);
+    LightAccum la = ComputePointLights_LambertPhong(input.worldPosition, N, 2);
 
     // ✅ Ambient + Diffuse + Specular
     float3 ambient = 0.25 * baseColor;
@@ -236,7 +255,7 @@ PS_OUTPUT mainPS(PS_INPUT input)
 
     float3 finalLit = ambient + diffuseLit + specularLit;
 
-    Result.Color = float4(finalLit, 1.0f);
+    Result.Color = float4(finalLit, 1);
     Result.UUID = input.UUID;
     return Result;
 }

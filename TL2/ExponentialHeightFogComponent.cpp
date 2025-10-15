@@ -18,7 +18,6 @@ void UExponentialHeightFogComponent::Render(URenderer* Renderer, const FVector& 
 		this->GetWorldLocation().Z)); 
 
 	FMatrix ViewProj = View * Projection;
-	Renderer->UpdateSetCBuffer(ViewProjBufferType(View, Projection));
 	Renderer->UpdateSetCBuffer(FViewProjectionInverse(ViewProj.Inverse(), CameraPosition));
 	
 	Renderer->UpdateSetCBuffer(ViewportBufferType(FVector4(

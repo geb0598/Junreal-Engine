@@ -56,8 +56,8 @@ void URenderer::BeginFrame()
     RHIDevice->RSSetViewport();
 
     //OM
-    //RHIDevice->OMSetBlendState();
-    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
+    RHIDevice->OMSetBlendState(false);
+   RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
 }
 
 void URenderer::PrepareShader(UShader* InShader)
@@ -386,6 +386,7 @@ void URenderer::RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* V
     FMatrix ViewMatrix = Camera->GetViewMatrix();
     FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 
+   
     // 씬의 액터들을 렌더링
     if (this->CurrentViewMode == EViewModeIndex::VMI_SceneDepth)
     {
@@ -439,7 +440,12 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
         return;
 
     // +-+-+ Render Pass Structure +-+-+
-    
+
+    float ViewportAspectRatio = static_cast<float>(Viewport->GetSizeX()) / static_cast<float>(Viewport->GetSizeY());
+    if (Viewport->GetSizeY() == 0) ViewportAspectRatio = 1.0f; // 0으로 나누기 방지
+    FMatrix ViewMatrix = Camera->GetViewMatrix();
+    FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
+    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix, Camera->GetActorLocation()));
     switch (CurrentViewMode)
     {
     case EViewModeIndex::VMI_Lit:
@@ -779,6 +785,7 @@ void URenderer::RenderFireBallPass(UWorld* World)
 
     // 1️⃣ 라이트 컴포넌트 수집 (FireBall, PointLight 등)
     FPointLightBufferType PointLightCB{};
+    PointLightCB.PointLightCount=0;
 
     for (UFireBallComponent* FireBallComponent : World->GetLevel()->GetComponentList<UFireBallComponent>())
     {
@@ -963,7 +970,6 @@ void URenderer::EndLineBatch(const FMatrix& ModelMatrix, const FMatrix& ViewMatr
     
     // Set up rendering state
     UpdateSetCBuffer(ModelBufferType(ModelMatrix));
-    UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
     PrepareShader(LineShader);
     OMSetBlendState(true);
     
