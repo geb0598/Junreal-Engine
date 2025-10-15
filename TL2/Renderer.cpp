@@ -449,7 +449,7 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
         RenderFireBallPass(World);
         RenderBasePass(World, Camera, Viewport);  // Full color + depth pass (Opaque geometry - per viewport)
         RenderFogPass(World,Camera,Viewport);
-       // FXAA.Render(this);
+        FXAA.Render(this);
         RenderEditorPass(World, Camera, Viewport);
         break;
     }
