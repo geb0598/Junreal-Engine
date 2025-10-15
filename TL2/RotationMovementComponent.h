@@ -9,6 +9,9 @@ public:
 
 	void TickComponent(float DeltaSeconds) override;
 
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
+
 	// Getter/Setter Func
 	FVector GetRotationRate() const { return RotationRate; }
 	FVector GetPivotTranslation() const { return PivotTranslation; }

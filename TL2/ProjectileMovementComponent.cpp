@@ -29,3 +29,20 @@ void UProjectileMovementComponent::TickComponent(float DeltaSeconds)
 		UpdatedComponent->AddWorldOffset(Delta);
 	}
 }
+
+UObject* UProjectileMovementComponent::Duplicate()
+{
+	UProjectileMovementComponent* Newcomp = Cast<UProjectileMovementComponent>(UMovementComponent::Duplicate());
+	if (Newcomp)
+	{
+		Newcomp->InitialSpeed = InitialSpeed;
+		Newcomp->MaxSpeed = MaxSpeed;
+		Newcomp->GravityScale = GravityScale;
+	}
+	return Newcomp;
+}
+
+void UProjectileMovementComponent::DuplicateSubObjects()
+{
+	UMovementComponent::DuplicateSubObjects();
+}

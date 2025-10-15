@@ -9,6 +9,9 @@ public:
 
 	void TickComponent(float DeltaSeconds) override;
 
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
+
 	// Getter/Setter Func
 	float GetInitialSpeed() const { return InitialSpeed; }
 	float GetMaxSpeed() const { return MaxSpeed; }

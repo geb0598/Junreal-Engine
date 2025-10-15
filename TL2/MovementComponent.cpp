@@ -30,3 +30,19 @@ void UMovementComponent::OnRegister()
 		}
 	}
 }
+
+UObject* UMovementComponent::Duplicate()
+{
+	UMovementComponent* NewComp = Cast<UMovementComponent>(Super_t::Duplicate());
+	if (NewComp)
+	{
+		NewComp->Velocity = Velocity;
+		NewComp->UpdatedComponent = nullptr;
+	}
+	return NewComp;
+}
+
+void UMovementComponent::DuplicateSubObjects()
+{
+	Super_t::DuplicateSubObjects();
+}

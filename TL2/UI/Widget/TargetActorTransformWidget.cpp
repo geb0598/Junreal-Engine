@@ -237,47 +237,47 @@ void UTargetActorTransformWidget::RenderWidget()
 	ImGui::Text("UUID: %u", static_cast<unsigned int>(SelectedActor->UUID));	// Show Selected Actor UUID (Global Unique ID)
 	ImGui::Spacing();
 
-		// 추가 가능한 컴포넌트 타입 목록 (자동 수집)
-		static TArray<TPair<FString, UClass*>> AddableSceneComponentTypes;
-		static bool bComponentTypesInitialized = false;
+	// 추가 가능한 컴포넌트 타입 목록 (자동 수집)
+	static TArray<TPair<FString, UClass*>> AddableSceneComponentTypes;
+	static bool bComponentTypesInitialized = false;
 
-		if (!bComponentTypesInitialized)
+	if (!bComponentTypesInitialized)
+	{
+		// USceneComponent를 상속받은 모든 클래스를 자동으로 수집
+		TArray<UClass*> DerivedClasses = UClassRegistry::Get().GetDerivedClasses(USceneComponent::StaticClass());
+
+		for (UClass* Class : DerivedClasses)
 		{
-			// USceneComponent를 상속받은 모든 클래스를 자동으로 수집
-			TArray<UClass*> DerivedClasses = UClassRegistry::Get().GetDerivedClasses(USceneComponent::StaticClass());
-
-			for (UClass* Class : DerivedClasses)
+			// 추상 클래스(인스턴스 생성 불가) 제외
+			if (Class->CreateInstance == nullptr)
 			{
-				// 추상 클래스(인스턴스 생성 불가) 제외
-				if (Class->CreateInstance == nullptr)
-				{
-					continue;
-				}
-
-				// Gizmo 컴포넌트와 같은 에디터 전용 컴포넌트 제외
-				FString ClassName = Class->Name;
-				if (ClassName.find("Gizmo") == FString::npos &&
-				    ClassName.find("Grid") == FString::npos &&
-				    ClassName.find("Line") == FString::npos &&
-				    ClassName.find("Shape") == FString::npos &&
-				    ClassName.find("Cube") == FString::npos &&
-				    ClassName.find("Sphere") == FString::npos &&
-				    ClassName.find("Triangle") == FString::npos &&
-				    ClassName.find("BoundingBox") == FString::npos)
-				{
-					AddableSceneComponentTypes.push_back({ ClassName, Class });
-				}
+				continue;
 			}
 
-			// 이름순 정렬
-			std::sort(AddableSceneComponentTypes.begin(), AddableSceneComponentTypes.end(),
-				[](const TPair<FString, UClass*>& A, const TPair<FString, UClass*>& B)
-				{
-					return A.first < B.first;
-				});
-
-			bComponentTypesInitialized = true;
+			// Gizmo 컴포넌트와 같은 에디터 전용 컴포넌트 제외
+			FString ClassName = Class->Name;
+			if (ClassName.find("Gizmo") == FString::npos &&
+				ClassName.find("Grid") == FString::npos &&
+				ClassName.find("Line") == FString::npos &&
+				ClassName.find("Shape") == FString::npos &&
+				ClassName.find("Cube") == FString::npos &&
+				ClassName.find("Sphere") == FString::npos &&
+				ClassName.find("Triangle") == FString::npos &&
+				ClassName.find("BoundingBox") == FString::npos)
+			{
+				AddableSceneComponentTypes.push_back({ ClassName, Class });
+			}
 		}
+
+		// 이름순 정렬
+		std::sort(AddableSceneComponentTypes.begin(), AddableSceneComponentTypes.end(),
+			[](const TPair<FString, UClass*>& A, const TPair<FString, UClass*>& B)
+			{
+				return A.first < B.first;
+			});
+
+		bComponentTypesInitialized = true;
+	}
 	// 추가 가능한 컴포넌트 타입 목록 (임시 하드코딩)
 	
 	static const TArray<TPair<FString, UClass*>> AddableActorComponentTypes = {
@@ -480,563 +480,45 @@ void UTargetActorTransformWidget::RenderWidget()
 	{
 		if (UExponentialHeightFogComponent* FogComponent = Cast<UExponentialHeightFogComponent>(SelectedComponent))
 		{
-			UExponentialHeightFogComponent::FFogInfo FogInfo = FogComponent->GetFogInfo();
-
-			ImGui::DragFloat("Fog Density", &FogInfo.FogDensity, 0.001f, 0.0f, 10.0f);
-			ImGui::DragFloat("Fog Height Falloff", &FogInfo.FogHeightFalloff, 0.0001f, 0.0f, 10.0f);
-			ImGui::DragFloat("Start Distance", &FogInfo.StartDistance, 0.1f, 0.0f);
-			ImGui::DragFloat("Fog Max Opacity", &FogInfo.FogMaxOpacity, 0.001f, 0.0f, 1.0f);
-			ImGui::DragFloat("Fog Max Opacity Distance", &FogInfo.FogMaxOpacityDistance, 100.0f, 0.0f);
-			ImGui::DragFloat("Fog Cutoff Distance", &FogInfo.FogCutoffDistance, 100.0f,0.0f);
-			float Color[3]{ FogInfo.FogInscatteringColor.R,FogInfo.FogInscatteringColor.G ,FogInfo.FogInscatteringColor.B };
-			if(ImGui::ColorEdit3("Fog Inscattering Color", Color))
-			{
-				FogInfo.FogInscatteringColor.R = Color[0];
-				FogInfo.FogInscatteringColor.G = Color[1];
-				FogInfo.FogInscatteringColor.B = Color[2];
-			}
-			//ImGui::DragFloat3("Fog Inscattering Color", &FogInfo.FogInscatteringColor, 0.1f, 0.0f, 10.0f);
-			FogComponent->SetFogInfo(FogInfo);
-
+			RenderExponentialHeightFogComponentDetails(FogComponent);
 		}
-
-		if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(SelectedComponent))
+		if (UStaticMeshComponent* Comp = Cast<UStaticMeshComponent>(SelectedComponent))
 		{
-			ImGui::Text("Static Mesh Override");
-			if (!SMC)
-			{
-				ImGui::TextColored(ImVec4(1, 0.6f, 0.6f, 1), "StaticMeshComponent not found.");
-			}
-			else
-			{
-				// 현재 메시 경로 표시
-				FString CurrentPath;
-				UStaticMesh* CurMesh = SMC->GetStaticMesh();
-				if (CurMesh)
-				{
-					CurrentPath = CurMesh->GetAssetPathFileName();
-					ImGui::Text("Current: %s", CurrentPath.c_str());
-				}
-				else
-				{
-					ImGui::Text("Current: <None>");
-				}
-
-				// 리소스 매니저에서 로드된 모든 StaticMesh 경로 수집
-				auto& RM = UResourceManager::GetInstance();
-				TArray<FString> Paths = RM.GetAllStaticMeshFilePaths();
-
-				if (Paths.empty())
-				{
-					ImGui::TextColored(ImVec4(1, 0.6f, 0.6f, 1), "No StaticMesh resources loaded.");
-				}
-				else
-				{
-					// 표시용 이름(파일명 스템)
-					TArray<FString> DisplayNames;
-					DisplayNames.reserve(Paths.size());
-					for (const FString& p : Paths)
-						DisplayNames.push_back(GetBaseNameNoExt(p));
-
-					// ImGui 콤보 아이템 배열
-					TArray<const char*> Items;
-					Items.reserve(DisplayNames.size());
-					for (const FString& n : DisplayNames)
-						Items.push_back(n.c_str());
-
-					// 선택 인덱스 유지
-					static int SelectedMeshIdx = -1;
-
-					// 기본 선택: Cube가 있으면 자동 선택
-					if (SelectedMeshIdx == -1)
-					{
-						for (int i = 0; i < static_cast<int>(Paths.size()); ++i)
-						{
-							if (DisplayNames[i] == "Cube" || Paths[i] == "Data/Cube.obj")
-							{
-								SelectedMeshIdx = i;
-								break;
-							}
-						}
-					}
-
-					ImGui::SetNextItemWidth(240);
-					ImGui::Combo("StaticMesh", &SelectedMeshIdx, Items.data(), static_cast<int>(Items.size()));
-					ImGui::SameLine();
-					if (ImGui::Button("Apply Mesh"))
-					{
-						if (SelectedMeshIdx >= 0 && SelectedMeshIdx < static_cast<int>(Paths.size()))
-						{
-							const FString& NewPath = Paths[SelectedMeshIdx];
-							SMC->SetStaticMesh(NewPath);
-
-							UE_LOG("Applied StaticMesh: %s", NewPath.c_str());
-						}
-					}
-
-					// 현재 메시로 선택 동기화 버튼 (옵션)
-					ImGui::SameLine();
-					if (ImGui::Button("Select Current"))
-					{
-						SelectedMeshIdx = -1;
-						if (!CurrentPath.empty())
-						{
-							for (int i = 0; i < static_cast<int>(Paths.size()); ++i)
-							{
-								if (Paths[i] == CurrentPath ||
-									DisplayNames[i] == GetBaseNameNoExt(CurrentPath))
-								{
-									SelectedMeshIdx = i;
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				// Material 설정
-
-				const TArray<FString> MaterialNames = UResourceManager::GetInstance().GetAllFilePaths<UMaterial>();
-				// ImGui 콤보 아이템 배열
-				TArray<const char*> MaterialNamesCharP;
-				MaterialNamesCharP.reserve(MaterialNames.size());
-				for (const FString& n : MaterialNames)
-					MaterialNamesCharP.push_back(n.c_str());
-
-				if (CurMesh)
-				{
-					const uint64 MeshGroupCount = CurMesh->GetMeshGroupCount();
-
-					if (0 < MeshGroupCount)
-					{
-						ImGui::Separator();
-					}
-
-					static TArray<int32> SelectedMaterialIdxAt; // i번 째 Material Slot이 가지고 있는 MaterialName이 MaterialNames의 몇번쩨 값인지.
-					if (SelectedMaterialIdxAt.size() < MeshGroupCount)
-					{
-						SelectedMaterialIdxAt.resize(MeshGroupCount);
-					}
-
-					// 현재 SMC의 MaterialSlots 정보를 UI에 반영
-					const TArray<FMaterialSlot>& MaterialSlots = SMC->GetMaterailSlots();
-					for (uint64 MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
-					{
-						for (uint32 MaterialIndex = 0; MaterialIndex < MaterialNames.size(); ++MaterialIndex)
-						{
-							if (MaterialSlots[MaterialSlotIndex].MaterialName == MaterialNames[MaterialIndex])
-							{
-								SelectedMaterialIdxAt[MaterialSlotIndex] = MaterialIndex;
-							}
-						}
-					}
-
-					// Material 선택
-					for (uint64 MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
-					{
-						ImGui::PushID(static_cast<int>(MaterialSlotIndex));
-						if (ImGui::Combo("Material", &SelectedMaterialIdxAt[MaterialSlotIndex], MaterialNamesCharP.data(), static_cast<int>(MaterialNamesCharP.size())))
-						{
-							SMC->SetMaterialByUser(static_cast<uint32>(MaterialSlotIndex), MaterialNames[SelectedMaterialIdxAt[MaterialSlotIndex]]);
-						}
-						ImGui::PopID();
-					}
-				}
-			}
+			RenderStaticMeshComponentDetails(Comp);
 		}
-		// Billboard Component가 선택된 경우 Sprite UI
-		else if (UBillboardComponent* BBC = Cast<UBillboardComponent>(SelectedComponent))
+		else if (UBillboardComponent* Comp = Cast<UBillboardComponent>(SelectedComponent))
 		{
-			ImGui::Separator();
-			ImGui::Text("Billboard Component Settings");
-
-			// Sprite 텍스처 경로 표시 및 변경
-			FString CurrentTexture = BBC->GetTexturePath();
-			ImGui::Text("Current Sprite: %s", CurrentTexture.c_str());
-
-			// Editor/Icon 폴더에서 동적으로 스프라이트 옵션 로드
-			static TArray<FString> SpriteOptions;
-			static bool bSpriteOptionsLoaded = false;
-			static int currentSpriteIndex = 0; // 현재 선택된 스프라이트 인덱스
-
-			if (!bSpriteOptionsLoaded)
-			{
-				// Editor/Icon 폴더에서 .dds 파일들을 찾아서 추가
-				SpriteOptions = GetIconFiles();
-				bSpriteOptionsLoaded = true;
-
-				// 현재 텍스처와 일치하는 인덱스 찾기
-				FString currentTexturePath = BBC->GetTexturePath();
-				for (int i = 0; i < SpriteOptions.size(); ++i)
-				{
-					if (SpriteOptions[i] == currentTexturePath)
-					{
-						currentSpriteIndex = i;
-						break;
-					}
-				}
-			}
-
-			// 스프라이트 선택 드롭다운 메뉴
-			ImGui::Text("Sprite Texture:");
-			FString currentDisplayName = (currentSpriteIndex >= 0 && currentSpriteIndex < SpriteOptions.size())
-				? GetBaseNameNoExt(SpriteOptions[currentSpriteIndex])
-				: "Select Sprite";
-
-			if (ImGui::BeginCombo("##SpriteCombo", currentDisplayName.c_str()))
-			{
-				for (int i = 0; i < SpriteOptions.size(); ++i)
-				{
-					FString displayName = GetBaseNameNoExt(SpriteOptions[i]);
-					bool isSelected = (currentSpriteIndex == i);
-
-					if (ImGui::Selectable(displayName.c_str(), isSelected))
-					{
-						currentSpriteIndex = i;
-						BBC->SetTexture(SpriteOptions[i]);
-					}
-
-					// 현재 선택된 항목에 포커스 설정
-					if (isSelected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
-			}
-
-			// 새로고침 버튼 (같은 줄에)
-			ImGui::SameLine();
-			if (ImGui::Button("Refresh"))
-			{
-				bSpriteOptionsLoaded = false; // 다음에 다시 로드하도록
-				currentSpriteIndex = 0; // 인덱스 리셋
-			}
-
-			ImGui::Spacing();
-
-			// Screen Size Scaled 체크박스
-			// bool bIsScreenSizeScaled = BBC->IsScreenSizeScaled();
-			// if (ImGui::Checkbox("Is Screen Size Scaled", &bIsScreenSizeScaled))
-			// {
-			// 	BBC->SetScreenSizeScaled(bIsScreenSizeScaled);
-			// }
-
-			// Screen Size (Is Screen Size Scaled가 true일 때만 활성화)
-			if (false) // (bIsScreenSizeScaled)
-			{
-				float screenSize = BBC->GetScreenSize();
-				if (ImGui::DragFloat("Screen Size", &screenSize, 0.0001f, 0.0001f, 0.1f, "%.4f"))
-				{
-					BBC->SetScreenSize(screenSize);
-				}
-			}
-			//else
-			//{
-			//	// Billboard Size (Is Screen Size Scaled가 false일 때)
-			//	float billboardWidth = BBC->GetBillboardWidth();
-			//	float billboardHeight = BBC->GetBillboardHeight();
-			//	
-			//	if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
-			//	{
-			//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
-			//	}
-			//	
-			//	if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
-			//	{
-			//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
-			//	}
-			//}
-
-			ImGui::Spacing();
-
-			// UV 좌표 설정
-			ImGui::Text("UV Coordinates");
-
-			float u = BBC->GetU();
-			float v = BBC->GetV();
-			float ul = BBC->GetUL();
-			float vl = BBC->GetVL();
-
-			bool uvChanged = false;
-
-			if (ImGui::DragFloat("U", &u, 0.01f))
-				uvChanged = true;
-
-			if (ImGui::DragFloat("V", &v, 0.01f))
-				uvChanged = true;
-
-			if (ImGui::DragFloat("UL", &ul, 0.01f))
-				uvChanged = true;
-
-			if (ImGui::DragFloat("VL", &vl, 0.01f))
-				uvChanged = true;
-
-			if (uvChanged)
-			{
-				BBC->SetUVCoords(u, v, ul, vl);
-			}
+			RenderBillboardComponentDetails(Comp);
 		}
-		else if (UTextRenderComponent* TextRenderComponent = Cast<UTextRenderComponent>(SelectedComponent))
+		else if (UTextRenderComponent* Comp = Cast<UTextRenderComponent>(SelectedComponent))
 		{
-			ImGui::Separator();
-			ImGui::Text("TextRender Component Settings");
-
-			static char textBuffer[256];
-			static UTextRenderComponent* lastSelected = nullptr;
-			if (lastSelected != TextRenderComponent)
-			{
-				strncpy_s(textBuffer, sizeof(textBuffer), TextRenderComponent->GetText().c_str(), sizeof(textBuffer) - 1);
-				lastSelected = TextRenderComponent;
-			}
-
-			ImGui::Text("Text Content");
-
-			if (ImGui::InputText("##TextContent", textBuffer, sizeof(textBuffer)))
-			{
-				// 실시간으로 SetText 함수 호출
-				TextRenderComponent->SetText(FString(textBuffer));
-			}
-
-			ImGui::Spacing();
-
-			//// 4. 텍스트 색상을 편집하는 Color Picker를 추가합니다.
-			//FLinearColor currentColor = TextRenderComponent->GetTextColor();
-			//float color[3] = { currentColor.R, currentColor.G, currentColor.B }; // ImGui는 float 배열 사용
-
-			//ImGui::Text("Text Color");
-			//if (ImGui::ColorEdit3("##TextColor", color))
-			//{
-			//	// 색상이 변경되면 컴포넌트의 SetTextColor 함수를 호출
-			//	TextRenderComponent->SetTextColor(FLinearColor(color[0], color[1], color[2]));
-			//}
+			RenderTextRenderComponentDetails(Comp);
 		}
-		else if (UFireBallComponent* FBC = Cast<UFireBallComponent>(SelectedComponent))
+		else if (UFireBallComponent* Comp = Cast<UFireBallComponent>(SelectedComponent))
 		{
-			ImGui::Separator();
-			ImGui::Text("FireBall Component Settings");
-
-			// 🔸 색상 설정 (RGB Color Picker)
-			float color[3] = { FBC->FireData.Color.R, FBC->FireData.Color.G, FBC->FireData.Color.B };
-			if (ImGui::ColorEdit3("Color", color))
-			{
-				FBC->FireData.Color = FLinearColor(color[0], color[1], color[2], 1.0f);
-			}
-
-			ImGui::Spacing();
-
-			// 🔸 밝기 (Intensity)
-			float intensity = FBC->FireData.Intensity;
-			if (ImGui::DragFloat("Intensity", &intensity, 0.1f, 0.0f, 100.0f))
-			{
-				FBC->FireData.Intensity = intensity;
-			}
-
-			// 🔸 반경 (Radius)
-			float radius = FBC->FireData.Radius;
-			if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 1000.0f))
-			{
-				FBC->FireData.Radius = radius;
-			}
-
-			// 🔸 감쇠 정도 (FallOff)
-			float falloff = FBC->FireData.RadiusFallOff;
-			if (ImGui::DragFloat("FallOff", &falloff, 0.05f, 0.1f, 10.0f))
-			{
-				FBC->FireData.RadiusFallOff = falloff;
-			}
-
-			ImGui::Spacing();
-
-			// 🔸 시각적 미리보기용 Sphere 표시 (선택된 경우)
-			ImGui::Text("Preview:");
-			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(color[0], color[1], color[2], 1.0f), "● FireBall Active");
-
+			RenderFireBallComponentDetails(Comp);
 		}	
-		else if (UDecalComponent* DecalComponent = Cast<UDecalComponent>(SelectedComponent))
+		else if (UDecalComponent* Comp = Cast<UDecalComponent>(SelectedComponent))
 		{
-			ImGui::Text("Decal Component Settings");
-
-			// Decal Texture Setting
-			ImGui::Separator();
-
-			// Editor/Icon 폴더에서 동적으로 스프라이트 옵션 로드
-			static TArray<FString> SpriteOptions;
-			static bool bSpriteOptionsLoaded = false;
-			static int currentSpriteIndex = 0; // 현재 선택된 스프라이트 인덱스
-
-			if (!bSpriteOptionsLoaded)
-			{
-				// Editor/Icon 폴더에서 .dds 파일들을 찾아서 추가
-				SpriteOptions = GetIconFiles();
-				bSpriteOptionsLoaded = true;
-
-				// 현재 텍스처와 일치하는 인덱스 찾기
-				FString CurrentTexture = DecalComponent->GetTexturePath();
-				for (int i = 0; i < SpriteOptions.size(); ++i)
-				{
-					if (SpriteOptions[i] == CurrentTexture)
-					{
-						currentSpriteIndex = i;
-						break;
-					}
-				}
-			}
-
-			// 스프라이트 선택 드롭다운 메뉴
-			ImGui::Text("Sprite Texture:");
-			FString currentDisplayName = (currentSpriteIndex >= 0 && currentSpriteIndex < SpriteOptions.size())
-				? GetBaseNameNoExt(SpriteOptions[currentSpriteIndex])
-				: "Select Sprite";
-
-			if (ImGui::BeginCombo("##SpriteCombo", currentDisplayName.c_str()))
-			{
-				for (int i = 0; i < SpriteOptions.size(); ++i)
-				{
-					FString displayName = GetBaseNameNoExt(SpriteOptions[i]);
-					bool isSelected = (currentSpriteIndex == i);
-
-					if (ImGui::Selectable(displayName.c_str(), isSelected))
-					{
-						currentSpriteIndex = i;
-						DecalComponent->SetDecalTexture(SpriteOptions[i]);
-					}
-
-					// 현재 선택된 항목에 포커스 설정
-					if (isSelected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
-			}
-
-			// 새로고침 버튼 (같은 줄에)
-			ImGui::SameLine();
-			if (ImGui::Button("Refresh"))
-			{
-				bSpriteOptionsLoaded = false; // 다음에 다시 로드하도록
-				currentSpriteIndex = 0; // 인덱스 리셋
-			}
-
-			ImGui::Separator();
-
-			int32 SortOrder = DecalComponent->GetSortOrder();
-			if (ImGui::DragInt("Sort Order", &SortOrder));
-			{
-				DecalComponent->SetSortOrder(SortOrder);
-			}
-
-			ImGui::Separator();
-
-			// Decal Fade In/Out
-			float FadeScreenSize = DecalComponent->GetFadeScreenSize();
-			if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.01f, 0.0f, 100.0f))
-			{
-				DecalComponent->SetFadeScreenSize(FadeScreenSize);
-			}
-
-			float FadeStartDelay = DecalComponent->GetFadeStartDelay();
-			if (ImGui::DragFloat("Fade Start Delay", &FadeStartDelay, 0.1f))
-			{
-				DecalComponent->SetFadeStartDelay(FadeStartDelay);
-			}
-
-			float FadeDuration = DecalComponent->GetFadeDuration();
-			if (ImGui::DragFloat("Fade Duration", &FadeDuration, 0.1f))
-			{
-				DecalComponent->SetFadeDuration(FadeDuration);
-			}
-
-			float FadeInStartDelay = DecalComponent->GetFadeInStartDelay();
-			if (ImGui::DragFloat("Fade In StartDelay", &FadeInStartDelay, 0.1f))
-			{
-				DecalComponent->SetFadeInStartDelay(FadeInStartDelay);
-			}
-
-			float FadeInDuration = DecalComponent->GetFadeInDuration();
-			if (ImGui::DragFloat("Fade In Duration", &FadeInDuration, 0.1f))
-			{
-				DecalComponent->SetFadeInDuration(FadeInDuration);
-			}
-
-			ImGui::Separator();
-
-			// Decal UV Tiling
-			FVector2D Tiling = DecalComponent->GetUVTiling();
-			if (ImGui::DragFloat2("UV Tiling", &Tiling.X, 0.1f, 1.0f, 10.0f))
-			{
-				DecalComponent->SetUVTiling(Tiling);
-			}
-			FVector DecalSize = DecalComponent->GetDecalSize();
-			if (ImGui::DragFloat3("Decal Size", &DecalSize.X, 0.1f, 1.0f, 10.0f))
-			{
-				DecalComponent->SetDecalSize(DecalSize);
-			}
+			RenderDecalComponentDetails(Comp);
 		}
-		else if (URotationMovementComponent* RotComp = Cast<URotationMovementComponent>(SelectedComponent))
+		else if (URotationMovementComponent* Comp = Cast<URotationMovementComponent>(SelectedComponent))
 		{
-			ImGui::Text("Rotation Movement Component Settings");
-			ImGui::Separator();
-			
-			// Rotate in Local Space
-			bool bLocalRotation = RotComp->GetRotationInLocalSpace();
-			if (ImGui::Checkbox("Rotate in Local Space", &bLocalRotation))
-			{
-				RotComp->SetRotationInLocalSpace(bLocalRotation);
-			}
+			RenderRotationMovementComponentDetails(Comp);
 		}
-		else if (UProjectileMovementComponent* ProjComp = Cast<UProjectileMovementComponent>(SelectedComponent))
+		else if (UProjectileMovementComponent* Comp = Cast<UProjectileMovementComponent>(SelectedComponent))
 		{
-			ImGui::Text("Projectile Movement Component Settings");
-			ImGui::Separator();
-
-			// Initial Speed
-			float InitialSpeed = ProjComp->GetInitialSpeed();
-			if (ImGui::DragFloat("InitialSpeed", &InitialSpeed, 1.0f, 0.0f, 10000.0f))
-			{
-				ProjComp->SetInitialSpeed(InitialSpeed);
-			}
-			// Max Speed
-			float MaxSpeed = ProjComp->GetMaxSpeed();
-			if (ImGui::DragFloat("MaxSpeed", &MaxSpeed, 1.0f, 0.0f, 10000.0f))
-			{
-				ProjComp->SetMaxSpeed(MaxSpeed);
-			}
-			// Gravity Scale
-			float GravityScale = ProjComp->GetGravityScale();
-			if (ImGui::DragFloat("GravityScale", &GravityScale, 1.0f, 0.0f, 10000.0f))
-			{
-				ProjComp->SetGravityScale(GravityScale);
-			}
+			RenderProjectileMovementComponentDetails(Comp);
 		}
 		else if (UFXAAComponent* FXAAComp = Cast<UFXAAComponent>(SelectedComponent))
 		{
-			float SlideX = FXAAComp->GetSlideX();
-			float SpanMax = FXAAComp->GetSpanMax();
-			int ReduceMin = FXAAComp->GetReduceMin();
-			float ReduceMul = FXAAComp->GetReduceMul();
-			if (ImGui::DragFloat("SlideX", &SlideX, 0.01f, 0, 1))
-			{
-				FXAAComp->SetSlideX(SlideX);
-			}
-			if (ImGui::DragFloat("SpanMax", &SpanMax, 0.01f, 0, 8))
-			{
-				FXAAComp->SetSpanMax(SpanMax);
-			}
-			if (ImGui::DragInt("ReduceMin", &ReduceMin, 1.0f, 0, 128))
-			{
-				FXAAComp->SetReduceMin(ReduceMin);
-			}
-			if (ImGui::DragFloat("ReduceMul", &ReduceMul, 0.01f, 0, 1))
-			{
-				FXAAComp->SetReduceMul(ReduceMul);
-			}
-			
+			RenderFXAAComponentDetails(FXAAComp);
 		}
 		else
 		{
 			ImGui::Text("Selected component is not a supported type.");
 		}
 	}
-
 	ImGui::Separator();
 }
 
@@ -1195,4 +677,578 @@ void UTargetActorTransformWidget::ResetChangeFlags()
 	bPositionChanged = false;
 	bRotationChanged = false;
 	bScaleChanged = false;
+}
+
+void UTargetActorTransformWidget::RenderExponentialHeightFogComponentDetails(UExponentialHeightFogComponent* InComponent)
+{
+	UExponentialHeightFogComponent::FFogInfo FogInfo = InComponent->GetFogInfo();
+
+	ImGui::DragFloat("Fog Density", &FogInfo.FogDensity, 0.001f, 0.0f, 10.0f);
+	ImGui::DragFloat("Fog Height Falloff", &FogInfo.FogHeightFalloff, 0.0001f, 0.0f, 10.0f);
+	ImGui::DragFloat("Start Distance", &FogInfo.StartDistance, 0.1f, 0.0f);
+	ImGui::DragFloat("Fog Max Opacity", &FogInfo.FogMaxOpacity, 0.001f, 0.0f, 1.0f);
+	ImGui::DragFloat("Fog Max Opacity Distance", &FogInfo.FogMaxOpacityDistance, 100.0f, 0.0f);
+	ImGui::DragFloat("Fog Cutoff Distance", &FogInfo.FogCutoffDistance, 100.0f, 0.0f);
+	float Color[3]{ FogInfo.FogInscatteringColor.R,FogInfo.FogInscatteringColor.G ,FogInfo.FogInscatteringColor.B };
+	if (ImGui::ColorEdit3("Fog Inscattering Color", Color))
+	{
+		FogInfo.FogInscatteringColor.R = Color[0];
+		FogInfo.FogInscatteringColor.G = Color[1];
+		FogInfo.FogInscatteringColor.B = Color[2];
+	}
+	//ImGui::DragFloat3("Fog Inscattering Color", &FogInfo.FogInscatteringColor, 0.1f, 0.0f, 10.0f);
+	InComponent->SetFogInfo(FogInfo);
+}
+
+void UTargetActorTransformWidget::RenderStaticMeshComponentDetails(UStaticMeshComponent* InComponent)
+{
+	ImGui::Text("Static Mesh Override");
+	if (!InComponent)
+	{
+		ImGui::TextColored(ImVec4(1, 0.6f, 0.6f, 1), "StaticMeshComponent not found.");
+	}
+	else
+	{
+		// 현재 메시 경로 표시
+		FString CurrentPath;
+		UStaticMesh* CurMesh = InComponent->GetStaticMesh();
+		if (CurMesh)
+		{
+			CurrentPath = CurMesh->GetAssetPathFileName();
+			ImGui::Text("Current: %s", CurrentPath.c_str());
+		}
+		else
+		{
+			ImGui::Text("Current: <None>");
+		}
+
+		// 리소스 매니저에서 로드된 모든 StaticMesh 경로 수집
+		auto& RM = UResourceManager::GetInstance();
+		TArray<FString> Paths = RM.GetAllStaticMeshFilePaths();
+
+		if (Paths.empty())
+		{
+			ImGui::TextColored(ImVec4(1, 0.6f, 0.6f, 1), "No StaticMesh resources loaded.");
+		}
+		else
+		{
+			// 표시용 이름(파일명 스템)
+			TArray<FString> DisplayNames;
+			DisplayNames.reserve(Paths.size());
+			for (const FString& p : Paths)
+				DisplayNames.push_back(GetBaseNameNoExt(p));
+
+			// ImGui 콤보 아이템 배열
+			TArray<const char*> Items;
+			Items.reserve(DisplayNames.size());
+			for (const FString& n : DisplayNames)
+				Items.push_back(n.c_str());
+
+			// 선택 인덱스 유지
+			static int SelectedMeshIdx = -1;
+
+			// 기본 선택: Cube가 있으면 자동 선택
+			if (SelectedMeshIdx == -1)
+			{
+				for (int i = 0; i < static_cast<int>(Paths.size()); ++i)
+				{
+					if (DisplayNames[i] == "Cube" || Paths[i] == "Data/Cube.obj")
+					{
+						SelectedMeshIdx = i;
+						break;
+					}
+				}
+			}
+
+			ImGui::SetNextItemWidth(240);
+			ImGui::Combo("StaticMesh", &SelectedMeshIdx, Items.data(), static_cast<int>(Items.size()));
+			ImGui::SameLine();
+			if (ImGui::Button("Apply Mesh"))
+			{
+				if (SelectedMeshIdx >= 0 && SelectedMeshIdx < static_cast<int>(Paths.size()))
+				{
+					const FString& NewPath = Paths[SelectedMeshIdx];
+					InComponent->SetStaticMesh(NewPath);
+
+					UE_LOG("Applied StaticMesh: %s", NewPath.c_str());
+				}
+			}
+
+			// 현재 메시로 선택 동기화 버튼 (옵션)
+			ImGui::SameLine();
+			if (ImGui::Button("Select Current"))
+			{
+				SelectedMeshIdx = -1;
+				if (!CurrentPath.empty())
+				{
+					for (int i = 0; i < static_cast<int>(Paths.size()); ++i)
+					{
+						if (Paths[i] == CurrentPath ||
+							DisplayNames[i] == GetBaseNameNoExt(CurrentPath))
+						{
+							SelectedMeshIdx = i;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		// Material 설정
+
+		const TArray<FString> MaterialNames = UResourceManager::GetInstance().GetAllFilePaths<UMaterial>();
+		// ImGui 콤보 아이템 배열
+		TArray<const char*> MaterialNamesCharP;
+		MaterialNamesCharP.reserve(MaterialNames.size());
+		for (const FString& n : MaterialNames)
+			MaterialNamesCharP.push_back(n.c_str());
+
+		if (CurMesh)
+		{
+			const uint64 MeshGroupCount = CurMesh->GetMeshGroupCount();
+
+			if (0 < MeshGroupCount)
+			{
+				ImGui::Separator();
+			}
+
+			static TArray<int32> SelectedMaterialIdxAt; // i번 째 Material Slot이 가지고 있는 MaterialName이 MaterialNames의 몇번쩨 값인지.
+			if (SelectedMaterialIdxAt.size() < MeshGroupCount)
+			{
+				SelectedMaterialIdxAt.resize(MeshGroupCount);
+			}
+
+			// 현재 SMC의 MaterialSlots 정보를 UI에 반영
+			const TArray<FMaterialSlot>& MaterialSlots = InComponent->GetMaterailSlots();
+			for (uint64 MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
+			{
+				for (uint32 MaterialIndex = 0; MaterialIndex < MaterialNames.size(); ++MaterialIndex)
+				{
+					if (MaterialSlots[MaterialSlotIndex].MaterialName == MaterialNames[MaterialIndex])
+					{
+						SelectedMaterialIdxAt[MaterialSlotIndex] = MaterialIndex;
+					}
+				}
+			}
+
+			// Material 선택
+			for (uint64 MaterialSlotIndex = 0; MaterialSlotIndex < MeshGroupCount; ++MaterialSlotIndex)
+			{
+				ImGui::PushID(static_cast<int>(MaterialSlotIndex));
+				if (ImGui::Combo("Material", &SelectedMaterialIdxAt[MaterialSlotIndex], MaterialNamesCharP.data(), static_cast<int>(MaterialNamesCharP.size())))
+				{
+					InComponent->SetMaterialByUser(static_cast<uint32>(MaterialSlotIndex), MaterialNames[SelectedMaterialIdxAt[MaterialSlotIndex]]);
+				}
+				ImGui::PopID();
+			}
+		}
+	}
+}
+
+void UTargetActorTransformWidget::RenderBillboardComponentDetails(UBillboardComponent* InComponent)
+{
+	// Billboard Component가 선택된 경우 Sprite UI
+	ImGui::Separator();
+	ImGui::Text("Billboard Component Settings");
+
+	// Sprite 텍스처 경로 표시 및 변경
+	FString CurrentTexture = InComponent->GetTexturePath();
+	ImGui::Text("Current Sprite: %s", CurrentTexture.c_str());
+
+	// Editor/Icon 폴더에서 동적으로 스프라이트 옵션 로드
+	static TArray<FString> SpriteOptions;
+	static bool bSpriteOptionsLoaded = false;
+	static int currentSpriteIndex = 0; // 현재 선택된 스프라이트 인덱스
+
+	if (!bSpriteOptionsLoaded)
+	{
+		// Editor/Icon 폴더에서 .dds 파일들을 찾아서 추가
+		SpriteOptions = GetIconFiles();
+		bSpriteOptionsLoaded = true;
+
+		// 현재 텍스처와 일치하는 인덱스 찾기
+		FString currentTexturePath = InComponent->GetTexturePath();
+		for (int i = 0; i < SpriteOptions.size(); ++i)
+		{
+			if (SpriteOptions[i] == currentTexturePath)
+			{
+				currentSpriteIndex = i;
+				break;
+			}
+		}
+	}
+
+	// 스프라이트 선택 드롭다운 메뉴
+	ImGui::Text("Sprite Texture:");
+	FString currentDisplayName = (currentSpriteIndex >= 0 && currentSpriteIndex < SpriteOptions.size())
+		? GetBaseNameNoExt(SpriteOptions[currentSpriteIndex])
+		: "Select Sprite";
+
+	if (ImGui::BeginCombo("##SpriteCombo", currentDisplayName.c_str()))
+	{
+		for (int i = 0; i < SpriteOptions.size(); ++i)
+		{
+			FString displayName = GetBaseNameNoExt(SpriteOptions[i]);
+			bool isSelected = (currentSpriteIndex == i);
+
+			if (ImGui::Selectable(displayName.c_str(), isSelected))
+			{
+				currentSpriteIndex = i;
+				InComponent->SetTexture(SpriteOptions[i]);
+			}
+
+			// 현재 선택된 항목에 포커스 설정
+			if (isSelected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+	// 새로고침 버튼 (같은 줄에)
+	ImGui::SameLine();
+	if (ImGui::Button("Refresh"))
+	{
+		bSpriteOptionsLoaded = false; // 다음에 다시 로드하도록
+		currentSpriteIndex = 0; // 인덱스 리셋
+	}
+
+	ImGui::Spacing();
+
+	// Screen Size Scaled 체크박스
+	// bool bIsScreenSizeScaled = BBC->IsScreenSizeScaled();
+	// if (ImGui::Checkbox("Is Screen Size Scaled", &bIsScreenSizeScaled))
+	// {
+	// 	BBC->SetScreenSizeScaled(bIsScreenSizeScaled);
+	// }
+
+	// Screen Size (Is Screen Size Scaled가 true일 때만 활성화)
+	if (false) // (bIsScreenSizeScaled)
+	{
+		float screenSize = InComponent->GetScreenSize();
+		if (ImGui::DragFloat("Screen Size", &screenSize, 0.0001f, 0.0001f, 0.1f, "%.4f"))
+		{
+			InComponent->SetScreenSize(screenSize);
+		}
+	}
+	//else
+	//{
+	//	// Billboard Size (Is Screen Size Scaled가 false일 때)
+	//	float billboardWidth = BBC->GetBillboardWidth();
+	//	float billboardHeight = BBC->GetBillboardHeight();
+	//	
+	//	if (ImGui::DragFloat("Width", &billboardWidth, 0.1f, 0.1f, 100.0f))
+	//	{
+	//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
+	//	}
+	//	
+	//	if (ImGui::DragFloat("Height", &billboardHeight, 0.1f, 0.1f, 100.0f))
+	//	{
+	//		BBC->SetBillboardSize(billboardWidth, billboardHeight);
+	//	}
+	//}
+
+	ImGui::Spacing();
+
+	// UV 좌표 설정
+	ImGui::Text("UV Coordinates");
+
+	float u = InComponent->GetU();
+	float v = InComponent->GetV();
+	float ul = InComponent->GetUL();
+	float vl = InComponent->GetVL();
+
+	bool uvChanged = false;
+
+	if (ImGui::DragFloat("U", &u, 0.01f))
+		uvChanged = true;
+
+	if (ImGui::DragFloat("V", &v, 0.01f))
+		uvChanged = true;
+
+	if (ImGui::DragFloat("UL", &ul, 0.01f))
+		uvChanged = true;
+
+	if (ImGui::DragFloat("VL", &vl, 0.01f))
+		uvChanged = true;
+
+	if (uvChanged)
+	{
+		InComponent->SetUVCoords(u, v, ul, vl);
+	}
+}
+
+void UTargetActorTransformWidget::RenderTextRenderComponentDetails(UTextRenderComponent* InComponent)
+{
+	ImGui::Separator();
+	ImGui::Text("TextRender Component Settings");
+
+	static char textBuffer[256];
+	static UTextRenderComponent* lastSelected = nullptr;
+	if (lastSelected != InComponent)
+	{
+		strncpy_s(textBuffer, sizeof(textBuffer), InComponent->GetText().c_str(), sizeof(textBuffer) - 1);
+		lastSelected = InComponent;
+	}
+
+	ImGui::Text("Text Content");
+
+	if (ImGui::InputText("##TextContent", textBuffer, sizeof(textBuffer)))
+	{
+		// 실시간으로 SetText 함수 호출
+		InComponent->SetText(FString(textBuffer));
+	}
+
+	ImGui::Spacing();
+
+	//// 4. 텍스트 색상을 편집하는 Color Picker를 추가합니다.
+	//FLinearColor currentColor = TextRenderComponent->GetTextColor();
+	//float color[3] = { currentColor.R, currentColor.G, currentColor.B }; // ImGui는 float 배열 사용
+
+	//ImGui::Text("Text Color");
+	//if (ImGui::ColorEdit3("##TextColor", color))
+	//{
+	//	// 색상이 변경되면 컴포넌트의 SetTextColor 함수를 호출
+	//	TextRenderComponent->SetTextColor(FLinearColor(color[0], color[1], color[2]));
+	//}
+}
+
+void UTargetActorTransformWidget::RenderFireBallComponentDetails(UFireBallComponent* InComponent)
+{
+	ImGui::Separator();
+	ImGui::Text("FireBall Component Settings");
+
+	// 🔸 색상 설정 (RGB Color Picker)
+	float color[3] = { InComponent->FireData.Color.R, InComponent->FireData.Color.G, InComponent->FireData.Color.B };
+	if (ImGui::ColorEdit3("Color", color))
+	{
+		InComponent->FireData.Color = FLinearColor(color[0], color[1], color[2], 1.0f);
+	}
+
+	ImGui::Spacing();
+
+	// 🔸 밝기 (Intensity)
+	float intensity = InComponent->FireData.Intensity;
+	if (ImGui::DragFloat("Intensity", &intensity, 0.1f, 0.0f, 100.0f))
+	{
+		InComponent->FireData.Intensity = intensity;
+	}
+
+	// 🔸 반경 (Radius)
+	float radius = InComponent->FireData.Radius;
+	if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 1000.0f))
+	{
+		InComponent->FireData.Radius = radius;
+	}
+
+	// 🔸 감쇠 정도 (FallOff)
+	float falloff = InComponent->FireData.RadiusFallOff;
+	if (ImGui::DragFloat("FallOff", &falloff, 0.05f, 0.1f, 10.0f))
+	{
+		InComponent->FireData.RadiusFallOff = falloff;
+	}
+
+	ImGui::Spacing();
+
+	// 🔸 시각적 미리보기용 Sphere 표시 (선택된 경우)
+	ImGui::Text("Preview:");
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(color[0], color[1], color[2], 1.0f), "● FireBall Active");
+}
+
+void UTargetActorTransformWidget::RenderDecalComponentDetails(UDecalComponent* InComponent)
+{
+	ImGui::Text("Decal Component Settings");
+
+	// Decal Texture Setting
+	ImGui::Separator();
+
+	// Editor/Icon 폴더에서 동적으로 스프라이트 옵션 로드
+	static TArray<FString> SpriteOptions;
+	static bool bSpriteOptionsLoaded = false;
+	static int currentSpriteIndex = 0; // 현재 선택된 스프라이트 인덱스
+
+	if (!bSpriteOptionsLoaded)
+	{
+		// Editor/Icon 폴더에서 .dds 파일들을 찾아서 추가
+		SpriteOptions = GetIconFiles();
+		bSpriteOptionsLoaded = true;
+
+		// 현재 텍스처와 일치하는 인덱스 찾기
+		FString CurrentTexture = InComponent->GetTexturePath();
+		for (int i = 0; i < SpriteOptions.size(); ++i)
+		{
+			if (SpriteOptions[i] == CurrentTexture)
+			{
+				currentSpriteIndex = i;
+				break;
+			}
+		}
+	}
+
+	// 스프라이트 선택 드롭다운 메뉴
+	ImGui::Text("Sprite Texture:");
+	FString currentDisplayName = (currentSpriteIndex >= 0 && currentSpriteIndex < SpriteOptions.size())
+		? GetBaseNameNoExt(SpriteOptions[currentSpriteIndex])
+		: "Select Sprite";
+
+	if (ImGui::BeginCombo("##SpriteCombo", currentDisplayName.c_str()))
+	{
+		for (int i = 0; i < SpriteOptions.size(); ++i)
+		{
+			FString displayName = GetBaseNameNoExt(SpriteOptions[i]);
+			bool isSelected = (currentSpriteIndex == i);
+
+			if (ImGui::Selectable(displayName.c_str(), isSelected))
+			{
+				currentSpriteIndex = i;
+				InComponent->SetDecalTexture(SpriteOptions[i]);
+			}
+
+			// 현재 선택된 항목에 포커스 설정
+			if (isSelected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+	// 새로고침 버튼 (같은 줄에)
+	ImGui::SameLine();
+	if (ImGui::Button("Refresh"))
+	{
+		bSpriteOptionsLoaded = false; // 다음에 다시 로드하도록
+		currentSpriteIndex = 0; // 인덱스 리셋
+	}
+
+	ImGui::Separator();
+
+	int32 SortOrder = InComponent->GetSortOrder();
+	if (ImGui::DragInt("Sort Order", &SortOrder));
+	{
+		InComponent->SetSortOrder(SortOrder);
+	}
+
+	ImGui::Separator();
+
+	// Decal Fade In/Out
+	float FadeScreenSize = InComponent->GetFadeScreenSize();
+	if (ImGui::DragFloat("Fade Screen Size", &FadeScreenSize, 0.01f, 0.0f, 100.0f))
+	{
+		InComponent->SetFadeScreenSize(FadeScreenSize);
+	}
+
+	float FadeStartDelay = InComponent->GetFadeStartDelay();
+	if (ImGui::DragFloat("Fade Start Delay", &FadeStartDelay, 0.1f))
+	{
+		InComponent->SetFadeStartDelay(FadeStartDelay);
+	}
+
+	float FadeDuration = InComponent->GetFadeDuration();
+	if (ImGui::DragFloat("Fade Duration", &FadeDuration, 0.1f))
+	{
+		InComponent->SetFadeDuration(FadeDuration);
+	}
+
+	float FadeInStartDelay = InComponent->GetFadeInStartDelay();
+	if (ImGui::DragFloat("Fade In StartDelay", &FadeInStartDelay, 0.1f))
+	{
+		InComponent->SetFadeInStartDelay(FadeInStartDelay);
+	}
+
+	float FadeInDuration = InComponent->GetFadeInDuration();
+	if (ImGui::DragFloat("Fade In Duration", &FadeInDuration, 0.1f))
+	{
+		InComponent->SetFadeInDuration(FadeInDuration);
+	}
+
+	ImGui::Separator();
+
+	// Decal UV Tiling
+	FVector2D Tiling = InComponent->GetUVTiling();
+	if (ImGui::DragFloat2("UV Tiling", &Tiling.X, 0.1f, 1.0f, 10.0f))
+	{
+		InComponent->SetUVTiling(Tiling);
+	}
+	FVector DecalSize = InComponent->GetDecalSize();
+	if (ImGui::DragFloat3("Decal Size", &DecalSize.X, 0.1f, 1.0f, 10.0f))
+	{
+		InComponent->SetDecalSize(DecalSize);
+	}
+}
+
+void UTargetActorTransformWidget::RenderRotationMovementComponentDetails(URotationMovementComponent* InComponent)
+{
+	ImGui::Text("Rotation Movement Component Settings");
+	ImGui::Separator();
+
+	// Rotate in Local Space
+	bool bLocalRotation = InComponent->GetRotationInLocalSpace();
+	if (ImGui::Checkbox("Rotate in Local Space", &bLocalRotation))
+	{
+		InComponent->SetRotationInLocalSpace(bLocalRotation);
+	}
+
+	UE_LOG("UI Component Address:      %p\n", InComponent);
+
+	// Rotation Rate
+	FVector RotationRate = InComponent->GetRotationRate();
+	if (ImGui::DragFloat3("Rotation Rate", &RotationRate.X, 0.1f))
+	{
+		InComponent->SetRotationRate(RotationRate);
+	}
+
+	// Pivot Translation
+	FVector PivotTranslation = InComponent->GetPivotTranslation();
+	if (ImGui::DragFloat3("Pivot Translation", &PivotTranslation.X, 0.1f))
+	{
+		InComponent->SetPivotTranslation(PivotTranslation);
+	}
+}
+
+void UTargetActorTransformWidget::RenderProjectileMovementComponentDetails(UProjectileMovementComponent* InComponent)
+{
+	ImGui::Text("Projectile Movement Component Settings");
+	ImGui::Separator();
+
+	// Initial Speed
+	float InitialSpeed = InComponent->GetInitialSpeed();
+	if (ImGui::DragFloat("InitialSpeed", &InitialSpeed, 1.0f, 0.0f, 10000.0f))
+	{
+		InComponent->SetInitialSpeed(InitialSpeed);
+	}
+	// Max Speed
+	float MaxSpeed = InComponent->GetMaxSpeed();
+	if (ImGui::DragFloat("MaxSpeed", &MaxSpeed, 1.0f, 0.0f, 10000.0f))
+	{
+		InComponent->SetMaxSpeed(MaxSpeed);
+	}
+	// Gravity Scale
+	float GravityScale = InComponent->GetGravityScale();
+	if (ImGui::DragFloat("GravityScale", &GravityScale, 1.0f, 0.0f, 10000.0f))
+	{
+		InComponent->SetGravityScale(GravityScale);
+	}
+}
+
+void UTargetActorTransformWidget::RenderFXAAComponentDetails(UFXAAComponent* InComponent)
+{
+	float SlideX = InComponent->GetSlideX();
+	float SpanMax = InComponent->GetSpanMax();
+	int ReduceMin = InComponent->GetReduceMin();
+	float ReduceMul = InComponent->GetReduceMul();
+	if (ImGui::DragFloat("SlideX", &SlideX, 0.01f, 0, 1))
+	{
+		InComponent->SetSlideX(SlideX);
+	}
+	if (ImGui::DragFloat("SpanMax", &SpanMax, 0.01f, 0, 8))
+	{
+		InComponent->SetSpanMax(SpanMax);
+	}
+	if (ImGui::DragInt("ReduceMin", &ReduceMin, 1.0f, 0, 128))
+	{
+		InComponent->SetReduceMin(ReduceMin);
+	}
+	if (ImGui::DragFloat("ReduceMul", &ReduceMul, 0.01f, 0, 1))
+	{
+		InComponent->SetReduceMul(ReduceMul);
+	}
 }

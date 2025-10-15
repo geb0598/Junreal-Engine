@@ -12,6 +12,9 @@ public:
 
 	void OnRegister() override;
 
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
+
 protected:
 	USceneComponent* UpdatedComponent;
 	FVector Velocity;
