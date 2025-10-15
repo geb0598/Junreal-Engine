@@ -54,6 +54,7 @@
 #include "MeshComponent.h"
 #include "RotationMovementComponent.h"
 #include "ProjectileMovementComponent.h"
+#include "ExponentialHeightFogComponent.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -86,6 +87,7 @@ IMPLEMENT_CLASS(UTextRenderComponent)
 IMPLEMENT_CLASS(UBillboardComponent)
 IMPLEMENT_CLASS(UDecalComponent)
 IMPLEMENT_CLASS(UFireBallComponent)
+IMPLEMENT_CLASS(UExponentialHeightFogComponent)
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)

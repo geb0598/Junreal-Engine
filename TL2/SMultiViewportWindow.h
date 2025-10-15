@@ -44,7 +44,7 @@ private:
     SSplitter* SingleLayout = nullptr;
 
     // 뷰포트
-    SViewportWindow* Viewports[4];
+    SViewportWindow* Viewports[4];//활성화된 뷰포트들이여서 
     SViewportWindow* MainViewport;
  
     SSplitterH* LeftTop;

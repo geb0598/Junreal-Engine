@@ -118,6 +118,9 @@
     <Filter Include="Components\Movement">
       <UniqueIdentifier>{74aac7c3-b3d4-4cb4-8aea-6bec9fe600ee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\Light">
+      <UniqueIdentifier>{4312deaf-c4fc-4add-b141-6a83fb4f1c25}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <!-- ==================== 소스 파일 (.cpp) ==================== -->
   <ItemGroup>
@@ -214,9 +217,6 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <!-- Rendering\RHI -->
-    <ClCompile Include="RHIDevice.cpp">
-      <Filter>Rendering\RHI</Filter>
-    </ClCompile>
     <ClCompile Include="D3D11RHI.cpp">
       <Filter>Rendering\RHI</Filter>
     </ClCompile>
@@ -475,6 +475,12 @@
     </ClCompile>
     <ClCompile Include="MovementComponent.cpp">
       <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="ExponentialHeightFog.cpp" />
+    <ClCompile Include="FXAA.cpp" />
+    <ClCompile Include="ExponentialHeightFogComponent.cpp" />
+    <ClCompile Include="FireballComponent.cpp">
+      <Filter>Components\Light</Filter>
     </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
@@ -872,6 +878,13 @@
     <ClInclude Include="MovementComponent.h">
       <Filter>Components\Movement</Filter>
     </ClInclude>
+    <ClInclude Include="ExponentialHeightFog.h" />
+    <ClInclude Include="FXAA.h" />
+    <ClInclude Include="ExponentialHeightFogComponent.h" />
+    <ClInclude Include="LinearColor.h" />
+    <ClInclude Include="FireballComponent.h">
+      <Filter>Components\Light</Filter>
+    </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
   <ItemGroup>
@@ -903,11 +916,17 @@
     <FxCompile Include="SpotLightShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Copy.hlsl" />
+    <FxCompile Include="FXAA.hlsl" />
+    <FxCompile Include="HeightFogShader.hlsl" />
   </ItemGroup>
   <!-- ==================== 리소스 파일 ==================== -->
   <ItemGroup>
     <Content Include="Editor\Icon\Pawn_64x.dds" />
     <Content Include="Editor\Icon\PointLight_64x.dds" />
     <Content Include="Editor\Icon\SpotLight_64x.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Common.hlsli" />
   </ItemGroup>
 </Project>

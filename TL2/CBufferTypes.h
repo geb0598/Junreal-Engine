@@ -38,6 +38,7 @@ constexpr bool TYPENAME##SetPS = SETPS;\
 #define CBUFFER_TYPE_LIST(MACRO)\
 MACRO(ModelBufferType)					\
 MACRO(ViewProjBufferType)					\
+MACRO(FViewProjectionInverse)            \
 MACRO(BillboardBufferType)					\
 MACRO(FPixelConstBufferType)					\
 MACRO(HighLightBufferType)					\
@@ -46,12 +47,13 @@ MACRO(UVScrollCB)					\
 MACRO(DecalMatrixCB)					\
 MACRO(ViewportBufferType)					\
 MACRO(DecalAlphaBufferType)					\
-MACRO(HeightFogBufferType)                  \
+MACRO(FHeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
-CBUFFER_INFO(ViewProjBufferType, 1, true, false)
+CBUFFER_INFO(ViewProjBufferType, 1, true, true)
 CBUFFER_INFO(BillboardBufferType, 2, true, false)
+CBUFFER_INFO(FViewProjectionInverse, 3, false, true)
 CBUFFER_INFO(FPixelConstBufferType, 4, false, true)
 CBUFFER_INFO(HighLightBufferType, 2, true, true)
 CBUFFER_INFO(ColorBufferType, 3, false, true)
@@ -60,7 +62,7 @@ CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
 
 CBUFFER_INFO(DecalAlphaBufferType, 8, false, true)
-CBUFFER_INFO(HeightFogBufferType, 8, false, true)
+CBUFFER_INFO(FHeightFogBufferType, 8, false, true)
 CBUFFER_INFO(FPointLightBufferType, 9, false, true)
 
 
@@ -77,6 +79,7 @@ struct ModelBufferType
     FMatrix Model;
     uint32 UUID = 0;
     FVector Padding;
+    FMatrix NormalMatrix; // Inverse transpose of Model matrix for proper normal transformation
 };
 
 //VS : b1
@@ -84,6 +87,9 @@ struct ViewProjBufferType
 {
     FMatrix View;
     FMatrix Proj;
+
+    FVector CameraWorldPos; // ★ 추가
+    float  _pad_cam;       // 16바이트 정렬용 패딩
 };
 
 //VS : b2
@@ -97,6 +103,14 @@ struct BillboardBufferType
     /*FVector cameraRight;
     FVector cameraUp;*/
 };
+
+//PS : b3
+struct FViewProjectionInverse
+{
+    FMatrix ViewProjectionInverse;
+    FVector CameraPosition;
+};
+
 
 //PS : b4
 struct FPixelConstBufferType
@@ -172,7 +186,7 @@ struct DecalAlphaBufferType
 };
 
 //PS : b8
-struct HeightFogBufferType
+struct FHeightFogBufferType
 {
     FLinearColor FogInscatteringColor;
 

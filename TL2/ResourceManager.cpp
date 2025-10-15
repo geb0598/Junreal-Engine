@@ -430,7 +430,9 @@ TArray<D3D11_INPUT_ELEMENT_DESC>& UResourceManager::GetProperInputLayout(const F
 
     if (it == ShaderToInputLayoutMap.end())
     {
-        throw std::runtime_error("Proper input layout not found for " + InShaderName);
+        TArray<D3D11_INPUT_ELEMENT_DESC> Empty;
+        return Empty;
+        //throw std::runtime_error("Proper input layout not found for " + InShaderName);
     }
     
     return ShaderToInputLayoutMap[InShaderName];

@@ -21,11 +21,18 @@ UMeshLoader::FFace UMeshLoader::ParseFaceBuffer(const FString& FaceBuffer)
     if (std::getline(Tokenizer, IndexBuffer, '/'))
         Face.IndexPosition = std::stoi(IndexBuffer);
 
-    // vt (항상 존재)
+    // vt (선택적)
     if (std::getline(Tokenizer, IndexBuffer, '/'))
     {
         if (!IndexBuffer.empty())
             Face.IndexTexCoord = std::stoi(IndexBuffer);
+    }
+
+    // vn (선택적)
+    if (std::getline(Tokenizer, IndexBuffer, '/'))
+    {
+        if (!IndexBuffer.empty())
+            Face.IndexNormal = std::stoi(IndexBuffer);
     }
 
     return Face;
@@ -125,7 +132,7 @@ FMeshData* UMeshLoader::LoadMesh(const std::filesystem::path& FilePath)
 
             // 위치 데이터 추가
             MeshData->Vertices.push_back(FVector(Pos.x, Pos.y, Pos.z));
-            
+
             // 랜덤 색상 추가
             MeshData->Color.push_back(FVector4(
                 static_cast<float>(rand()) / RAND_MAX,
@@ -133,6 +140,18 @@ FMeshData* UMeshLoader::LoadMesh(const std::filesystem::path& FilePath)
                 static_cast<float>(rand()) / RAND_MAX,
                 1.0f
             ));
+
+            // Normal 데이터 추가
+            if (Face.IndexNormal > 0 && Face.IndexNormal <= Normals.size())
+            {
+                const FNormal& Norm = Normals[Face.IndexNormal - 1];
+                MeshData->Normal.push_back(FVector(Norm.x, Norm.y, Norm.z));
+            }
+            else
+            {
+                // Normal이 없는 경우 기본값 (0, 1, 0)
+                MeshData->Normal.push_back(FVector(0.0f, 1.0f, 0.0f));
+            }
 
             MeshData->Indices.push_back(newIndex);
             UniqueVertexMap[key] = newIndex;

@@ -30,8 +30,6 @@ void SetCBuffer(const TYPE& CBufferData)\
     RHIDevice->SetCBuffer(CBufferData);\
 }
 
-
-
 class URenderer
 {
 public:
@@ -59,18 +57,17 @@ public:
     void RenderFrame(class UWorld* World);   //패스를 위한 렌더프레임
 
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_FUNC)
-        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
-        CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER_UPDATE_SET_FUNC)
+    CBUFFER_TYPE_LIST(DECLARE_CBUFFER_SET_FUNC)
 
     void DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITIVE_TOPOLOGY InTopology, const TArray<FMaterialSlot>& InComponentMaterialSlots);
-
-
     void DrawIndexedPrimitiveComponent(UTextRenderComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
-    void DrawIndexedPrimitiveComponent(UBillboardComponent* Comp,
-                                       D3D11_PRIMITIVE_TOPOLOGY InTopology);
+    void DrawIndexedPrimitiveComponent(UBillboardComponent* Comp, D3D11_PRIMITIVE_TOPOLOGY InTopology);
 
+    // View Mode Setting
     void SetViewModeType(EViewModeIndex ViewModeIndex);
-    void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
+    void SetViewModeIndex(EViewModeIndex InViewModeIndex) { CurrentViewMode = InViewModeIndex; }
+
     // Batch Line Rendering System
     void BeginLineBatch();
     void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -88,21 +85,27 @@ public:
 
     URHIDevice* GetRHIDevice() { return RHIDevice; }
     void RenderScene(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+    
     void RenderPostProcessing(UShader* Shader);
 
 private:
-
-    // ========== 핵심: 패스 분리 ==========
-
-    // 1) 패스들
+    // Render Passes
+    void RenderSceneDepthPass(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix);   // 깊이 전용 (필요 시)
     void RenderBasePass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);         // 불투명/기본 머티리얼
-    void RenderFogPass();                       // 포스트: SceneColor/SceneDepth 기반
+    void RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);                       // 포스트: SceneColor/SceneDepth 기반
+
+    void RenderPointLightShadowPass(UWorld* World);
     void RenderFireBallPass(UWorld* World);     // 포스트: FireBall 조명/가산
     void RenderOverlayPass(UWorld* World);      // 라인/텍스트/UI/디버그
+    void RenderSceneDepthVisualizePass(ACameraActor* Camera);       // 포스트: SceneDepth 뷰 모드 (뎁스 버퍼 시각화)
+
 
     // 2) 씬 렌더링 헬퍼 메소드들
 
+    void RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
     void RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
+    void RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderEngineActors(const TArray<AActor*>& EngineActors, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
 
     //// 2) 풀스크린 쿼드
@@ -120,7 +123,7 @@ private:
 
     // ========== 내부 상태 ==========
 
-    EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Unlit;
+    EViewModeIndex CurrentViewMode = EViewModeIndex::VMI_Unlit;
 
 	URHIDevice* RHIDevice;
 

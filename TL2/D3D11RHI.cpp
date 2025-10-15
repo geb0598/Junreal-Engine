@@ -267,7 +267,15 @@ void D3D11RHI::RSSetViewport()
 //지금 발제는 처리가능하기에 일단 이대로 둠
 void D3D11RHI::OMSetRenderTargets(const ERenderTargetType RenderTargetType)
 {
+
     TArray< ID3D11RenderTargetView*> RTVList;
+    ID3D11DepthStencilView* Depth = DepthStencilView;
+    if (((int)RenderTargetType & (int)ERenderTargetType::None) > 0)
+    {
+        DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+        return;
+    }
+
     if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
     {
         RTVList.Push(FrameRTV);
@@ -280,8 +288,13 @@ void D3D11RHI::OMSetRenderTargets(const ERenderTargetType RenderTargetType)
     {
         RTVList.Push(TemporalRTV);
     }
-
-    DeviceContext->OMSetRenderTargets(RTVList.size(), RTVList.data(), DepthStencilView);
+    //depth를 SRV로 안 써야 RTV로 설정 가능
+    if (((int)RenderTargetType & (int)ERenderTargetType::NoDepth) > 0)
+    {
+        Depth = nullptr;
+    }
+   
+    DeviceContext->OMSetRenderTargets(RTVList.size(), RTVList.data(), Depth);
 }
 
 //수정 필요
@@ -304,13 +317,24 @@ void D3D11RHI::PSSetRenderTargetSRV(const ERenderTargetType RenderTargetType)
     ViewPort.MaxDepth = 1;
     
    DeviceContext->RSSetViewports(1, &ViewPort);*/
+    if (((int)RenderTargetType & (int)ERenderTargetType::None) > 0)
+    {
+        //현재까지 최대 2개
+        ID3D11ShaderResourceView* Empty[2]{ nullptr, nullptr };
+        DeviceContext->PSSetShaderResources(0, 2, Empty);
+        return;
+    }
     if (((int)RenderTargetType & (int)ERenderTargetType::Frame) > 0)
     {
-        SRVList = { FrameSRV };
+        SRVList.Add(FrameSRV);
     }
-    if (((int)RenderTargetType & (int)ERenderTargetType::Temporal) > 0)
+    else if (((int)RenderTargetType & (int)ERenderTargetType::Temporal) > 0)
     {
-        SRVList = { TemporalSRV };
+        SRVList.Add(TemporalSRV);
+    }
+    if (((int)RenderTargetType & (int)ERenderTargetType::Depth) > 0)
+    {
+        SRVList.Add(DepthSRV);
     }
     DeviceContext->PSSetShaderResources(0, SRVList.size(), SRVList.data());
 }
