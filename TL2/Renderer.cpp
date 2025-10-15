@@ -692,11 +692,12 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
         {
             AddLines(PrimitiveComponent->GetBoundingBoxLines(), PrimitiveComponent->GetBoundingBoxColor());
         }
-        if (SelectionManager.IsActorSelected(PrimitiveComponent->GetOwner()))
+        if (PrimitiveComponent->GetOwner() == SelectedActor)
         {
-            FVector rgb(1.0f, 1.0f, 1.0f);
-            UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
+            bIsSelected = true;
         }
+        FVector rgb(1.0f, 1.0f, 1.0f);
+        UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
         PrimitiveComponent->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
     }
 }
@@ -831,7 +832,6 @@ void URenderer::RenderFireBallPass(UWorld* World)
     // 1️⃣ 라이트 컴포넌트 수집 (FireBall, PointLight 등)
     FPointLightBufferType PointLightCB{};
     PointLightCB.PointLightCount=0;
-
     for (UFireBallComponent* FireBallComponent : World->GetLevel()->GetComponentList<UFireBallComponent>())
     {
         int idx = PointLightCB.PointLightCount++;

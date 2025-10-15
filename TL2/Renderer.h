@@ -103,6 +103,7 @@ private:
     // 2) 씬 렌더링 헬퍼 메소드들
 
     void RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport* Viewport);
+
     void RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);
     void RenderDecals(UWorld* World, const FMatrix& ViewMatrix, const FMatrix& ProjectionMatrix, FViewport* Viewport);

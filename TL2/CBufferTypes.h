@@ -110,7 +110,6 @@ struct BillboardBufferType
 struct FViewProjectionInverse
 {
     FMatrix ViewProjectionInverse;
-    FVector CameraPosition;
 };
 
 
@@ -196,9 +195,10 @@ struct FHeightFogBufferType
     float FogHeightFalloff;
     float StartDistance;
     float FogCutoffDistance;
+    float FogMaxOpacityDistance;
     float FogMaxOpacity;
     float FogActorHeight;
-    float Padding[2];
+    float Padding;
 };
 
 //PS : b0

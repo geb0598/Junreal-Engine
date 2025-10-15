@@ -12,19 +12,16 @@ void UExponentialHeightFogComponent::Render(URenderer* Renderer, const FVector& 
 		FogHeightFalloff,
 		StartDistance,
 		FogCutoffDistance,
+		FogMaxOpacityDistance,
 		FogMaxOpacity,
 		//2열에 있던 Z가 Y로 가서 Y를 써야하는 게 아니라 이미 Z가 up으로 변환된 상태(바뀐 기저축상의 점을 월드좌표계로 나타냄)이므로
 		//Z값을 써야 이미 바뀐 높이값을 쓸 수 있음(Y는 이미 높이가 아니라 깊이를 나타냄)
 		this->GetWorldLocation().Z)); 
 
 	FMatrix ViewProj = View * Projection;
-	Renderer->UpdateSetCBuffer(FViewProjectionInverse(ViewProj.Inverse(), CameraPosition));
-	
-	Renderer->UpdateSetCBuffer(ViewportBufferType(FVector4(
-	Viewport->GetStartX(),
-	Viewport->GetStartY(),
-	Viewport->GetSizeX(),
-	Viewport->GetSizeY())));
+
+	//Renderer->UpdateSetCBuffer(ViewProjBufferType(View, Projection, CameraPosition));
+	Renderer->UpdateSetCBuffer(FViewProjectionInverse(ViewProj.Inverse()));
 
 	Renderer->RenderPostProcessing(UResourceManager::GetInstance().Load<UShader>("HeightFogShader.hlsl"));
 
@@ -62,6 +59,7 @@ UObject* UExponentialHeightFogComponent::Duplicate()
 		DuplicatedComponent->FogHeightFalloff = FogHeightFalloff;
 		DuplicatedComponent->StartDistance = StartDistance;
 		DuplicatedComponent->FogCutoffDistance = FogCutoffDistance;
+		DuplicatedComponent->FogMaxOpacityDistance = FogMaxOpacityDistance;
 		DuplicatedComponent->FogMaxOpacity = FogMaxOpacity;
 
 		DuplicatedComponent->FogInscatteringColor = FogInscatteringColor;
