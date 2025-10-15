@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include "ResourceManager.h"
 #include "ObjManager.h"
+#include"CameraActor.h"
 #include "SceneLoader.h"
 
 UStaticMeshComponent::UStaticMeshComponent()
@@ -35,8 +36,18 @@ void UStaticMeshComponent::Render(URenderer* Renderer, const FMatrix& ViewMatrix
         }
 
         Renderer->RSSetNoCullState();
-        Renderer->UpdateSetCBuffer(ModelBufferType(GetWorldMatrix(), this->InternalIndex));
-        Renderer->UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix));
+
+        // Normal transformation을 위한 inverse transpose matrix 계산
+        FMatrix WorldMatrix = GetWorldMatrix();
+        FMatrix NormalMatrix = WorldMatrix.Inverse().Transpose();
+
+        ModelBufferType ModelBuffer;
+        ModelBuffer.Model = WorldMatrix;
+        ModelBuffer.UUID = this->InternalIndex;
+        ModelBuffer.NormalMatrix = NormalMatrix;
+
+        Renderer->UpdateSetCBuffer(ModelBuffer);
+        Renderer->UpdateSetCBuffer(ViewProjBufferType(ViewMatrix, ProjectionMatrix,GEngine->GetActiveWorld()->GetCameraActor()->GetActorLocation()));
         Renderer->PrepareShader(GetMaterial()->GetShader());
         Renderer->DrawIndexedPrimitiveComponent(GetStaticMesh(), D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, MaterailSlots);
     }

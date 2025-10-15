@@ -20,6 +20,9 @@
 #include "MeshComponent.h"
 #include "RotationMovementComponent.h"
 #include "ProjectileMovementComponent.h"
+#include "ExponentialHeightFogComponent.h"
+#include"FireballComponent.h"
+
 #include <filesystem>
 #include <vector>
 
@@ -474,6 +477,20 @@ void UTargetActorTransformWidget::RenderWidget()
 	// Actor가 AStaticMeshActor인 경우 StaticMesh 변경 UI
 	if (SelectedComponent)
 	{
+		if (UExponentialHeightFogComponent* FogComponent = Cast<UExponentialHeightFogComponent>(SelectedComponent))
+		{
+			UExponentialHeightFogComponent::FFogInfo FogInfo = FogComponent->GetFogInfo();
+
+			ImGui::DragFloat("Fog Density", &FogInfo.FogDensity, 0.1f, 0.0f, 10.0f);
+			ImGui::DragFloat("Fog Height Falloff", &FogInfo.FogHeightFalloff, 0.1f, 0.0f, 10.0f);
+			ImGui::DragFloat("Start Distance", &FogInfo.StartDistance, 0.1f, 0.0f);
+			ImGui::DragFloat("Fog Max Opacity", &FogInfo.FogMaxOpacity, 0.1f, 0.0f, 10.0f);
+			ImGui::DragFloat("Fog Cutoff Distance", &FogInfo.FogCutoffDistance, 1.0f, 0.0f);
+			//ImGui::DragFloat4("Fog Inscattering Color", &FogInfo.FogInscatteringColor, 0.1f, 0.0f, 10.0f);
+			FogComponent->SetFogInfo(FogInfo);
+
+		}
+
 		if (UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(SelectedComponent))
 		{
 			ImGui::Text("Static Mesh Override");
@@ -783,6 +800,49 @@ void UTargetActorTransformWidget::RenderWidget()
 			//	TextRenderComponent->SetTextColor(FLinearColor(color[0], color[1], color[2]));
 			//}
 		}
+		else if (UFireBallComponent* FBC = Cast<UFireBallComponent>(SelectedComponent))
+		{
+			ImGui::Separator();
+			ImGui::Text("FireBall Component Settings");
+
+			// 🔸 색상 설정 (RGB Color Picker)
+			float color[3] = { FBC->FireData.Color.R, FBC->FireData.Color.G, FBC->FireData.Color.B };
+			if (ImGui::ColorEdit3("Color", color))
+			{
+				FBC->FireData.Color = FLinearColor(color[0], color[1], color[2], 1.0f);
+			}
+
+			ImGui::Spacing();
+
+			// 🔸 밝기 (Intensity)
+			float intensity = FBC->FireData.Intensity;
+			if (ImGui::DragFloat("Intensity", &intensity, 0.1f, 0.0f, 100.0f))
+			{
+				FBC->FireData.Intensity = intensity;
+			}
+
+			// 🔸 반경 (Radius)
+			float radius = FBC->FireData.Radius;
+			if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 1000.0f))
+			{
+				FBC->FireData.Radius = radius;
+			}
+
+			// 🔸 감쇠 정도 (FallOff)
+			float falloff = FBC->FireData.RadiusFallOff;
+			if (ImGui::DragFloat("FallOff", &falloff, 0.05f, 0.1f, 10.0f))
+			{
+				FBC->FireData.RadiusFallOff = falloff;
+			}
+
+			ImGui::Spacing();
+
+			// 🔸 시각적 미리보기용 Sphere 표시 (선택된 경우)
+			ImGui::Text("Preview:");
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(color[0], color[1], color[2], 1.0f), "● FireBall Active");
+
+		}	
 		else if (UDecalComponent* DecalComponent = Cast<UDecalComponent>(SelectedComponent))
 		{
 			ImGui::Text("Decal Component Settings");

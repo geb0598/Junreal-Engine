@@ -889,7 +889,7 @@ struct FTransform
         //Tcw * Rpwi * Spwi + Tpwi = Tcl
         FVector Rotated = Rotation.RotateVector(Other.Translation);
         FVector Scaled(Rotated * Scale3D);
-        Result.Translation = Translation + Rotated;
+        Result.Translation = Translation + Scaled;
 
         return Result;
     }

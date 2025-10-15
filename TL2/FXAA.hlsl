@@ -3,11 +3,11 @@ Texture2D FrameColor : register(t0);
 SamplerState LinearSampler : register(s0);
 
 
-struct VS_Input
-{
-    float3 posModel : POSITION;
-    float2 uv : TEXCOORD0;
-};
+//struct VS_Input
+//{
+//    float3 posModel : POSITION;
+//    float2 uv : TEXCOORD0;
+//};
 
 struct PS_Input
 {
@@ -15,11 +15,22 @@ struct PS_Input
     float2 uv : TEXCOORD0;
 };
 
-PS_Input mainVS(VS_Input i)
+PS_Input mainVS(uint Input : SV_VertexID)
 {
-    PS_Input o;
-    o.posCS = float4(i.posModel, 1);
-    o.uv = i.uv;
+     PS_Input o;
+   
+    float2 UVMap[] =
+    {
+        float2(0.0f, 0.0f),
+        float2(1.0f, 1.0f),
+        float2(0.0f, 1.0f),
+        float2(0.0f, 0.0f),
+        float2(1.0f, 0.0f),
+        float2(1.0f, 1.0f),
+    };
+
+    o.uv = UVMap[Input];
+    o.posCS = float4(o.uv.x * 2.0f - 1.0f, 1.0f - (o.uv.y * 2.0f), 0.0f, 1.0f);
     return o;
 }
 

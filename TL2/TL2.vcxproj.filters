@@ -118,6 +118,9 @@
     <Filter Include="Components\Movement">
       <UniqueIdentifier>{74aac7c3-b3d4-4cb4-8aea-6bec9fe600ee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\Light">
+      <UniqueIdentifier>{4312deaf-c4fc-4add-b141-6a83fb4f1c25}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <!-- ==================== 소스 파일 (.cpp) ==================== -->
   <ItemGroup>
@@ -474,9 +477,11 @@
       <Filter>Components\Movement</Filter>
     </ClCompile>
     <ClCompile Include="ExponentialHeightFog.cpp" />
-    <ClCompile Include="FireballComponent.cpp" />
     <ClCompile Include="FXAA.cpp" />
     <ClCompile Include="ExponentialHeightFogComponent.cpp" />
+    <ClCompile Include="FireballComponent.cpp">
+      <Filter>Components\Light</Filter>
+    </ClCompile>
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
   <ItemGroup>
@@ -874,10 +879,12 @@
       <Filter>Components\Movement</Filter>
     </ClInclude>
     <ClInclude Include="ExponentialHeightFog.h" />
-    <ClInclude Include="FireballComponent.h" />
     <ClInclude Include="FXAA.h" />
     <ClInclude Include="ExponentialHeightFogComponent.h" />
     <ClInclude Include="LinearColor.h" />
+    <ClInclude Include="FireballComponent.h">
+      <Filter>Components\Light</Filter>
+    </ClInclude>
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
   <ItemGroup>
