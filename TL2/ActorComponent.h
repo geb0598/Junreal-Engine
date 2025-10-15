@@ -33,7 +33,9 @@ public:
     // ───────────────
     void SetActive(bool bNewActive) { bIsActive = bNewActive; }
     void SetEditable(bool bIsEditable) { bEdiableWhenInherited = bIsEditable; }
+    void SetShowflag(bool bIsShow) { bIsRender = bIsShow; }
     bool IsActive() const { return bIsActive; }
+    bool IsRender() const { return bIsRender; }
     bool IsEditable() const { return bEdiableWhenInherited; }
 
     void SetTickEnabled(bool bNewTick) { bCanEverTick = bNewTick; }
@@ -58,6 +60,7 @@ protected:
     bool bIsActive = true;    // 활성 상태
     bool bCanEverTick = false; // 매 프레임 Tick 가능 여부
     bool bEdiableWhenInherited = true;  //디테일에서 Editing 가능 여부
+    bool bIsRender = true;
 
    
 };
