@@ -264,9 +264,7 @@ void D3D11RHI::RSSetViewport()
 
 void D3D11RHI::OMSetDepthOnlyTarget()
 {
-    //DeviceContext->OMSetRenderTargets(0, nullptr, DepthStencilView);
-    float color[4] = { 1, 0, 0, 1 };
-    DeviceContext->ClearRenderTargetView(FrameRTV, color);
+    DeviceContext->OMSetRenderTargets(0, nullptr, DepthStencilView);
 }
 
 //수정 필요

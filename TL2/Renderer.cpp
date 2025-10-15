@@ -71,9 +71,6 @@ void URenderer::PrepareShader(UShader* InShader)
     RHIDevice->GetDeviceContext()->VSSetShader(InShader->GetVertexShader(), nullptr, 0);
     RHIDevice->GetDeviceContext()->PSSetShader(InShader->GetPixelShader(), nullptr, 0);
     RHIDevice->GetDeviceContext()->IASetInputLayout(InShader->GetInputLayout());
-
-    //ID3D11PixelShader* ps = InShader->GetPixelShader();
-    //UE_LOG("PS Bound? %s", ps ? "YES" : "NO");
 }
 
 void URenderer::OMSetBlendState(bool bIsChecked)
@@ -587,38 +584,6 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
         }
     }
 
-    {
-        ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(RHIDevice)->GetDepthSRV();
-
-        ID3D11RenderTargetView* rtv = nullptr;
-        ID3D11DepthStencilView* dsv = nullptr;
-        RHIDevice->GetDeviceContext()->OMGetRenderTargets(1, &rtv, &dsv);
-
-        UE_LOG("DepthSRV = %p", DepthSRV);
-        UE_LOG("DepthDSV = %p", dsv);
-
-        if (DepthSRV && dsv)
-        {
-            // 두 개가 같은 리소스 기반인지 확인 (아래는 optional)
-            ID3D11Resource* resSRV = nullptr;
-            ID3D11Resource* resDSV = nullptr;
-            DepthSRV->GetResource(&resSRV);
-            dsv->GetResource(&resDSV);
-            UE_LOG("DepthSRV->GetResource() = %p", resSRV);
-            UE_LOG("DepthDSV->GetResource() = %p", resDSV);
-            if (resSRV == resDSV)
-                UE_LOG("SRV and DSV share the same depth texture resource.");
-            else
-                UE_LOG("SRV and DSV are different resources (no shared depth buffer).");
-
-            if (resSRV) resSRV->Release();
-            if (resDSV) resDSV->Release();
-        }
-
-        if (rtv) rtv->Release();
-        if (dsv) dsv->Release();
-    }
-
     // BVH 바운드 시각화
     if (Viewport->IsShowFlagEnabled(EEngineShowFlags::SF_BVH))
     {
@@ -758,42 +723,36 @@ void URenderer::RenderOverlayPass(UWorld* World)
 
 void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
 {
-    // RTV만 바인딩 (DSV = nullptr)
+    // +-+ Set Render State +-+
+    // Bind only RTV (DSV = nullptr)
     ID3D11RenderTargetView* FrameRTV = static_cast<D3D11RHI*>(RHIDevice)->GetFrameRTV();
     RHIDevice->GetDeviceContext()->OMSetRenderTargets(1, &FrameRTV, nullptr);
-
-    // 현재 프레임버퍼(Texture2D)에서 뷰포트 크기 구하기
-    D3D11_TEXTURE2D_DESC backDesc{};
-    ID3D11Texture2D* frameBuffer = static_cast<D3D11RHI*>(RHIDevice)->GetFrameBuffer();
-
-    if (frameBuffer)
-    {
-        frameBuffer->GetDesc(&backDesc);
-
-        D3D11_VIEWPORT vp{};
-        vp.TopLeftX = 0.0f;
-        vp.TopLeftY = 0.0f;
-        vp.Width = static_cast<FLOAT>(backDesc.Width);
-        vp.Height = static_cast<FLOAT>(backDesc.Height);
-        vp.MinDepth = 0.0f;
-        vp.MaxDepth = 1.0f;
-
-        RHIDevice->GetDeviceContext()->RSSetViewports(1, &vp);
-
-        UE_LOG("Viewport 재설정 완료: %.0fx%.0f", vp.Width, vp.Height);
-    }
-    else
-    {
-        UE_LOG("FrameBuffer가 null입니다. Viewport 설정 실패");
-    }
-
-    //RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame);
     RHIDevice->OmSetDepthStencilState(EComparisonFunc::Disable);
-    RHIDevice->OMSetBlendState(false);
 
+    // +-+ Re-set Viewport +-+
+    // Because the DSV is set to nullptr
+    // Unbinding DSV invalidates the current viewport state, causing it to appear smaller.
+    // Get viewport size from the current framebuffer (Texture2D)
+    D3D11_TEXTURE2D_DESC BackDesc{};
+    ID3D11Texture2D* FrameBuffer = static_cast<D3D11RHI*>(RHIDevice)->GetFrameBuffer();
+    if (FrameBuffer)
+    {
+        FrameBuffer->GetDesc(&BackDesc);
+        D3D11_VIEWPORT vp = {
+            .TopLeftX = 0.0f,
+            .TopLeftY = 0.0f,
+            .Width = static_cast<FLOAT>(BackDesc.Width),
+            .Height = static_cast<FLOAT>(BackDesc.Height),
+            .MinDepth = 0.0f,
+            .MaxDepth = 1.0f
+        };
+        // Reset Viewport
+        RHIDevice->GetDeviceContext()->RSSetViewports(1, &vp);
+    }
+
+    // +-+ Set Shader & Buffer +-+
     SceneDepthVisualizeShader = UResourceManager::GetInstance().Load<UShader>("DepthVisualizeShader.hlsl");
     PrepareShader(SceneDepthVisualizeShader);
-
     if (Camera)
     {
         CameraInfoBufferType CameraInfo;
@@ -802,49 +761,29 @@ void URenderer::RenderSceneDepthVisualizePass(ACameraActor* Camera)
         UpdateSetCBuffer(CameraInfoBufferType(CameraInfo));
     }
 
-    // 깊이 SRV 바인딩 (이제 DSV는 안 붙어 있으니 안전함)
+    // +-+ Set Shader Resources (Texture) +-+
+    // Bind depth SRV
+    // If DSV were still bound, the set call would fail and result in a null binding.
+    // TODO: Abstracting RHI access to the depth SRV
     ID3D11ShaderResourceView* DepthSRV = static_cast<D3D11RHI*>(RHIDevice)->GetDepthSRV();
-    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &DepthSRV);   // SET!!!
-    //UE_LOG("Currently bound SRV at slot 0 = %p", DepthSRV);
+    RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &DepthSRV);   // SET
+    
+    //ID3D11ShaderResourceView* currentSRV = nullptr;
+    //RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &currentSRV); // GET
+    //UE_LOG("Currently bound SRV at slot 0 = %p", currentSRV);      // null!!! if bind both RTV + DSV
 
+    // +-+ Connect to PS s0 slot +-+
     RHIDevice->PSSetDefaultSampler(0);
-
-    // (디버그) OM/RS/PS 상태 확인
-    {
-        ID3D11RenderTargetView* chkRTV = nullptr; ID3D11DepthStencilView* chkDSV = nullptr;
-        RHIDevice->GetDeviceContext()->OMGetRenderTargets(1, &chkRTV, &chkDSV);
-        UE_LOG("OMGet RT=%p DSV=%p (DSV는 반드시 null)", chkRTV, chkDSV);
-        if (chkRTV) chkRTV->Release(); if (chkDSV) chkDSV->Release();
-
-        UINT numVPs = 0;
-        RHIDevice->GetDeviceContext()->RSGetViewports(&numVPs, nullptr);      // 필요한 개수 질의
-
-        std::vector<D3D11_VIEWPORT> vps(numVPs);
-        RHIDevice->GetDeviceContext()->RSGetViewports(&numVPs, vps.data());   // 실제 가져오기
-
-        UE_LOG("ViewportCount=%u, size=(%.0f, %.0f)",
-            numVPs, numVPs ? vps[0].Width : 0, numVPs ? vps[0].Height : 0);
-
-        ID3D11ShaderResourceView* cur = nullptr;
-        RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &cur);
-        UE_LOG("t0(before Draw)=%p (depthSRV=%p)", cur, DepthSRV);
-        if (cur) cur->Release();
-    }
-
     RHIDevice->IASetPrimitiveTopology();
 
-    ID3D11ShaderResourceView* currentSRV = nullptr;
-    RHIDevice->GetDeviceContext()->PSGetShaderResources(0, 1, &currentSRV); // GET!!!
-    UE_LOG("=========Currently bound SRV at slot 0 = %p", currentSRV);  // nulllll -> if I bind both RTV + DSV
-
+    // +-+ Draw Full-Screen Triangle +-+
     RHIDevice->GetDeviceContext()->Draw(3, 0);
 
-    // SRV 언바인딩 (다음 프레임 DSV 다시 쓰게 하려면 꼭 필요)
+    // +-+ Restore Render State +-+
+    // Unbind SRV to allow re-binding the depth texture as DSV
     ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
     RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, nullSRV);
-
     RHIDevice->OmSetDepthStencilState(EComparisonFunc::LessEqual);
-    RHIDevice->OMSetBlendState(true);
 }
 
 void URenderer::InitializeLineBatch()
