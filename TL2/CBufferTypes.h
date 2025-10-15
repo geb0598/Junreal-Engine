@@ -51,6 +51,7 @@ MACRO(FHeightFogBufferType)                  \
 MACRO(FPointLightBufferType)                  \
 MACRO(CameraInfoBufferType)                  \
 MACRO(FXAABufferType)                  \
+MACRO(FGammaBufferType)                  \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, true)
@@ -68,6 +69,7 @@ CBUFFER_INFO(FHeightFogBufferType, 8, false, true)
 CBUFFER_INFO(FPointLightBufferType, 9, false, true)
 CBUFFER_INFO(CameraInfoBufferType, 0, false, true)
 CBUFFER_INFO(FXAABufferType, 0, false, true)
+CBUFFER_INFO(FGammaBufferType, 0, false, true)
 
 
 //Create 
@@ -220,6 +222,12 @@ struct FXAABufferType
     float ReduceMul = 1.0f / 8.0f;
 };
 
+//PS : b0
+struct FGammaBufferType
+{
+    float Gamma;
+    FVector padding;
+};
 //---//
 
 

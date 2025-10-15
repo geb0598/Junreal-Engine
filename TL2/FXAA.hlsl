@@ -83,15 +83,31 @@ float4 mainPS(PS_Input i) : SV_TARGET
     float BL = GetFrameSample(uv + int2(-1, -1) * TexSizeRCP);
     
 
-    float2 Dir; //밝기 차이
-    Dir.x = ((TR + TL) - (BR + BL)); //Top - Bottom  양수 => 위가 밝다, 음수 => 아래가 밝다
-    Dir.y = ((TR + BR) - (TL + BL)); //Right - Left
+    float2 Dir; //밝기 차이 
+    Dir.x = -((TR + TL) - (BR + BL)); //Top - Bottom  음수 => 위가 밝다, 양수 => 아래가 밝다
+    Dir.y = ((TR + BR) - (TL + BL)); //Right - Left 양수 => 오른쪽이 밝다, 음수 => 왼쪽이 밝다
 	
     float DirReduce = max((TR + TL + BR + BL) * 0.25 * ReduceMul, ReduceMin); //DirReduce = max(대각 4점 평균 * ReduceMul, ReduceMin) = max(대각 평균 줄인거, ReduceMin)
-    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce); //1 / (밝기차이절대값X,Y중 최소 + DirReduce)
+    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce); //1 / (밝기차이절대값X,Y중 최소 + DirReduce) //dir 작은값이 0일 수 있어서 최소값을 더함
 	
     //Dir * InvDirAdjustment = Dir / (밝기차이절대값X,Y중 최소 + max(대각평균 줄인거, ReduceMin))
     Dir = min(float2(SpanMax, SpanMax), max(float2(-SpanMax, -SpanMax), Dir * InvDirAdjustment)); //Dir = -SpanMax <= (Dir * InvDirAdjustment) <= SpanMax 범위로 넣기
+
+    //가로세로 확인
+    //코드
+
+    if (abs(Dir.x) < 1 && abs(Dir.y) < 1)
+    {
+        
+    }
+    else if (abs(Dir.x) < 1)
+    {
+        return float4(1, 1, 0, 1);
+    }
+    else if (abs(Dir.y) < 1)
+    {
+        return float4(0, 1, 1, 1);
+    }
     
     //step(x,y) = x <= y ? 1 : 0;
     Dir.x = Dir.x * step(1.0, abs(Dir.x)); //abs(Dir.x)가 1보다 크거나 같으면 1 else 0

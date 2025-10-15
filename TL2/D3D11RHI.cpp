@@ -620,17 +620,17 @@ void D3D11RHI::ReleaseRasterizerState()
 
 void D3D11RHI::ReleaseTexture(ID3D11Texture2D** Texture, ID3D11RenderTargetView** RTV, ID3D11ShaderResourceView** SRV)
 {
-    if (RTV)
+    if (RTV && (*RTV))
     {
         (*RTV)->Release();
         (*RTV) = nullptr;
     }
-    if (SRV)
+    if (SRV && (*SRV))
     {
         (*SRV)->Release();
         (*SRV) = nullptr;
     }
-    if (Texture)
+    if (Texture && (*Texture))
     {
         (*Texture)->Release();
         (*Texture) = nullptr;
@@ -638,12 +638,12 @@ void D3D11RHI::ReleaseTexture(ID3D11Texture2D** Texture, ID3D11RenderTargetView*
 }
 void D3D11RHI::ReleaseDepthStencilView(ID3D11DepthStencilView** DSV, ID3D11ShaderResourceView** SRV)
 {
-    if (SRV)
+    if (SRV &&(*SRV))
     {
         (*SRV)->Release();
         (*SRV) = nullptr;
     }
-    if (DSV)
+    if (DSV && (*DSV))
     {
         (*DSV)->Release();
         (*DSV) = nullptr;

@@ -857,6 +857,8 @@ void URenderer::RenderFogPass(UWorld* World, ACameraActor* Camera, FViewport* Vi
 }
 void URenderer::RenderFXAAPaxx(UWorld* World, ACameraActor* Camera, FViewport* Viewport)
 {
+    UpdateSetCBuffer(FGammaBufferType(Gamma));
+    RenderPostProcessing(UResourceManager::GetInstance().Load<UShader>("Gamma.hlsl"));
     for (UFXAAComponent* FXAAComponent : World->GetLevel()->GetComponentList<UFXAAComponent>())
     {
         FXAAComponent->Render(this);
