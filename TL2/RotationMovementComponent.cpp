@@ -36,24 +36,25 @@ void URotationMovementComponent::TickComponent(float DeltaSeconds)
 		return;
 	}
 
-	// --- [PivotTranslation이 있을 경우] ---
-	// 현재 월드 트랜스폼 가져오기
+	// Pivot Translation
+	// Get World Transform
 	FTransform WorldTransform = UpdatedComponent->GetWorldTransform();
 
-	// 로컬 Pivot을 월드 공간으로 변환
+	// Calculate world position of pivot
 	FVector WorldPivot = WorldTransform.TransformPosition(PivotTranslation);
 
-	// 회전 적용 후 위치 재계산
+	// Calculate new rotation after applying DeltaQuat
 	FQuat CurrentRot = WorldTransform.Rotation;
 	FQuat NewRot = (bRotationInLocalSpace)
-		? (CurrentRot * DeltaQuat)	// 로컬 축 회전
-		: (DeltaQuat * CurrentRot); // 월드 축 회전
+		? (CurrentRot * DeltaQuat)	// local-axis rotation
+		: (DeltaQuat * CurrentRot); // world-axis rotation
 
-	// 현재 위치를 피벗 기준으로 회전
+	// Compute new location rotated around the pivot point
+	// P' = C + ΔQ * (P - C)
 	FVector WorldLoc = WorldTransform.Translation;
-	FVector RotatedLoc = WorldPivot + NewRot.RotateVector(WorldLoc - WorldPivot);
+	FVector RotatedLoc = WorldPivot + DeltaQuat.RotateVector(WorldLoc - WorldPivot);
 
-	// 적용
+	// Apply the new world-space location and rotation
 	UpdatedComponent->SetWorldLocationAndRotation(RotatedLoc, NewRot);
 }
 
