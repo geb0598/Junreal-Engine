@@ -3,11 +3,10 @@ Texture2D FrameColor : register(t0);
 SamplerState LinearSampler : register(s0);
 
 
-//struct VS_Input
-//{
-//    float3 posModel : POSITION;
-//    float2 uv : TEXCOORD0;
-//};
+//float SlideX = 1.0f;
+//float SpanMax = 8.0f; 
+//float ReduceMin = 1.0f / 128.0f;
+//float ReduceMul = 1.0f / 8.0f;
 cbuffer FXAACBuffer : register(b0)
 {
     float SlideX;
@@ -55,7 +54,7 @@ float GetFrameSample(float2 uv)
 
 float4 mainPS(PS_Input i) : SV_TARGET
 {
-    if (i.uv.x < SlideX)
+    if (i.uv.x > SlideX)
     {
         discard;
     }
@@ -65,7 +64,6 @@ float4 mainPS(PS_Input i) : SV_TARGET
         {
             return float4(1, 0, 0, 1);
         }
-
     }
     float3 Lumaniance = float3(0.299f, 0.587f, 0.114f);
     
@@ -85,31 +83,36 @@ float4 mainPS(PS_Input i) : SV_TARGET
     float BL = GetFrameSample(uv + int2(-1, -1) * TexSizeRCP);
     
 
-    float2 Dir;
-    Dir.x = ((TR + TL) - (BR + BL));
-    Dir.y = ((TR + BR) - (TL + BL));
+    float2 Dir; //밝기 차이
+    Dir.x = ((TR + TL) - (BR + BL)); //Top - Bottom  양수 => 위가 밝다, 음수 => 아래가 밝다
+    Dir.y = ((TR + BR) - (TL + BL)); //Right - Left
 	
-    float DirReduce = max((TR + TL + BR + BL) * (ReduceMul * 0.25), ReduceMin);
-    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce);
+    float DirReduce = max((TR + TL + BR + BL) * 0.25 * ReduceMul, ReduceMin); //DirReduce = max(대각 4점 평균 * ReduceMul, ReduceMin) = max(대각 평균 줄인거, ReduceMin)
+    float InvDirAdjustment = 1.0 / (min(abs(Dir.x), abs(Dir.y)) + DirReduce); //1 / (밝기차이절대값X,Y중 최소 + DirReduce)
 	
-    Dir = min(float2(SpanMax, SpanMax), max(float2(-SpanMax, -SpanMax), Dir * InvDirAdjustment));
-	
-    Dir.x = Dir.x * step(1.0, abs(Dir.x));
+    //Dir * InvDirAdjustment = Dir / (밝기차이절대값X,Y중 최소 + max(대각평균 줄인거, ReduceMin))
+    Dir = min(float2(SpanMax, SpanMax), max(float2(-SpanMax, -SpanMax), Dir * InvDirAdjustment)); //Dir = -SpanMax <= (Dir * InvDirAdjustment) <= SpanMax 범위로 넣기
+    
+    //step(x,y) = x <= y ? 1 : 0;
+    Dir.x = Dir.x * step(1.0, abs(Dir.x)); //abs(Dir.x)가 1보다 크거나 같으면 1 else 0
     Dir.y = Dir.y * step(1.0, abs(Dir.y));
-    Dir *= TexSizeRCP;
+    Dir *= TexSizeRCP; //1 / TexSize 곱함
+    
 
+    //(0, 1/3, 2/3, 1) => (-0.5, (1/3 - 0.5), (2/3 - 0.5), 0.5) 
     float3 Sample1 = FrameColor.Sample(LinearSampler, uv + (Dir * (1.0f / 3.0f - 0.5f)));
     float3 Sample2 = FrameColor.Sample(LinearSampler, uv + (Dir * (2.0f / 3.0f - 0.5f)));
     float3 Sample3 = FrameColor.Sample(LinearSampler, uv + (Dir * (0.0f / 3.0f - 0.5f)));
     float3 Sample4 = FrameColor.Sample(LinearSampler, uv + (Dir * (3.0f / 3.0f - 0.5f)));
 
-    float3 Result1 = 0.5f * (Sample1 + Sample2);
-    float3 Result2 = 0.25f * (Sample1 + Sample2 + Sample3 + Sample4);
+    float3 Result1 = 0.5f * (Sample1 + Sample2); //가까운 두점 평균
+    float3 Result2 = 0.25f * (Sample1 + Sample2 + Sample3 + Sample4); //4점 평균
 
     float Min = min(M, min(min(TL, TR), min(BL, BR)));
     float Max = max(M, max(max(TL, TR), max(BL, BR)));
     float Result2Dot = dot(Lumaniance, Result2);
 	
+    //4점평균이 Min Max 범위 밖이면 Result1(가까움 두점 평균) 리턴
     if (Result2Dot < Min || Result2Dot > Max)
     {
         return float4(Result1, 1.0);

@@ -8,6 +8,8 @@ public:
 
 	DECLARE_CLASS(AFXAAActor, AInfo);
 	AFXAAActor();
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
 
 private:
 	UFXAAComponent* FXAAComponent = nullptr;

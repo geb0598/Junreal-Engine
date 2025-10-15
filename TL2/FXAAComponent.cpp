@@ -20,7 +20,7 @@ UObject* UFXAAComponent::Duplicate()
 	}
 	DuplicatedComponent->DuplicateSubObjects();
 
-	return nullptr;
+	return DuplicatedComponent;
 }
 
 void UFXAAComponent::DuplicateSubObjects()

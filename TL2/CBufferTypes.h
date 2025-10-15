@@ -59,7 +59,7 @@ CBUFFER_INFO(FViewProjectionInverse, 3, false, true)
 CBUFFER_INFO(FPixelConstBufferType, 4, false, true)
 CBUFFER_INFO(HighLightBufferType, 2, true, true)
 CBUFFER_INFO(ColorBufferType, 3, false, true)
-CBUFFER_INFO(UVScrollCB, 5, false, true)
+CBUFFER_INFO(UVScrollCB, 5, true, true)
 CBUFFER_INFO(DecalMatrixCB, 7, false, true)
 CBUFFER_INFO(ViewportBufferType, 6, false, true)
 
@@ -131,6 +131,7 @@ struct HighLightBufferType
     uint32 Y;
     uint32 Z;
     uint32 Gizmo;
+	uint32 enable;
 };
 
 //PS : b3

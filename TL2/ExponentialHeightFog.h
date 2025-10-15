@@ -10,6 +10,8 @@ public:
 
 
 	AExponentialHeightFog();
+	UObject* Duplicate() override;
+	void DuplicateSubObjects() override;
 
 private:
 	UExponentialHeightFogComponent* HeightFogComponent = nullptr;

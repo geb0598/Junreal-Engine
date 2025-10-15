@@ -34,6 +34,7 @@ public:
     // 🔸 CPU → GPU 전달용 라이트 데이터 캐시
     FPointLightData PointLightBuffer;
 
+    
 protected:
 	
 

@@ -20,33 +20,10 @@ void UExponentialHeightFogComponent::Render(URenderer* Renderer, const FVector& 
 
 	FMatrix ViewProj = View * Projection;
 
-	//Renderer->UpdateSetCBuffer(ViewProjBufferType(View, Projection, CameraPosition));
+	Renderer->UpdateSetCBuffer(ViewProjBufferType(View, Projection, CameraPosition));
 	Renderer->UpdateSetCBuffer(FViewProjectionInverse(ViewProj.Inverse()));
 
 	Renderer->RenderPostProcessing(UResourceManager::GetInstance().Load<UShader>("HeightFogShader.hlsl"));
-
-	//셰이더 설정
-	//Renderer->PrepareShader(UResourceManager::GetInstance().Load<UShader>("HeightFogShader.hlsl"));
-	
-
-	//D3D11RHI* RHIDevice = static_cast<D3D11RHI*>(Renderer->GetRHIDevice());
-	//ID3D11DeviceContext* DeviceContext = RHIDevice->GetDeviceContext();
-
-	//DeviceContext->IASetVertexBuffers(0, 1, nullptr, nullptr, nullptr);
-	//DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	////텍스처 설정
-	//ID3D11ShaderResourceView* SRVList[]{ RHIDevice->GetOffScreenSRV(), RHIDevice->GetDepthSRV() };
-
-	//DeviceContext->PSSetShaderResources(0, 2, SRVList);
-
-	//RHIDevice->PSSetDefaultSampler(0);
-
-	//DeviceContext->Draw(3, 0);
-	//
-	//SRVList[0] = nullptr; SRVList[1] = nullptr;
-	//DeviceContext->PSSetShaderResources(0, 2, SRVList);
-	//RHIDevice->OMSetRenderTargets(true);
 }
 
 UObject* UExponentialHeightFogComponent::Duplicate()
@@ -66,10 +43,10 @@ UObject* UExponentialHeightFogComponent::Duplicate()
 	}
 	DuplicatedComponent->DuplicateSubObjects();
 
-	return nullptr;
+	return DuplicatedComponent;
 }
 
 void UExponentialHeightFogComponent::DuplicateSubObjects()
 {
-	USceneComponent::DuplicateSubObjects();
+	Super_t::DuplicateSubObjects();
 }

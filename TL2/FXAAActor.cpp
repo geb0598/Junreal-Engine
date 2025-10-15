@@ -17,3 +17,33 @@ AFXAAActor::AFXAAActor()
     }
 
 }
+
+UObject* AFXAAActor::Duplicate()
+{
+    AFXAAActor* DuplicatedActor = NewObject<AFXAAActor>(*this);
+    DuplicatedActor->SetName(GetName().ToString());
+
+    if (DuplicatedActor->RootComponent)
+    {
+        TSet<UActorComponent*> ComponentList = DuplicatedActor->GetComponents();
+        for (UActorComponent* Component : ComponentList)
+        {
+            DuplicatedActor->OwnedComponents.Remove(Component);
+            ObjectFactory::DeleteObject(Component);
+        }
+        DuplicatedActor->RootComponent = nullptr;
+    }
+
+    if (RootComponent)
+    {
+        DuplicatedActor->RootComponent = Cast<USceneComponent>(RootComponent->Duplicate());
+    }
+    DuplicatedActor->DuplicateSubObjects();
+
+    return DuplicatedActor;
+}
+
+void AFXAAActor::DuplicateSubObjects()
+{
+    Super_t::DuplicateSubObjects();
+}

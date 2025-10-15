@@ -1251,7 +1251,7 @@ void UTargetActorTransformWidget::RenderFXAAComponentDetails(UFXAAComponent* InC
 	{
 		InComponent->SetSlideX(SlideX);
 	}
-	if (ImGui::DragFloat("SpanMax", &SpanMax, 0.01f, 0, 8))
+	if (ImGui::DragFloat("SpanMax", &SpanMax, 0.01f, 0, 12))
 	{
 		InComponent->SetSpanMax(SpanMax);
 	}

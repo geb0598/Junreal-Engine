@@ -58,6 +58,7 @@ UObject* ADecalActor::Duplicate()
 
     // 얕은 복사 수행 (생성자 실행됨 - DecalComponent 생성)
     ADecalActor* DuplicatedActor = NewObject<ADecalActor>(*this);
+    DuplicatedActor->SetName(GetName().ToString());
 
     // 생성자가 만든 컴포넌트 삭제
     if (DuplicatedActor->DecalComponent)
