@@ -1,0 +1,938 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <!-- ==================== 최상위 필터 ==================== -->
+    <Filter Include="Core">
+      <UniqueIdentifier>{E1000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Actors">
+      <UniqueIdentifier>{E2000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components">
+      <UniqueIdentifier>{E3000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{E4000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{E5000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{E6000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Gizmo">
+      <UniqueIdentifier>{E7000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Managers">
+      <UniqueIdentifier>{E8000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Spatial">
+      <UniqueIdentifier>{E9000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Bounding">
+      <UniqueIdentifier>{EA000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{EB000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math &amp; Data">
+      <UniqueIdentifier>{EC000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{ED000000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{95520b77-70ba-47a8-a3c4-364bce265567}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== Core 하위 필터 ==================== -->
+    <Filter Include="Core\Engine">
+      <UniqueIdentifier>{E1100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== Components 하위 필터 ==================== -->
+    <Filter Include="Components\Camera">
+      <UniqueIdentifier>{E3100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Mesh">
+      <UniqueIdentifier>{E3200000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Primitive">
+      <UniqueIdentifier>{E3300000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Line">
+      <UniqueIdentifier>{E3400000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Text">
+      <UniqueIdentifier>{E3500000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Decal">
+      <UniqueIdentifier>{E3600000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== Rendering 하위 필터 ==================== -->
+    <Filter Include="Rendering\RHI">
+      <UniqueIdentifier>{E4100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Viewport">
+      <UniqueIdentifier>{E4200000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== Resources 하위 필터 ==================== -->
+    <Filter Include="Resources\Mesh">
+      <UniqueIdentifier>{E5100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== UI 하위 필터 ==================== -->
+    <Filter Include="UI\Windows">
+      <UniqueIdentifier>{E6100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Widgets">
+      <UniqueIdentifier>{E6200000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Factory">
+      <UniqueIdentifier>{E6300000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\ImGui">
+      <UniqueIdentifier>{E6400000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\SWidget">
+      <UniqueIdentifier>{E6500000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Stats">
+      <UniqueIdentifier>{E6600000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== Utilities 하위 필터 ==================== -->
+    <Filter Include="Utilities\Archive">
+      <UniqueIdentifier>{EB100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities\Factory">
+      <UniqueIdentifier>{EB200000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities\Scene">
+      <UniqueIdentifier>{EB300000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== Math & Data 하위 필터 ==================== -->
+    <Filter Include="Math &amp; Data\Primitives">
+      <UniqueIdentifier>{EC100000-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <!-- ==================== ThirdParty 하위 필터 ==================== -->
+    <Filter Include="ThirdParty\ImGui">
+      <UniqueIdentifier>{340a9369-98be-4580-af67-945e0e2bcbef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Movement">
+      <UniqueIdentifier>{74aac7c3-b3d4-4cb4-8aea-6bec9fe600ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Light">
+      <UniqueIdentifier>{4312deaf-c4fc-4add-b141-6a83fb4f1c25}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <!-- ==================== 소스 파일 (.cpp) ==================== -->
+  <ItemGroup>
+    <!-- Main Entry Point -->
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <!-- Core -->
+    <ClCompile Include="Object.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Level.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="AllClassesRegistration.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <!-- Core\Engine -->
+    <ClCompile Include="Engine.cpp">
+      <Filter>Core\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine.cpp">
+      <Filter>Core\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorEngine.cpp">
+      <Filter>Core\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorClipboard.cpp">
+      <Filter>Core\Engine</Filter>
+    </ClCompile>
+    <!-- Actors -->
+    <ClCompile Include="CameraActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMeshActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="GizmoActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="GridActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="DecalActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <!-- Components -->
+    <ClCompile Include="ActorComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <!-- Components\Camera -->
+    <ClCompile Include="CameraComponent.cpp">
+      <Filter>Components\Camera</Filter>
+    </ClCompile>
+    <!-- Components\Mesh -->
+    <ClCompile Include="MeshComponent.cpp">
+      <Filter>Components\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMeshComponent.cpp">
+      <Filter>Components\Mesh</Filter>
+    </ClCompile>
+    <!-- Components\Primitive -->
+    <ClCompile Include="PrimitiveComponent.cpp">
+      <Filter>Components\Primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeComponent.cpp">
+      <Filter>Components\Primitive</Filter>
+    </ClCompile>
+    <!-- Components\Line -->
+    <ClCompile Include="LineComponent.cpp">
+      <Filter>Components\Line</Filter>
+    </ClCompile>
+    <!-- Components\Text -->
+    <ClCompile Include="TextRenderComponent.cpp">
+      <Filter>Components\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="BillboardComponent.cpp">
+      <Filter>Components\Text</Filter>
+    </ClCompile>
+    <!-- Components\Decal -->
+    <ClCompile Include="DecalComponent.cpp">
+      <Filter>Components\Decal</Filter>
+    </ClCompile>
+    <!-- Rendering -->
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <!-- Rendering\RHI -->
+    <ClCompile Include="D3D11RHI.cpp">
+      <Filter>Rendering\RHI</Filter>
+    </ClCompile>
+    <!-- Rendering\Viewport -->
+    <ClCompile Include="FViewport.cpp">
+      <Filter>Rendering\Viewport</Filter>
+    </ClCompile>
+    <ClCompile Include="FViewportClient.cpp">
+      <Filter>Rendering\Viewport</Filter>
+    </ClCompile>
+    <!-- Resources -->
+    <ClCompile Include="ResourceBase.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="TextQuad.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <!-- Resources\Mesh -->
+    <ClCompile Include="StaticMesh.cpp">
+      <Filter>Resources\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicMesh.cpp">
+      <Filter>Resources\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="LineDynamicMesh.cpp">
+      <Filter>Resources\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Line.cpp">
+      <Filter>Resources\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshLoader.cpp">
+      <Filter>Resources\Mesh</Filter>
+    </ClCompile>
+    <!-- UI -->
+    <ClCompile Include="UI\UIManager.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\GlobalConsole.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <!-- UI\Windows -->
+    <ClCompile Include="UI\Window\UIWindow.cpp">
+      <Filter>UI\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\ControlPanelWindow.cpp">
+      <Filter>UI\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\ExperimentalFeatureWindow.cpp">
+      <Filter>UI\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\ConsoleWindow.cpp">
+      <Filter>UI\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\PropertyWindow.cpp">
+      <Filter>UI\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Window\SceneWindow.cpp">
+      <Filter>UI\Windows</Filter>
+    </ClCompile>
+    <!-- UI\Widgets -->
+    <ClCompile Include="UI\Widget\Widget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\ActorTerminationWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\CameraControlWIdget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\ConsoleWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\FPSWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\InputInformationWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\PrimitiveSpawnWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\SceneIOWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\SceneManagerWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Widget\TargetActorTransformWidget.cpp">
+      <Filter>UI\Widgets</Filter>
+    </ClCompile>
+    <!-- UI\Factory -->
+    <ClCompile Include="UI\Factory\UIWindowFactory.cpp">
+      <Filter>UI\Factory</Filter>
+    </ClCompile>
+    <!-- UI\ImGui -->
+    <ClCompile Include="UI\ImGui\ImGuiHelper.cpp">
+      <Filter>UI\ImGui</Filter>
+    </ClCompile>
+    <!-- UI\SWidget -->
+    <ClCompile Include="SWindow.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SSplitter.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SSplitterH.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SSplitterV.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SViewportWindow.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SMultiViewportWindow.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SDetailsWindow.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SControlPanel.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneIOWindow.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuBarWidget.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderViewportSwitcherWidget.cpp">
+      <Filter>UI\SWidget</Filter>
+    </ClCompile>
+    <!-- UI\Stats -->
+    <ClCompile Include="UI\StatsOverlayD2D.cpp">
+      <Filter>UI\Stats</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderingStats.cpp">
+      <Filter>UI\Stats</Filter>
+    </ClCompile>
+    <!-- Gizmo -->
+    <ClCompile Include="GizmoArrowComponent.cpp">
+      <Filter>Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="GizmoRotateComponent.cpp">
+      <Filter>Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="GizmoScaleComponent.cpp">
+      <Filter>Gizmo</Filter>
+    </ClCompile>
+    <!-- Managers -->
+    <ClCompile Include="InputManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectionManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <!-- Spatial -->
+    <ClCompile Include="SpatialDataStructure.cpp">
+      <Filter>Spatial</Filter>
+    </ClCompile>
+    <ClCompile Include="Octree.cpp">
+      <Filter>Spatial</Filter>
+    </ClCompile>
+    <ClCompile Include="BVH.cpp">
+      <Filter>Spatial</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingVolumeHierarchy.cpp">
+      <Filter>Spatial</Filter>
+    </ClCompile>
+    <!-- Bounding -->
+    <ClCompile Include="Frustum.cpp">
+      <Filter>Bounding</Filter>
+    </ClCompile>
+    <ClCompile Include="AABoundingBoxComponent.cpp">
+      <Filter>Bounding</Filter>
+    </ClCompile>
+    <ClCompile Include="OBoundingBoxComponent.cpp">
+      <Filter>Bounding</Filter>
+    </ClCompile>
+    <!-- Utilities -->
+    <ClCompile Include="Picking.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="FName.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <!-- Utilities\Factory -->
+    <ClCompile Include="ObjectFactory.cpp">
+      <Filter>Utilities\Factory</Filter>
+    </ClCompile>
+    <!-- Utilities\Scene -->
+    <ClCompile Include="SceneLoader.cpp">
+      <Filter>Utilities\Scene</Filter>
+    </ClCompile>
+    <!-- Math & Data -->
+    <ClCompile Include="UEContainer.cpp">
+      <Filter>Math &amp; Data</Filter>
+    </ClCompile>
+    <!-- ThirdParty\ImGui -->
+    <ClCompile Include="ImGui\imgui.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_demo.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_draw.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_impl_dx11.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_impl_win32.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_tables.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_widgets.cpp">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingVolume.cpp" />
+    <ClCompile Include="DecalComponentScreen.cpp" />
+    <ClCompile Include="SpotLightActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="SpotLightComponent.cpp">
+      <Filter>Components\Decal</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeProfile.cpp" />
+    <ClCompile Include="Info.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectileMovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationMovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="MovementComponent.cpp">
+      <Filter>Components\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="ExponentialHeightFog.cpp" />
+    <ClCompile Include="ExponentialHeightFogComponent.cpp" />
+    <ClCompile Include="FireballComponent.cpp">
+      <Filter>Components\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="FXAAActor.cpp" />
+    <ClCompile Include="FXAAComponent.cpp" />
+  </ItemGroup>
+  <!-- ==================== 헤더 파일 (.h) ==================== -->
+  <ItemGroup>
+    <!-- PCH -->
+    <ClInclude Include="pch.h" />
+    <!-- Core -->
+    <ClInclude Include="Object.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Level.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyFlag.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <!-- Core\Engine -->
+    <ClInclude Include="Engine.h">
+      <Filter>Core\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine.h">
+      <Filter>Core\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorEngine.h">
+      <Filter>Core\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorClipboard.h">
+      <Filter>Core\Engine</Filter>
+    </ClInclude>
+    <!-- Actors -->
+    <ClInclude Include="CameraActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMeshActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="GizmoActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="GridActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="DecalActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <!-- Components -->
+    <ClInclude Include="ActorComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <!-- Components\Camera -->
+    <ClInclude Include="CameraComponent.h">
+      <Filter>Components\Camera</Filter>
+    </ClInclude>
+    <!-- Components\Mesh -->
+    <ClInclude Include="MeshComponent.h">
+      <Filter>Components\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMeshComponent.h">
+      <Filter>Components\Mesh</Filter>
+    </ClInclude>
+    <!-- Components\Primitive -->
+    <ClInclude Include="PrimitiveComponent.h">
+      <Filter>Components\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeComponent.h">
+      <Filter>Components\Primitive</Filter>
+    </ClInclude>
+    <!-- Components\Line -->
+    <ClInclude Include="LineComponent.h">
+      <Filter>Components\Line</Filter>
+    </ClInclude>
+    <!-- Components\Text -->
+    <ClInclude Include="TextRenderComponent.h">
+      <Filter>Components\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="BillboardComponent.h">
+      <Filter>Components\Text</Filter>
+    </ClInclude>
+    <!-- Components\Decal -->
+    <ClInclude Include="DecalComponent.h">
+      <Filter>Components\Decal</Filter>
+    </ClInclude>
+    <!-- Rendering -->
+    <ClInclude Include="Renderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <!-- Rendering\RHI -->
+    <ClInclude Include="RHIDevice.h">
+      <Filter>Rendering\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11RHI.h">
+      <Filter>Rendering\RHI</Filter>
+    </ClInclude>
+    <!-- Rendering\Viewport -->
+    <ClInclude Include="FViewport.h">
+      <Filter>Rendering\Viewport</Filter>
+    </ClInclude>
+    <ClInclude Include="FViewportClient.h">
+      <Filter>Rendering\Viewport</Filter>
+    </ClInclude>
+    <!-- Resources -->
+    <ClInclude Include="ResourceBase.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="TextQuad.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <!-- Resources\Mesh -->
+    <ClInclude Include="StaticMesh.h">
+      <Filter>Resources\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicMesh.h">
+      <Filter>Resources\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="LineDynamicMesh.h">
+      <Filter>Resources\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Line.h">
+      <Filter>Resources\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshLoader.h">
+      <Filter>Resources\Mesh</Filter>
+    </ClInclude>
+    <!-- UI -->
+    <ClInclude Include="UI\UIManager.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\GlobalConsole.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <!-- UI\Windows -->
+    <ClInclude Include="UI\Window\UIWindow.h">
+      <Filter>UI\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\ControlPanelWindow.h">
+      <Filter>UI\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\ExperimentalFeatureWindow.h">
+      <Filter>UI\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\ConsoleWindow.h">
+      <Filter>UI\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\PropertyWindow.h">
+      <Filter>UI\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Window\SceneWindow.h">
+      <Filter>UI\Windows</Filter>
+    </ClInclude>
+    <!-- UI\Widgets -->
+    <ClInclude Include="UI\Widget\Widget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\ActorTerminationWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\CameraControlWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\ConsoleWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\FPSWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\InputInformationWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\PrimitiveSpawnWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\SceneIOWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\SceneManagerWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Widget\TargetActorTransformWidget.h">
+      <Filter>UI\Widgets</Filter>
+    </ClInclude>
+    <!-- UI\Factory -->
+    <ClInclude Include="UI\Factory\UIWindowFactory.h">
+      <Filter>UI\Factory</Filter>
+    </ClInclude>
+    <!-- UI\ImGui -->
+    <ClInclude Include="UI\ImGui\ImGuiHelper.h">
+      <Filter>UI\ImGui</Filter>
+    </ClInclude>
+    <!-- UI\SWidget -->
+    <ClInclude Include="SWindow.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SSplitter.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SSplitterH.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SSplitterV.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SViewportWindow.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SMultiViewportWindow.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SDetailsWindow.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SControlPanel.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneIOWindow.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuBarWidget.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderViewportSwitcherWidget.h">
+      <Filter>UI\SWidget</Filter>
+    </ClInclude>
+    <!-- UI\Stats -->
+    <ClInclude Include="UI\StatsOverlayD2D.h">
+      <Filter>UI\Stats</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderingStats.h">
+      <Filter>UI\Stats</Filter>
+    </ClInclude>
+    <!-- Gizmo -->
+    <ClInclude Include="GizmoArrowComponent.h">
+      <Filter>Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="GizmoRotateComponent.h">
+      <Filter>Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="GizmoScaleComponent.h">
+      <Filter>Gizmo</Filter>
+    </ClInclude>
+    <!-- Managers -->
+    <ClInclude Include="InputManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectionManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <!-- Spatial -->
+    <ClInclude Include="SpatialDataStructure.h">
+      <Filter>Spatial</Filter>
+    </ClInclude>
+    <ClInclude Include="Octree.h">
+      <Filter>Spatial</Filter>
+    </ClInclude>
+    <ClInclude Include="BVH.h">
+      <Filter>Spatial</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingVolumeHierarchy.h">
+      <Filter>Spatial</Filter>
+    </ClInclude>
+    <!-- Bounding -->
+    <ClInclude Include="Frustum.h">
+      <Filter>Bounding</Filter>
+    </ClInclude>
+    <ClInclude Include="AABoundingBoxComponent.h">
+      <Filter>Bounding</Filter>
+    </ClInclude>
+    <ClInclude Include="OBoundingBoxComponent.h">
+      <Filter>Bounding</Filter>
+    </ClInclude>
+    <!-- Utilities -->
+    <ClInclude Include="Picking.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Name.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Enums.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneRotationUtils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <!-- Utilities\Factory -->
+    <ClInclude Include="ObjectFactory.h">
+      <Filter>Utilities\Factory</Filter>
+    </ClInclude>
+    <!-- Utilities\Archive -->
+    <ClInclude Include="Archive.h">
+      <Filter>Utilities\Archive</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsBinWriter.h">
+      <Filter>Utilities\Archive</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsBinReader.h">
+      <Filter>Utilities\Archive</Filter>
+    </ClInclude>
+    <!-- Utilities\Scene -->
+    <ClInclude Include="SceneLoader.h">
+      <Filter>Utilities\Scene</Filter>
+    </ClInclude>
+    <!-- Math & Data -->
+    <ClInclude Include="Vector.h">
+      <Filter>Math &amp; Data</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexData.h">
+      <Filter>Math &amp; Data</Filter>
+    </ClInclude>
+    <ClInclude Include="UEContainer.h">
+      <Filter>Math &amp; Data</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectIterator.h">
+      <Filter>Math &amp; Data</Filter>
+    </ClInclude>
+    <!-- Math & Data\Primitives -->
+    <ClInclude Include="Triangle.h">
+      <Filter>Math &amp; Data\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>Math &amp; Data\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Math &amp; Data\Primitives</Filter>
+    </ClInclude>
+    <!-- ThirdParty\ImGui -->
+    <ClInclude Include="ImGui\imconfig.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_impl_dx11.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_impl_win32.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_internal.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_rectpack.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_textedit.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_truetype.h">
+      <Filter>ThirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingVolume.h" />
+    <ClInclude Include="DecalComponentScreen.h" />
+    <ClInclude Include="SpotLightActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="CBufferTypes.h" />
+    <ClInclude Include="SpotLightComponent.h">
+      <Filter>Components\Decal</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeProfile.h" />
+    <ClInclude Include="Info.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectileMovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="RotationMovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="MovementComponent.h">
+      <Filter>Components\Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="ExponentialHeightFog.h" />
+    <ClInclude Include="ExponentialHeightFogComponent.h" />
+    <ClInclude Include="LinearColor.h" />
+    <ClInclude Include="FireballComponent.h">
+      <Filter>Components\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="FXAAActor.h" />
+    <ClInclude Include="FXAAComponent.h" />
+  </ItemGroup>
+  <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
+  <ItemGroup>
+    <FxCompile Include="Primitive.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TextBillboard.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ShaderLine.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="StaticMeshShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TextShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Billboard.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DecalShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DecalShaderScreen.hlsl" />
+    <FxCompile Include="SpotLightShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Copy.hlsl" />
+    <FxCompile Include="FXAA.hlsl" />
+    <FxCompile Include="HeightFogShader.hlsl" />
+    <FxCompile Include="SceneDepth.hlsl" />
+    <FxCompile Include="DepthPrepassShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthVisualizeShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Gamma.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <!-- ==================== 리소스 파일 ==================== -->
+  <ItemGroup>
+    <Content Include="Editor\Icon\Pawn_64x.dds" />
+    <Content Include="Editor\Icon\PointLight_64x.dds" />
+    <Content Include="Editor\Icon\SpotLight_64x.dds" />
+  </ItemGroup>
+</Project>
