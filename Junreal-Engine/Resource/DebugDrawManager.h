@@ -17,7 +17,7 @@ public:
 	 * @param End 선의 끝점 월드 좌표
 	 * @param Color 선의 색상 (기본값: 흰색)
 	 */
-	void AddLine(const FVector& Start, const FVector& End, const FVector4& Color = {1.0f,1.0f,1.0f,1.0f});
+	void AddLine(const FVector & InStart, const FVector & InEnd, const FVector4 & InColor = {1.0f, 1.0f, 1.0f, 1.0f});
 	/**
 	 * @brief 디버그용 원을 이루는 라인들을 추가합니다.
 	 * @param Center 원의 중심 월드 좌표
@@ -26,7 +26,7 @@ public:
 	 * @param NumSegments 원을 표현하기 위해 사용할 선분의 개수(값이 높을수록 원이 부드러워짐)
 	 * @param Color 원의 색상 (기본값: 흰색)
 	 */
-	void AddCircle(const FVector& Center, const FVector & UpAxis, float Radius, int NumSegments, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
+	void AddCircle(const FVector & InCenter, const FVector & InUpAxis, float InRadius, int InNumSegments, const FVector4 & InColor = {1.0f, 1.0f, 1.0f, 1.0f});
 	/**
 	 * @brief 3D 공간에 구(Sphere)를 이루는 라인들을 추가합니다. 3개의 축(X, Y, Z)에 원을 그려 구를 근사
 	 * @param Center 구의 중심 월드 좌표
@@ -34,7 +34,7 @@ public:
 	 * @param NumSegments 구를 구성하는 각 원을 표현할 선분의 개수
 	 * @param Color 구의 색상(기본값: 흰색)
 	 */
-	void AddSphere(const FVector& Center, float Radius, int NumSegments, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
+	void AddSphere(const FVector& InCenter, float InRadius, int InNumSegments, const FVector4& InColor = { 1.0f, 1.0f, 1.0f, 1.0f });
 	/**
 	 * @brief 3D 공간에 원뿔(Cone)를 이루는 라인들을 추가합니다. 
 	 * @param ApexPosition 원뿔의 꼭짓점 월드 좌표
@@ -44,14 +44,14 @@ public:
 	 * @param NumSegments 원뿔의 밑면 원을 표현할 선분의 개수
 	 * @param Color 원뿔의 색상입 (기본값: 흰색)
 	 */
-	void AddCone(const FVector& ApexPosition, const FVector& Direction, float Height, float AngleInDegrees, int NumSegments, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
+	void AddCone(const FVector & InApexPosition, const FVector & InDirection, float InHeight, float InAngleInDegrees, int InNumSegments, const FVector4 & InColor = {1.0f, 1.0f, 1.0f, 1.0f});
 	/**
 	 * @brief 3D 공간에 축 정렬된 상자(AABB)를 그립니다.
 	 * @param Center 상자의 중심 월드 좌표
 	 * @param Extents 상자 중심에서 각 면까지의 거리(반경)
 	 * @param Color 상자의 색상 (기본값: 흰색)
 	 */
-	void AddBox(const FVector& Center, const FVector& Extents, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
+	void AddBox(const FVector & InCenter, const FVector & InExtents, const FVector4 & InColor = {1.0f, 1.0f, 1.0f, 1.0f});
 	
 	/**
 	* @brief 이번 프레임에 그릴 모든 라인 데이터 반환
