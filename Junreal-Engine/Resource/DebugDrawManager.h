@@ -45,13 +45,22 @@ public:
 	 * @param Color 원뿔의 색상입 (기본값: 흰색)
 	 */
 	void AddCone(const FVector& ApexPosition, const FVector& Direction, float Height, float AngleInDegrees, int NumSegments, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
-	void AddBox(const FVector& Extents, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
+	/**
+	 * @brief 3D 공간에 축 정렬된 상자(AABB)를 그립니다.
+	 * @param Center 상자의 중심 월드 좌표
+	 * @param Extents 상자 중심에서 각 면까지의 거리(반경)
+	 * @param Color 상자의 색상 (기본값: 흰색)
+	 */
+	void AddBox(const FVector& Center, const FVector& Extents, const FVector4& Color = { 1.0f,1.0f,1.0f,1.0f });
 	
 	/**
 	* @brief 이번 프레임에 그릴 모든 라인 데이터 반환
 	*/
 	const TArray<FDebugLine>& GetLines() const;
 
+	/**
+	* @brief 저장된 디버그 라인을 비웁니다.
+	*/
 	void ClearLines();
 	
 private:

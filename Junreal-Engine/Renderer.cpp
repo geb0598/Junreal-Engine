@@ -574,9 +574,10 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
 
     RenderDecals(World, ViewMatrix, ProjectionMatrix, Viewport);
 
-    // 이번 프레임에 수집된 디버그용 라인들을 라인 배치에 추가 (해당 줄 시작전에 FDebugDrawManager를 이용해서 라인들이 추가되어 있어야 함)
+    // 이번 프레임에 수집된 디버그용 라인들을 라인 배치에 추가 (해당 줄 시작전에 FDebugDrawManager의 Add함수를 이용해서 이용해서 라인들을 수집해야 함)
     FDebugDrawManager& DebugDrawer = FDebugDrawManager::GetInstance();
-    for (const FDebugLine& Line : DebugDrawer.GetLines())
+    const TArray<FDebugLine>& DebugLines = DebugDrawer.GetLines();
+    for (const FDebugLine& Line : DebugLines)
     {
         AddLine(Line.Start, Line.End, Line.Color);
     }

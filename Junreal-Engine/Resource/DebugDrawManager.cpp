@@ -25,7 +25,7 @@ void FDebugDrawManager::AddCircle(const FVector& Center, const FVector& UpAxis, 
 	FVector LastVertex = Center + AxisU * Radius;
 	for (int i = 1;i <= NumSegments; ++i)
 	{
-		float Angle = i / NumSegments * 2.0f * PI;
+		float Angle = static_cast<float>(i) / static_cast<float>(NumSegments) * TWO_PI;
 		FVector Vertex = Center + (AxisU * cos(Angle) + AxisV * sin(Angle)) * Radius;
 		DebugLines.Add(FDebugLine{ LastVertex, Vertex, Color });
 		LastVertex = Vertex;
@@ -57,9 +57,9 @@ void FDebugDrawManager::AddCone(const FVector& ApexPosition, const FVector& Dire
 	DirNorm.FindBestAxisVectors(AxisU, AxisV);
 
 	// 일단, 4개의 옆면 선만 그림
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < NumSegments; ++i)
 	{
-		float Angle = static_cast<float>(i) / 4.0f * TWO_PI; // 0, 90, 180, 270도
+		float Angle = static_cast<float>(i) / static_cast<float>(NumSegments) * TWO_PI; 
 		FVector PointOnCircle = BaseCenter + (AxisU * cosf(Angle) + AxisV * sinf(Angle)) * BaseRadius;
 		AddLine(ApexPosition, PointOnCircle, Color);
 	}
@@ -67,8 +67,37 @@ void FDebugDrawManager::AddCone(const FVector& ApexPosition, const FVector& Dire
 
 
 
-void FDebugDrawManager::AddBox(const FVector& Extents, const FVector4& Color)
+void FDebugDrawManager::AddBox(const FVector& Center, const FVector& Extents, const FVector4& Color)
 {
+	// 상자의 8개 꼭짓점 좌표
+	FVector Vertices[8];
+	Vertices[0] = Center + FVector(-Extents.X, -Extents.Y, -Extents.Z); // ---
+	Vertices[1] = Center + FVector(Extents.X, -Extents.Y, -Extents.Z); // +--
+	Vertices[2] = Center + FVector(Extents.X, Extents.Y, -Extents.Z); // ++-
+	Vertices[3] = Center + FVector(-Extents.X, Extents.Y, -Extents.Z); // -+-
+	Vertices[4] = Center + FVector(-Extents.X, -Extents.Y, Extents.Z); // --+
+	Vertices[5] = Center + FVector(Extents.X, -Extents.Y, Extents.Z); // +-+
+	Vertices[6] = Center + FVector(Extents.X, Extents.Y, Extents.Z); // +++
+	Vertices[7] = Center + FVector(-Extents.X, Extents.Y, Extents.Z); // -++
+
+	// === 12개의 모서리(Edge) ===
+	// 아래쪽 면
+	AddLine(Vertices[0], Vertices[1], Color);
+	AddLine(Vertices[1], Vertices[2], Color);
+	AddLine(Vertices[2], Vertices[3], Color);
+	AddLine(Vertices[3], Vertices[0], Color);
+
+	// 위쪽 면 
+	AddLine(Vertices[4], Vertices[5], Color);
+	AddLine(Vertices[5], Vertices[6], Color);
+	AddLine(Vertices[6], Vertices[7], Color);
+	AddLine(Vertices[7], Vertices[4], Color);
+
+	// 옆면
+	AddLine(Vertices[0], Vertices[4], Color);
+	AddLine(Vertices[1], Vertices[5], Color);
+	AddLine(Vertices[2], Vertices[6], Color);
+	AddLine(Vertices[3], Vertices[7], Color);
 }
 
 const TArray<FDebugLine>& FDebugDrawManager::GetLines() const
