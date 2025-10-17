@@ -176,6 +176,7 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
             const UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
             const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();
             bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName == FName::None());
+            bool bHasNormalMap = !(MaterialInfo.NormalTextureName == FName::None());
             
             // 재료 변경 추적
             if (LastMaterial != Material)
@@ -185,6 +186,8 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
             }
             
             FTextureData* TextureData = nullptr;
+            FTextureData* NormalMapData = nullptr;
+
             if (bHasTexture)
             {
                 TextureData = UResourceManager::GetInstance().CreateOrGetTextureData(MaterialInfo.DiffuseTextureFileName);
@@ -199,8 +202,21 @@ void URenderer::DrawIndexedPrimitiveComponent(UStaticMesh* InMesh, D3D11_PRIMITI
                 
                 RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
             }
-            
-            RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(MaterialInfo), true, bHasTexture)); // PSSet도 해줌
+            if (bHasNormalMap)
+            {
+                NormalMapData = UResourceManager::GetInstance().CreateOrGetTextureData(MaterialInfo.NormalTextureName);
+                // 텍스처 변경 추적 (임시로 FTextureData*를 UTexture*로 캠스트)
+                UTexture* CurrentTexture = reinterpret_cast<UTexture*>(NormalMapData);
+                if (LastTexture != CurrentTexture)
+                {
+                    StatsCollector.IncrementTextureChanges();
+                    LastTexture = CurrentTexture;
+                }
+
+                RHIDevice->GetDeviceContext()->PSSetShaderResources(1, 1, &(NormalMapData->TextureSRV));
+            }
+
+            RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(MaterialInfo), true, bHasTexture, bHasNormalMap)); // PSSet도 해줌
             
             // DrawCall 수실행 및 통계 추가
             RHIDevice->GetDeviceContext()->DrawIndexed(MeshGroupInfos[i].IndexCount, MeshGroupInfos[i].StartIndex, 0);

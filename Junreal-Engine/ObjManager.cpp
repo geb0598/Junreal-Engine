@@ -144,7 +144,7 @@ FStaticMesh* FObjManager::LoadObjStaticMeshAsset(const FString& PathFileName)
         // obj 및 Mtl 파싱
         FObjInfo RawObjInfo;
         //FObjImporter::LoadObjModel(WPathFileName, &RawObjInfo, false, true); // test로 오른손 좌표계 false
-        FObjImporter::LoadObjModel(NormalizedPathStr, &RawObjInfo, MaterialInfos, true, true);
+        FObjImporter::LoadObjModel(NormalizedPathStr, &RawObjInfo, MaterialInfos, false, true);
         FObjImporter::ConvertToStaticMesh(RawObjInfo, MaterialInfos, NewFStaticMesh);
 
         // obj 정보 bin에 저장

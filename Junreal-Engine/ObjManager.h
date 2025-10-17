@@ -2,6 +2,7 @@
 #include "UEContainer.h"
 #include "Vector.h"
 #include "Enums.h"
+#include <regex>
 
 // Raw Data
 struct FObjInfo
@@ -83,7 +84,7 @@ public:
 
                 if (bIsRHCoordSys)
                 {
-                    //OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
+                    OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
                     OutObjInfo->Positions.push_back(FVector(vz, -vy, vx));
                 }
                 else
@@ -110,8 +111,10 @@ public:
 
                 if (bIsRHCoordSys)
                     OutObjInfo->Normals.push_back(FVector(nz, -ny, nx));
+                    //OutObjInfo->Normals.push_back(FVector(nx, -ny, nz));
                 else
-                    OutObjInfo->Normals.push_back(FVector(nz, ny, nx));
+                    //OutObjInfo->Normals.push_back(FVector(nz, ny, nx));
+                    OutObjInfo->Normals.push_back(FVector(nx, ny, nz));
 
                 bHasNormal = true;
             }
@@ -407,6 +410,47 @@ public:
                 }
                 OutMaterialInfos[MatCount - 1].EmissiveTextureFileName = TextureFileName;
             }
+            else if (line.rfind("map_Bump ", 0) == 0)
+            {
+                //FString TextureFileName;
+                //if (line.substr(7).rfind(objDir) != 0)
+                //{
+                //    TextureFileName = objDir + line.substr(7);
+                //}
+                //else
+                //{
+                //    TextureFileName = line.substr(7);
+                //}
+                //std::replace(TextureFileName.begin(), TextureFileName.end(), '\\', '/');
+                //OutMaterialInfos[MatCount - 1].NormalTextureName = TextureFileName;
+                FString rest = line.substr(9); // 주의: "map_Bump " 길이 = 9
+
+                // 옵션(-bm 등)은 전부 무시하고 .png 경로만 찾는다(따옴표/공백 포함, 대소문자 무시)
+                std::regex re(
+                    R"rgx("([^"]+\.png)"|([^\s"]+\.png))rgx",
+                    std::regex::icase
+                );
+                std::sregex_iterator it(rest.begin(), rest.end(), re), end;
+
+                if (it != end)
+                {
+                    // 마지막 매치를 채택
+                    std::smatch m = *it; ++it;
+                    for (; it != end; ++it) m = *it;
+
+                    FString TextureFileName = m[1].matched ? m[1].str() : m[2].str();
+
+                    // 경로 정규화 및 상대경로면 objDir 접두
+                    if (TextureFileName.rfind(objDir, 0) != 0)
+                    {
+                        TextureFileName = objDir + TextureFileName;
+                    }
+
+                    std::replace(TextureFileName.begin(), TextureFileName.end(), '\\', '/');
+
+                    OutMaterialInfos[MatCount - 1].NormalTextureName = FName(TextureFileName);
+                }
+            }
             else if (line.rfind("newmtl ", 0) == 0)
             {
                 FObjMaterialInfo TempMatInfo;
@@ -553,6 +597,72 @@ public:
             // 일단 여기까지 하고, 나중에, imgui에서 material slot의 matName을 바꾸면, dirty flag true로 바꾸는 로직도 설정하기.->완료.
             //OutStaticMesh->GroupInfos[i].MaterialInfo = InMaterialInfos[InObjInfo.GroupMaterialArray[i]];
             OutStaticMesh->GroupInfos[i].InitialMaterialName = InMaterialInfos[InObjInfo.GroupMaterialArray[i]].MaterialName;
+        }
+
+        const size_t vertexCount = OutStaticMesh->Vertices.size();
+        std::vector<FVector> AccumT(vertexCount, FVector(0, 0, 0));
+        std::vector<FVector> AccumB(vertexCount, FVector(0, 0, 0));
+
+        for (size_t i = 0; i < OutStaticMesh->Indices.size(); i += 3)
+        {
+            uint32 i0 = OutStaticMesh->Indices[i + 0];
+            uint32 i1 = OutStaticMesh->Indices[i + 1];
+            uint32 i2 = OutStaticMesh->Indices[i + 2];
+
+            const auto& v0 = OutStaticMesh->Vertices[i0];
+            const auto& v1 = OutStaticMesh->Vertices[i1];
+            const auto& v2 = OutStaticMesh->Vertices[i2];
+
+            const FVector  p0 = v0.pos, p1 = v1.pos, p2 = v2.pos;
+            const FVector2D uv0 = v0.tex, uv1 = v1.tex, uv2 = v2.tex;
+
+            FVector e1 = p1 - p0;
+            FVector e2 = p2 - p0;
+            FVector2D d1 = uv1 - uv0;
+            FVector2D d2 = uv2 - uv0;
+
+            float det = d1.X * d2.Y - d1.Y * d2.X;
+            if (abs(det) < 1e-20f) {
+                // UV 퇴화: N과 직교하는 임의 T/B 생성(fallback)
+                FVector n = (v0.normal + v1.normal + v2.normal).GetSafeNormal();
+                FVector a = (abs(n.Z) < 0.999f) ? FVector(0, 0, 1) : FVector(0, 1, 0);
+                FVector t = (FVector::Cross(a, n)).GetSafeNormal();
+                FVector b = FVector::Cross(n, t);
+                AccumT[i0] += t; AccumT[i1] += t; AccumT[i2] += t;
+                AccumB[i0] += b; AccumB[i1] += b; AccumB[i2] += b;
+                continue;
+            }
+
+            float r = 1.0f / det;
+            FVector Tface = (e1 * d2.Y - e2 * d1.Y) * r; // U 축
+            FVector Bface = (e2 * d1.X - e1 * d2.X) * r; // V 축
+
+            // 면적 가중치(권장): |cross(e1,e2)| 반
+            float w = FVector::Cross(e1, e2).Size();
+            Tface *= w; Bface *= w;
+
+            AccumT[i0] += Tface; AccumT[i1] += Tface; AccumT[i2] += Tface;
+            AccumB[i0] += Bface; AccumB[i1] += Bface; AccumB[i2] += Bface;
+        }
+
+        for (size_t v = 0; v < vertexCount; ++v)
+        {
+            FVector n = OutStaticMesh->Vertices[v].normal.GetSafeNormal();
+            FVector t = AccumT[v];
+
+            t = (t - n * FVector::Dot(n, t)).GetSafeNormal();
+            if (!(t.Size() < 1e-5))
+            {
+                FVector bsum = AccumB[v];
+                float h = (FVector::Dot(FVector::Cross(n, t), bsum) < 0.0f) ? -1.0f : +1.0f;
+                OutStaticMesh->Vertices[v].tangent = FVector4(t.X, t.Y, t.Z, h);
+            }
+            else
+            {
+                FVector a = (abs(n.Z) < 0.999f) ? FVector(0, 0, 1) : FVector(0, 1, 0);
+                FVector tf = FVector::Cross(a, n).GetSafeNormal();
+                OutStaticMesh->Vertices[v].tangent = FVector4(tf.X, tf.Y, tf.Z, +1.0f);
+            }
         }
     }
 

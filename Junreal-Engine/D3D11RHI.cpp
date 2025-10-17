@@ -153,13 +153,15 @@ void D3D11RHI::CreateDepthStencilState()
 void D3D11RHI::CreateSamplerState()
 {
     D3D11_SAMPLER_DESC SampleDesc = {};
-    SampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    SampleDesc.Filter = D3D11_FILTER_ANISOTROPIC;
     SampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     SampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     SampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     SampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     SampleDesc.MinLOD = 0;
     SampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    SampleDesc.MaxAnisotropy = 16;
+
 
 	HRESULT HR = Device->CreateSamplerState(&SampleDesc, &DefaultSamplerState);
 }
