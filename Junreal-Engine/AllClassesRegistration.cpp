@@ -99,8 +99,13 @@ IMPLEMENT_CLASS(UFireBallComponent)
 IMPLEMENT_CLASS(UExponentialHeightFogComponent)
 IMPLEMENT_CLASS(UFXAAComponent)
 IMPLEMENT_CLASS(ULightComponentBase)
-IMPLEMENT_CLASS(ULigthComponent)
+IMPLEMENT_CLASS(ULightComponent)
 IMPLEMENT_CLASS(ULocalLightComponent)
+IMPLEMENT_CLASS(UPointLightComponent)
+IMPLEMENT_CLASS(UDirectionalLightComponent)
+IMPLEMENT_CLASS(UAmbientLightComponent)
+
+
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)

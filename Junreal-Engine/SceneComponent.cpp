@@ -259,19 +259,22 @@ void USceneComponent::UpdateRelativeTransform()
 
 // Duplicate function
 
-void USceneComponent::CopyCommonProperties(USceneComponent* Target)
+void USceneComponent::CopyCommonProperties(UObject* InTarget)
 {
-    if (!Target) return;
+    if (!InTarget) return;
+    USceneComponent* Target = Cast<USceneComponent>(InTarget);
+    if (Target)
+    {
+        // Transform 속성 복사 (모든 SceneComponent 공통)
+        Target->RelativeLocation = RelativeLocation;
+        Target->RelativeRotation = RelativeRotation;
+        Target->RelativeScale = RelativeScale;
+        Target->UpdateRelativeTransform();
 
-    // Transform 속성 복사 (모든 SceneComponent 공통)
-    Target->RelativeLocation = this->RelativeLocation;
-    Target->RelativeRotation = this->RelativeRotation;
-    Target->RelativeScale = this->RelativeScale;
-    Target->UpdateRelativeTransform();
-
-    // 원본(this)의 자식 정보를 임시로 복사 (생성자가 초기화했으므로)
-    // DuplicateSubObjects에서 이를 사용하여 자식들을 재귀 복제
-    Target->AttachChildren = this->AttachChildren;
+        // 원본(this)의 자식 정보를 임시로 복사 (생성자가 초기화했으므로)
+        // DuplicateSubObjects에서 이를 사용하여 자식들을 재귀 복제
+        Target->AttachChildren = AttachChildren;
+    }
 }
 
 UObject* USceneComponent::Duplicate()

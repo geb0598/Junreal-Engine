@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include "Component/LightComponent.h"
-class ULocalLightComponent : public ULigthComponent
+class ULocalLightComponent : public ULightComponent
 {
 public:
-	DECLARE_CLASS(ULocalLightComponent, ULigthComponent)
+	DECLARE_CLASS(ULocalLightComponent, ULightComponent)
 	ULocalLightComponent();
 	~ULocalLightComponent();
 
@@ -13,6 +13,7 @@ public:
 
 	UObject* Duplicate() override;
 	void DuplicateSubObjects() override;
+	void CopyCommonProperties(UObject* InTarget) override;
 private:
 	float AttenuationRadius;
 };

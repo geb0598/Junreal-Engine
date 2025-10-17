@@ -27,8 +27,6 @@ UObject* ULocalLightComponent::Duplicate()
     {
         CopyCommonProperties(DuplicatedComponent);
 
-        DuplicatedComponent->AttenuationRadius = AttenuationRadius;
-
         // 자식 컴포넌트 복제
         DuplicatedComponent->DuplicateSubObjects();
     }
@@ -38,4 +36,17 @@ UObject* ULocalLightComponent::Duplicate()
 void ULocalLightComponent::DuplicateSubObjects()
 {
     Super_t::DuplicateSubObjects();
+}
+
+void ULocalLightComponent::CopyCommonProperties(UObject* InTarget)
+{
+    // 부모 속성 복제
+    Super_t::CopyCommonProperties(InTarget);
+
+    // 자신의 속성 복제
+    ULocalLightComponent* Target = Cast<ULocalLightComponent>(InTarget);
+    if (Target)
+    {
+        Target->AttenuationRadius = AttenuationRadius;
+    }
 }

@@ -29,6 +29,7 @@ public:
 
 	UObject* Duplicate() override;
 	void DuplicateSubObjects() override;
+	void CopyCommonProperties(UObject* InTarget) override;
 
 private:
 	float Intensity;

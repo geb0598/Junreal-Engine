@@ -1,7 +1,8 @@
-﻿#include "Component/LightComponentBase.h"
+﻿#include "pch.h"
+#include "Component/LightComponentBase.h"
 
 ULightComponentBase::ULightComponentBase()
-	: Intensity(10.0f), LightColor({1.0f, 1.0f, 0.0f, 1.0f}), bVisible(true)
+	: Intensity(10.0f), LightColor({255, 0, 0, 255}), bVisible(true)
 {
 
 }
@@ -46,12 +47,8 @@ UObject* ULightComponentBase::Duplicate()
     ULightComponentBase* DuplicatedComponent = Cast<ULightComponentBase>(NewObject(GetClass()));
     if (DuplicatedComponent)
     {
+        // 공통 속성 복제
         CopyCommonProperties(DuplicatedComponent);
-
-        DuplicatedComponent->Intensity = Intensity;
-        DuplicatedComponent->LightColor = LightColor;
-        DuplicatedComponent->bVisible = bVisible;
-
         // 자식 컴포넌트 복제
         DuplicatedComponent->DuplicateSubObjects();
     }
@@ -61,4 +58,17 @@ UObject* ULightComponentBase::Duplicate()
 void ULightComponentBase::DuplicateSubObjects()
 {
     Super_t::DuplicateSubObjects();
+}
+
+void ULightComponentBase::CopyCommonProperties(UObject* InTarget)
+{
+    Super_t::CopyCommonProperties(InTarget);
+
+    ULightComponentBase* Target = Cast<ULightComponentBase>(InTarget);
+    if (Target)
+    {
+        Target->Intensity = Intensity;
+        Target->LightColor = LightColor;
+        Target->bVisible = bVisible;
+    }
 }
