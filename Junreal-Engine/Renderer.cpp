@@ -22,6 +22,7 @@
 #include "ExponentialHeightFogComponent.h"
 #include "FXAAComponent.h"
 #include "CameraComponent.h"
+#include "Resource/DebugDrawManager.h"
 
 URenderer::URenderer(URHIDevice* InDevice) : RHIDevice(InDevice)
 {
@@ -573,6 +574,13 @@ void URenderer::RenderActorsInViewport(UWorld* World, const FMatrix& ViewMatrix,
 
     RenderDecals(World, ViewMatrix, ProjectionMatrix, Viewport);
 
+    // 이번 프레임에 수집된 디버그용 라인들을 라인 배치에 추가 (해당 줄 시작전에 FDebugDrawManager를 이용해서 라인들이 추가되어 있어야 함)
+    FDebugDrawManager& DebugDrawer = FDebugDrawManager::GetInstance();
+    for (const FDebugLine& Line : DebugDrawer.GetLines())
+    {
+        AddLine(Line.Start, Line.End, Line.Color);
+    }
+    DebugDrawer.ClearLines();
 
     //const TArray<AActor*>& LevelActors = World->GetLevel() ? World->GetLevel()->GetActors() : TArray<AActor*>();
     //USelectionManager& SelectionManager = USelectionManager::GetInstance();
