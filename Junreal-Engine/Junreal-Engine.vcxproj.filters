@@ -121,6 +121,9 @@
     <Filter Include="Components\Light">
       <UniqueIdentifier>{4312deaf-c4fc-4add-b141-6a83fb4f1c25}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{73fa4677-ad77-4346-8aa7-1ff8938c8bd9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <!-- ==================== 소스 파일 (.cpp) ==================== -->
   <ItemGroup>
@@ -483,6 +486,7 @@
     </ClCompile>
     <ClCompile Include="FXAAActor.cpp" />
     <ClCompile Include="FXAAComponent.cpp" />
+    <ClCompile Include="Resource\DebugDrawManager.cpp" />
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
   <ItemGroup>
@@ -887,6 +891,7 @@
     </ClInclude>
     <ClInclude Include="FXAAActor.h" />
     <ClInclude Include="FXAAComponent.h" />
+    <ClInclude Include="Resource\DebugDrawManager.h" />
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
   <ItemGroup>
