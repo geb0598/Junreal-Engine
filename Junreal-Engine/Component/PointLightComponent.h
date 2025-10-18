@@ -1,4 +1,5 @@
-﻿#include "Component/LocalLightComponent.h"
+﻿#pragma once
+#include "Component/LocalLightComponent.h"
 class UPointLightComponent : public ULocalLightComponent
 {
 public:

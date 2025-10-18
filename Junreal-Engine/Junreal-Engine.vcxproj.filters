@@ -463,7 +463,7 @@
     <ClCompile Include="SpotLightActor.cpp">
       <Filter>Actors</Filter>
     </ClCompile>
-    <ClCompile Include="SpotLightComponent.cpp">
+    <ClCompile Include="Component\SpotLightComponent.cpp">
       <Filter>Components\Decal</Filter>
     </ClCompile>
     <ClCompile Include="TimeProfile.cpp" />
@@ -487,6 +487,12 @@
     <ClCompile Include="FXAAActor.cpp" />
     <ClCompile Include="FXAAComponent.cpp" />
     <ClCompile Include="Resource\DebugDrawManager.cpp" />
+    <ClCompile Include="Component\AmbientLightComponent.cpp" />
+    <ClCompile Include="Component\DirectionalLightComponent.cpp" />
+    <ClCompile Include="Component\LightComponentBase.cpp" />
+    <ClCompile Include="Component\LightComponent.cpp" />
+    <ClCompile Include="Component\LocalLightComponent.cpp" />
+    <ClCompile Include="Component\PointLightComponent.cpp" />
   </ItemGroup>
   <!-- ==================== 헤더 파일 (.h) ==================== -->
   <ItemGroup>
@@ -867,7 +873,7 @@
       <Filter>Actors</Filter>
     </ClInclude>
     <ClInclude Include="CBufferTypes.h" />
-    <ClInclude Include="SpotLightComponent.h">
+    <ClInclude Include="Component\SpotLightComponent.h">
       <Filter>Components\Decal</Filter>
     </ClInclude>
     <ClInclude Include="TimeProfile.h" />
@@ -892,6 +898,12 @@
     <ClInclude Include="FXAAActor.h" />
     <ClInclude Include="FXAAComponent.h" />
     <ClInclude Include="Resource\DebugDrawManager.h" />
+    <ClInclude Include="Component\AmbientLightComponent.h" />
+    <ClInclude Include="Component\DirectionalLightComponent.h" />
+    <ClInclude Include="Component\LightComponentBase.h" />
+    <ClInclude Include="Component\LightComponent.h" />
+    <ClInclude Include="Component\LocalLightComponent.h" />
+    <ClInclude Include="Component\PointLightComponent.h" />
   </ItemGroup>
   <!-- ==================== 셰이더 파일 (.hlsl) ==================== -->
   <ItemGroup>
