@@ -11,7 +11,7 @@
 #include "SMultiViewportWindow.h"
 #include "SelectionManager.h"
 #include "DecalComponent.h"
-#include "SpotLightComponent.h"
+#include "Component/SpotLightComponent.h"
 #include "GridActor.h"
 #include "FViewport.h"
 #include "CameraActor.h"

@@ -164,6 +164,7 @@
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="AllClassesRegistration.cpp" />
     <ClCompile Include="AABoundingBoxComponent.cpp" />
+    <ClCompile Include="Component\AmbientLightComponent.cpp" />
     <ClCompile Include="BillboardComponent.cpp" />
     <ClCompile Include="BoundingVolume.cpp" />
     <ClCompile Include="BoundingVolumeHierarchy.cpp" />
@@ -174,10 +175,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Component\DirectionalLightComponent.cpp" />
     <ClCompile Include="EditorClipboard.cpp" />
     <ClCompile Include="EditorEngine.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="ExponentialHeightFog.cpp" />
+    <ClCompile Include="Component\LightComponentBase.cpp" />
+    <ClCompile Include="Component\LightComponent.cpp" />
+    <ClCompile Include="Component\LocalLightComponent.cpp" />
+    <ClCompile Include="Component\PointLightComponent.cpp" />
     <ClCompile Include="Resource\DebugDrawManager.cpp" />
     <ClCompile Include="FireballComponent.cpp" />
     <ClCompile Include="FXAAActor.cpp" />
@@ -280,7 +286,7 @@
     <ClCompile Include="SMultiViewportWindow.cpp" />
     <ClCompile Include="SpatialDataStructure.cpp" />
     <ClCompile Include="SpotLightActor.cpp" />
-    <ClCompile Include="SpotLightComponent.cpp" />
+    <ClCompile Include="Component\SpotLightComponent.cpp" />
     <ClCompile Include="SSplitter.cpp" />
     <ClCompile Include="SSplitterH.cpp" />
     <ClCompile Include="SSplitterV.cpp" />
@@ -424,6 +430,7 @@
   <ItemGroup>
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AABoundingBoxComponent.h" />
+    <ClInclude Include="Component\AmbientLightComponent.h" />
     <ClInclude Include="Archive.h" />
     <ClInclude Include="BillboardComponent.h" />
     <ClInclude Include="BoundingVolume.h" />
@@ -436,10 +443,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Component\DirectionalLightComponent.h" />
     <ClInclude Include="EditorClipboard.h" />
     <ClInclude Include="EditorEngine.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="ExponentialHeightFog.h" />
+    <ClInclude Include="Component\LightComponentBase.h" />
+    <ClInclude Include="Component\LightComponent.h" />
+    <ClInclude Include="Component\LocalLightComponent.h" />
+    <ClInclude Include="Component\PointLightComponent.h" />
     <ClInclude Include="Resource\DebugDrawManager.h" />
     <ClInclude Include="FireballComponent.h" />
     <ClInclude Include="Frustum.h" />
@@ -511,7 +523,7 @@
     <ClInclude Include="SpatialDataStructure.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="SpotLightActor.h" />
-    <ClInclude Include="SpotLightComponent.h" />
+    <ClInclude Include="Component\SpotLightComponent.h" />
     <ClInclude Include="SSplitter.h" />
     <ClInclude Include="SSplitterH.h" />
     <ClInclude Include="SSplitterV.h" />
