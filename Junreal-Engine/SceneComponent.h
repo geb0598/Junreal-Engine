@@ -85,7 +85,11 @@ protected:
     void UpdateRelativeTransform();
 
     // Duplicate 헬퍼: 공통 속성 복사 (Transform, AttachChildren)
-    void CopyCommonProperties(USceneComponent* Target);
+    /**
+     * @brief 부모 속성을 선 복사 후 자신의 속성을 복사합니다.
+     * @param InTarget 복사할 오브젝트
+    */
+    virtual void CopyCommonProperties(UObject* InTarget);
 
 protected:
     // [PIE] 값 복사

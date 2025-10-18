@@ -57,6 +57,13 @@
 #include "ExponentialHeightFogComponent.h"
 #include "FXAAComponent.h"
 #include "FXAAActor.h"
+#include "Component/LightComponentBase.h"
+#include "Component/LightComponent.h"
+#include "Component/LocalLightComponent.h"
+#include "Component/PointLightComponent.h"
+#include "Component/SpotLightComponent.h"
+#include "Component/AmbientLightComponent.h"
+#include "Component/DirectionalLightComponent.h"
 // ... (rest of the file)
 IMPLEMENT_CLASS(UWorld)
 
@@ -77,7 +84,7 @@ IMPLEMENT_CLASS(AStaticMeshActor)
 IMPLEMENT_CLASS(AGizmoActor)
 IMPLEMENT_CLASS(AGridActor)
 IMPLEMENT_CLASS(ADecalActor)
-IMPLEMENT_CLASS(ASpotLightActor)
+//IMPLEMENT_CLASS(ASpotLightActor)
 IMPLEMENT_CLASS(AExponentialHeightFog)
 IMPLEMENT_CLASS(AFXAAActor)
 
@@ -92,6 +99,15 @@ IMPLEMENT_CLASS(UDecalComponent)
 IMPLEMENT_CLASS(UFireBallComponent)
 IMPLEMENT_CLASS(UExponentialHeightFogComponent)
 IMPLEMENT_CLASS(UFXAAComponent)
+IMPLEMENT_CLASS(ULightComponentBase)
+IMPLEMENT_CLASS(ULightComponent)
+IMPLEMENT_CLASS(ULocalLightComponent)
+IMPLEMENT_CLASS(UPointLightComponent)
+IMPLEMENT_CLASS(USpotLightComponent)
+IMPLEMENT_CLASS(UDirectionalLightComponent)
+IMPLEMENT_CLASS(UAmbientLightComponent)
+
+
 
 // Managers / Systems
 IMPLEMENT_CLASS(UInputManager)

@@ -243,6 +243,12 @@ struct FVector
         );
     }
 
+    /**
+    * @brief *this을 법선으로 하는 최적의 U, V 벡터를 찾아 반환합니다.
+    * @param OutAxisU *this에 수직한 Right Vector
+    * @param OutAxisV *this에 수직한 Forward Vector
+    */
+    void FindBestAxisVectors(FVector& OutAxisU, FVector& OutAxisV) const;
 
     // 보조 유틸
     static FVector Lerp(const FVector& A, const FVector& B, float T)
@@ -1229,4 +1235,45 @@ inline FTransform FTransform::Inverse() const
     Out.Scale3D = InvScale;
     Out.Translation = InvTrans;
     return Out;
+}
+
+inline void FVector::FindBestAxisVectors(FVector& OutAxisU, FVector& OutAxisV) const
+{
+    // 현재 벡터(*this)를 법선(Normal)으로 사용.
+    const FVector& Normal = *this;
+
+    // 안정적인 계산을 위해 법선을 정규화
+    const FVector Norm = Normal.GetSafeNormal();
+
+    // 입력 벡터가 거의 0인 극단적인 경우, 기본 축들을 반환
+    if (Norm.SizeSquared() < KINDA_SMALL_NUMBER * KINDA_SMALL_NUMBER)
+    {
+        OutAxisU = FVector(1.0f, 0.0f, 0.0f);
+        OutAxisV = FVector(0.0f, 1.0f, 0.0f);
+        return;
+    }
+
+    // 가장 안정적인 보조 축 선택(법선의 성분 중 가장 절댓값 작은 것) -> 법선과 보조 축 외적 결과가 평행이 되어 0이되는 것 방지 
+    FVector HelperAxis;
+    if (std::fabs(Norm.X) <= std::fabs(Norm.Y) && std::fabs(Norm.X) <= std::fabs(Norm.Z))
+    {
+        HelperAxis = FVector(1.0f, 0.0f, 0.0f);
+    }
+    else if (std::fabs(Norm.Y) <= std::fabs(Norm.Z))
+    {
+        HelperAxis = FVector(0.0f, 1.0f, 0.0f);
+    }
+    else
+    {
+        HelperAxis = FVector(0.0f, 0.0f, 1.0f);
+    }
+
+    // 두 벡터에 모두 수직인 첫 번째 축
+    OutAxisU = FVector::Cross(Norm, HelperAxis);
+    OutAxisU.Normalize(); // unit vector화
+
+    // 법선(Norm)과 첫 번째 축 외적 -> 마지막 축 구하기
+    // 직교 좌표계 완성
+    OutAxisV = FVector::Cross(Norm, OutAxisU);
+    OutAxisV.Normalize(); // 명시적 정규화
 }

@@ -64,7 +64,7 @@ void UPrimitiveSpawnWidget::Initialize()
         RegisterSpawnInfo<AActor>(ESpawnActorType::Actor, "Actor");
         RegisterSpawnInfo<AStaticMeshActor>(ESpawnActorType::StaticMesh, "Static Mesh");
         RegisterSpawnInfo<ADecalActor>(ESpawnActorType::Decal, "Decal");
-        RegisterSpawnInfo<ASpotLightActor>(ESpawnActorType::SpotLight, "Spot Light");
+        //RegisterSpawnInfo<ASpotLightActor>(ESpawnActorType::SpotLight, "Spot Light");
         RegisterSpawnInfo<AExponentialHeightFog>(ESpawnActorType::HeightFog, "HeightFog");
         RegisterSpawnInfo<AFXAAActor>(ESpawnActorType::FXAA, "FXAA");
     }
