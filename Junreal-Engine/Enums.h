@@ -21,8 +21,8 @@ struct FObjMaterialInfo
     FVector SpecularColor = FVector::One(); // Ks
     FVector EmissiveColor = FVector::One(); // Ke
 
-    FName DiffuseTextureFileName;
-    FName NormalTextureName;
+    FName DiffuseTextureFileName = FName::None();
+    FName NormalTextureName = FName::None();
     FString AmbientTextureFileName;
     FString SpecularTextureFileName;
     FString EmissiveTextureFileName;
@@ -295,6 +295,7 @@ enum class EViewModeIndex : uint32
     VMI_Unlit,
     VMI_Wireframe,
     VMI_SceneDepth,
+    VMI_WorldNormal,
 
     End,
 };

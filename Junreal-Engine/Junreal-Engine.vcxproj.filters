@@ -928,6 +928,9 @@
     <FxCompile Include="Gamma.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="NormalViz.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <!-- ==================== 리소스 파일 ==================== -->
   <ItemGroup>

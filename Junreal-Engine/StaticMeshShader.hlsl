@@ -297,8 +297,9 @@ PS_OUTPUT mainPS(PS_INPUT input)
     }
 
     // 조명 계산 (shininess는 Material.SpecularExponent를 쓰는 게 일반적)
-    //float3 N = (-1)*normalize(input.worldNormal);
-    float3 N = g_NormalMapTex.Sample(g_Sample, input.texCoord).xyz;
+    //float3 N = normalize(input.worldNormal);
+    float2 uv = input.texCoord + UVScrollSpeed * UVScrollTime;
+    float3 N = g_NormalMapTex.Sample(g_Sample, uv).xyz;
     
     N = 2.0f * N - 1.0f;
     N = normalize(N);

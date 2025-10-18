@@ -84,7 +84,7 @@ public:
 
                 if (bIsRHCoordSys)
                 {
-                    OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
+                    //OutObjInfo->Positions.push_back(FVector(vx, -vy, vz));
                     OutObjInfo->Positions.push_back(FVector(vz, -vy, vx));
                 }
                 else
@@ -661,7 +661,7 @@ public:
             {
                 FVector a = (abs(n.Z) < 0.999f) ? FVector(0, 0, 1) : FVector(0, 1, 0);
                 FVector tf = FVector::Cross(a, n).GetSafeNormal();
-                OutStaticMesh->Vertices[v].tangent = FVector4(tf.X, tf.Y, tf.Z, +1.0f);
+                OutStaticMesh->Vertices[v].tangent = FVector4(tf.X, tf.Y, tf.Z, -1.0f);
             }
         }
     }
