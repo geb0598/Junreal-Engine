@@ -28,6 +28,8 @@ public:
 	void SetVisible(bool bInVisible);
 
 	UObject* Duplicate() override;
+
+protected:
 	void DuplicateSubObjects() override;
 	void CopyCommonProperties(UObject* InTarget) override;
 

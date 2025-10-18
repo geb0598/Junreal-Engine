@@ -11,9 +11,11 @@ public:
 	void SetLightFalloffExponent(float InLightFalloffExponent);
 
 	UObject* Duplicate() override;
+
+protected:
 	void DuplicateSubObjects() override;
 	void CopyCommonProperties(UObject* InTarget) override;
-private:
 
+private:
 	float LightFalloffExponent;
 };
