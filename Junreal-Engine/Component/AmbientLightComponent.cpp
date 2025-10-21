@@ -1,11 +1,6 @@
 ﻿#include "pch.h"
 #include "Component/AmbientLightComponent.h"
 
-UAmbientLightComponent::UAmbientLightComponent()
-{
-    SetIntensity(0.2f);
-}
-
 UObject* UAmbientLightComponent::Duplicate()
 {
     UAmbientLightComponent* DuplicatedComponent = Cast<UAmbientLightComponent>(NewObject(GetClass()));

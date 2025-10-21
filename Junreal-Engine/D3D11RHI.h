@@ -94,8 +94,6 @@ public:
 
     void ResizeSwapChain(UINT width, UINT height);
 
-    void UpdateAndBindLightBuffers(const TArray<FPointLightInfo>& InPointLights, const TArray<FSpotLightInfo>& InSpotLights) override;
-
 public:
     // getter
     inline ID3D11Device* GetDevice()
@@ -189,7 +187,6 @@ private:
     void CreateDepthStencilState() override;
 	void CreateSamplerState();
     void CreateIdBuffer();
-    void CreateLightBuffers();
 
     // release
 	void ReleaseSamplerState();
@@ -198,7 +195,6 @@ private:
     void ReleaseDeviceAndSwapChain();
     void ReleaseTexture(ID3D11Texture2D** Texture, ID3D11RenderTargetView** RTV, ID3D11ShaderResourceView** SRV);
     void ReleaseDepthStencilView(ID3D11DepthStencilView** DSV,  ID3D11ShaderResourceView** SRV);
-    void ReleaseLightBuffers();
  
 	void OmSetDepthStencilState(EComparisonFunc Func) override;
     
@@ -243,10 +239,7 @@ private:
     ID3D11ShaderResourceView* FrameSRV{};
     ID3D11ShaderResourceView* TemporalSRV{};
 
-    ID3D11Buffer* PointLightBuffer = nullptr;
-    ID3D11ShaderResourceView* PointLightSRV = nullptr;
-    ID3D11Buffer* SpotLightBuffer = nullptr;
-    ID3D11ShaderResourceView* SpotLightSRV = nullptr;
+
 
     CBUFFER_TYPE_LIST(DECLARE_CBUFFER)
 

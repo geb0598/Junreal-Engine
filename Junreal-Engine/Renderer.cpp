@@ -397,6 +397,7 @@ void URenderer::DrawIndexedPrimitiveComponentWithLight(UStaticMesh* InMesh, D3D1
 			const UMaterial* const Material = UResourceManager::GetInstance().Get<UMaterial>(InComponentMaterialSlots[i].MaterialName);
 			const FObjMaterialInfo& MaterialInfo = Material->GetMaterialInfo();
 			bool bHasTexture = !(MaterialInfo.DiffuseTextureFileName == FName::None());
+			bool bHasNormalMap = !(MaterialInfo.NormalTextureName == FName::None());
 
 			// 재료 변경 추적
 			if (LastMaterial != Material)
@@ -421,6 +422,23 @@ void URenderer::DrawIndexedPrimitiveComponentWithLight(UStaticMesh* InMesh, D3D1
 				RHIDevice->GetDeviceContext()->PSSetShaderResources(0, 1, &(TextureData->TextureSRV));
 			}
 
+			FTextureData* NormalMapData = nullptr;
+			if (bHasNormalMap)
+			{
+				NormalMapData = UResourceManager::GetInstance().CreateOrGetTextureData(MaterialInfo.NormalTextureName);
+				// 텍스처 변경 추적 (임시로 FTextureData*를 UTexture*로 캠스트)
+				UTexture* CurrentTexture = reinterpret_cast<UTexture*>(NormalMapData);
+				if (LastTexture != CurrentTexture)
+				{
+					StatsCollector.IncrementTextureChanges();
+					LastTexture = CurrentTexture;
+				}
+
+				RHIDevice->GetDeviceContext()->PSSetShaderResources(1, 1, &(NormalMapData->TextureSRV));
+			}
+
+			RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(MaterialInfo), true, bHasTexture, bHasNormalMap));
+
 			//RHIDevice->UpdateSetCBuffer(FPixelConstBufferType(FMaterialInPs(MaterialInfo), true, bHasTexture)); // PSSet도 해줌
 
 			// UberShader가 사용할 PerMaterial 상수 버퍼(b2)의 내용을 채웁니다.
@@ -431,7 +449,7 @@ void URenderer::DrawIndexedPrimitiveComponentWithLight(UStaticMesh* InMesh, D3D1
 			PerMaterialData.MaterialEmissive = FVector4(MaterialInfo.EmissiveColor, 1.0f);
 			PerMaterialData.SpecularShininess = MaterialInfo.SpecularExponent;
 			// GPU 전송
-			UpdateSetCBuffer(PerMaterialData);
+			RHIDevice->UpdateSetCBuffer(PerMaterialData);
 
 
 			// DrawCall 수실행 및 통계 추가
@@ -446,7 +464,7 @@ void URenderer::DrawIndexedPrimitiveComponentWithLight(UStaticMesh* InMesh, D3D1
 		//RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
 
 		FPerMaterialBufferType DefaultMaterialData{};
-		UpdateSetCBuffer(DefaultMaterialData);
+		RHIDevice->UpdateSetCBuffer(DefaultMaterialData);
 		RHIDevice->GetDeviceContext()->DrawIndexed(IndexCount, 0, 0);
 		StatsCollector.IncrementDrawCalls();
 	}
@@ -633,7 +651,7 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
 	case EViewModeIndex::VMI_Unlit:
 	case EViewModeIndex::VMI_Wireframe:
 	{
-		//RenderFireBallPass(World);
+		RenderFireBallPass(World);
 		RenderBasePass(World, Camera, Viewport);  // Full color + depth pass (Opaque geometry - per viewport)
 		RenderFogPass(World, Camera, Viewport);
 		RenderFXAAPaxx(World, Camera, Viewport);
@@ -642,16 +660,18 @@ void URenderer::RenderScene(UWorld* World, ACameraActor* Camera, FViewport* View
 	}
 	case EViewModeIndex::VMI_SceneDepth:
 	{
-		RenderBasePass(World, Camera, Viewport);  // calls RenderScene, which executes the depth-only pass 
-		// (RenderSceneDepthPass) according to the current view mode
-		RenderSceneDepthVisualizePass(Camera);    // Depth → Grayscale visualize
+		RenderBasePass(World, Camera, Viewport);
+		RenderSceneDepthVisualizePass(Camera);
+		RenderEditorPass(World, Camera, Viewport);
 		break;
 	}
-	case EViewModeIndex::VMI_WorldNormal:
-	{
-		RenderWorldNormalPass(World, Camera, Viewport);
-		break;
-	}
+    case EViewModeIndex::VMI_WorldNormal:
+    {
+        RenderBasePass(World, Camera, Viewport);
+        RenderWorldNormalPass(World, Camera, Viewport);
+        RenderEditorPass(World, Camera, Viewport);
+        break;
+    }
 	default:
 		break;
 	}
@@ -672,11 +692,21 @@ void URenderer::RenderEditorPass(UWorld* World, ACameraActor* Camera, FViewport*
 	FMatrix ViewMatrix = Camera->GetViewMatrix();
 	FMatrix ProjectionMatrix = Camera->GetProjectionMatrix(ViewportAspectRatio, Viewport);
 
-	if (!World->IsPIEWorld())
-	{
-		RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
-		RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
-		RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID | ERenderTargetType::NoDepth);
+    if (!World->IsPIEWorld())
+    {
+        RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
+        RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
+        RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID | ERenderTargetType::NoDepth);
+        {
+            D3D11_VIEWPORT vp{};
+            vp.TopLeftX = static_cast<FLOAT>(Viewport->GetStartX());
+            vp.TopLeftY = static_cast<FLOAT>(Viewport->GetStartY());
+            vp.Width    = static_cast<FLOAT>(Viewport->GetSizeX());
+            vp.Height   = static_cast<FLOAT>(Viewport->GetSizeY());
+            vp.MinDepth = 0.0f;
+            vp.MaxDepth = 1.0f;
+            RHIDevice->GetDeviceContext()->RSSetViewports(1, &vp);
+        }
 		for (auto& Billboard : World->GetLevel()->GetComponentList<UBillboardComponent>())
 		{
 			Billboard->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
@@ -835,10 +865,19 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
 	AActor* SelectedActor = SelectionManager.GetSelectedActor();
 
 	UShader* ShaderToUse = UberShaders[CurrentViewMode];
+	/*if (!ShaderToUse)
+	{
+		ShaderToUse = UberShaders[EViewModeIndex::VMI_Unlit];
+		if (!ShaderToUse)
+		{
+			return;
+		}
+	}*/
 	if (ShaderToUse)
 	{
 		PrepareShader(ShaderToUse);
 	}
+    
 	// Lighting 상수 버퍼(b1) 설정
 	UpdateSetCBuffer(FLightingBufferType(LightingCBufferData));
 
@@ -851,7 +890,7 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
 		{
 			AddLines(PrimitiveComponent->GetBoundingBoxLines(), PrimitiveComponent->GetBoundingBoxColor());
 		}
-		if (PrimitiveComponent->GetOwner() == SelectedActor)
+		/*if (PrimitiveComponent->GetOwner() == SelectedActor)
 		{
 			bIsSelected = true;
 		}
@@ -872,9 +911,9 @@ void URenderer::RenderPrimitives(UWorld* World, const FMatrix& ViewMatrix, const
 			else {
 				UpdateSetCBuffer(HighLightBufferType(bIsSelected, rgb, 0, 0, 0, 0));
 			}
-		}
+		}*/
 
-		if (CurrentViewMode == EViewModeIndex::VMI_Unlit)
+		if (CurrentViewMode == EViewModeIndex::VMI_Unlit || CurrentViewMode == EViewModeIndex::VMI_Wireframe || CurrentViewMode == EViewModeIndex::VMI_SceneDepth || CurrentViewMode == EViewModeIndex::VMI_WorldNormal)
 		{
 			PrimitiveComponent->Render(this, ViewMatrix, ProjectionMatrix, Viewport->GetShowFlags());
 		}
@@ -995,53 +1034,53 @@ void URenderer::UpdateLightingBuffer(UWorld* InWorld, ACameraActor* InCameraActo
 			const FColor& Color = DirectionalLightComponent->GetLightColor();
 			const float Intensity = DirectionalLightComponent->GetIntensity();
 
+			// [수정] FColor 정규화
 			LightingCBufferData.Directional.Color = FVector4(Color.R / 255.0f, Color.G / 255.0f, Color.B / 255.0f, 1.0f);
 			LightingCBufferData.Directional.Intensity = Intensity;
 			LightingCBufferData.Directional.Direction = DirectionalLightComponent->GetForwardVector();
 
 		}
 	}
-	TArray<FPointLightInfo> PointLightData;
+	int pointLightIndex = 0;
 	for (UPointLightComponent* PointLightComponent : CurrentLevel->GetComponentList<UPointLightComponent>())
 	{
-		if (PointLightData.size() >= MAX_POINT_LIGHTS) break;
+		if (pointLightIndex >= 4) break;
 		if (PointLightComponent && PointLightComponent->GetVisible())
 		{
-			FPointLightInfo& PointLight = PointLightData.emplace_back();
-			
+			auto& PointLightData = LightingCBufferData.PointLights[pointLightIndex];
 			const FColor& Color = PointLightComponent->GetLightColor();
-			PointLight.Color = FVector4(Color.R / 255.0f, Color.G / 255.0f, Color.B / 255.0f, 1.0f);
-			PointLight.Intensity = PointLightComponent->GetIntensity();
-			PointLight.Position = PointLightComponent->GetWorldLocation();
-			PointLight.AttenuationRadius = PointLightComponent->GetAttenuationRadius();
-			PointLight.LightFalloffExponent = PointLightComponent->GetLightFalloffExponent();
 
+			PointLightData.Color = FVector4(Color.R / 255.0f, Color.G / 255.0f, Color.B / 255.0f, 1.0f);
+			PointLightData.Intensity = PointLightComponent->GetIntensity();
+			PointLightData.Position = PointLightComponent->GetWorldLocation();
+			PointLightData.AttenuationRadius = PointLightComponent->GetAttenuationRadius();
+			PointLightData.LightFalloffExponent = PointLightComponent->GetLightFalloffExponent();
+
+			pointLightIndex++;
 		}
 	}
-	TArray<FSpotLightInfo> SpotLightData;
+	int spotLightIndex = 0;
 	for (USpotLightComponent* SpotLightComponent : CurrentLevel->GetComponentList<USpotLightComponent>())
 	{
-		if (SpotLightData.size() >= MAX_SPOT_LIGHTS) break;
+		if (spotLightIndex >= 4) break;
 		if (SpotLightComponent && SpotLightComponent->GetVisible())
 		{
-			FSpotLightInfo& SpotLight = SpotLightData.emplace_back();
-			
+			auto& SpotLightData = LightingCBufferData.SpotLights[spotLightIndex];
 			const FColor& Color = SpotLightComponent->GetLightColor();
-			SpotLight.Color = FVector4(Color.R / 255.0f, Color.G / 255.0f, Color.B / 255.0f, 1.0f);
-			SpotLight.Intensity = SpotLightComponent->GetIntensity();
-			SpotLight.Position = SpotLightComponent->GetWorldLocation();
-			SpotLight.Direction = SpotLightComponent->GetForwardVector();
-			SpotLight.AttenuationRadius = SpotLightComponent->GetAttenuationRadius();
-			SpotLight.LightFalloffExponent = SpotLightComponent->GetLightFalloffExponent();
 
-			SpotLight.InnerConeAngle = cosf(DegreeToRadian(SpotLightComponent->GetInnerConeAngle()));
-			SpotLight.OuterConeAngle = cosf(DegreeToRadian(SpotLightComponent->GetOuterConeAngle()));
+			SpotLightData.Color = FVector4(Color.R / 255.0f, Color.G / 255.0f, Color.B / 255.0f, 1.0f);
+			SpotLightData.Intensity = SpotLightComponent->GetIntensity();
+			SpotLightData.Position = SpotLightComponent->GetWorldLocation();
+			SpotLightData.Direction = SpotLightComponent->GetForwardVector();
+			SpotLightData.AttenuationRadius = SpotLightComponent->GetAttenuationRadius();
+			SpotLightData.LightFalloffExponent = SpotLightComponent->GetLightFalloffExponent();
+
+			SpotLightData.InnerConeAngle = cosf(DegreeToRadian(SpotLightComponent->GetInnerConeAngle()));
+			SpotLightData.OuterConeAngle = cosf(DegreeToRadian(SpotLightComponent->GetOuterConeAngle()));
+
+			spotLightIndex++;
 		}
 	}
-	// Structured Buffer 업데이트 및 바인딩 요청
-	RHIDevice->UpdateAndBindLightBuffers(PointLightData, SpotLightData);
-	LightingCBufferData.NumPointLights = PointLightData.size();
-	LightingCBufferData.NumSpotLights = SpotLightData.size();
 	LightingCBufferData.CameraPos = InCameraActor->GetActorLocation();
 }
 
@@ -1253,7 +1292,7 @@ void URenderer::RenderWorldNormalPass(UWorld* World, ACameraActor* Camera, FView
     // 2) 렌더 타깃 상태: 프레임 RTV + DSV (깊이 테스트 유지)
     RHIDevice->OMSetRenderTargets(ERenderTargetType::None);
     RHIDevice->PSSetRenderTargetSRV(ERenderTargetType::None);
-    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame); // 이미 BeginFrame에서 Frame|ID 묶었으면 필요시 다시 Frame만
+    RHIDevice->OMSetRenderTargets(ERenderTargetType::Frame | ERenderTargetType::ID);
     OMSetBlendState(false);
     OMSetDepthStencilState(EComparisonFunc::LessEqual); // 깊이 테스트 O, 쓰기 On 권장
     RHIDevice->RSSetDefaultState();
@@ -1274,6 +1313,7 @@ void URenderer::RenderWorldNormalPass(UWorld* World, ACameraActor* Camera, FView
             FMatrix NormalMatrix = WorldMatrix.Inverse().Transpose();
             ModelBufferType ModelBuf;
             ModelBuf.Model = WorldMatrix;
+            ModelBuf.UUID = Prim->InternalIndex;
             ModelBuf.NormalMatrix = NormalMatrix;
             UpdateSetCBuffer(ModelBuf);
         }

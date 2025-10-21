@@ -1,19 +1,19 @@
 ﻿#pragma once
-#include "Component/LightComponentBase.h"
+#include "Component/LightComponent.h"
 
-class UDirectionalLightComponent : public ULightComponentBase
+class UDirectionalLightComponent : public ULightComponent
 {
 public:
-	DECLARE_CLASS(UDirectionalLightComponent, ULightComponentBase)
-
+	DECLARE_CLASS(UDirectionalLightComponent, ULightComponent)
 	UDirectionalLightComponent();
 	~UDirectionalLightComponent();
-
-	void TickComponent(float DeltaTime) override;
 
 	UObject* Duplicate() override;
 
 protected:
 	void DuplicateSubObjects() override;
 	void CopyCommonProperties(UObject* InTarget) override;
+
+private:
+	
 };
