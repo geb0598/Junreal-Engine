@@ -56,6 +56,7 @@ MACRO(FGammaBufferType)                  \
 MACRO(FPerObjectBufferType) \
 MACRO(FLightingBufferType) \
 MACRO(FPerMaterialBufferType) \
+MACRO(FNormalVizCB)      \
 
 CBUFFER_INFO(ModelBufferType, 0, true, false)
 CBUFFER_INFO(ViewProjBufferType, 1, true, true)
@@ -286,7 +287,8 @@ struct alignas(16) FPerObjectBufferType
     FMatrix Projection;
     FMatrix WorldInverseTranspose;
     uint32 UUID = 0;
-    FVector _Pad_UUID;
+    FVector Pad_UUID;
+
 };
 struct alignas(16) FLightingBufferType
 {

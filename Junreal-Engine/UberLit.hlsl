@@ -1,7 +1,5 @@
-#define NUM_POINT_LIGHT 4
-#define NUM_SPOT_LIGHT 4
 #define EPSILON 1e-6
-//#define HAS_NORMAL_MAP 1
+#define HAS_NORMAL_MAP 1
 
 struct FAmbientLightInfo
 {
