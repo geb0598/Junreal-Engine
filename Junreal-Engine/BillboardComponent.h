@@ -24,7 +24,7 @@ public:
 
     // Color settings
     void SetTintColor(const FColor& InColor);
-    
+    const FColor& GetTintColor() const { return TintColor; }
     // UV coordinate settings
     void SetUVCoords(float U, float V, float UL, float VL);
     float GetU() const { return UCoord; }

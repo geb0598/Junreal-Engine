@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <fstream>
 #include <sstream>
@@ -7,6 +7,8 @@
 #include "Vector.h"
 #include "UEContainer.h"
 #include"FireballComponent.h"
+#include "Component/LightComponentBase.h" // Added this include for FColor
+
 using namespace json;
 
 
@@ -64,6 +66,29 @@ struct FRotationMovementProperty
     FVector PivotTranslation = FVector(0, 0, 0);
     bool bRotationInLocalSpace = false;
 };
+
+// LightComponentBase의 공통 속성
+struct FLightComponentProperty
+{
+    float Intensity = 1.0f;
+    FColor LightColor = {220, 220, 220, 255};
+    bool bVisible = true;
+};
+
+// PointLightComponent 고유 속성
+struct FPointLightProperty
+{
+    float AttenuationRadius = 1000.0f;
+    float LightFalloffExponent = 8.0f;
+};
+
+// SpotLightComponent 고유 속성
+struct FSpotLightProperty
+{
+    float InnerConeAngle = 0.0f;
+    float OuterConeAngle = 44.0f;
+};
+
 struct FComponentData
 {
     uint32 UUID = 0;
@@ -84,6 +109,11 @@ struct FComponentData
     // 신규
     FProjectileMovementProperty ProjectileMovementProperty;
     FRotationMovementProperty RotationMovementProperty;
+
+    // Light Component Properties
+    FLightComponentProperty LightProperty;
+    FPointLightProperty PointLightProperty;
+    FSpotLightProperty SpotLightProperty;
 };
 
 

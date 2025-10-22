@@ -22,9 +22,14 @@
 #include"DecalComponent.h"
 #include"DecalActor.h"
 #include "TimeProfile.h"
-#include "Component/SpotLightComponent.h"
 #include "ProjectileMovementComponent.h"
 #include "RotationMovementComponent.h"
+
+#include "Component/AmbientLightComponent.h"
+#include "Component/PointLightComponent.h"
+#include "Component/SpotLightComponent.h"
+#include "Component/DirectionalLightComponent.h"
+
 
 
 extern float CLIENTWIDTH;
@@ -774,7 +779,24 @@ void UWorld::SaveSceneV2(const FString& SceneName)
             else
                 CompData.ParentComponentUUID = 0;
 
-        
+            // Light 정보 저장
+            if (ULightComponentBase* LightCompBase = Cast<ULightComponentBase>(Comp))
+            {
+                CompData.LightProperty.Intensity = LightCompBase->GetIntensity();
+                CompData.LightProperty.LightColor = LightCompBase->GetLightColor();
+                CompData.LightProperty.bVisible = LightCompBase->GetVisible();
+
+                if (UPointLightComponent* PointLightComp = Cast<UPointLightComponent>(LightCompBase))
+                {
+                    CompData.PointLightProperty.AttenuationRadius = PointLightComp->GetAttenuationRadius();
+                    CompData.PointLightProperty.LightFalloffExponent = PointLightComp->GetLightFalloffExponent();
+                    if (USpotLightComponent* SpotLightComp = Cast<USpotLightComponent>(PointLightComp))
+                    {
+                        CompData.SpotLightProperty.InnerConeAngle = SpotLightComp->GetInnerConeAngle();
+                        CompData.SpotLightProperty.OuterConeAngle = SpotLightComp->GetOuterConeAngle();
+                    }
+                }
+            }
 
             // Serialize를 통해 Transform 및 Type별 속성 저장
             if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
@@ -943,7 +965,6 @@ void UWorld::LoadSceneV2(const FString& SceneName)
                 ProjectileComp->UUID = CompData.UUID;
                 OwnerActor->OwnedComponents.Add(ProjectileComp);
             }
-
             else if (URotationMovementComponent* RotComp = Cast<URotationMovementComponent>(TargetComp))
             {
                 const FRotationMovementProperty& RM = CompData.RotationMovementProperty;
@@ -953,8 +974,36 @@ void UWorld::LoadSceneV2(const FString& SceneName)
                 RotComp->UUID = CompData.UUID;
                 OwnerActor->OwnedComponents.Add(RotComp);
             }
-            OwnerActor->OwnedComponents.Add(TargetComp);
+            else if (ULightComponentBase* LightComp = Cast<ULightComponentBase>(TargetComp))
+            {
+                const FLightComponentProperty& LM = CompData.LightProperty;
+                LightComp->SetIntensity(LM.Intensity);
+                LightComp->SetLightColor(LM.LightColor);
+                LightComp->SetVisible(LM.bVisible);
+
+                LightComp->SetRelativeLocation(CompData.RelativeLocation);
+                LightComp->SetRelativeRotation(FQuat::MakeFromEuler(CompData.RelativeRotation));
+                LightComp->SetRelativeScale(CompData.RelativeScale);
+
+                if (UPointLightComponent* PointLightComp = Cast<UPointLightComponent>(LightComp))
+                {
+                    PointLightComp->SetAttenuationRadius(CompData.PointLightProperty.AttenuationRadius);
+                    PointLightComp->SetLightFalloffExponent(CompData.PointLightProperty.LightFalloffExponent);
+
+                    if (USpotLightComponent* SpotLightComp = Cast<USpotLightComponent>(PointLightComp))
+                    {
+                        SpotLightComp->SetInnerConeAngle(CompData.SpotLightProperty.InnerConeAngle);
+                        SpotLightComp->SetOuterConeAngle(CompData.SpotLightProperty.OuterConeAngle);
+                    }
+                }
+                OwnerActor->OwnedComponents.Add(LightComp);
+            }
+            else
+            {
+                OwnerActor->OwnedComponents.Add(TargetComp);
+            }
         }
+
 
         // 4. UUID 설정 및 Serialize
         TargetComp->UUID = CompData.UUID;
@@ -994,7 +1043,7 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         if (USceneComponent** RootCompPtr = ComponentMap.Find(ActorData.RootComponentUUID))
         {
             Actor->RootComponent = *RootCompPtr;
-        }
+        }  
     }
 
     // Component 부모-자식 관계 설정
@@ -1029,6 +1078,20 @@ void UWorld::LoadSceneV2(const FString& SceneName)
         {
             StaticMeshActor->SetStaticMeshComponent( Cast<UStaticMeshComponent>(StaticMeshActor->RootComponent));
         }
+        /*ULightComponentBase* LightComp = nullptr;
+        UBillboardComponent* BillboardComp = nullptr;
+        for (UActorComponent* Comp : Actor->GetComponents())
+        {
+            if (!Comp) continue;
+            if (auto FoundLight = Cast<ULightComponentBase>(Comp))
+            {
+                LightComp = FoundLight;
+            }
+            else if (auto FoundBillboard = Cast<UBillboardComponent>(Comp))
+            {
+                BillboardComp = FoundBillboard;
+            }
+        }*/
     }
 
     // NextUUID 업데이트 (로드된 모든 UUID + 1)

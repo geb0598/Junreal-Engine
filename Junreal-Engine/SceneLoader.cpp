@@ -350,6 +350,84 @@ void FSceneLoader::SaveV2(const FSceneData& SceneData, const FString& SceneName)
             oss << "        \"bRotationInLocalSpace\" : " << (RM.bRotationInLocalSpace ? "true" : "false") << "\n";
             oss << "      }";
         }
+        // AmbientLightComponent
+        if (Comp.Type.find("AmbientLightComponent") != std::string::npos)
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+
+            const FLightComponentProperty& LP = Comp.LightProperty;
+
+            oss << "      \"LightData\" : {\n";
+            oss << "        \"Intensity\" : " << LP.Intensity << ",\n";
+            oss << "        \"LightColor\" : [" << (int)LP.LightColor.R << ", " << (int)LP.LightColor.G << ", " << (int)LP.LightColor.B << ", " << (int)LP.LightColor.A << "],\n";
+            oss << "        \"bVisible\" : " << (LP.bVisible ? "true" : "false") << "\n";
+            oss << "      }";
+        }
+
+        // DirectionalLightComponent
+        if (Comp.Type.find("DirectionalLightComponent") != std::string::npos)
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+
+            const FLightComponentProperty& LP = Comp.LightProperty;
+
+            oss << "      \"LightData\" : {\n";
+            oss << "        \"Intensity\" : " << LP.Intensity << ",\n";
+            oss << "        \"LightColor\" : [" << (int)LP.LightColor.R << ", " << (int)LP.LightColor.G << ", " << (int)LP.LightColor.B << ", " << (int)LP.LightColor.A << "],\n";
+            oss << "        \"bVisible\" : " << (LP.bVisible ? "true" : "false") << "\n";
+            oss << "      }";
+        }
+
+        // PointLightComponent
+        if (Comp.Type.find("PointLightComponent") != std::string::npos)
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+
+            const FLightComponentProperty& LP = Comp.LightProperty;
+            oss << "      \"LightData\" : {\n";
+            oss << "        \"Intensity\" : " << LP.Intensity << ",\n";
+            oss << "        \"LightColor\" : [" << (int)LP.LightColor.R << ", " << (int)LP.LightColor.G << ", " << (int)LP.LightColor.B << ", " << (int)LP.LightColor.A << "],\n";
+            oss << "        \"bVisible\" : " << (LP.bVisible ? "true" : "false") << "\n";
+            oss << "      }";
+
+            const FPointLightProperty& PLP = Comp.PointLightProperty;
+            oss << ",\n";
+            oss << "      \"PointLightData\" : {\n";
+            oss << "        \"AttenuationRadius\" : " << PLP.AttenuationRadius << ",\n";
+            oss << "        \"LightFalloffExponent\" : " << PLP.LightFalloffExponent << "\n";
+            oss << "      }";
+        }
+
+        // SpotLightComponent
+        if (Comp.Type.find("SpotLightComponent") != std::string::npos)
+        {
+            if (!bHasTypeSpecificData) { oss << ",\n"; bHasTypeSpecificData = true; }
+            else { oss << ",\n"; }
+
+            const FLightComponentProperty& LP = Comp.LightProperty;
+            oss << "      \"LightData\" : {\n";
+            oss << "        \"Intensity\" : " << LP.Intensity << ",\n";
+            oss << "        \"LightColor\" : [" << (int)LP.LightColor.R << ", " << (int)LP.LightColor.G << ", " << (int)LP.LightColor.B << ", " << (int)LP.LightColor.A << "],\n";
+            oss << "        \"bVisible\" : " << (LP.bVisible ? "true" : "false") << "\n";
+            oss << "      }";
+
+            const FPointLightProperty& PLP = Comp.PointLightProperty;
+            oss << ",\n";
+            oss << "      \"PointLightData\" : {\n";
+            oss << "        \"AttenuationRadius\" : " << PLP.AttenuationRadius << ",\n";
+            oss << "        \"LightFalloffExponent\" : " << PLP.LightFalloffExponent << "\n";
+            oss << "      }";
+
+            const FSpotLightProperty& SLP = Comp.SpotLightProperty;
+            oss << ",\n";
+            oss << "      \"SpotLightData\" : {\n";
+            oss << "        \"InnerConeAngle\" : " << SLP.InnerConeAngle << ",\n";
+            oss << "        \"OuterConeAngle\" : " << SLP.OuterConeAngle << "\n";
+            oss << "      }";
+        }
 
         oss << "\n";
         oss << "    }" << (i + 1 < SceneData.Components.size() ? "," : "") << "\n";
@@ -568,6 +646,49 @@ FSceneData FSceneLoader::ParseV2(const JSON& Json)
                 }
                 if (RMJson.hasKey("bRotationInLocalSpace"))
                     Comp.RotationMovementProperty.bRotationInLocalSpace = RMJson.at("bRotationInLocalSpace").ToBool();
+            }
+
+            // LightComponents
+            if ((Comp.Type.find("AmbientLightComponent") != std::string::npos || Comp.Type.find("DirectionalLightComponent") != std::string::npos || Comp.Type.find("PointLightComponent") != std::string::npos || Comp.Type.find("SpotLightComponent") != std::string::npos) && CompJson.hasKey("LightData"))
+            {
+                const JSON& LightDataJson = CompJson.at("LightData");
+                if (LightDataJson.hasKey("Intensity"))
+                    Comp.LightProperty.Intensity = (float)LightDataJson.at("Intensity").ToFloat();
+                if (LightDataJson.hasKey("LightColor"))
+                {
+                    auto ColorJson = LightDataJson.at("LightColor");
+                    if (ColorJson.size() >= 4)
+                    {
+                        Comp.LightProperty.LightColor = FColor(
+                            static_cast<uint8>(ColorJson[0].ToInt()),
+                            static_cast<uint8>(ColorJson[1].ToInt()),
+                            static_cast<uint8>(ColorJson[2].ToInt()),
+                            static_cast<uint8>(ColorJson[3].ToInt())
+                        );
+                    }
+                }
+                if (LightDataJson.hasKey("bVisible"))
+                    Comp.LightProperty.bVisible = LightDataJson.at("bVisible").ToBool();
+            }
+
+            // PointLightComponent specific properties
+            if ((Comp.Type.find("PointLightComponent") != std::string::npos || Comp.Type.find("SpotLightComponent") != std::string::npos) && CompJson.hasKey("PointLightData"))
+            {
+                const JSON& PointLightDataJson = CompJson.at("PointLightData");
+                if (PointLightDataJson.hasKey("AttenuationRadius"))
+                    Comp.PointLightProperty.AttenuationRadius = (float)PointLightDataJson.at("AttenuationRadius").ToFloat();
+                if (PointLightDataJson.hasKey("LightFalloffExponent"))
+                    Comp.PointLightProperty.LightFalloffExponent = (float)PointLightDataJson.at("LightFalloffExponent").ToFloat();
+            }
+
+            // SpotLightComponent specific properties
+            if (Comp.Type.find("SpotLightComponent") != std::string::npos && CompJson.hasKey("SpotLightData"))
+            {
+                const JSON& SpotLightDataJson = CompJson.at("SpotLightData");
+                if (SpotLightDataJson.hasKey("InnerConeAngle"))
+                    Comp.SpotLightProperty.InnerConeAngle = (float)SpotLightDataJson.at("InnerConeAngle").ToFloat();
+                if (SpotLightDataJson.hasKey("OuterConeAngle"))
+                    Comp.SpotLightProperty.OuterConeAngle = (float)SpotLightDataJson.at("OuterConeAngle").ToFloat();
             }
             Data.Components.push_back(Comp);
         }
